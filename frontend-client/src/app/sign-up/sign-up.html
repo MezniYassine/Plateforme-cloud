@@ -1,0 +1,412 @@
+<div class="page">
+
+  <!-- ══ LEFT PANEL ══ -->
+  <div class="left-panel">
+    <a class="logo" routerLink="">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+        </svg>
+      </div>
+      <span class="logo-text">Dynamix Services</span>
+    </a>
+
+    <div class="iso-scene">
+      <!-- SVG isometric city / cloud scene -->
+      <svg viewBox="0 0 480 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gBlue" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.9" />
+            <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0.7" />
+          </linearGradient>
+          <linearGradient id="gTeal" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.8" />
+            <stop offset="100%" stop-color="#0891b2" stop-opacity="0.6" />
+          </linearGradient>
+          <linearGradient id="gDark" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1e40af" stop-opacity="0.6" />
+            <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0.4" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        <!-- Base platform -->
+        <ellipse cx="240" cy="370" rx="160" ry="40" fill="rgba(26,86,232,0.15)" />
+
+        <!-- Building 1 — main tower -->
+        <!-- left face -->
+        <polygon points="160,200 200,180 200,340 160,360" fill="url(#gDark)" />
+        <!-- right face -->
+        <polygon points="200,180 280,180 280,340 200,340" fill="url(#gBlue)" />
+        <!-- top face -->
+        <polygon points="160,200 200,180 280,180 240,200" fill="#60a5fa" opacity="0.9" />
+        <!-- windows -->
+        <rect x="210" y="200" width="14" height="10" rx="2" fill="rgba(147,210,255,0.6)" />
+        <rect x="232" y="200" width="14" height="10" rx="2" fill="rgba(147,210,255,0.4)" />
+        <rect x="254" y="200" width="14" height="10" rx="2" fill="rgba(147,210,255,0.7)" />
+        <rect x="210" y="220" width="14" height="10" rx="2" fill="rgba(147,210,255,0.3)" />
+        <rect x="232" y="220" width="14" height="10" rx="2" fill="rgba(147,210,255,0.6)" />
+        <rect x="254" y="220" width="14" height="10" rx="2" fill="rgba(147,210,255,0.5)" />
+        <rect x="210" y="240" width="14" height="10" rx="2" fill="rgba(147,210,255,0.7)" />
+        <rect x="232" y="240" width="14" height="10" rx="2" fill="rgba(147,210,255,0.3)" />
+        <rect x="254" y="240" width="14" height="10" rx="2" fill="rgba(147,210,255,0.6)" />
+        <!-- label -->
+        <text x="225" y="268" font-family="'Syne',sans-serif" font-size="9" font-weight="700"
+          fill="rgba(147,210,255,0.9)" text-anchor="middle" letter-spacing="1">SOVEREIGN</text>
+        <text x="225" y="280" font-family="'Syne',sans-serif" font-size="9" font-weight="700"
+          fill="rgba(147,210,255,0.9)" text-anchor="middle" letter-spacing="1">CLOUD</text>
+
+        <!-- Building 2 — left small -->
+        <polygon points="108,260 138,244 138,340 108,356" fill="url(#gDark)" opacity="0.8" />
+        <polygon points="138,244 180,244 180,340 138,340" fill="url(#gBlue)" opacity="0.75" />
+        <polygon points="108,260 138,244 180,244 150,260" fill="#93c5fd" opacity="0.7" />
+        <rect x="145" y="258" width="10" height="8" rx="1" fill="rgba(147,210,255,0.5)" />
+        <rect x="162" y="258" width="10" height="8" rx="1" fill="rgba(147,210,255,0.7)" />
+        <rect x="145" y="274" width="10" height="8" rx="1" fill="rgba(147,210,255,0.4)" />
+        <rect x="162" y="274" width="10" height="8" rx="1" fill="rgba(147,210,255,0.6)" />
+
+        <!-- Building 3 — right small -->
+        <polygon points="290,252 316,238 316,336 290,350" fill="url(#gDark)" opacity="0.8" />
+        <polygon points="316,238 360,238 360,336 316,336" fill="url(#gBlue)" opacity="0.75" />
+        <polygon points="290,252 316,238 360,238 334,252" fill="#93c5fd" opacity="0.7" />
+        <rect x="322" y="252" width="10" height="8" rx="1" fill="rgba(147,210,255,0.6)" />
+        <rect x="340" y="252" width="10" height="8" rx="1" fill="rgba(147,210,255,0.4)" />
+        <rect x="322" y="268" width="10" height="8" rx="1" fill="rgba(147,210,255,0.7)" />
+        <rect x="340" y="268" width="10" height="8" rx="1" fill="rgba(147,210,255,0.3)" />
+
+        <!-- Floating dashboard cards -->
+        <rect x="60" y="120" width="120" height="72" rx="8" fill="rgba(15,20,60,0.85)" stroke="rgba(96,165,250,0.4)"
+          stroke-width="1" />
+        <rect x="72" y="132" width="32" height="3" rx="1" fill="#60a5fa" opacity="0.7" />
+        <rect x="72" y="140" width="20" height="3" rx="1" fill="rgba(255,255,255,0.3)" />
+        <rect x="72" y="152" width="96" height="24" rx="4" fill="rgba(26,86,232,0.2)" />
+        <polyline points="76,168 84,158 92,163 100,154 108,160 116,152 124,157 132,150 140,155 156,147 164,152"
+          fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" />
+
+        <rect x="300" y="100" width="120" height="70" rx="8" fill="rgba(15,20,60,0.85)" stroke="rgba(34,211,238,0.35)"
+          stroke-width="1" />
+        <rect x="312" y="112" width="36" height="3" rx="1" fill="#22d3ee" opacity="0.7" />
+        <rect x="312" y="120" width="22" height="3" rx="1" fill="rgba(255,255,255,0.3)" />
+        <!-- mini bars -->
+        <rect x="312" y="142" width="8" height="18" rx="2" fill="#1d4ed8" opacity="0.7" />
+        <rect x="326" y="134" width="8" height="26" rx="2" fill="#3b82f6" opacity="0.8" />
+        <rect x="340" y="138" width="8" height="22" rx="2" fill="#60a5fa" opacity="0.7" />
+        <rect x="354" y="128" width="8" height="32" rx="2" fill="#93c5fd" opacity="0.9" />
+        <rect x="368" y="136" width="8" height="24" rx="2" fill="#3b82f6" opacity="0.75" />
+        <rect x="382" y="132" width="8" height="28" rx="2" fill="#1d4ed8" opacity="0.8" />
+        <rect x="396" y="142" width="8" height="18" rx="2" fill="#60a5fa" opacity="0.6" />
+
+        <!-- Connector lines from buildings to cards -->
+        <line x1="200" y1="200" x2="140" y2="155" stroke="rgba(96,165,250,0.25)" stroke-width="1"
+          stroke-dasharray="4 3" />
+        <line x1="280" y1="200" x2="320" y2="148" stroke="rgba(34,211,238,0.25)" stroke-width="1"
+          stroke-dasharray="4 3" />
+
+        <!-- Globe / sphere at bottom -->
+        <ellipse cx="200" cy="390" rx="32" ry="32" fill="none" stroke="rgba(96,165,250,0.4)" stroke-width="1" />
+        <ellipse cx="200" cy="390" rx="18" ry="32" fill="none" stroke="rgba(96,165,250,0.25)" stroke-width="1" />
+        <ellipse cx="200" cy="390" rx="32" ry="12" fill="none" stroke="rgba(96,165,250,0.25)" stroke-width="1" />
+        <circle cx="200" cy="390" r="28" fill="rgba(26,86,232,0.15)" />
+        <!-- inner glow dot -->
+        <circle cx="200" cy="390" r="10" fill="rgba(34,211,238,0.3)" />
+        <circle cx="200" cy="390" r="5" fill="rgba(34,211,238,0.7)" />
+
+        <!-- B2B tag -->
+        <rect x="330" y="370" width="72" height="26" rx="5" fill="rgba(26,86,232,0.4)" stroke="rgba(96,165,250,0.4)"
+          stroke-width="1" />
+        <text x="366" y="387" font-family="'Syne',sans-serif" font-size="9" font-weight="700"
+          fill="rgba(147,210,255,0.9)" text-anchor="middle" letter-spacing="1">B2B SAAS</text>
+
+        <!-- Stars / particles -->
+        <circle cx="80" cy="80" r="1.5" fill="rgba(255,255,255,0.5)" />
+        <circle cx="130" cy="50" r="1" fill="rgba(255,255,255,0.4)" />
+        <circle cx="380" cy="65" r="1.5" fill="rgba(255,255,255,0.5)" />
+        <circle cx="420" cy="100" r="1" fill="rgba(255,255,255,0.35)" />
+        <circle cx="450" cy="55" r="2" fill="rgba(96,165,250,0.6)" />
+        <circle cx="50" cy="180" r="1.5" fill="rgba(255,255,255,0.4)" />
+        <circle cx="430" cy="300" r="1" fill="rgba(255,255,255,0.3)" />
+      </svg>
+    </div>
+
+    <div class="left-tags">
+      <div class="tag">DATA</div>
+      <div class="tag">SECURITY</div>
+      <div class="tag">NETWORK</div>
+      <div class="tag">KUBERNETES</div>
+      <div class="tag">AI OPS</div>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT PANEL ══ -->
+  <div class="right-panel">
+    <div class="form-card">
+      <h1 class="form-title">Sign Up</h1>
+
+      <!-- TAB SWITCHER -->
+      <div class="tabs">
+        <button type="button" class="tab-btn enterprise" [class.active]="activeTab() === 'enterprise'"
+          (click)="switchTab('enterprise')">
+          <div class="tab-icon-wrap">
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="7" width="20" height="14" rx="2" />
+              <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+              <line x1="12" y1="12" x2="12" y2="16" />
+              <line x1="10" y1="14" x2="14" y2="14" />
+            </svg>
+          </div>
+          Enterprise
+        </button>
+
+        <button type="button" class="tab-btn developer" [class.active]="activeTab() === 'developer'"
+          (click)="switchTab('developer')">
+          <div class="tab-icon-wrap">
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <path d="M8 21h8M12 17v4" />
+              <path d="M7 10l-2 2 2 2M17 10l2 2-2 2" />
+            </svg>
+          </div>
+          Developer
+        </button>
+      </div>
+
+      <!-- ══ ENTERPRISE FORM ══ -->
+      <div class="form-panel" [class.active]="activeTab() === 'enterprise'" id="panel-enterprise">
+        <p class="form-section-title">Create an Enterprise Account</p>
+
+        <form [formGroup]="enterpriseForm">
+          @if (enterpriseForm.invalid && enterpriseForm.touched) {
+          <p class="form-error">Please fill in all required fields.</p>
+          }
+          <div class="fields-grid">
+            <div class="fields-row">
+              <div class="field-group">
+                <label class="field-label" for="ent-firstName">Admin First Name</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                  <input id="ent-firstName" type="text" formControlName="firstName" placeholder="Jane"
+                    autocomplete="given-name">
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="ent-lastName">Admin Last Name</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                  <input id="ent-lastName" type="text" formControlName="lastName" placeholder="Doe"
+                    autocomplete="family-name">
+                </div>
+              </div>
+            </div>
+
+            <div class="fields-row">
+              <div class="field-group">
+                <label class="field-label" for="ent-email">Admin Email</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="2" y="4" width="20" height="16" rx="2" />
+                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                    </svg>
+                  </div>
+                  <input id="ent-email" type="email" formControlName="email" placeholder="admin@company.com"
+                    autocomplete="email">
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="ent-password">Password</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="11" width="18" height="11" rx="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+                  <input id="ent-password" type="password" formControlName="password" placeholder="············"
+                    autocomplete="new-password">
+                </div>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="ent-companyName">Company Name</label>
+              <div class="field-input-wrap">
+                <div class="field-icon">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                </div>
+                <input id="ent-companyName" type="text" formControlName="companyName" placeholder="Acme Corporation"
+                  autocomplete="organization">
+              </div>
+            </div>
+
+            <div class="fields-row">
+              <div class="field-group">
+                <label class="field-label" for="ent-taxId">Tax ID</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                  </div>
+                  <input id="ent-taxId" type="text" formControlName="taxId" placeholder="FR12345678900"
+                    autocomplete="off">
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="ent-createdAt">Date of Creation</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  </div>
+                  <input id="ent-createdAt" type="date" formControlName="createdAt" style="color: var(--text-light);">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn-submit btn-enterprise" [disabled]="submitting()"
+            (click)="onSubmitEnterprise()">
+            Sign Up
+          </button>
+        </form>
+        <p class="signin-link">Already have an account? <a routerLink="/login">Sign in</a></p>
+      </div>
+
+      <!-- ══ DEVELOPER FORM ══ -->
+      <div class="form-panel" [class.active]="activeTab() === 'developer'" id="panel-developer">
+        <p class="form-section-title">Create a Developer Account</p>
+
+        <form [formGroup]="developerForm">
+          @if (developerForm.invalid && developerForm.touched) {
+          <p class="form-error">Please fill in all required fields.</p>
+          }
+          <div class="fields-grid">
+            <div class="fields-row">
+              <div class="field-group dev-field">
+                <label class="field-label" for="dev-firstName">First Name</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                  <input id="dev-firstName" type="text" formControlName="firstName" placeholder="Enter first name"
+                    autocomplete="given-name">
+                </div>
+              </div>
+              <div class="field-group dev-field">
+                <label class="field-label" for="dev-lastName">Last Name</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                  <input id="dev-lastName" type="text" formControlName="lastName" placeholder="Enter last name"
+                    autocomplete="family-name">
+                </div>
+              </div>
+            </div>
+
+            <div class="field-group dev-field">
+              <label class="field-label" for="dev-email">Email Address</label>
+              <div class="field-input-wrap">
+                <div class="field-icon">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </div>
+                <input id="dev-email" type="email" formControlName="email" placeholder="developer@example.com"
+                  autocomplete="email">
+              </div>
+            </div>
+
+            <div class="fields-row">
+              <div class="field-group dev-field">
+                <label class="field-label" for="dev-password">Password</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="11" width="18" height="11" rx="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+                  <input id="dev-password" type="password" formControlName="password" placeholder="·········"
+                    autocomplete="new-password">
+                </div>
+              </div>
+              <div class="field-group dev-field">
+                <label class="field-label" for="dev-confirmPass">Confirm Password</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="11" width="18" height="11" rx="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+                  <input id="dev-confirmPass" type="password" formControlName="confirmPass" placeholder="·········"
+                    autocomplete="new-password">
+                </div>
+              </div>
+            </div>
+
+            <div class="field-group dev-field">
+              <label class="field-label" for="dev-techStack">Developer Specialty / Tech Stack</label>
+              <div class="field-input-wrap">
+                <div class="field-icon">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                  </svg>
+                </div>
+                <input id="dev-techStack" type="text" formControlName="techStack"
+                  placeholder="Cloud Native, K8s, Python" autocomplete="off">
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn-submit btn-developer" [disabled]="submitting()"
+            (click)="onSubmitDeveloper()">
+            Sign Up
+          </button>
+        </form>
+        <p class="signin-link">Already have an account? <a routerLink="/login">Sign in</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (toast(); as msg) {
+<div class="toast show" role="status" aria-live="polite">
+  <div class="toast-dot"></div>
+  <span>{{ msg }}</span>
+</div>
+}

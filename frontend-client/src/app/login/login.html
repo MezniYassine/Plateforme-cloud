@@ -1,0 +1,261 @@
+<div class="page">
+
+  <!-- ══ LEFT PANEL ══ -->
+  <div class="left-panel">
+    <a class="logo" [routerLink]="['']">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+        </svg>
+      </div>
+      <span class="logo-text">Dynamix Services</span>
+    </a>
+
+    <div class="left-content">
+      <h2 class="left-headline">
+        Welcome back<br>to your <span class="hl-teal">sovereign<br>cloud.</span>
+      </h2>
+      <p class="left-sub">
+        Your infrastructure. Your data. Your rules. Sign in to manage your cloud resources with full control.
+      </p>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-check" style="background:rgba(26,86,232,0.15);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <span class="feature-text"><strong>JWT + MFA</strong> — secure two-factor authentication</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-check" style="background:rgba(0,212,255,0.1);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <span class="feature-text"><strong>RBAC</strong> — access adapted to your exact role</span>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-check" style="background:rgba(0,212,255,0.1);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <span class="feature-text"><strong>Sovereign data</strong> — hosted locally</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <span class="stat-val">99.<span>9</span>%</span>
+        <span class="stat-lbl">Uptime SLA</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val"><span>100</span>%</span>
+        <span class="stat-lbl">Sovereignty</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val"><span>24</span>/7</span>
+        <span class="stat-lbl">Expert support</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT PANEL ══ -->
+  <div class="right-panel">
+    <div class="form-card">
+      <h1 class="form-title">Sign In</h1>
+      <p class="form-subtitle">Log in to your Dynamix workspace</p>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button type="button" class="tab-btn enterprise" [class.active]="activeTab() === 'enterprise'"
+          (click)="switchTab('enterprise')">
+          <div class="ti">
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="7" width="20" height="14" rx="2" />
+              <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+            </svg>
+          </div>
+          Enterprise
+        </button>
+        <button type="button" class="tab-btn developer" [class.active]="activeTab() === 'developer'"
+          (click)="switchTab('developer')">
+          <div class="ti">
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <path d="M8 21h8M12 17v4" />
+              <path d="M7 10l-2 2 2 2M17 10l2 2-2 2" />
+            </svg>
+          </div>
+          Developer
+        </button>
+      </div>
+
+      <!-- ══ ENTERPRISE LOGIN ══ -->
+      <div class="form-panel" [class.active]="activeTab() === 'enterprise'">
+
+        <div class="alert alert-error">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          {{ errorMsg || 'Incorrect email or password.' }}
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+          <div class="fields-grid">
+            <div class="field-group">
+              <label class="field-label">Administrator Email</label>
+              <div class="field-wrap">
+                <div class="fi">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </div>
+                <input type="email" formControlName="email" placeholder="admin@company.com" autocomplete="email">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Password</label>
+              <div class="field-wrap">
+                <div class="fi">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="11" rx="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                <input type="password" formControlName="password" placeholder="············"
+                  autocomplete="current-password">
+                <button class="pw-toggle" type="button">
+                  <svg viewBox="0 0 24 24" class="eye-icon">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="row-options">
+              <label class="checkbox-wrap">
+                <input type="checkbox">
+                <span class="checkbox-label">Remember Me</span>
+              </label>
+              <a href="#" class="forgot-link">Forgot Password ?</a>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit btn-enterprise" [class.loading]="isLoading"
+            [disabled]="isLoading || loginForm.invalid">
+            <div class="spinner"></div>
+            <span class="btn-label">Log In</span>
+          </button>
+        </form>
+
+        <p class="bottom-link">Don't have an account yet? <a routerLink="/signup">Create an account</a></p>
+      </div>
+
+      <!-- ══ DEVELOPER LOGIN ══ -->
+      <div class="form-panel" [class.active]="activeTab() === 'developer'">
+
+        <div class="alert alert-error">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          {{ errorMsg || 'Incorrect email or password.' }}
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+          <div class="fields-grid">
+            <div class="field-group">
+              <label class="field-label">Email</label>
+              <div class="field-wrap">
+                <div class="fi">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </div>
+                <input type="email" formControlName="email" placeholder="developer@example.com" autocomplete="email">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Password</label>
+              <div class="field-wrap">
+                <div class="fi">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="11" rx="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                <input type="password" formControlName="password" placeholder="············"
+                  autocomplete="current-password">
+                <button class="pw-toggle" type="button">
+                  <svg viewBox="0 0 24 24" class="eye-icon">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="row-options">
+              <label class="checkbox-wrap">
+                <input type="checkbox">
+                <span class="checkbox-label">Remember me</span>
+              </label>
+              <a href="#" class="forgot-link">Forgot your password?</a>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit btn-developer" [class.loading]="isLoading"
+            [disabled]="isLoading || loginForm.invalid">
+            <div class="spinner"></div>
+            <span class="btn-label">Log In</span>
+          </button>
+        </form>
+
+        <p class="bottom-link">Don't have an account yet? <a routerLink="/signup"
+            [queryParams]="{type: 'developer'}">Create a developer account</a></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ MFA MODAL ══ -->
+<div class="modal-overlay" [class.show]="showMFA" id="mfa-modal">
+  <div class="mfa-modal">
+    <div class="mfa-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+    </div>
+    <h3 class="mfa-title">MFA Verification</h3>
+    <p class="mfa-sub">Enter the 6-digit code sent to your authenticator app.</p>
+
+    <div class="otp-row">
+      <input class="otp-input" type="text" maxlength="1" id="otp1">
+      <input class="otp-input" type="text" maxlength="1" id="otp2">
+      <input class="otp-input" type="text" maxlength="1" id="otp3">
+      <input class="otp-input" type="text" maxlength="1" id="otp4">
+      <input class="otp-input" type="text" maxlength="1" id="otp5">
+      <input class="otp-input" type="text" maxlength="1" id="otp6">
+    </div>
+
+    <button class="btn-verify" (click)="submitMFA()">Verify and log in</button>
+    <p class="mfa-resend">Didn't receive the code? <a (click)="resetMFA()">Resend</a></p>
+  </div>
+</div>

@@ -1,0 +1,319 @@
+<!-- ══ NAVBAR ══ -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+        <path d="M2 17l10 5 10-5" />
+        <path d="M2 12l10 5 10-5" />
+      </svg>
+    </div>
+    <span class="nav-logo-text">Dynamix Services</span>
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="#products">Products</a></li>
+    <li><a href="#solutions">Solutions</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#docs">Documentation</a></li>
+  </ul>
+
+  <div class="nav-actions">
+    <a routerLink="/signup" class="btn-ghost">Sign Up</a>
+    <a [routerLink]="['/login']" class="btn-primary">Sign In</a>
+  </div>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section>
+  <div class="hero">
+    <!-- Left -->
+    <div class="hero-content">
+      <div class="hero-badge fade-up">
+        <div class="hero-badge-dot"></div>
+        Dynamix v1.0 is now live
+      </div>
+
+      <h1 class="hero-title fade-up delay-1">
+        Sovereign Cloud<br>
+        Infrastructure <span class="accent-gradient">for<br>the Future.</span>
+      </h1>
+
+      <p class="hero-subtitle fade-up delay-2">
+        Secure, scalable, and AI-ready cloud computing designed for enterprise data sovereignty. Build, deploy, and
+        scale with absolute control.
+      </p>
+
+      <div class="hero-actions fade-up delay-3">
+        <a [routerLink]="['/signup']" [queryParams]="{type: 'developer'}" class="btn-hero-primary">
+          Sign up as a developer
+        </a>
+
+        <!-- Bouton Contact Sales → Enterprise signup -->
+        <a [routerLink]="['/signup']" [queryParams]="{type: 'enterprise'}" class="btn-hero-outline">
+          Sign up as an enterprise
+        </a>
+      </div>
+    </div>
+
+    <!-- Right: dashboard mockup -->
+    <div class="hero-visual fade-up delay-4">
+      <div class="hero-mockup">
+        <div class="mockup-topbar">
+          <div class="mockup-dot" style="background:#ff5f57;"></div>
+          <div class="mockup-dot" style="background:#febc2e;"></div>
+          <div class="mockup-dot" style="background:#28c840;"></div>
+        </div>
+        <div class="mockup-body">
+          <div class="mockup-stat">
+            <div class="mockup-stat-label">Active vCPUs</div>
+            <div class="mockup-stat-value accent">128</div>
+          </div>
+          <div class="mockup-stat">
+            <div class="mockup-stat-label">RAM (GB)</div>
+            <div class="mockup-stat-value">512</div>
+          </div>
+          <div class="mockup-stat">
+            <div class="mockup-stat-label">Uptime</div>
+            <div class="mockup-stat-value teal">99.9%</div>
+          </div>
+
+          <div class="mockup-chart">
+            <div class="mockup-chart-label">CPU Usage — Last 7 days</div>
+            <div class="chart-bars">
+              <div class="bar" style="height:45%;animation-delay:.1s"></div>
+              <div class="bar" style="height:62%;animation-delay:.15s"></div>
+              <div class="bar" style="height:38%;animation-delay:.2s"></div>
+              <div class="bar" style="height:78%;animation-delay:.25s"></div>
+              <div class="bar" style="height:55%;animation-delay:.3s"></div>
+              <div class="bar" style="height:90%;animation-delay:.35s;opacity:.9"></div>
+              <div class="bar" style="height:67%;animation-delay:.4s"></div>
+              <div class="bar" style="height:50%;animation-delay:.45s"></div>
+              <div class="bar" style="height:82%;animation-delay:.5s"></div>
+              <div class="bar" style="height:71%;animation-delay:.55s"></div>
+              <div class="bar" style="height:44%;animation-delay:.6s"></div>
+              <div class="bar" style="height:60%;animation-delay:.65s"></div>
+            </div>
+          </div>
+
+          <div class="mockup-list">
+            <div class="mockup-vm-row">
+              <span class="vm-name">vm-prod-erp-01</span>
+              <span class="vm-status running">Running</span>
+            </div>
+            <div class="mockup-vm-row">
+              <span class="vm-name">vm-db-postgres-02</span>
+              <span class="vm-status running">Running</span>
+            </div>
+            <div class="mockup-vm-row">
+              <span class="vm-name">vm-staging-crm-03</span>
+              <span class="vm-status pending">Pending</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CORE INFRASTRUCTURE ══ -->
+<section class="core-section" id="products">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">Core Infrastructure</h2>
+      <p class="section-sub">A complete ecosystem of cloud services built for performance, security, and strict
+        compliance requirements.</p>
+    </div>
+
+    <div class="cards-grid">
+      <!-- IaaS -->
+      <div class="infra-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+            <rect x="2" y="3" width="20" height="5" rx="2" />
+            <rect x="2" y="11" width="20" height="5" rx="2" />
+            <rect x="2" y="19" width="20" height="2" rx="1" />
+            <circle cx="18" cy="5.5" r="1" fill="var(--accent-2)" />
+            <circle cx="18" cy="13.5" r="1" fill="var(--accent-2)" />
+          </svg>
+        </div>
+        <div class="card-title">IaaS</div>
+        <div class="card-desc">Infrastructure as a Service. Provision bare metal, virtual machines, and scalable
+          storage with sovereign guarantees.</div>
+        <a href="#" class="card-link">
+          Explore Infrastructure
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+
+      <!-- PaaS -->
+      <div class="infra-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <div class="card-title">PaaS</div>
+        <div class="card-desc">Platform as a Service. Managed Kubernetes, serverless environments, and AI-ready
+          pipelines out of the box.</div>
+        <a href="#" class="card-link">
+          Explore Platforms
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+
+      <!-- SaaS -->
+      <div class="infra-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
+          </svg>
+        </div>
+        <div class="card-title">SaaS</div>
+        <div class="card-desc">Software as a Service. Enterprise-grade sovereign workspace, data analytics tools, and
+          secure collaboration.</div>
+        <a href="#" class="card-link">
+          Explore Software
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ STATS ══ -->
+<section class="stats-section">
+  <div style="max-width:1280px;margin:0 auto;">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-number">99.<span>9</span>%</div>
+        <div class="stat-label">Guaranteed SLA</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number"><span>100</span>%</div>
+        <div class="stat-label">Local Data Sovereignty</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number"><span>&lt;2</span>s</div>
+        <div class="stat-label">API Response Time</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number"><span>24</span>/7</div>
+        <div class="stat-label">Expert Support</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FEATURES ══ -->
+<section id="solutions">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">Everything you need</h2>
+      <p class="section-sub">A comprehensive platform designed for SMBs and enterprises that want to maintain control.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        </div>
+        <div>
+          <div class="feature-title">Advanced IAM & RBAC</div>
+          <div class="feature-desc">Granular role-based access control (Super Admin, Client Admin, Developer).
+            Mandatory JWT + MFA authentication.</div>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
+            <path d="M12 6v6l4 2" />
+          </svg>
+        </div>
+        <div>
+          <div class="feature-title">Pay-as-you-go Billing</div>
+          <div class="feature-desc">Transparent pay-as-you-go model. Real-time estimates, budget alerts, and
+            complete invoice history.</div>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+        </div>
+        <div>
+          <div class="feature-title">Monitoring & AIOps</div>
+          <div class="feature-desc">Real-time monitoring with predictive anomaly detection. Built-in AI assistant
+            for log analysis.</div>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
+          </svg>
+        </div>
+        <div>
+          <div class="feature-title">Self-service Console</div>
+          <div class="feature-desc">Instant provisioning of VMs, databases, and managed services from an
+            intuitive web portal.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CTA ══ -->
+<section class="cta-section">
+  <div class="section-inner">
+    <div class="cta-box">
+      <h2 class="cta-title">Ready to deploy your sovereign cloud?</h2>
+      <p class="cta-sub">Join the companies that trust Dynamix for their critical infrastructure.</p>
+      <div class="cta-actions">
+        <a [routerLink]="['/signup']" [queryParams]="{type: 'enterprise'}" class="btn-hero-primary">Start for free</a>
+        <a href="#contact" class="btn-hero-outline">Talk to an expert</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <a class="footer-logo" href="#">
+    <div class="nav-logo-icon" style="width:28px;height:28px;border-radius:7px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+        style="width:14px;height:14px;">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+        <path d="M2 17l10 5 10-5" />
+        <path d="M2 12l10 5 10-5" />
+      </svg>
+    </div>
+    <span class="nav-logo-text" style="font-size:14px;">Dynamix Services</span>
+  </a>
+
+  <span class="footer-copy">© 2025–2026 Dynamix Services. All rights reserved.</span>
+
+  <div class="footer-links">
+    <a href="#">Privacy Policy</a>
+    <a href="#">Terms of Service</a>
+    <a href="#">Contact Us</a>
+  </div>
+</footer>
