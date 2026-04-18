@@ -45,8 +45,8 @@
       </p>
 
       <div class="hero-actions fade-up delay-3">
-        <a [routerLink]="['/signup']" [queryParams]="{type: 'developer'}" class="btn-hero-primary">
-          Sign up as a developer
+        <a [routerLink]="['/signup']" [queryParams]="{type: 'personal'}" class="btn-hero-primary">
+          Sign up for a Personal Account
         </a>
 
         <!-- Bouton Contact Sales → Enterprise signup -->
@@ -56,63 +56,7 @@
       </div>
     </div>
 
-    <!-- Right: dashboard mockup -->
-    <div class="hero-visual fade-up delay-4">
-      <div class="hero-mockup">
-        <div class="mockup-topbar">
-          <div class="mockup-dot" style="background:#ff5f57;"></div>
-          <div class="mockup-dot" style="background:#febc2e;"></div>
-          <div class="mockup-dot" style="background:#28c840;"></div>
-        </div>
-        <div class="mockup-body">
-          <div class="mockup-stat">
-            <div class="mockup-stat-label">Active vCPUs</div>
-            <div class="mockup-stat-value accent">128</div>
-          </div>
-          <div class="mockup-stat">
-            <div class="mockup-stat-label">RAM (GB)</div>
-            <div class="mockup-stat-value">512</div>
-          </div>
-          <div class="mockup-stat">
-            <div class="mockup-stat-label">Uptime</div>
-            <div class="mockup-stat-value teal">99.9%</div>
-          </div>
 
-          <div class="mockup-chart">
-            <div class="mockup-chart-label">CPU Usage — Last 7 days</div>
-            <div class="chart-bars">
-              <div class="bar" style="height:45%;animation-delay:.1s"></div>
-              <div class="bar" style="height:62%;animation-delay:.15s"></div>
-              <div class="bar" style="height:38%;animation-delay:.2s"></div>
-              <div class="bar" style="height:78%;animation-delay:.25s"></div>
-              <div class="bar" style="height:55%;animation-delay:.3s"></div>
-              <div class="bar" style="height:90%;animation-delay:.35s;opacity:.9"></div>
-              <div class="bar" style="height:67%;animation-delay:.4s"></div>
-              <div class="bar" style="height:50%;animation-delay:.45s"></div>
-              <div class="bar" style="height:82%;animation-delay:.5s"></div>
-              <div class="bar" style="height:71%;animation-delay:.55s"></div>
-              <div class="bar" style="height:44%;animation-delay:.6s"></div>
-              <div class="bar" style="height:60%;animation-delay:.65s"></div>
-            </div>
-          </div>
-
-          <div class="mockup-list">
-            <div class="mockup-vm-row">
-              <span class="vm-name">vm-prod-erp-01</span>
-              <span class="vm-status running">Running</span>
-            </div>
-            <div class="mockup-vm-row">
-              <span class="vm-name">vm-db-postgres-02</span>
-              <span class="vm-status running">Running</span>
-            </div>
-            <div class="mockup-vm-row">
-              <span class="vm-name">vm-staging-crm-03</span>
-              <span class="vm-status pending">Pending</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -231,7 +175,8 @@
         </div>
         <div>
           <div class="feature-title">Advanced IAM & RBAC</div>
-          <div class="feature-desc">Granular role-based access control (Super Admin, Client Admin, Developer).
+          <div class="feature-desc">Granular role-based access control to securely manage your enterprise team or
+            individual workspace.
             Mandatory JWT + MFA authentication.</div>
         </div>
       </div>

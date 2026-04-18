@@ -11,7 +11,7 @@ import { AuthService } from '../services/auth-service';
   styleUrl: './login.scss',
 })
 export class LoginComponent implements OnInit {
-  activeTab = signal<'enterprise' | 'developer'>('enterprise');
+  activeTab = signal<'enterprise' | 'personal'>('enterprise');
   showMFA = false;
   isLoading = false;
   errorMsg = '';
@@ -27,13 +27,14 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() {
     this.route.queryParams.subscribe((p) => {
-      this.activeTab.set(p['type'] === 'developer' ? 'developer' : 'enterprise');
+      this.activeTab.set(p['type'] === 'personal' ? 'personal' : 'enterprise');
     });
   }
 
   onLogin() {
     this.isLoading = true;
-    this.auth.login({ ...this.loginForm.getRawValue(), role: this.activeTab() })
+    const val = this.loginForm.getRawValue();
+    this.auth.login({ email: val.email || '', password: val.password || '' })
       .subscribe({
         next: (res) => {
           if (res.requiresMFA) {
@@ -47,6 +48,7 @@ export class LoginComponent implements OnInit {
           this.errorMsg = 'Email ou mot de passe incorrect.';
         }
       });
+    console.log(this.loginForm.value);
   }
 
   onVerifyMFA(code: string) {
@@ -70,7 +72,7 @@ export class LoginComponent implements OnInit {
     (document.getElementById('otp1') as HTMLInputElement)?.focus();
   }
 
-  switchTab(tab: 'enterprise' | 'developer') {
+  switchTab(tab: 'enterprise' | 'personal') {
     this.activeTab.set(tab);
   }
 

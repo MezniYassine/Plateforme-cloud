@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 
+// --- DTOs ---
 export interface RegisterEnterpriseDto {
   firstName: string;
   lastName: string;
@@ -15,29 +16,19 @@ export interface RegisterEnterpriseDto {
   password: string;
   companyName: string;
   taxId: string;
-  createdAt: string;
 }
 
-export interface RegisterDeveloperDto {
+export interface RegisterPersonalDto { // Renommé (anciennement Developer)
   firstName: string;
   lastName: string;
   email: string;
   password: string;
-  techStack?: string;
-}
-
-export interface RegisterUserCDto {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  techStack?: string;
+  profession?: string;
 }
 
 export interface LoginDto {
-  email: string | null;
-  password: string | null;
-  role: string;
+  email: string;
+  password: string;
 }
 
 @Injectable()
@@ -47,14 +38,20 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) { }
 
+  // 1. Inscription d'une Entreprise (et de son premier Admin)
   async registerEnterprise(dto: RegisterEnterpriseDto) {
-    if ((!dto.email || !dto.password || !dto.companyName || !dto.firstName || !dto.lastName)) {
+    if (!dto.email || !dto.password || !dto.companyName || !dto.firstName || !dto.lastName) {
       throw new BadRequestException('Missing required fields');
     }
 
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) {
       throw new ConflictException('An account with this email already exists');
+    }
+
+    const existingTaxId = await this.usersService.findByTaxId(dto.taxId);
+    if (existingTaxId) {
+      throw new ConflictException('An account with this tax ID already exists');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -66,14 +63,14 @@ export class AuthService {
       password: hashedPassword,
       companyName: dto.companyName,
       taxId: dto.taxId,
-      createdAt: dto.createdAt,
     });
 
     return { ok: true, message: 'Enterprise account created. Awaiting approval.' };
   }
 
-  async registerDeveloper(dto: RegisterDeveloperDto) {
-    if (!dto.email || !dto.password) {
+  // 2. Inscription d'un Particulier (Anciennement Developer)
+  async registerPersonal(dto: RegisterPersonalDto) {
+    if (!dto.email || !dto.password || !dto.firstName || !dto.lastName) {
       throw new BadRequestException('Missing required fields');
     }
 
@@ -84,22 +81,24 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    await this.usersService.createDeveloper({
+    await this.usersService.createPersonal({
       nom: dto.lastName,
       prenom: dto.firstName,
       email: dto.email,
       password: hashedPassword,
-      techStack: dto.techStack ?? '',
+      profession: dto.profession ?? '',
     });
 
-    return { ok: true, message: 'Developer account created successfully.' };
+    return { ok: true, message: 'Personal account created successfully.' };
   }
 
+  // 3. Connexion (Login Unifié pour TOUS les utilisateurs)
   async login(dto: LoginDto) {
     if (!dto.email || !dto.password) {
       throw new BadRequestException('Email and password are required');
     }
 
+    // On récupère le Client (qui contient son rôle, son statut et ses relations)
     const user = await this.usersService.findByEmail(dto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -110,44 +109,36 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: user.id, email: user.email, role: dto.role };
+    // --- SÉCURITÉ JWT ---
+    // On injecte le VRAI rôle et statut de la base de données dans le token
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      entrepriseId: user.entreprise ? user.entreprise.id : null // Pratique pour le frontend
+    };
+
     const token = this.jwtService.sign(payload);
 
     return {
-      requiresMFA: false,
+      requiresMFA: user.mfaStatus === 'ACTIVE', // Dynamique selon la DB
       token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        status: user.status
+      }
     };
   }
 
+  // 4. Vérification MFA (Inchangé)
   verifyMFA(code: string) {
-    // Stub: in production, validate a TOTP code against user's MFA secret
     if (!code || code.length !== 6) {
       throw new BadRequestException('Invalid MFA code');
     }
-    // For now, any 6-digit code is accepted and we issue a fresh token
     const token = this.jwtService.sign({ mfaVerified: true });
     return { token };
-  }
-
-  async registerUserC(dto: RegisterUserCDto) {
-    if (!dto.email || !dto.password) {
-      throw new BadRequestException('Missing required fields');
-    }
-
-    const existing = await this.usersService.findByEmail(dto.email);
-    if (existing) {
-      throw new ConflictException('An account with this email already exists');
-    }
-
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
-
-    await this.usersService.createUserC({
-      nom: dto.lastName,
-      prenom: dto.firstName,
-      email: dto.email,
-      password: hashedPassword,
-    });
-
-    return { ok: true, message: 'UserC account created successfully.' };
   }
 }

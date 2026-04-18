@@ -1,0 +1,7 @@
+export enum ServiceStatus {
+    AWAITING_PAYMENT = 'AWAITING_PAYMENT',
+    PROVISIONING = 'PROVISIONING',
+    RUNNING = 'RUNNING',
+    STOPPED = 'STOPPED',
+    FAILED = 'FAILED',
+}

@@ -84,8 +84,8 @@
           </div>
           Enterprise
         </button>
-        <button type="button" class="tab-btn developer" [class.active]="activeTab() === 'developer'"
-          (click)="switchTab('developer')">
+        <button type="button" class="tab-btn personal" [class.active]="activeTab() === 'personal'"
+          (click)="switchTab('personal')">
           <div class="ti">
             <svg viewBox="0 0 24 24">
               <rect x="2" y="3" width="20" height="14" rx="2" />
@@ -93,7 +93,7 @@
               <path d="M7 10l-2 2 2 2M17 10l2 2-2 2" />
             </svg>
           </div>
-          Developer
+          Personal
         </button>
       </div>
 
@@ -163,8 +163,8 @@
         <p class="bottom-link">Don't have an account yet? <a routerLink="/signup">Create an account</a></p>
       </div>
 
-      <!-- ══ DEVELOPER LOGIN ══ -->
-      <div class="form-panel" [class.active]="activeTab() === 'developer'">
+      <!-- ══ personal LOGIN ══ -->
+      <div class="form-panel" [class.active]="activeTab() === 'personal'">
 
         <div class="alert alert-error">
           <svg viewBox="0 0 24 24">
@@ -186,7 +186,7 @@
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                   </svg>
                 </div>
-                <input type="email" formControlName="email" placeholder="developer@example.com" autocomplete="email">
+                <input type="email" formControlName="email" placeholder="personal@example.com" autocomplete="email">
               </div>
             </div>
 
@@ -219,7 +219,7 @@
             </div>
           </div>
 
-          <button type="submit" class="btn-submit btn-developer" [class.loading]="isLoading"
+          <button type="submit" class="btn-submit btn-personal" [class.loading]="isLoading"
             [disabled]="isLoading || loginForm.invalid">
             <div class="spinner"></div>
             <span class="btn-label">Log In</span>
@@ -227,7 +227,7 @@
         </form>
 
         <p class="bottom-link">Don't have an account yet? <a routerLink="/signup"
-            [queryParams]="{type: 'developer'}">Create a developer account</a></p>
+            [queryParams]="{type: 'personal'}">Create a Personal Account</a></p>
       </div>
 
     </div>

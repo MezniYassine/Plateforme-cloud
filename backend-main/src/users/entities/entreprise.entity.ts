@@ -1,18 +1,17 @@
-import { Entity, Column, PrimaryColumn, CreateDateColumn, OneToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Client } from './client.entity';
-import { UserC } from './userC.entity';
 
 @Entity()
 export class Entreprise {
   // Clé primaire ET clé étrangère
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   nomEntreprise: string;
 
-  @Column()
-  identifiantFiscal: number;
+  @Column({ unique: true })
+  identifiantFiscal: string;
 
   @CreateDateColumn() // TypeORM gérera automatiquement cette date
   dateCreation: Date;
@@ -20,10 +19,7 @@ export class Entreprise {
   @Column()
   maxUtilisateurs: number;
 
-  @OneToOne(() => Client, (client) => client.entreprise, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'id' }) // Lie explicitement cette colonne à l'ID du Client
-  client: Client;
+  @OneToMany(() => Client, (client) => client.entreprise)
+  clients: Client[];
 
-  @OneToMany(() => UserC, (user) => user.entreprise)
-  utilisateurs: UserC[];
 }

@@ -1,0 +1,6 @@
+export enum AccountStatus {
+    PENDING_VALIDATION = 'PENDING_VALIDATION',
+    APPROVED = 'APPROVED',
+    REJECTED = 'REJECTED',
+    SUSPENDED = 'SUSPENDED',
+}

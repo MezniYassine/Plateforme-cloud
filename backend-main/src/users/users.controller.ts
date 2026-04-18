@@ -16,13 +16,5 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Post('userC')
-  async createUserC(@Body() userData: {
-    nom: string;
-    prenom: string;
-    email: string;
-    password: string;
-  }) {
-    return this.usersService.createUserC(userData);
-  }
+
 }

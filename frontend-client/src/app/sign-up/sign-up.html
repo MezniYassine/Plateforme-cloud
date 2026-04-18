@@ -1,6 +1,6 @@
 <div class="page">
 
-  <!-- ══ LEFT PANEL ══ -->
+  <!-- â•â• LEFT PANEL â•â• -->
   <div class="left-panel">
     <a class="logo" routerLink="">
       <div class="logo-icon">
@@ -38,7 +38,7 @@
         <!-- Base platform -->
         <ellipse cx="240" cy="370" rx="160" ry="40" fill="rgba(26,86,232,0.15)" />
 
-        <!-- Building 1 — main tower -->
+        <!-- Building 1 â€” main tower -->
         <!-- left face -->
         <polygon points="160,200 200,180 200,340 160,360" fill="url(#gDark)" />
         <!-- right face -->
@@ -61,7 +61,7 @@
         <text x="225" y="280" font-family="'Syne',sans-serif" font-size="9" font-weight="700"
           fill="rgba(147,210,255,0.9)" text-anchor="middle" letter-spacing="1">CLOUD</text>
 
-        <!-- Building 2 — left small -->
+        <!-- Building 2 â€” left small -->
         <polygon points="108,260 138,244 138,340 108,356" fill="url(#gDark)" opacity="0.8" />
         <polygon points="138,244 180,244 180,340 138,340" fill="url(#gBlue)" opacity="0.75" />
         <polygon points="108,260 138,244 180,244 150,260" fill="#93c5fd" opacity="0.7" />
@@ -70,7 +70,7 @@
         <rect x="145" y="274" width="10" height="8" rx="1" fill="rgba(147,210,255,0.4)" />
         <rect x="162" y="274" width="10" height="8" rx="1" fill="rgba(147,210,255,0.6)" />
 
-        <!-- Building 3 — right small -->
+        <!-- Building 3 â€” right small -->
         <polygon points="290,252 316,238 316,336 290,350" fill="url(#gDark)" opacity="0.8" />
         <polygon points="316,238 360,238 360,336 316,336" fill="url(#gBlue)" opacity="0.75" />
         <polygon points="290,252 316,238 360,238 334,252" fill="#93c5fd" opacity="0.7" />
@@ -142,7 +142,7 @@
     </div>
   </div>
 
-  <!-- ══ RIGHT PANEL ══ -->
+  <!-- â•â• RIGHT PANEL â•â• -->
   <div class="right-panel">
     <div class="form-card">
       <h1 class="form-title">Sign Up</h1>
@@ -162,8 +162,8 @@
           Enterprise
         </button>
 
-        <button type="button" class="tab-btn developer" [class.active]="activeTab() === 'developer'"
-          (click)="switchTab('developer')">
+        <button type="button" class="tab-btn personal" [class.active]="activeTab() === 'personal'"
+          (click)="switchTab('personal')">
           <div class="tab-icon-wrap">
             <svg viewBox="0 0 24 24">
               <rect x="2" y="3" width="20" height="14" rx="2" />
@@ -171,19 +171,46 @@
               <path d="M7 10l-2 2 2 2M17 10l2 2-2 2" />
             </svg>
           </div>
-          Developer
+          Personal Account
         </button>
       </div>
 
-      <!-- ══ ENTERPRISE FORM ══ -->
+      <!--  ENTERPRISE FORM  -->
       <div class="form-panel" [class.active]="activeTab() === 'enterprise'" id="panel-enterprise">
         <p class="form-section-title">Create an Enterprise Account</p>
 
         <form [formGroup]="enterpriseForm">
-          @if (enterpriseForm.invalid && enterpriseForm.touched) {
-          <p class="form-error">Please fill in all required fields.</p>
-          }
           <div class="fields-grid">
+            <div class="fields-row">
+              <div class="field-group">
+                <label class="field-label" for="ent-companyName">Company Name</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                  </div>
+                  <input id="ent-companyName" type="text" formControlName="companyName" placeholder="Dynamix Services"
+                    autocomplete="organization">
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="ent-taxId">Tax ID</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                  </div>
+                  <input id="ent-taxId" type="text" formControlName="taxId" placeholder="1234567A/M/A/000"
+                    autocomplete="off">
+                </div>
+              </div>
+            </div>
             <div class="fields-row">
               <div class="field-group">
                 <label class="field-label" for="ent-firstName">Admin First Name</label>
@@ -194,7 +221,7 @@
                       <circle cx="12" cy="7" r="4" />
                     </svg>
                   </div>
-                  <input id="ent-firstName" type="text" formControlName="firstName" placeholder="Jane"
+                  <input id="ent-firstName" type="text" formControlName="firstName" placeholder="Mohamed"
                     autocomplete="given-name">
                 </div>
               </div>
@@ -207,26 +234,26 @@
                       <circle cx="12" cy="7" r="4" />
                     </svg>
                   </div>
-                  <input id="ent-lastName" type="text" formControlName="lastName" placeholder="Doe"
+                  <input id="ent-lastName" type="text" formControlName="lastName" placeholder="Ben Salah"
                     autocomplete="family-name">
                 </div>
               </div>
             </div>
 
-            <div class="fields-row">
-              <div class="field-group">
-                <label class="field-label" for="ent-email">Admin Email</label>
-                <div class="field-input-wrap">
-                  <div class="field-icon">
-                    <svg viewBox="0 0 24 24">
-                      <rect x="2" y="4" width="20" height="16" rx="2" />
-                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                    </svg>
-                  </div>
-                  <input id="ent-email" type="email" formControlName="email" placeholder="admin@company.com"
-                    autocomplete="email">
+            <div class="fields-group">
+              <label class="field-label" for="ent-email">Admin Email</label>
+              <div class="field-input-wrap">
+                <div class="field-icon">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
                 </div>
+                <input id="ent-email" type="email" formControlName="email" placeholder="admin@company.com"
+                  autocomplete="email">
               </div>
+            </div>
+            <div class="fields-row">
               <div class="field-group">
                 <label class="field-label" for="ent-password">Password</label>
                 <div class="field-input-wrap">
@@ -236,57 +263,58 @@
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
                   </div>
-                  <input id="ent-password" type="password" formControlName="password" placeholder="············"
-                    autocomplete="new-password">
+                  <input id="ent-password" [type]="showPassword() ? 'text' : 'password'" formControlName="password"
+                    placeholder="........" autocomplete="new-password">
+                  <button type="button" class="field-visibility-btn" (click)="togglePassword()"
+                    [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+
+                    @if (showPassword()) {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path
+                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                    }
+                  </button>
+                </div>
+              </div>
+              <div class="field-group dev-field">
+                <label class="field-label" for="ent-confirmPass">Confirm Password</label>
+                <div class="field-input-wrap">
+                  <div class="field-icon">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="11" width="18" height="11" rx="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+                  <input id="ent-confirmPass" [type]="showConfirmPassword() ? 'text' : 'password'"
+                    formControlName="confirmPass" placeholder="........" autocomplete="new-password">
+                  <button type="button" class="field-visibility-btn" (click)="toggleConfirmPassword()"
+                    [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'">
+
+                    @if (showConfirmPassword()) {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path
+                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                    }
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div class="field-group">
-              <label class="field-label" for="ent-companyName">Company Name</label>
-              <div class="field-input-wrap">
-                <div class="field-icon">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    <polyline points="9 22 9 12 15 12 15 22" />
-                  </svg>
-                </div>
-                <input id="ent-companyName" type="text" formControlName="companyName" placeholder="Acme Corporation"
-                  autocomplete="organization">
-              </div>
-            </div>
 
-            <div class="fields-row">
-              <div class="field-group">
-                <label class="field-label" for="ent-taxId">Tax ID</label>
-                <div class="field-input-wrap">
-                  <div class="field-icon">
-                    <svg viewBox="0 0 24 24">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                    </svg>
-                  </div>
-                  <input id="ent-taxId" type="text" formControlName="taxId" placeholder="FR12345678900"
-                    autocomplete="off">
-                </div>
-              </div>
-              <div class="field-group">
-                <label class="field-label" for="ent-createdAt">Date of Creation</label>
-                <div class="field-input-wrap">
-                  <div class="field-icon">
-                    <svg viewBox="0 0 24 24">
-                      <rect x="3" y="4" width="18" height="18" rx="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                  </div>
-                  <input id="ent-createdAt" type="date" formControlName="createdAt" style="color: var(--text-light);">
-                </div>
-              </div>
-            </div>
           </div>
 
           <button type="button" class="btn-submit btn-enterprise" [disabled]="submitting()"
@@ -297,14 +325,11 @@
         <p class="signin-link">Already have an account? <a routerLink="/login">Sign in</a></p>
       </div>
 
-      <!-- ══ DEVELOPER FORM ══ -->
-      <div class="form-panel" [class.active]="activeTab() === 'developer'" id="panel-developer">
-        <p class="form-section-title">Create a Developer Account</p>
+      <!-- personal FORM  -->
+      <div class="form-panel" [class.active]="activeTab() === 'personal'" id="panel-personal">
+        <p class="form-section-title">Create a Personal Account</p>
 
-        <form [formGroup]="developerForm">
-          @if (developerForm.invalid && developerForm.touched) {
-          <p class="form-error">Please fill in all required fields.</p>
-          }
+        <form [formGroup]="personalForm">
           <div class="fields-grid">
             <div class="fields-row">
               <div class="field-group dev-field">
@@ -316,7 +341,7 @@
                       <circle cx="12" cy="7" r="4" />
                     </svg>
                   </div>
-                  <input id="dev-firstName" type="text" formControlName="firstName" placeholder="Enter first name"
+                  <input id="dev-firstName" type="text" formControlName="firstName" placeholder="Mohamed"
                     autocomplete="given-name">
                 </div>
               </div>
@@ -329,9 +354,22 @@
                       <circle cx="12" cy="7" r="4" />
                     </svg>
                   </div>
-                  <input id="dev-lastName" type="text" formControlName="lastName" placeholder="Enter last name"
+                  <input id="dev-lastName" type="text" formControlName="lastName" placeholder="Ben Mohamed"
                     autocomplete="family-name">
                 </div>
+              </div>
+            </div>
+            <div class="field-group dev-field">
+              <label class="field-label" for="dev-techStack">Profession</label>
+              <div class="field-input-wrap">
+                <div class="field-icon">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                  </svg>
+                </div>
+                <input id="dev-techStack" type="text" formControlName="profession"
+                  placeholder="Student,Developer,Data Scientist" autocomplete="off">
               </div>
             </div>
 
@@ -344,7 +382,7 @@
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                   </svg>
                 </div>
-                <input id="dev-email" type="email" formControlName="email" placeholder="developer@example.com"
+                <input id="dev-email" type="email" formControlName="email" placeholder="personal@example.com"
                   autocomplete="email">
               </div>
             </div>
@@ -352,49 +390,71 @@
             <div class="fields-row">
               <div class="field-group dev-field">
                 <label class="field-label" for="dev-password">Password</label>
-                <div class="field-input-wrap">
+                <div class="field-input-wrap has-toggle">
                   <div class="field-icon">
-                    <svg viewBox="0 0 24 24">
-                      <rect x="3" y="11" width="18" height="11" rx="2" />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
                   </div>
-                  <input id="dev-password" type="password" formControlName="password" placeholder="·········"
-                    autocomplete="new-password">
+
+                  <input id="dev-password" [type]="showPassword() ? 'text' : 'password'" formControlName="password"
+                    placeholder="........" autocomplete="new-password">
+
+                  <button type="button" class="field-visibility-btn" (click)="togglePassword()"
+                    [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+
+                    @if (showPassword()) {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path
+                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                    }
+                  </button>
                 </div>
               </div>
+
               <div class="field-group dev-field">
                 <label class="field-label" for="dev-confirmPass">Confirm Password</label>
-                <div class="field-input-wrap">
+                <div class="field-input-wrap has-toggle">
                   <div class="field-icon">
-                    <svg viewBox="0 0 24 24">
-                      <rect x="3" y="11" width="18" height="11" rx="2" />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
                   </div>
-                  <input id="dev-confirmPass" type="password" formControlName="confirmPass" placeholder="·········"
-                    autocomplete="new-password">
-                </div>
-              </div>
-            </div>
 
-            <div class="field-group dev-field">
-              <label class="field-label" for="dev-techStack">Developer Specialty / Tech Stack</label>
-              <div class="field-input-wrap">
-                <div class="field-icon">
-                  <svg viewBox="0 0 24 24">
-                    <polyline points="16 18 22 12 16 6" />
-                    <polyline points="8 6 2 12 8 18" />
-                  </svg>
+                  <input id="dev-confirmPass" [type]="showConfirmPassword() ? 'text' : 'password'"
+                    formControlName="confirmPass" placeholder="........" autocomplete="new-password">
+
+                  <button type="button" class="field-visibility-btn" (click)="toggleConfirmPassword()"
+                    [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'">
+
+                    @if (showConfirmPassword()) {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path
+                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                    }
+                  </button>
                 </div>
-                <input id="dev-techStack" type="text" formControlName="techStack"
-                  placeholder="Cloud Native, K8s, Python" autocomplete="off">
               </div>
             </div>
           </div>
 
-          <button type="button" class="btn-submit btn-developer" [disabled]="submitting()"
-            (click)="onSubmitDeveloper()">
+          <button type="button" class="btn-submit btn-personal" [disabled]="submitting()" (click)="onSubmitPersonal()">
             Sign Up
           </button>
         </form>

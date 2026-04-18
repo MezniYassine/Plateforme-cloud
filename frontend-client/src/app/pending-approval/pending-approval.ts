@@ -1,26 +1,26 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-pending-approval',
   standalone: true,
   imports: [RouterLink],
-  template: `
-    <div class="wrap">
-      <h1>Pending approval</h1>
-      <p>Your enterprise registration was received. An administrator will validate your account.</p>
-      <a routerLink="/">Back to home</a>
-    </div>
-  `,
-  styles: `
-    .wrap {
-      font-family: 'DM Sans', system-ui, sans-serif;
-      padding: 3rem;
-      max-width: 40rem;
-    }
-    a {
-      color: #1a56e8;
-    }
-  `,
+  templateUrl: './pending-approval.component.html',
+  styleUrl: './pending-approval.component.scss'
 })
-export class PendingApprovalComponent {}
+export class PendingApprovalComponent {
+
+  constructor(private router: Router) {
+    // 1. On récupère la navigation en cours (doit être fait dans le constructeur)
+    const navigation = this.router.getCurrentNavigation();
+
+    // 2. On extrait l'état (state) passé lors de la redirection
+    const fromSignup = navigation?.extras.state?.['fromSignup'];
+
+    // 3. Si l'état n'existe pas ou est faux, on redirige vers l'accueil
+    if (!fromSignup) {
+      void this.router.navigate(['/']);
+    }
+  }
+
+}

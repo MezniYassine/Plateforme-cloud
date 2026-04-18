@@ -2,31 +2,38 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Client } from './entities/client.entity';
-import { Developpeur } from './entities/developpeur.entity';
+import { Personal } from './entities/personal.entity';
 import { Entreprise } from './entities/entreprise.entity';
-import { UserC } from './entities/userC.entity';
+import { RoleClient } from 'src/enum/role-client.enum';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(Client)
     private clientRepo: Repository<Client>,
-    @InjectRepository(Developpeur)
-    private developpeurRepo: Repository<Developpeur>,
+    @InjectRepository(Personal)
+    private personalRepo: Repository<Personal>,
     @InjectRepository(Entreprise)
     private entrepriseRepo: Repository<Entreprise>,
-    @InjectRepository(UserC)
-    private userCRepo: Repository<UserC>,
   ) { }
 
   /** Find a user by email (used by AuthService for login) */
   async findByEmail(email: string): Promise<Client | null> {
-    return this.clientRepo.findOne({ where: { email } });
+    // J'ai ajouté 'relations' pour que lors de la connexion, tu récupères
+    // aussi les infos de son entreprise ou de son profil perso.
+    return this.clientRepo.findOne({
+      where: { email },
+      relations: ['entreprise', 'personal']
+    });
+  }
+
+  async findByTaxId(taxId: string): Promise<Entreprise | null> {
+    return this.entrepriseRepo.findOne({ where: { identifiantFiscal: taxId } });
   }
 
   /** Get all users */
   async findAll(): Promise<Client[]> {
-    return this.clientRepo.find();
+    return this.clientRepo.find({ relations: ['entreprise', 'personal'] });
   }
 
   /** Legacy generic create (kept for backward compatibility) */
@@ -35,7 +42,7 @@ export class UsersService {
     return this.clientRepo.save(newUser);
   }
 
-  /** Create a Client + Entreprise atomically */
+  /** Create an Entreprise and its first Admin atomically */
   async createEnterprise(data: {
     nom: string;
     prenom: string;
@@ -43,69 +50,55 @@ export class UsersService {
     password: string;
     companyName: string;
     taxId: string;
-    createdAt: string;
   }): Promise<Client> {
-    // 1. Save Client base row
-    const client = this.clientRepo.create({
-      nom: data.nom,
-      prenom: data.prenom,
-      email: data.email,
-      password: data.password,
-    });
-    const savedClient = await this.clientRepo.save(client);
-
-    // 2. Save Entreprise row referencing the Client id
+    // 1. On crée l'Entreprise en premier (elle obtient son propre ID)
     const entreprise = this.entrepriseRepo.create({
-      id: savedClient.id,
       nomEntreprise: data.companyName,
-      identifiantFiscal: Number(data.taxId),
-      maxUtilisateurs: 10, // default quota
+      identifiantFiscal: data.taxId,
+      maxUtilisateurs: 10,
     });
-    await this.entrepriseRepo.save(entreprise);
+    const savedEntreprise = await this.entrepriseRepo.save(entreprise);
 
-    return savedClient;
-  }
-
-  /** Create a Client + Developpeur atomically */
-  async createDeveloper(data: {
-    nom: string;
-    prenom: string;
-    email: string;
-    password: string;
-    techStack: string;
-  }): Promise<Client> {
-    // 1. Save Client base row
+    // 2. On crée le Client Admin et on le relie à l'entreprise
     const client = this.clientRepo.create({
       nom: data.nom,
       prenom: data.prenom,
       email: data.email,
       password: data.password,
+      role: RoleClient.ENTREPRISE_ADMIN, // Assigne le rôle Admin
+      entreprise: savedEntreprise,       // Lie le client à l'entreprise
     });
-    const savedClient = await this.clientRepo.save(client);
 
-    // 2. Save Developpeur row referencing the Client id
-    const dev = this.developpeurRepo.create({
-      id: savedClient.id,
-      specialite: data.techStack,
-    });
-    await this.developpeurRepo.save(dev);
-
-    return savedClient;
+    return this.clientRepo.save(client);
   }
 
-  async createUserC(data: {
+  /** Create a Personal user (Particulier) atomically */
+  async createPersonal(data: {
     nom: string;
     prenom: string;
     email: string;
     password: string;
-  }): Promise<UserC> {
-    const user = this.userCRepo.create({
+    profession: string;
+  }): Promise<Client> {
+    // 1. On crée le Client de base
+    const client = this.clientRepo.create({
       nom: data.nom,
       prenom: data.prenom,
       email: data.email,
       password: data.password,
+      role: RoleClient.PERSONNEL, // Assigne le rôle Personnel
     });
-    const savedUser = await this.userCRepo.save(user);
-    return savedUser;
+    const savedClient = await this.clientRepo.save(client);
+
+    // 2. On crée le profil Personal avec le MÊME ID (Clé partagée)
+    const personalProfile = this.personalRepo.create({
+      id: savedClient.id, // ID explicite pour la relation 1:1
+      profession: data.profession,
+    });
+    await this.personalRepo.save(personalProfile);
+
+    // Optionnel : on attache l'objet pour le retour propre de la fonction
+    savedClient.personal = personalProfile;
+    return savedClient;
   }
 }
