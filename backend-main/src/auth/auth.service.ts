@@ -7,6 +7,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
+import { MailerService } from '@nestjs-modules/mailer';
+import { ConfigService } from '@nestjs/config';
 
 // --- DTOs ---
 export interface RegisterEnterpriseDto {
@@ -36,6 +38,8 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
   ) { }
 
   // 1. Inscription d'une Entreprise (et de son premier Admin)
@@ -64,11 +68,31 @@ export class AuthService {
       companyName: dto.companyName,
       taxId: dto.taxId,
     });
+    const adminEmail = this.configService.get<string>('ADMIN_GLOBAL_EMAIL');
+
+    if (adminEmail) {
+      await this.mailerService.sendMail({
+        to: adminEmail,
+        subject: '🔔 Nouvelle inscription d\'entreprise à valider',
+        html: `
+        <h3>Nouvelle inscription sur Dynamix</h3>
+        <p>Une nouvelle entreprise <strong>${dto.companyName}</strong> a été créée et attend votre validation.</p>
+        <ul>
+          <li><strong>Contact :</strong> ${dto.firstName} ${dto.lastName}</li>
+          <li><strong>Email :</strong> ${dto.email}</li>
+          <li><strong>SIRET :</strong> ${dto.taxId}</li>
+        </ul>
+        <p>Veuillez vous connecter à votre console d'administration pour traiter cette demande.</p>
+      `,
+      }).catch(err => {
+        console.error("Erreur lors de l'envoi de l'email à l'admin:", err);
+      });
+    }
 
     return { ok: true, message: 'Enterprise account created. Awaiting approval.' };
   }
 
-  // 2. Inscription d'un Particulier (Anciennement Developer)
+  // 2. Inscription d'un Particulier
   async registerPersonal(dto: RegisterPersonalDto) {
     if (!dto.email || !dto.password || !dto.firstName || !dto.lastName) {
       throw new BadRequestException('Missing required fields');
@@ -88,6 +112,26 @@ export class AuthService {
       password: hashedPassword,
       profession: dto.profession ?? '',
     });
+    const adminEmail = this.configService.get<string>('ADMIN_GLOBAL_EMAIL');
+
+    if (adminEmail) {
+      await this.mailerService.sendMail({
+        to: adminEmail,
+        subject: '🔔 Nouveau compte Particulier à valider',
+        html: `
+        <h3>Nouvelle inscription sur Dynamix</h3>
+        <p>Un nouveau compte <strong>Particulier</strong> a été créé et attend votre validation.</p>
+        <ul>
+          <li><strong>Nom :</strong> ${dto.firstName} ${dto.lastName}</li>
+          <li><strong>Email :</strong> ${dto.email}</li>
+          <li><strong>Profession :</strong> ${dto.profession ?? 'Non renseignée'}</li>
+        </ul>
+        <p>Veuillez vous connecter à votre console d'administration pour traiter cette demande.</p>
+      `,
+      }).catch(err => {
+        console.error("Erreur lors de l'envoi de l'email à l'admin:", err);
+      });
+    }
 
     return { ok: true, message: 'Personal account created successfully.' };
   }
@@ -98,8 +142,16 @@ export class AuthService {
       throw new BadRequestException('Email and password are required');
     }
 
-    // On récupère le Client (qui contient son rôle, son statut et ses relations)
-    const user = await this.usersService.findByEmail(dto.email);
+    let user: any = await this.usersService.findByEmail(dto.email);
+    let isGlobalAdmin = false;
+
+    if (!user) {
+      user = await this.usersService.findAdminByEmail(dto.email);
+      if (user) {
+        isGlobalAdmin = true;
+      }
+    }
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -110,25 +162,28 @@ export class AuthService {
     }
 
     // --- SÉCURITÉ JWT ---
-    // On injecte le VRAI rôle et statut de la base de données dans le token
+    const role = isGlobalAdmin ? 'GLOBAL_ADMIN' : user.role;
+    const status = isGlobalAdmin ? 'APPROVED' : user.status;
+    const requiresMFA = isGlobalAdmin ? false : (user.mfaStatus === 'ACTIVE');
+
     const payload = {
       sub: user.id,
       email: user.email,
-      role: user.role,
-      status: user.status,
-      entrepriseId: user.entreprise ? user.entreprise.id : null // Pratique pour le frontend
+      role: role,
+      status: status,
+      entrepriseId: isGlobalAdmin ? null : (user.entreprise ? user.entreprise.id : null)
     };
 
     const token = this.jwtService.sign(payload);
 
     return {
-      requiresMFA: user.mfaStatus === 'ACTIVE', // Dynamique selon la DB
+      requiresMFA,
       token,
       user: {
         id: user.id,
         email: user.email,
-        role: user.role,
-        status: user.status
+        role: role,
+        status: status
       }
     };
   }

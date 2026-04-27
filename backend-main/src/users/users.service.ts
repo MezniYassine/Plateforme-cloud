@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Client } from './entities/client.entity';
-import { Personal } from './entities/personal.entity';
-import { Entreprise } from './entities/entreprise.entity';
+import { Client } from '../entities/client.entity';
+import { Personal } from '../entities/personal.entity';
+import { Entreprise } from '../entities/entreprise.entity';
+import { Admin } from '../entities/admin.entity';
 import { RoleClient } from 'src/enum/role-client.enum';
+import { AccountStatus } from 'src/enum/account-status.enum';
 
 @Injectable()
 export class UsersService {
@@ -15,16 +17,20 @@ export class UsersService {
     private personalRepo: Repository<Personal>,
     @InjectRepository(Entreprise)
     private entrepriseRepo: Repository<Entreprise>,
+    @InjectRepository(Admin)
+    private adminRepo: Repository<Admin>,
   ) { }
 
   /** Find a user by email (used by AuthService for login) */
   async findByEmail(email: string): Promise<Client | null> {
-    // J'ai ajouté 'relations' pour que lors de la connexion, tu récupères
-    // aussi les infos de son entreprise ou de son profil perso.
     return this.clientRepo.findOne({
       where: { email },
       relations: ['entreprise', 'personal']
     });
+  }
+
+  async findAdminByEmail(email: string): Promise<Admin | null> {
+    return this.adminRepo.findOne({ where: { email } });
   }
 
   async findByTaxId(taxId: string): Promise<Entreprise | null> {
@@ -40,6 +46,16 @@ export class UsersService {
   async create(userData: Partial<Client>): Promise<Client> {
     const newUser = this.clientRepo.create(userData);
     return this.clientRepo.save(newUser);
+  }
+
+  /** Update user status */
+  async updateStatus(id: number, status: AccountStatus): Promise<Client> {
+    const client = await this.clientRepo.findOne({ where: { id } });
+    if (!client) {
+      throw new Error('Client not found');
+    }
+    client.status = status;
+    return this.clientRepo.save(client);
   }
 
   /** Create an Entreprise and its first Admin atomically */
