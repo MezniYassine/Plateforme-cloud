@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Component, inject, PLATFORM_ID } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 @Component({
@@ -10,16 +11,21 @@ import { Router, RouterLink } from '@angular/router';
 })
 export class PendingApprovalComponent {
 
+  private platformId = inject(PLATFORM_ID);
+  isBrowserAndReady = false;
   constructor(private router: Router) {
-    // 1. On récupère la navigation en cours (doit être fait dans le constructeur)
-    const navigation = this.router.getCurrentNavigation();
 
-    // 2. On extrait l'état (state) passé lors de la redirection
-    const fromSignup = navigation?.extras.state?.['fromSignup'];
+  }
+  ngOnInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      const token = localStorage.getItem('access_token');
 
-    // 3. Si l'état n'existe pas ou est faux, on redirige vers l'accueil
-    if (!fromSignup) {
-      void this.router.navigate(['/']);
+      if (!token) {
+        this.router.navigate(['/']);
+        return;
+      }
+      this.isBrowserAndReady = true;
+
     }
   }
 

@@ -1,0 +1,72 @@
+<div class="stats-row">
+  @for (s of k8sStats(); track s.label) {
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-label">{{ s.label }}</span>
+      <div class="stat-icon" [style.background]="s.bg">
+        <svg viewBox="0 0 24 24" [attr.stroke]="s.color" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+        </svg>
+      </div>
+    </div>
+    <div class="stat-value">{{ s.val }}</div>
+    <div class="stat-footer"><span class="stat-period">{{ s.sub }}</span></div>
+  </div>
+  }
+</div>
+
+<div class="main-grid">
+  <div class="section-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Namespaces &amp; Pods</div>
+        <div class="card-sub">Cluster Kubernetes de production</div>
+      </div>
+      <button class="btn-sm primary">+ Namespace</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Namespace</th><th>Tenant</th><th>Pods</th>
+            <th>Services</th><th>CPU req.</th><th>RAM req.</th><th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (n of k8sNamespaces(); track n.id) {
+          <tr>
+            <td><span class="mono-tag">{{ n.name }}</span></td>
+            <td style="font-size:13px;color:var(--text-secondary)">{{ n.tenant }}</td>
+            <td><span style="font-weight:600">{{ n.pods }}</span></td>
+            <td>{{ n.services }}</td>
+            <td>{{ n.cpuReq }}</td>
+            <td>{{ n.ramReq }}</td>
+            <td><span class="badge" [class]="n.status">
+              <div class="badge-dot"></div>{{ n.status === 'approved' ? 'Running' : 'Warning' }}
+            </span></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="section-card">
+      <div class="card-header"><div class="card-title">Ressources cluster</div></div>
+      <div class="infra-list">
+        @for (m of k8sResources(); track m.label) {
+        <div class="infra-row">
+          <div class="infra-header">
+            <span class="infra-label">{{ m.label }}</span>
+            <span class="infra-val">{{ m.val }}</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" [class]="'fill-'+m.color" [style.width]="m.pct+'%'"></div></div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

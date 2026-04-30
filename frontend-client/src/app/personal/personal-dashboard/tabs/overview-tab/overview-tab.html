@@ -1,0 +1,174 @@
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="sc-top">
+      <span class="sc-label">VMs actives</span>
+      <div class="sc-icon" style="background:var(--blue-l)">
+        <svg viewBox="0 0 24 24" stroke="var(--blue)">
+          <rect x="2" y="3" width="20" height="5" rx="2" />
+          <rect x="2" y="11" width="20" height="5" rx="2" />
+        </svg>
+      </div>
+    </div>
+    <div class="sc-val">{{ vms().length }}</div>
+    <div class="sc-sub">Instances provisionnées</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-top">
+      <span class="sc-label">Services PaaS</span>
+      <div class="sc-icon" style="background:var(--teal-l)">
+        <svg viewBox="0 0 24 24" stroke="var(--teal)">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+        </svg>
+      </div>
+    </div>
+    <div class="sc-val">2</div>
+    <div class="sc-sub">PostgreSQL · Redis</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-top">
+      <span class="sc-label">Consommation mois</span>
+      <div class="sc-icon" style="background:var(--amber-l)">
+        <svg viewBox="0 0 24 24" stroke="var(--amber)">
+          <line x1="12" y1="1" x2="12" y2="23" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+      </div>
+    </div>
+    <div class="sc-val">57.50</div>
+    <div class="sc-sub">DT · sur 200 DT budget</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-top">
+      <span class="sc-label">Solde wallet</span>
+      <div class="sc-icon" style="background:var(--green-l)">
+        <svg viewBox="0 0 24 24" stroke="var(--green)">
+          <rect x="1" y="4" width="22" height="16" rx="2" />
+          <line x1="1" y1="10" x2="23" y2="10" />
+        </svg>
+      </div>
+    </div>
+    <div class="sc-val">{{ wallet().toFixed(2) }}</div>
+    <div class="sc-sub">DT disponibles</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- VM Quick List -->
+  <div class="sc">
+    <div class="sc-head">
+      <div>
+        <div class="sc-title">Mes instances</div>
+        <div class="sc-desc">Ressources IaaS en cours</div>
+      </div>
+      <button class="btn btn-primary" (click)="openDeploy.emit({ type: 'vm', name: '' })">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+        Déployer
+      </button>
+    </div>
+    <div class="vm-list">
+      @for (v of vms(); track v.id) {
+      <div class="vm-card">
+        <div class="vm-top">
+          <div class="vm-name-row">
+            <div class="vm-icon" style="background:var(--blue-l)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round">
+                <rect x="2" y="3" width="20" height="5" rx="2" />
+                <rect x="2" y="11" width="20" height="5" rx="2" />
+              </svg>
+            </div>
+            <div>
+              <div class="vm-name">{{v.name}}</div>
+              <div class="vm-id">{{v.ip}}</div>
+            </div>
+          </div>
+          <span class="badge" [class]="v.status"><div class="badge-dot"></div>{{ v.status }}</span>
+        </div>
+        <div class="vm-specs">
+          <span class="vm-spec"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /></svg>{{v.cpu}} vCPU</span>
+          <span class="vm-spec"><svg viewBox="0 0 24 24"><path d="M2 20h20M4 20V10l8-6 8 6v10" /></svg>{{v.ram}} GB RAM</span>
+          <span class="vm-spec"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>{{v.disk}} GB</span>
+        </div>
+        @if (v.status === 'running') {
+        <div class="vm-metrics">
+          <div class="metric-row">
+            <div class="metric-label">CPU</div>
+            <div class="metric-bar"><div class="metric-fill" [style.width.%]="v.cpuUse" [style.background]="h.metricColor(v.cpuUse)"></div></div>
+            <div class="metric-val">{{v.cpuUse}}%</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-label">RAM</div>
+            <div class="metric-bar"><div class="metric-fill" [style.width.%]="v.ramUse" [style.background]="h.metricColor(v.ramUse)"></div></div>
+            <div class="metric-val">{{v.ramUse}}%</div>
+          </div>
+        </div>
+        }
+        <div class="vm-actions">
+          @if (v.status === 'running') { <button class="vm-btn stop" (click)="onVmAction(v.id, 'stop')">Arrêter</button> }
+          @if (v.status === 'stopped') { <button class="vm-btn start" (click)="onVmAction(v.id, 'start')">Démarrer</button> }
+          <button class="vm-btn console">Console</button>
+          <button class="vm-btn delete" (click)="onVmAction(v.id, 'delete')" style="margin-left:auto">Supprimer</button>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- Right: PaaS + budget -->
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div class="sc">
+      <div class="sc-head">
+        <div class="sc-title">Services managés</div>
+        <button class="btn btn-ghost" (click)="switchTab.emit('paas')">Voir tout</button>
+      </div>
+      <div style="padding:10px 12px 14px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:30px;height:30px;background:var(--blue-l);border-radius:7px;display:flex;align-items:center;justify-content:center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              </svg>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600">PostgreSQL 16</div>
+              <div style="font-size:11px;color:var(--text-3)">db.prod-01 · 4GB RAM</div>
+            </div>
+          </div>
+          <span class="badge running"><div class="badge-dot"></div>Running</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:30px;height:30px;background:var(--red-l);border-radius:7px;display:flex;align-items:center;justify-content:center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+              </svg>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600">Redis Cache</div>
+              <div style="font-size:11px;color:var(--text-3)">cache.dev-01 · 1GB</div>
+            </div>
+          </div>
+          <span class="badge running"><div class="badge-dot"></div>Running</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget bar -->
+    <div class="sc">
+      <div class="sc-head"><div class="sc-title">Budget mensuel</div></div>
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12.5px">
+          <span style="color:var(--text-2)">Consommé ce mois</span>
+          <span style="font-weight:600;color:var(--text-1)">57.50 / 200 DT</span>
+        </div>
+        <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+          <div style="width:28.75%;height:100%;background:linear-gradient(90deg,var(--blue),#60a5fa);border-radius:4px"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-3)">
+          <span>28.75% utilisé</span>
+          <span>142.50 DT restants</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

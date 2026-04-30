@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -12,6 +13,7 @@ export const routes: Routes = [
   },
   {
     path: 'pending-approval',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pending-approval/pending-approval').then(
         (m) => m.PendingApprovalComponent,
@@ -19,12 +21,25 @@ export const routes: Routes = [
   },
   {
     path: 'console',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./console/console').then((m) => m.ConsolePageComponent),
+  },
+  {
+    path: 'admin-dashboard',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./admin/admin-dashboard/admin-dashboard').then((m) => m.AdminDashboard),
   },
   {
     path: 'login',
     loadComponent: () =>
       import('./login/login').then((m) => m.LoginComponent),
-  }
+  },
+  {
+    path: 'personal-dashboard',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./personal/personal-dashboard/personal-dashboard').then((m) => m.PersonalDashboard),
+  },
 ];

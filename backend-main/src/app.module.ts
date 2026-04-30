@@ -9,6 +9,7 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { MailtrapTransport } from 'mailtrap';
 import { AdminModule } from './admin/admin.module';
+import { PersonnelModule } from './personnel/personnel.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AdminModule } from './admin/admin.module';
     UsersModule,
     InfrastructureModule,
     AdminModule,
+    PersonnelModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

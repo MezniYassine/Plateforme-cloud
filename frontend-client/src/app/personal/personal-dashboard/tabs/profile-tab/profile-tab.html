@@ -1,0 +1,44 @@
+<div style="max-width:600px">
+  <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:18px">Mon profil</div>
+  <div class="sc" style="margin-bottom:16px">
+    <div class="sc-head">
+      <div class="sc-title">Informations personnelles</div>
+      <button class="btn btn-ghost">Modifier</button>
+    </div>
+    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field"><div class="field-label">Prénom</div><input type="text" value="Yassine"></div>
+        <div class="field"><div class="field-label">Nom</div><input type="text" value="Mezni"></div>
+      </div>
+      <div class="field"><div class="field-label">Email</div><input type="email" value="y.mezni&#64;dev.tn"></div>
+      <div class="field"><div class="field-label">Spécialité / Tech Stack</div><input type="text" value="Cloud Native, K8s, Python, NestJS"></div>
+      <button class="btn btn-primary" style="width:fit-content">Enregistrer les modifications</button>
+    </div>
+  </div>
+  <div class="sc">
+    <div class="sc-head"><div class="sc-title">Sécurité</div></div>
+    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:var(--r-sm)">
+        <div>
+          <div style="font-size:13.5px;font-weight:600">Authentification MFA</div>
+          <div style="font-size:12px;color:var(--text-3)">Protège votre compte avec un code TOTP</div>
+        </div>
+        <button class="btn btn-primary">Activer</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:var(--r-sm)">
+        <div>
+          <div style="font-size:13.5px;font-weight:600">Clés API</div>
+          <div style="font-size:12px;color:var(--text-3)">Accès programmatique à vos ressources</div>
+        </div>
+        <button class="btn btn-ghost">Gérer</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:var(--r-sm)">
+        <div>
+          <div style="font-size:13.5px;font-weight:600">Changer le mot de passe</div>
+          <div style="font-size:12px;color:var(--text-3)">Dernière modification il y a 30 jours</div>
+        </div>
+        <button class="btn btn-ghost">Modifier</button>
+      </div>
+    </div>
+  </div>
+</div>

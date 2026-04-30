@@ -1,9 +1,10 @@
-import { Controller, Patch, Param, Body, ParseIntPipe, Get } from '@nestjs/common';
+import { Controller, Patch, Param, Body, ParseIntPipe, Get, UseGuards, Req } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AccountStatus } from 'src/enum/account-status.enum';
-// Import AccountStatus
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('admin')
+@UseGuards(JwtAuthGuard)
 export class AdminController {
     constructor(private readonly adminService: AdminService) { }
 
@@ -18,5 +19,11 @@ export class AdminController {
     @Get('clients')
     async findAll() {
         return this.adminService.findAll();
+    }
+    @Get('me')
+    async getProfile(@Req() req) {
+        // req.user contient le payload du JWT (req.user.sub == id)
+        const adminId = parseInt(req.user.sub, 10);
+        return this.adminService.getProfile(adminId);
     }
 }

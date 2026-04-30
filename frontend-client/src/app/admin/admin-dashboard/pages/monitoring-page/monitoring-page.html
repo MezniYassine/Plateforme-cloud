@@ -1,0 +1,108 @@
+<div class="stats-row">
+  @for (s of monitorStats(); track s.label) {
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-label">{{ s.label }}</span>
+      <div class="stat-icon" [style.background]="s.bg">
+        <svg viewBox="0 0 24 24" [attr.stroke]="s.color" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      </div>
+    </div>
+    <div class="stat-value" [style.color]="s.valColor || 'var(--text-primary)'">{{ s.val }}</div>
+    <div class="stat-footer"><span class="stat-period">{{ s.sub }}</span></div>
+  </div>
+  }
+</div>
+
+@if (aiopsAlerts().length > 0) {
+<div class="aiops-banner">
+  <div class="aiops-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  </div>
+  <div>
+    <div class="aiops-title">AIOps — {{ aiopsAlerts().length }} alertes détectées</div>
+    <div class="aiops-sub">Analyse prédictive des logs · Dernière analyse : il y a 2 min</div>
+  </div>
+  <button class="btn-sm" style="margin-left:auto">Voir les alertes</button>
+</div>
+}
+
+<div class="main-grid">
+  <div class="section-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Métriques VMs (toutes instances)</div>
+        <div class="card-sub">Consolidation infrastructure globale</div>
+      </div>
+      <button class="btn-sm">Exporter rapport</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Instance</th><th>Tenant</th><th>CPU</th>
+            <th>RAM</th><th>Réseau</th><th>Uptime</th><th>Alerte</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of monitorVMs(); track v.id) {
+          <tr>
+            <td><span class="mono-tag">{{ v.name }}</span></td>
+            <td style="font-size:12.5px;color:var(--text-secondary)">{{ v.tenant }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:7px">
+                <div class="mini-bar">
+                  <div class="mini-fill" [style.width]="v.cpu+'%'"
+                    [style.background]="v.cpu>80?'var(--red)':v.cpu>60?'var(--amber)':'var(--blue)'"></div>
+                </div>
+                <span style="font-size:12px;font-weight:600">{{ v.cpu }}%</span>
+              </div>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:7px">
+                <div class="mini-bar">
+                  <div class="mini-fill" [style.width]="v.ram+'%'"
+                    [style.background]="v.ram>80?'var(--red)':v.ram>60?'var(--amber)':'var(--teal)'"></div>
+                </div>
+                <span style="font-size:12px;font-weight:600">{{ v.ram }}%</span>
+              </div>
+            </td>
+            <td style="font-size:12.5px">{{ v.net }}</td>
+            <td><span class="badge approved"><div class="badge-dot"></div>{{ v.uptime }}</span></td>
+            <td>
+              @if (v.alert) { <span class="badge rejected"><div class="badge-dot"></div>Critique</span> }
+              @else { <span class="badge approved"><div class="badge-dot"></div>OK</span> }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="section-card">
+      <div class="card-header"><div class="card-title">Alertes AIOps</div></div>
+      <div class="activity-list">
+        @for (a of aiopsAlerts(); track $index) {
+        <div class="activity-item">
+          <div class="activity-icon" [style.background]="a.bg">
+            <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="a.color" stroke-width="2" stroke-linecap="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+            </svg>
+          </div>
+          <div class="activity-text">
+            <div class="activity-msg" [innerHTML]="a.msg"></div>
+            <div class="activity-time">{{ a.time }}</div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

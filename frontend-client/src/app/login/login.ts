@@ -11,7 +11,7 @@ import { AuthService } from '../services/auth-service';
   styleUrl: './login.scss',
 })
 export class LoginComponent implements OnInit {
-  activeTab = signal<'enterprise' | 'personal'>('enterprise');
+  pendingRole = '';
   showMFA = false;
   isLoading = false;
   errorMsg = '';
@@ -19,6 +19,8 @@ export class LoginComponent implements OnInit {
   auth = inject(AuthService);
   router = inject(Router);
   route = inject(ActivatedRoute);
+  readonly showPassword = signal(false);
+
 
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -26,9 +28,6 @@ export class LoginComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.route.queryParams.subscribe((p) => {
-      this.activeTab.set(p['type'] === 'personal' ? 'personal' : 'enterprise');
-    });
   }
 
   onLogin() {
@@ -38,14 +37,18 @@ export class LoginComponent implements OnInit {
       .subscribe({
         next: (res) => {
           if (res.requiresMFA) {
+            this.pendingRole = res.user.role;
             this.showMFA = true;   // affiche le modal OTP
           } else {
-            this.saveTokenAndRedirect(res.token);
+            this.saveTokenAndRedirect(res.token, res.user.role, res.user.status);
           }
         },
         error: () => {
           this.isLoading = false;
-          this.errorMsg = 'Email ou mot de passe incorrect.';
+          this.errorMsg = 'Incorrect Email or password .';
+          setTimeout(() => {
+            this.errorMsg = '';
+          }, 4000);
         }
       });
     console.log(this.loginForm.value);
@@ -53,7 +56,7 @@ export class LoginComponent implements OnInit {
 
   onVerifyMFA(code: string) {
     this.auth.verifyMFA(code).subscribe({
-      next: (res) => this.saveTokenAndRedirect(res.token),
+      next: (res) => this.saveTokenAndRedirect(res.token, this.pendingRole),
     });
   }
 
@@ -72,13 +75,25 @@ export class LoginComponent implements OnInit {
     (document.getElementById('otp1') as HTMLInputElement)?.focus();
   }
 
-  switchTab(tab: 'enterprise' | 'personal') {
-    this.activeTab.set(tab);
-  }
-
-  private saveTokenAndRedirect(token: string) {
+  private saveTokenAndRedirect(token: string, role?: string, status?: string) {
     this.isLoading = false;
     localStorage.setItem('access_token', token);
-    this.router.navigate(['/console']);
+    if (role === 'GLOBAL_ADMIN') {
+      this.router.navigate(['/admin-dashboard']);
+    }
+    else if (role == 'PERSONNEL' && status == 'APPROVED') {
+      this.router.navigate(['/personal-dashboard']);
+    }
+    else if (status == 'PENDING_VALIDATION') {
+      this.router.navigate(['/pending-approval']);
+    }
+
+    else {
+      this.router.navigate(['/console']);
+    }
   }
+  togglePassword() {
+    this.showPassword.update(v => !v);
+  }
+
 }

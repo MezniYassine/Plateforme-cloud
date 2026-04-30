@@ -1,0 +1,101 @@
+<div class="stats-row">
+  @for (s of iamStats(); track s.label) {
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-label">{{ s.label }}</span>
+      <div class="stat-icon" [style.background]="s.bg">
+        <svg viewBox="0 0 24 24" [attr.stroke]="s.color" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      </div>
+    </div>
+    <div class="stat-value">{{ s.val }}</div>
+    <div class="stat-footer"><span class="stat-period">{{ s.sub }}</span></div>
+  </div>
+  }
+</div>
+
+<div class="main-grid">
+  <div class="section-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Utilisateurs &amp; Rôles</div>
+        <div class="card-sub">Contrôle d'accès basé sur les rôles (RBAC)</div>
+      </div>
+      <button class="btn-sm primary">+ Utilisateur</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Utilisateur</th><th>Rôle</th><th>Tenant</th>
+            <th>MFA</th><th>Dernière connexion</th><th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of iamUsers(); track u.id) {
+          <tr>
+            <td>
+              <div class="cell-company">
+                <div class="company-avatar" [style.background]="h.colorFor(u.id)">{{ h.getInitials(u.name) }}</div>
+                <div>
+                  <div class="company-name">{{ u.name }}</div>
+                  <div class="company-email">{{ u.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="role-badge" [attr.data-role]="u.role">{{ u.role }}</span></td>
+            <td style="font-size:12.5px;color:var(--text-secondary)">{{ u.tenant }}</td>
+            <td>
+              @if (u.mfa) { <span class="badge approved"><div class="badge-dot"></div>Actif</span> }
+              @else { <span class="badge pending"><div class="badge-dot"></div>Inactif</span> }
+            </td>
+            <td style="font-size:12.5px;color:var(--text-muted)">{{ u.lastLogin }}</td>
+            <td><span class="badge" [class]="u.active?'approved':'suspended'">
+              <div class="badge-dot"></div>{{ u.active ? 'Actif' : 'Suspendu' }}
+            </span></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="section-card">
+      <div class="card-header"><div class="card-title">Événements sécurité</div></div>
+      <div class="activity-list">
+        @for (e of securityEvents(); track $index) {
+        <div class="activity-item">
+          <div class="activity-icon" [style.background]="e.bg">
+            <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="e.color" stroke-width="2" stroke-linecap="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+          <div class="activity-text">
+            <div class="activity-msg" [innerHTML]="e.msg"></div>
+            <div class="activity-time">{{ e.time }}</div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="card-header">
+        <div class="card-title">Politiques globales</div>
+        <button class="btn-sm primary">Modifier</button>
+      </div>
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+        @for (p of securityPolicies(); track p.label) {
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text-primary)">{{ p.label }}</div>
+            <div style="font-size:11.5px;color:var(--text-muted)">{{ p.desc }}</div>
+          </div>
+          <div class="toggle-wrap" [class.on]="p.enabled"><div class="toggle-knob"></div></div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

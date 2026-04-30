@@ -1,0 +1,152 @@
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-label">Comptes Enterprise</span>
+      <div class="stat-icon" style="background:var(--blue-light)">
+        <svg viewBox="0 0 24 24" stroke="var(--blue)" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      </div>
+    </div>
+    <div class="stat-value">{{ enterpriseCount() }}</div>
+    <div class="stat-footer"><span class="stat-delta up">+3</span><span class="stat-period">ce mois</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-label">En attente</span>
+      <div class="stat-icon" style="background:var(--amber-light)">
+        <svg viewBox="0 0 24 24" stroke="var(--amber)" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <path d="M5 22h14" /><path d="M5 2h14" />
+          <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+          <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+        </svg>
+      </div>
+    </div>
+    <div class="stat-value">{{ pendingCount() }}</div>
+    <div class="stat-footer"><span class="stat-delta down">Action requise</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-label">Développeurs actifs</span>
+      <div class="stat-icon" style="background:var(--teal-light)">
+        <svg viewBox="0 0 24 24" stroke="var(--teal)" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+        </svg>
+      </div>
+    </div>
+    <div class="stat-value">{{ activeDevCount() }}</div>
+    <div class="stat-footer"><span class="stat-delta up">+11</span><span class="stat-period">ce mois</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-label">VMs actives</span>
+      <div class="stat-icon" style="background:var(--purple-light)">
+        <svg viewBox="0 0 24 24" stroke="var(--purple)" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <rect x="2" y="3" width="20" height="5" rx="2" />
+          <rect x="2" y="11" width="20" height="5" rx="2" />
+        </svg>
+      </div>
+    </div>
+    <div class="stat-value">87</div>
+    <div class="stat-footer"><span class="stat-delta up">+6</span><span class="stat-period">cette semaine</span></div>
+  </div>
+</div>
+
+<div class="main-grid">
+  <!-- Table inscriptions récentes -->
+  <div class="section-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Inscriptions récentes</div>
+        <div class="card-sub">Comptes en attente de validation</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-sm primary" (click)="navigateTo.emit('inscriptions')">Voir tout</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Entreprise</th><th>ID Fiscal</th><th>Date</th><th>Statut</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of tenants().slice(0,5); track t.id) {
+          <tr (click)="openModal.emit(t.id)">
+            <td>
+              <div class="cell-company">
+                <div class="company-avatar" [style.background]="h.colorFor(t.id)">{{ h.getInitials(t.company) }}</div>
+                <div>
+                  <div class="company-name">{{ t.company }}</div>
+                  <div class="company-email">{{ t.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="mono-tag">{{ t.taxId }}</span></td>
+            <td class="text-muted">{{ h.formatDate(t.registered) }}</td>
+            <td><span class="badge" [class]="t.status"><div class="badge-dot"></div>{{ h.getBadgeLabel(t.status) }}</span></td>
+            <td (click)="$event.stopPropagation()">
+              <div class="row-actions">
+                @if (t.status === 'pending') {
+                  <button class="action-btn approve" (click)="$event.stopPropagation(); onQuickAction(t.id,'approved')">Approuver</button>
+                  <button class="action-btn reject" (click)="$event.stopPropagation(); onQuickAction(t.id,'rejected')">Rejeter</button>
+                }
+                @if (t.status === 'approved') {
+                  <button class="action-btn suspend" (click)="$event.stopPropagation(); onQuickAction(t.id,'suspended')">Suspendre</button>
+                }
+                @if (t.status === 'rejected' || t.status === 'suspended') {
+                  <button class="action-btn approve" (click)="$event.stopPropagation(); onQuickAction(t.id,'approved')">Réactiver</button>
+                }
+                <button class="action-btn view" (click)="$event.stopPropagation(); openModal.emit(t.id)">Détails</button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Right col -->
+  <div class="right-col">
+    <div class="section-card">
+      <div class="card-header"><div class="card-title">Activité récente</div></div>
+      <div class="activity-list">
+        @for (a of activities().slice(0,5); track $index) {
+        <div class="activity-item">
+          <div class="activity-icon" [style.background]="a.bg">
+            <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="a.color" stroke-width="2" stroke-linecap="round">
+              @if (a.type === 'approve') { <polyline points="20 6 9 17 4 12" /> }
+              @else if (a.type === 'register') { <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /> }
+              @else if (a.type === 'reject') { <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /> }
+              @else { <rect x="2" y="3" width="20" height="5" rx="2" /><rect x="2" y="11" width="20" height="5" rx="2" /> }
+            </svg>
+          </div>
+          <div class="activity-text">
+            <div class="activity-msg" [innerHTML]="a.msg"></div>
+            <div class="activity-time">{{ a.time }}</div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="card-header">
+        <div class="card-title">Infrastructure</div>
+        <button class="btn-sm" (click)="navigateTo.emit('esxi')">Détails</button>
+      </div>
+      <div class="infra-list">
+        @for (m of infraMetrics(); track m.label) {
+        <div class="infra-row">
+          <div class="infra-header"><span class="infra-label">{{ m.label }}</span><span class="infra-val">{{ m.val }}</span></div>
+          <div class="progress-bar"><div class="progress-fill" [class]="'fill-'+m.color" [style.width]="m.pct+'%'"></div></div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

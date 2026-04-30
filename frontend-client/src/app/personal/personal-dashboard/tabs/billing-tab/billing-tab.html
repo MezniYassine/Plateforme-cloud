@@ -1,0 +1,46 @@
+<div class="wallet-hero">
+  <div>
+    <div class="wallet-bal-label">Solde disponible</div>
+    <div class="wallet-bal"><span>DT </span><span>{{wallet().toFixed(2)}}</span></div>
+    <div style="font-size:12px;opacity:.6;margin-top:6px">Dernière recharge · 15 juin 2025</div>
+  </div>
+  <div class="wallet-actions">
+    <button class="wallet-action-btn" (click)="openRecharge.emit()">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+      Recharger
+    </button>
+    <button class="wallet-action-btn">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+      Télécharger
+    </button>
+  </div>
+</div>
+
+<div class="sc">
+  <div class="sc-head">
+    <div>
+      <div class="sc-title">Historique des factures</div>
+      <div class="sc-desc">Facturation automatique mensuelle (pay-as-you-go)</div>
+    </div>
+  </div>
+  <table class="inv-table">
+    <thead>
+      <tr>
+        <th>Période</th><th>Réf. facture</th><th>Ressources</th>
+        <th>Montant</th><th>Statut</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (i of invoices(); track $index) {
+      <tr>
+        <td style="font-weight:600">{{i.period}}</td>
+        <td><span style="font-family:'DM Mono',monospace;font-size:12px;background:var(--bg-page);padding:2px 8px;border-radius:5px">{{i.ref}}</span></td>
+        <td style="color:var(--text-2)">{{i.resources}}</td>
+        <td style="font-family:'Syne',sans-serif;font-weight:700">{{i.amount}}</td>
+        <td><span class="badge" [class]="i.statusClass"><div class="badge-dot"></div>{{i.status}}</span></td>
+        <td><button class="btn btn-ghost" style="font-size:11.5px;padding:4px 10px">Télécharger</button></td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,33 @@
+<div style="margin-bottom:18px">
+  <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Catalogue SaaS</div>
+  <div style="font-size:12.5px;color:var(--text-3);margin-top:2px">Applications prêtes à l'emploi</div>
+</div>
+
+<div class="sc">
+  <div class="catalog-grid">
+    @for (s of saasServices(); track $index) {
+    <div class="catalog-card">
+      @if (s.tag) { <div class="catalog-tag" [style.background]="s.bg" [style.color]="s.tagColor">{{s.tag}}</div> }
+      <div class="cat-icon" [style.background]="s.bg" [style.stroke]="s.color">
+        @if (s.icon==='erp') {
+          <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" /></svg>
+        } @else if (s.icon==='cloud') {
+          <svg viewBox="0 0 24 24" fill="none"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" /></svg>
+        } @else if (s.icon==='git') {
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="18" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><path d="M13 6h3a2 2 0 0 1 2 2v7" /><line x1="6" y1="9" x2="6" y2="21" /></svg>
+        } @else if (s.icon==='chat') {
+          <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+        } @else if (s.icon==='monitor') {
+          <svg viewBox="0 0 24 24" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
+        } @else if (s.icon==='web') {
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
+        }
+      </div>
+      <div class="cat-name">{{s.name}}</div>
+      <div class="cat-desc">{{s.desc}}</div>
+      <div class="cat-price">{{s.price}} DT<span>/mois</span></div>
+      <div class="cat-specs">@for (sp of s.specs; track $index) { <span class="cat-spec">{{sp}}</span> }</div>
+    </div>
+    }
+  </div>
+</div>

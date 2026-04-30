@@ -1,0 +1,298 @@
+@if( isBrowserAndReady){
+<div class="app">
+
+  <!-- ══════ SIDEBAR ══════ -->
+  <aside class="sidebar">
+    <a class="sb-logo" href="#">
+      <div class="sb-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+        </svg>
+      </div>
+      <div>
+        <div class="sb-logo-name">Dynamix</div>
+        <div class="sb-logo-role">Espace Personnel</div>
+      </div>
+    </a>
+
+    <div class="sb-section">
+      <div class="sb-sec-label">Principal</div>
+      <div class="nav-item" [class.active]="activeTab() === 'overview'" (click)="switchTab('overview')">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+        Vue d'ensemble
+      </div>
+      <div class="nav-item" [class.active]="activeTab() === 'iaas'" (click)="switchTab('iaas')">
+        <svg viewBox="0 0 24 24">
+          <rect x="2" y="3" width="20" height="5" rx="2" />
+          <rect x="2" y="11" width="20" height="5" rx="2" />
+        </svg>
+        Mes VMs (IaaS)
+        <span class="nav-pill">{{ vms().length }}</span>
+      </div>
+      <div class="nav-item" [class.active]="activeTab() === 'paas'" (click)="switchTab('paas')">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+        </svg>
+        Services PaaS
+      </div>
+      <div class="nav-item" [class.active]="activeTab() === 'saas'" (click)="switchTab('saas')">
+        <svg viewBox="0 0 24 24">
+          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
+        </svg>
+        Catalogue SaaS
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-sec-label">Mon compte</div>
+      <div class="nav-item" [class.active]="activeTab() === 'monitor'" (click)="switchTab('monitor')">
+        <svg viewBox="0 0 24 24">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+        Monitoring
+      </div>
+      <div class="nav-item" [class.active]="activeTab() === 'billing'" (click)="switchTab('billing')">
+        <svg viewBox="0 0 24 24">
+          <line x1="12" y1="1" x2="12" y2="23" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+        Facturation &amp; Wallet
+      </div>
+      <div class="nav-item" [class.active]="activeTab() === 'profile'" (click)="switchTab('profile')">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        Mon profil
+      </div>
+    </div>
+
+    <div class="sb-footer">
+      <div class="user-card">
+        <div class="user-av">{{ actualPers()?.client?.nom?.charAt(0) }}{{ actualPers()?.client?.prenom?.charAt(0) }}
+        </div>
+        <div>
+          <div class="user-name">{{ actualPers ()?.client?.nom }} {{ actualPers()?.client?.prenom }}</div>
+          <div class="user-email">{{ actualPers()?.client?.email }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════ MAIN ══════ -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="tb-left">
+        <div class="tb-title">{{ titles[activeTab()] || "Vue d'ensemble" }}</div>
+        <div class="tb-bread">Personnel · Espace Cloud Dynamix</div>
+      </div>
+      <div class="tb-right">
+        <div class="wallet-chip" (click)="switchTab('billing')">
+          <svg viewBox="0 0 24 24">
+            <rect x="1" y="4" width="22" height="16" rx="2" />
+            <line x1="1" y1="10" x2="23" y2="10" />
+          </svg>
+          <div>
+            <div class="wallet-label">Solde</div>
+            <div class="wallet-amount">{{ wallet().toFixed(2) }} DT</div>
+          </div>
+        </div>
+        <div class="tb-btn">
+          <svg viewBox="0 0 24 24">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <div class="notif-dot"></div>
+        </div>
+        <div class="tb-btn">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      @if (activeTab() === 'overview') {
+      <app-overview-tab [vms]="vms()" [wallet]="wallet()" (openDeploy)="handleOpenDeploy($event)"
+        (switchTab)="switchTab($event)" (vmAction)="handleVmAction($event)" />
+      }
+
+      @if (activeTab() === 'iaas') {
+      <app-iaas-tab [vms]="vms()" (openDeploy)="handleOpenDeploy($event)" (vmAction)="handleVmAction($event)" />
+      }
+
+      @if (activeTab() === 'paas') {
+      <app-paas-tab (openDeploy)="handleOpenDeploy($event)" />
+      }
+
+      @if (activeTab() === 'saas') {
+      <app-saas-tab />
+      }
+
+      @if (activeTab() === 'monitor') {
+      <app-monitor-tab [vms]="vms()" [monitorBars]="monitorBars()" />
+      }
+
+      @if (activeTab() === 'billing') {
+      <app-billing-tab [wallet]="wallet()" (openRecharge)="openRecharge()" />
+      }
+
+      @if (activeTab() === 'profile') {
+      <app-profile-tab />
+      }
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ DEPLOY MODAL ══ -->
+<div class="modal-ov" [class.show]="isDeployModalOpen()" (click)="onOverlayClick($event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">{{ deployType() === 'vm' ? 'Déployer une VM' : 'Déployer ' + deployName() }}</div>
+        <div class="modal-sub">{{ deployType() === 'vm' ? 'Infrastructure as a Service — VMware ESXi' : 'Platform /
+          Software as a Service' }}</div>
+      </div>
+      <button class="modal-x" (click)="closeModal()">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      @if (deployType() === 'vm') {
+      <div class="field">
+        <div class="field-label">Nom de l'instance</div>
+        <input type="text" placeholder="ex: prod-web-01" (input)="updateDeployName($any($event.target).value)">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">Système d'exploitation</div>
+          <select>
+            <option>Ubuntu 22.04 LTS</option>
+            <option>Debian 12</option>
+            <option>CentOS 9</option>
+            <option>Windows Server 2022</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label">Région</div>
+          <select>
+            <option>Tunisie - DC Bizerte</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">vCPU</div>
+          <select (change)="updateCpu($any($event.target).value)">
+            <option value="1">1 vCPU</option>
+            <option value="2" selected>2 vCPU</option>
+            <option value="4">4 vCPU</option>
+            <option value="8">8 vCPU</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label">RAM</div>
+          <select (change)="updateRam($any($event.target).value)">
+            <option value="2">2 GB</option>
+            <option value="4" selected>4 GB</option>
+            <option value="8">8 GB</option>
+            <option value="16">16 GB</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Stockage SSD (GB)</div>
+        <select (change)="updateDisk($any($event.target).value)">
+          <option value="50" selected>50 GB</option>
+          <option value="100">100 GB</option>
+          <option value="200">200 GB</option>
+          <option value="500">500 GB</option>
+        </select>
+      </div>
+      } @else {
+      <div class="field">
+        <div class="field-label">Nom de l'instance</div>
+        <input type="text" placeholder="ex: inst-01">
+      </div>
+      <div class="field">
+        <div class="field-label">Service</div>
+        <select>
+          <option>{{deployName()}}</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">Plan mémoire</div>
+          <select>
+            <option>2 GB RAM</option>
+            <option selected>4 GB RAM</option>
+            <option>8 GB RAM</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label">Stockage</div>
+          <select>
+            <option>20 GB</option>
+            <option selected>50 GB</option>
+            <option>100 GB</option>
+          </select>
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="modal-foot">
+      <div class="cost-preview" style="flex:1;margin-right:14px">
+        <span class="cost-label">Coût estimé</span>
+        <span class="cost-val">~{{costPreview()}} DT/mois</span>
+      </div>
+      <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
+      <button class="btn btn-primary" style="margin-left:8px" (click)="confirmDeploy()">
+        <svg viewBox="0 0 24 24">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+        Déployer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" [class.show]="isToastVisible()">
+  <div class="toast-ic" [style.background]="toastColor()">
+    <svg viewBox="0 0 24 24">
+      @if (toastColor().includes('red')) {
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+      } @else {
+      <polyline points="20 6 9 17 4 12" />
+      }
+    </svg>
+  </div>
+  <span>{{ toastMsg() }}</span>
+</div>
+}
+@else{
+<div style="height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #f8f9fa;">
+  <h2>Vérification de la sécurité...</h2>
+</div>
+}

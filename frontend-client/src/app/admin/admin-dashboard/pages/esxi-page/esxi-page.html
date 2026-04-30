@@ -1,0 +1,71 @@
+<div class="stats-row">
+  @for (s of esxiStats(); track s.label) {
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-label">{{ s.label }}</span>
+      <div class="stat-icon" [style.background]="s.bg">
+        <svg viewBox="0 0 24 24" [attr.stroke]="s.color" fill="none" stroke-width="1.8" stroke-linecap="round">
+          <rect x="2" y="3" width="20" height="5" rx="2" /><rect x="2" y="11" width="20" height="5" rx="2" />
+        </svg>
+      </div>
+    </div>
+    <div class="stat-value">{{ s.val }}</div>
+    <div class="stat-footer"><span class="stat-period">{{ s.sub }}</span></div>
+  </div>
+  }
+</div>
+
+<div class="section-card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Nœuds VMware ESXi</div>
+      <div class="card-sub">Infrastructure physique · Datacenter Bizerte</div>
+    </div>
+    <button class="btn-sm primary">+ Ajouter un hôte</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Hôte ESXi</th><th>IP</th><th>vCPU total</th><th>RAM</th>
+          <th>CPU %</th><th>RAM %</th><th>VMs</th><th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (h of esxiHosts(); track h.id) {
+        <tr>
+          <td>
+            <div style="font-weight:600;font-size:13.5px">{{ h.name }}</div>
+            <div style="font-size:11.5px;color:var(--text-muted)">{{ h.model }}</div>
+          </td>
+          <td><span class="mono-tag">{{ h.ip }}</span></td>
+          <td>{{ h.vcpu }}</td>
+          <td>{{ h.ram }} GB</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="mini-bar">
+                <div class="mini-fill" [style.width]="h.cpuPct+'%'"
+                  [style.background]="h.cpuPct>80?'var(--red)':h.cpuPct>60?'var(--amber)':'var(--blue)'"></div>
+              </div>
+              <span style="font-size:12px;font-weight:600">{{ h.cpuPct }}%</span>
+            </div>
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="mini-bar">
+                <div class="mini-fill" [style.width]="h.ramPct+'%'"
+                  [style.background]="h.ramPct>80?'var(--red)':h.ramPct>60?'var(--amber)':'var(--teal)'"></div>
+              </div>
+              <span style="font-size:12px;font-weight:600">{{ h.ramPct }}%</span>
+            </div>
+          </td>
+          <td><span style="font-weight:600">{{ h.vms }}</span></td>
+          <td><span class="badge" [class]="h.status">
+            <div class="badge-dot"></div>{{ h.status === 'approved' ? 'Online' : 'Offline' }}
+          </span></td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

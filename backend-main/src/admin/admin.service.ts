@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Client } from 'src/entities/client.entity';
 import { AccountStatus } from 'src/enum/account-status.enum';
+import { Admin } from 'src/entities/admin.entity';
 
 @Injectable()
 export class AdminService {
@@ -11,6 +12,8 @@ export class AdminService {
         @InjectRepository(Client)
         private readonly clientRepo: Repository<Client>,
         private readonly mailerService: MailerService,
+        @InjectRepository(Admin)
+        private readonly adminRepository: Repository<Admin>,
     ) { }
 
     async updateStatus(id: number, status: AccountStatus): Promise<Client> {
@@ -50,6 +53,12 @@ export class AdminService {
         return updatedClient;
     }
     async findAll() {
-        return this.clientRepo.find();
+        return this.clientRepo.find({
+            relations: ['entreprise'],
+        });
     }
+    async getProfile(adminId: number) {
+        return this.adminRepository.findOne({ where: { id: adminId } });
+    }
+
 }

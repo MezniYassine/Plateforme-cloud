@@ -1,0 +1,69 @@
+<div class="section-card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">{{ activePage() === 'inscriptions' ? 'Inscriptions en attente' : 'Tous les locataires' }}</div>
+      <div class="card-sub">{{ filteredTenants().length }} compte(s) trouvé(s)</div>
+    </div>
+    <div class="card-actions">
+      <button class="btn-sm">Exporter CSV</button>
+      <button class="btn-sm primary" (click)="showAllTenants()">Tous les comptes</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+      <input type="text" placeholder="Rechercher une entreprise…" (input)="filterTable($event)">
+    </div>
+    <div class="filter-tabs">
+      <button class="filter-tab" [class.active]="currentFilter()==='all'" (click)="filterStatus('all')">Tous</button>
+      <button class="filter-tab" [class.active]="currentFilter()==='pending'" (click)="filterStatus('pending')">En attente</button>
+      <button class="filter-tab" [class.active]="currentFilter()==='approved'" (click)="filterStatus('approved')">Approuvés</button>
+      <button class="filter-tab" [class.active]="currentFilter()==='rejected'" (click)="filterStatus('rejected')">Rejetés</button>
+      <button class="filter-tab" [class.active]="currentFilter()==='suspended'" (click)="filterStatus('suspended')">Suspendus</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Entreprise</th><th>ID Fiscal</th><th>Date inscription</th><th>Statut</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (t of filteredTenants(); track t.id) {
+        <tr (click)="openModal.emit(t.id)">
+          <td>
+            <div class="cell-company">
+              <div class="company-avatar" [style.background]="h.colorFor(t.id)">{{ h.getInitials(t.company) }}</div>
+              <div>
+                <div class="company-name">{{ t.company }}</div>
+                <div class="company-email">{{ t.email }}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="mono-tag">{{ t.taxId }}</span></td>
+          <td class="text-muted">{{ h.formatDate(t.registered) }}</td>
+          <td><span class="badge" [class]="t.status"><div class="badge-dot"></div>{{ h.getBadgeLabel(t.status) }}</span></td>
+          <td (click)="$event.stopPropagation()">
+            <div class="row-actions">
+              @if (t.status === 'pending') {
+                <button class="action-btn approve" (click)="$event.stopPropagation(); onQuickAction(t.id,'approved')">Approuver</button>
+                <button class="action-btn reject" (click)="$event.stopPropagation(); onQuickAction(t.id,'rejected')">Rejeter</button>
+              }
+              @if (t.status === 'approved') {
+                <button class="action-btn suspend" (click)="$event.stopPropagation(); onQuickAction(t.id,'suspended')">Suspendre</button>
+              }
+              @if (t.status === 'rejected' || t.status === 'suspended') {
+                <button class="action-btn approve" (click)="$event.stopPropagation(); onQuickAction(t.id,'approved')">Réactiver</button>
+              }
+              <button class="action-btn view" (click)="$event.stopPropagation(); openModal.emit(t.id)">Détails</button>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

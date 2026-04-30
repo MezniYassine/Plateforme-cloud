@@ -1,0 +1,42 @@
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+  <div>
+    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Catalogue de services</div>
+    <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px">Gérez les offres IaaS, PaaS et SaaS disponibles pour les clients</div>
+  </div>
+  <button class="btn-sm primary">+ Nouveau service</button>
+</div>
+
+<div class="catalogue-tabs">
+  @for (tab of catalogueTabs(); track tab.key) {
+  <button class="filter-tab" [class.active]="catalogueFilter()===tab.key" (click)="setCatalogueFilter(tab.key)">{{ tab.label }}</button>
+  }
+</div>
+
+<div class="catalogue-grid">
+  @for (s of filteredCatalogue(); track s.id) {
+  <div class="catalogue-card">
+    @if (s.popular) { <div class="cat-tag" style="background:var(--purple-light);color:var(--purple)">Populaire</div> }
+    <div class="cat-icon" [style.background]="s.bg">
+      <svg viewBox="0 0 24 24" [attr.stroke]="s.color" fill="none" stroke-width="1.8" stroke-linecap="round">
+        <ellipse cx="12" cy="5" rx="9" ry="3" />
+        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+      </svg>
+    </div>
+    <div class="cat-name">{{ s.name }}</div>
+    <div class="cat-desc">{{ s.desc }}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+      <div class="cat-price">{{ s.price }} DT<span>/mois</span></div>
+      <span class="badge" [class]="s.active?'approved':'suspended'">
+        <div class="badge-dot"></div>{{ s.active ? 'Actif' : 'Inactif' }}
+      </span>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:12px">
+      <button class="btn-sm" style="flex:1">Modifier</button>
+      <button class="action-btn" [class]="s.active?'suspend':'approve'" (click)="toggleService(s.id)">
+        {{ s.active ? 'Désactiver' : 'Activer' }}
+      </button>
+    </div>
+  </div>
+  }
+</div>
