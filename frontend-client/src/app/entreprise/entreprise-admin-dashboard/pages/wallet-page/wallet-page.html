@@ -1,0 +1,78 @@
+﻿            <div class="wallet-hero">
+                <div>
+                    <div class="wallet-bal-label">Solde disponible</div>
+                    <div class="wallet-bal"><span>DT </span>{{ walletBalance() }}</div>
+                    <div style="font-size:12px;opacity:.6;margin-top:6px">Compte : {{ companyName() }} Â· Tenant ID : {{
+                        tenantId() }}</div>
+                </div>
+                <div class="wallet-actions">
+                    <button class="wallet-action-btn" (click)="rechargeWallet.emit()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                            width="14" height="14">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Recharger
+                    </button>
+                    <button class="wallet-action-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                            width="14" height="14">
+                            <rect x="1" y="4" width="22" height="16" rx="2" />
+                            <line x1="1" y1="10" x2="23" y2="10" />
+                        </svg>
+                        Moyen de paiement
+                    </button>
+                </div>
+            </div>
+
+            <div class="main-grid">
+                <div class="section-card">
+                    <div class="card-header">
+                        <div class="card-title">Transactions rÃ©centes</div>
+                    </div>
+                    <table class="inv-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (t of walletTransactions(); track t.id) {
+                            <tr>
+                                <td style="font-weight:500">{{ t.desc }}</td>
+                                <td style="font-size:12.5px;color:var(--text-muted)">{{ t.date }}</td>
+                                <td>
+                                    <span class="badge" [class]="t.type === 'credit' ? 'approved' : 'rejected'">
+                                        <div class="badge-dot"></div>{{ t.type === 'credit' ? 'CrÃ©dit' : 'DÃ©bit' }}
+                                    </span>
+                                </td>
+                                <td style="font-family:'DM Mono',monospace;font-weight:700"
+                                    [style.color]="t.type==='credit'?'var(--green)':'var(--red)'">
+                                    {{ t.type === 'credit' ? '+' : '-' }}{{ t.amount }} DT
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="right-col">
+                    <div class="section-card">
+                        <div class="card-header">
+                            <div class="card-title">RÃ©capitulatif</div>
+                        </div>
+                        <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+                            @for (s of walletSummary(); track s.label) {
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-light)">
+                                <span style="font-size:13px;color:var(--text-secondary)">{{ s.label }}</span>
+                                <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600"
+                                    [style.color]="s.color||'var(--text-primary)'">{{ s.val }}</span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>

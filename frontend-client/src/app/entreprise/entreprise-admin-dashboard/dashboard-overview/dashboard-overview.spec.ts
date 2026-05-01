@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ListClient } from './list-client';
+import { DashboardOverview } from './dashboard-overview';
 
-describe('ListClient', () => {
-  let component: ListClient;
-  let fixture: ComponentFixture<ListClient>;
+describe('DashboardOverview', () => {
+  let component: DashboardOverview;
+  let fixture: ComponentFixture<DashboardOverview>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ListClient]
+      imports: [DashboardOverview]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ListClient);
+    fixture = TestBed.createComponent(DashboardOverview);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

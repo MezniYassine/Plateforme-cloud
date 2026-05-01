@@ -1,0 +1,55 @@
+﻿            <div style="max-width:600px">
+                <div class="section-card" style="margin-bottom:16px">
+                    <div class="card-header">
+                        <div class="card-title">Informations de l'entreprise</div><button
+                            class="btn-sm primary">Enregistrer</button>
+                    </div>
+                    <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+                        <div
+                            style="display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--border-light)">
+                            <div class="admin-avatar" style="width:52px;height:52px;font-size:18px;border-radius:13px">
+                                {{ getInitials(adminName()) }}</div>
+                            <div>
+                                <div style="font-size:14px;font-weight:600">{{ adminName() }}</div>
+                                <div style="font-size:12.5px;color:var(--text-muted)">Admin Entreprise Â· {{
+                                    companyName() }}</div>
+                                <span class="badge approved" style="margin-top:4px">
+                                    <div class="badge-dot"></div>Compte approuvÃ©
+                                </span>
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                            <div class="profile-field"><label>PrÃ©nom</label><input type="text" value="Jane"></div>
+                            <div class="profile-field"><label>Nom</label><input type="text" value="Doe"></div>
+                        </div>
+                        <div class="profile-field"><label>Email administrateur</label><input type="email"
+                                [value]="adminEmail()"></div>
+                        <div class="profile-field"><label>Raison sociale</label><input type="text"
+                                [value]="companyName()"></div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                            <div class="profile-field"><label>Identifiant fiscal</label><input type="text"
+                                    [value]="taxId()"></div>
+                            <div class="profile-field"><label>Tenant ID</label><input type="text" [value]="tenantId()"
+                                    readonly style="background:#f1f5f9;cursor:default"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <div class="card-header">
+                        <div class="card-title">SÃ©curitÃ© du compte</div>
+                    </div>
+                    <div style="padding:16px 22px;display:flex;flex-direction:column;gap:10px">
+                        @for (item of profileSecurity(); track item.label) {
+                        <div
+                            style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
+                            <div>
+                                <div style="font-size:13.5px;font-weight:600">{{ item.label }}</div>
+                                <div style="font-size:12px;color:var(--text-muted)">{{ item.desc }}</div>
+                            </div>
+                            <button class="btn-sm" [class]="item.primary?'primary':''">{{ item.action }}</button>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>

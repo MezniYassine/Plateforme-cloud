@@ -89,12 +89,6 @@ export class AdminDashboard implements OnInit {
     this.setDate();
 
     if (isPlatformBrowser(this.platformId)) {
-      const token = localStorage.getItem('access_token');
-
-      if (!token) {
-        this.router.navigate(['/']);
-        return;
-      }
       this.isBrowserAndReady = true;
       this.loadTenants();
       this.loadCurrentAdmin();

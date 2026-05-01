@@ -42,4 +42,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./personal/personal-dashboard/personal-dashboard').then((m) => m.PersonalDashboard),
   },
+  {
+    path: 'entreprise-admin-dashboard',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./entreprise/entreprise-admin-dashboard/entreprise-admin-dashboard').then((m) => m.EntrepriseAdminDashboard),
+  }
 ];

@@ -1,0 +1,143 @@
+﻿            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-header"><span class="stat-label">DÃ©pense juin</span>
+                        <div class="stat-icon" style="background:var(--blue-light)"><svg viewBox="0 0 24 24"
+                                stroke="var(--blue)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                                <line x1="12" y1="1" x2="12" y2="23" />
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                            </svg></div>
+                    </div>
+                    <div class="stat-value">{{ monthlySpend() }}</div>
+                    <div class="stat-footer"><span class="stat-period">DT ce mois</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header"><span class="stat-label">Budget mensuel</span>
+                        <div class="stat-icon" style="background:var(--green-light)"><svg viewBox="0 0 24 24"
+                                stroke="var(--green)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                <polyline points="17 6 23 6 23 12" />
+                            </svg></div>
+                    </div>
+                    <div class="stat-value">{{ monthlyBudget() }}</div>
+                    <div class="stat-footer"><span class="stat-period">DT allouÃ©s</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header"><span class="stat-label">Restant</span>
+                        <div class="stat-icon" style="background:var(--amber-light)"><svg viewBox="0 0 24 24"
+                                stroke="var(--amber)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                                <rect x="1" y="4" width="22" height="16" rx="2" />
+                                <line x1="1" y1="10" x2="23" y2="10" />
+                            </svg></div>
+                    </div>
+                    <div class="stat-value">{{ monthlyBudget() - monthlySpend() }}</div>
+                    <div class="stat-footer"><span class="stat-period">DT disponibles</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header"><span class="stat-label">PrÃ©vision fin de mois</span>
+                        <div class="stat-icon" style="background:var(--purple-light)"><svg viewBox="0 0 24 24"
+                                stroke="var(--purple)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                            </svg></div>
+                    </div>
+                    <div class="stat-value">{{ forecast() }}</div>
+                    <div class="stat-footer"><span class="stat-period">DT estimÃ©s</span></div>
+                </div>
+            </div>
+
+            <!-- Budget alert -->
+            @if (budgetUsedPct() > 80) {
+            <div class="alert-banner" style="--alert-color:var(--red);--alert-bg:var(--red-light)">
+                <div class="alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"
+                        stroke-linecap="round">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                    </svg></div>
+                <div>
+                    <div class="alert-title">Attention : {{ budgetUsedPct() }}% du budget consommÃ©</div>
+                    <div class="alert-sub">Envisagez d'augmenter votre budget ou de rÃ©duire les ressources actives</div>
+                </div>
+            </div>
+            }
+
+            <div class="main-grid">
+                <div class="section-card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Historique des factures</div>
+                            <div class="card-sub">GÃ©nÃ©ration automatique mensuelle</div>
+                        </div>
+                        <button class="btn-sm">Exporter</button>
+                    </div>
+                    <table class="inv-table">
+                        <thead>
+                            <tr>
+                                <th>PÃ©riode</th>
+                                <th>RÃ©fÃ©rence</th>
+                                <th>Montant</th>
+                                <th>Statut</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (i of invoices(); track i.id) {
+                            <tr>
+                                <td style="font-weight:600">{{ i.period }}</td>
+                                <td><span class="mono-tag">{{ i.ref }}</span></td>
+                                <td style="font-family:'DM Mono',monospace;font-weight:700">{{ i.amount }} DT</td>
+                                <td><span class="badge" [class]="i.paid?'approved':'pending'">
+                                        <div class="badge-dot"></div>{{ i.paid?'PayÃ©e':'En attente' }}
+                                    </span></td>
+                                <td><button class="btn-sm">PDF</button></td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="right-col">
+                    <div class="section-card">
+                        <div class="card-header">
+                            <div class="card-title">RÃ©partition par membre</div>
+                        </div>
+                        <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+                            @for (m of teamSpend(); track m.name) {
+                            <div class="breakdown-row">
+                                <div class="breakdown-user">
+                                    <div class="breakdown-av" [style.background]="m.color">{{ getInitials(m.name) }}
+                                    </div>
+                                    <span>{{ m.name }}</span>
+                                </div>
+                                <div class="breakdown-bar-wrap">
+                                    <div class="breakdown-bar">
+                                        <div class="breakdown-fill" [style.width]="(m.spend/monthlyBudget()*100)+'%'"
+                                            [style.background]="m.color"></div>
+                                    </div>
+                                </div>
+                                <span class="breakdown-val">{{ m.spend }} DT</span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="section-card">
+                        <div class="card-header">
+                            <div class="card-title">Alertes budget</div><button
+                                class="btn-sm primary">Configurer</button>
+                        </div>
+                        <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+                            @for (a of budgetAlerts(); track a.label) {
+                            <div
+                                style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm)">
+                                <div>
+                                    <div style="font-size:13px;font-weight:500">{{ a.label }}</div>
+                                    <div style="font-size:11.5px;color:var(--text-muted)">{{ a.desc }}</div>
+                                </div>
+                                <div class="toggle-wrap" [class.on]="a.enabled">
+                                    <div class="toggle-knob"></div>
+                                </div>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>

@@ -1,0 +1,207 @@
+<!-- Alert banner for pending requests -->
+@if (pendingRequestsCount() > 0) {
+<div class="alert-banner" (click)="navigateTo.emit('requests')">
+    <div class="alert-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+    </div>
+    <div>
+        <div class="alert-title">{{ pendingRequestsCount() }} demande(s) en attente de votre approbation
+        </div>
+        <div class="alert-sub">Cliquez ici pour valider ou rejeter les demandes de votre équipe</div>
+    </div>
+    <div class="alert-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
+    </div>
+</div>
+}
+
+<!-- Stats -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Membres équipe</span>
+            <div class="stat-icon" style="background:var(--blue-light)">
+                <svg viewBox="0 0 24 24" stroke="var(--blue)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ teamMembers().length }}</div>
+        <div class="stat-footer"><span class="stat-period">Utilisateurs actifs</span></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Demandes en attente</span>
+            <div class="stat-icon" style="background:var(--amber-light)">
+                <svg viewBox="0 0 24 24" stroke="var(--amber)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M9 11l3 3L22 4" />
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                </svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ pendingRequestsCount() }}</div>
+        <div class="stat-footer"><span class="stat-delta down">Action requise</span></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Ressources actives</span>
+            <div class="stat-icon" style="background:var(--green-light)">
+                <svg viewBox="0 0 24 24" stroke="var(--green)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                    <rect x="2" y="3" width="20" height="5" rx="2" />
+                    <rect x="2" y="11" width="20" height="5" rx="2" />
+                </svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ activeResourcesCount() }}</div>
+        <div class="stat-footer"><span class="stat-delta up">VMs + Services</span></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Budget utilisé</span>
+            <div class="stat-icon" style="background:var(--purple-light)">
+                <svg viewBox="0 0 24 24" stroke="var(--purple)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ budgetUsedPct() }}%</div>
+        <div class="stat-footer"><span class="stat-period">{{ monthlySpend() }} / {{ monthlyBudget() }}
+                DT</span></div>
+    </div>
+</div>
+
+<div class="main-grid">
+    <!-- Pending requests preview -->
+    <div class="section-card">
+        <div class="card-header">
+            <div>
+                <div class="card-title">Demandes récentes</div>
+                <div class="card-sub">Provisionnement soumis par votre équipe</div>
+            </div>
+            <button class="btn-sm primary" (click)="navigateTo.emit('requests')">Tout gérer</button>
+        </div>
+        <div class="requests-list">
+            @for (r of resourceRequests().slice(0, 4); track r.id) {
+            <div class="request-row" [class]="r.status">
+                <div class="req-icon" [style.background]="serviceColor(r.type).bg">
+                    <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="serviceColor(r.type).color" stroke-width="1.8"
+                        stroke-linecap="round">
+                        @if (r.type === 'vm') {
+                        <rect x="2" y="3" width="20" height="5" rx="2" />
+                        <rect x="2" y="11" width="20" height="5" rx="2" /> }
+                        @else if (r.type === 'db') {
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /> }
+                        @else {
+                        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" /> }
+                    </svg>
+                </div>
+                <div class="req-info">
+                    <div class="req-name">{{ r.name }}</div>
+                    <div class="req-meta">{{ r.user }} · {{ r.specs }} · {{ r.date }}</div>
+                </div>
+                <div class="req-cost">{{ r.cost }} DT/mois</div>
+                @if (r.status === 'pending') {
+                <div class="req-actions">
+                    <button class="action-btn approve" (click)="approveRequest.emit(r.id)">Approuver</button>
+                    <button class="action-btn reject" (click)="rejectRequest.emit(r.id)">Rejeter</button>
+                </div>
+                } @else {
+                <span class="badge" [class]="r.status === 'approved' ? 'approved' : 'rejected'">
+                    <div class="badge-dot"></div>{{ r.status === 'approved' ? 'Approuvé' : 'Rejeté' }}
+                </span>
+                }
+            </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right col -->
+    <div class="right-col">
+        <!-- Budget card -->
+        <div class="section-card">
+            <div class="card-header">
+                <div class="card-title">Budget mensuel</div><button class="btn-sm"
+                    (click)="navigateTo.emit('billing')">Détails</button>
+            </div>
+            <div class="budget-body">
+                <div class="budget-amounts">
+                    <span class="budget-used">{{ monthlySpend() }} DT</span>
+                    <span class="budget-total">/ {{ monthlyBudget() }} DT</span>
+                </div>
+                <div class="budget-bar">
+                    <div class="budget-fill" [style.width]="budgetUsedPct()+'%'"
+                        [style.background]="budgetUsedPct() > 85 ? 'var(--red)' : budgetUsedPct() > 65 ? 'var(--amber)' : 'var(--blue)'">
+                    </div>
+                </div>
+                <div class="budget-footer">
+                    <span>{{ budgetUsedPct() }}% utilisé</span>
+                    <span>{{ monthlyBudget() - monthlySpend() }} DT restants</span>
+                </div>
+                <!-- Per-member spend -->
+                <div class="budget-breakdown">
+                    @for (m of teamSpend(); track m.name) {
+                    <div class="breakdown-row">
+                        <div class="breakdown-user">
+                            <div class="breakdown-av" [style.background]="m.color">{{ getInitials(m.name) }}
+                            </div>
+                            <span>{{ m.name }}</span>
+                        </div>
+                        <div class="breakdown-bar-wrap">
+                            <div class="breakdown-bar">
+                                <div class="breakdown-fill" [style.width]="(m.spend/monthlyBudget()*100)+'%'"
+                                    [style.background]="m.color"></div>
+                            </div>
+                        </div>
+                        <span class="breakdown-val">{{ m.spend }} DT</span>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity -->
+        <div class="section-card">
+            <div class="card-header">
+                <div class="card-title">Activité récente</div>
+            </div>
+            <div class="activity-list">
+                @for (a of activities().slice(0,5); track $index) {
+                <div class="activity-item">
+                    <div class="activity-icon" [style.background]="a.bg">
+                        <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="a.color" stroke-width="2"
+                            stroke-linecap="round">
+                            @if (a.type === 'approve') {
+                            <polyline points="20 6 9 17 4 12" /> }
+                            @else if (a.type === 'reject') {
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" /> }
+                            @else if (a.type === 'request') {
+                            <path d="M9 11l3 3L22 4" />
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5" /> }
+                            @else {
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" /> }
+                        </svg>
+                    </div>
+                    <div class="activity-text">
+                        <div class="activity-msg" [innerHTML]="a.msg"></div>
+                        <div class="activity-time">{{ a.time }}</div>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

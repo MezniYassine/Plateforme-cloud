@@ -1,0 +1,68 @@
+﻿<div class="section-card">
+    <div class="card-header">
+        <div>
+            <div class="card-title">Mon équipe</div>
+            <div class="card-sub">{{ teamMembers().length }} membre(s) · Utilisateurs Entreprise de {{
+                companyName() }}</div>
+        </div>
+        <button class="btn-sm primary" (click)="openInviteModal.emit()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                width="13" height="13">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <line x1="19" y1="8" x2="19" y2="14" />
+                <line x1="22" y1="11" x2="16" y2="11" />
+            </svg>
+            Inviter un membre
+        </button>
+    </div>
+
+    <div class="team-grid">
+        @for (m of teamMembers(); track m.id) {
+        <div class="member-card">
+            <div class="member-top">
+                <div class="member-av" [style.background]="m.color">{{ getInitials(m.name) }}</div>
+                <div>
+                    <div class="member-name">{{ m.name }}</div>
+                    <div class="member-email">{{ m.email }}</div>
+                </div>
+                <span class="badge" [class]="m.active ? 'approved' : 'suspended'" style="margin-left:auto">
+                    <div class="badge-dot"></div>{{ m.active ? 'Actif' : 'Suspendu' }}
+                </span>
+            </div>
+            <div class="member-stats">
+                <div class="mstat">
+                    <div class="mstat-val">{{ m.vms }}</div>
+                    <div class="mstat-label">VMs</div>
+                </div>
+                <div class="mstat">
+                    <div class="mstat-val">{{ m.services }}</div>
+                    <div class="mstat-label">Services</div>
+                </div>
+                <div class="mstat">
+                    <div class="mstat-val">{{ m.spend }} DT</div>
+                    <div class="mstat-label">Ce mois</div>
+                </div>
+            </div>
+            <div class="member-actions">
+                <button class="btn-sm">Voir ressources</button>
+                <button class="btn-sm" [class]="m.active ? '' : 'primary'" (click)="toggleMember.emit(m.id)">
+                    {{ m.active ? 'Suspendre' : 'Réactiver' }}
+                </button>
+            </div>
+        </div>
+        }
+        <div class="member-card invite-card" (click)="openInviteModal.emit()">
+            <div class="invite-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <line x1="19" y1="8" x2="19" y2="14" />
+                    <line x1="22" y1="11" x2="16" y2="11" />
+                </svg>
+            </div>
+            <div class="invite-label">Inviter un collaborateur</div>
+            <div class="invite-sub">Envoyer un lien d'invitation</div>
+        </div>
+    </div>
+</div>

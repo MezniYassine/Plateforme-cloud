@@ -84,6 +84,10 @@ export class LoginComponent implements OnInit {
     else if (role == 'PERSONNEL' && status == 'APPROVED') {
       this.router.navigate(['/personal-dashboard']);
     }
+    else if (role == 'ENTREPRISE_ADMIN' && status == 'APPROVED') {
+      this.router.navigate(['/entreprise-admin-dashboard']);
+    }
+
     else if (status == 'PENDING_VALIDATION') {
       this.router.navigate(['/pending-approval']);
     }

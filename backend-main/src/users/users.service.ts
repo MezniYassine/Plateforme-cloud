@@ -21,7 +21,6 @@ export class UsersService {
     private adminRepo: Repository<Admin>,
   ) { }
 
-  /** Find a user by email (used by AuthService for login) */
   async findByEmail(email: string): Promise<Client | null> {
     return this.clientRepo.findOne({
       where: { email },

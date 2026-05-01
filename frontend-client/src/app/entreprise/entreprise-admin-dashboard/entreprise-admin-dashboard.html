@@ -1,0 +1,215 @@
+﻿@if(isBrowserAndReady){
+<div class="app">
+
+    <aside class="sidebar">
+        <a class="sidebar-logo" href="#">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                    <path d="M2 17l10 5 10-5" />
+                    <path d="M2 12l10 5 10-5" />
+                </svg>
+            </div>
+            <div>
+                <div class="logo-text">Dynamix</div>
+                <div class="logo-sub">{{ actualAdmin()?.entreprise?.nomEntreprise }}</div>
+            </div>
+        </a>
+
+        <div class="sidebar-section">
+            <div class="sidebar-label">Principal</div>
+            <div class="nav-item" [class.active]="activePage()==='dashboard'" (click)="setPage('dashboard')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                Dashboard
+            </div>
+            <div class="nav-item" [class.active]="activePage()==='requests'" (click)="setPage('requests')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M9 11l3 3L22 4" />
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                </svg>
+                Demandes à valider
+                @if (pendingRequestsCount() > 0) {
+                <span class="nav-badge">{{ pendingRequestsCount() }}</span>
+                }
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-label">Mon organisation</div>
+            <div class="nav-item" [class.active]="activePage()==='team'" (click)="setPage('team')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                Mon équipe
+                <span class="nav-badge-count">{{ teamMembers().length }}</span>
+            </div>
+            <div class="nav-item" [class.active]="activePage()==='resources'" (click)="setPage('resources')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <rect x="2" y="3" width="20" height="5" rx="2" />
+                    <rect x="2" y="11" width="20" height="5" rx="2" />
+                </svg>
+                Ressources déployées
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-label">Finance</div>
+            <div class="nav-item" [class.active]="activePage()==='billing'" (click)="setPage('billing')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                Budget & Facturation
+            </div>
+            <div class="nav-item" [class.active]="activePage()==='wallet'" (click)="setPage('wallet')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <rect x="1" y="4" width="22" height="16" rx="2" />
+                    <line x1="1" y1="10" x2="23" y2="10" />
+                </svg>
+                Portefeuille
+                <span class="wallet-chip-sb">{{ walletBalance() }} DT</span>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-label">Compte</div>
+            <div class="nav-item" [class.active]="activePage()==='profile'" (click)="setPage('profile')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                Mon profil
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="admin-card" (click)="setPage('profile')">
+                <div class="admin-avatar">{{ actualAdmin()?.nom?.charAt(0) }}{{ actualAdmin()?.prenom?.charAt(0) }}
+                </div>
+                <div class="admin-info">
+                    <div class="admin-name">{{ actualAdmin()?.nom }} {{ actualAdmin()?.prenom }}</div>
+                    <div class="admin-role">{{ actualAdmin()?.email }}</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main">
+
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="page-title">{{ pageTitle() }}</div>
+                <div class="page-breadcrumb">{{ actualAdmin()?.entreprise?.nomEntreprise }} · Admin Entreprise</div>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-date">{{ currentDate() }}</div>
+                <!-- Notification bell -->
+                <div class="topbar-btn notif-btn" (click)="setPage('requests')">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                    @if (pendingRequestsCount() > 0) {
+                    <div class="notif-dot"></div>
+                    }
+                </div>
+                <!-- Wallet chip -->
+                <div class="wallet-chip-top" (click)="setPage('wallet')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                    </svg>
+                    <span>{{ walletBalance() }} DT</span>
+                </div>
+                <div class="topbar-btn" (click)="setPage('profile')">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="content">
+
+            <!-- PAGE: DASHBOARD -->
+            @if (activePage() === 'dashboard') {
+            <ent-dashboard-overview [teamMembers]="teamMembers()" [resourceRequests]="resourceRequests()"
+                [activeResourcesCount]="activeResourcesCount()" [monthlyBudget]="monthlyBudget()"
+                [monthlySpend]="monthlySpend()" [activities]="activities()" [teamSpend]="teamSpend()"
+                [pendingRequestsCount]="pendingRequestsCount()" (navigateTo)="setPage($event)"
+                (approveRequest)="approveRequest($event)" (rejectRequest)="rejectRequest($event)" />
+            }
+
+            <!-- PAGE: DEMANDES A VALIDER -->
+            @if (activePage() === 'requests') {
+            <ent-requests-page [filteredRequests]="filteredRequests()" [reqFilter]="reqFilter()"
+                [pendingRequestsCount]="pendingRequestsCount()" (filterChange)="reqFilter.set($event)"
+                (approveRequest)="approveRequest($event)" (rejectRequest)="rejectRequest($event)" />
+            }
+
+            <!-- PAGE: EQUIPE -->
+            @if (activePage() === 'team') {
+            <ent-team-page [teamMembers]="teamMembers()" [companyName]="companyName()"
+                (openInviteModal)="openInviteModal()" (toggleMember)="toggleMember($event)" />
+            }
+
+            <!-- PAGE: RESSOURCES DEPLOYEES -->
+            @if (activePage() === 'resources') {
+            <ent-resources-page [filteredResources]="filteredResources()" [resFilter]="resFilter()"
+                [teamMembers]="teamMembers()" (filterChange)="resFilter.set($event)" />
+            }
+
+            <!-- PAGE: BUDGET & FACTURATION -->
+            @if (activePage() === 'billing') {
+            <ent-billing-page [monthlySpend]="monthlySpend()" [monthlyBudget]="monthlyBudget()" [forecast]="forecast()"
+                [budgetUsedPct]="budgetUsedPct()" [invoices]="invoices()" [teamSpend]="teamSpend()"
+                [budgetAlerts]="budgetAlerts()" />
+            }
+
+            <!-- PAGE: PORTEFEUILLE -->
+            @if (activePage() === 'wallet') {
+            <ent-wallet-page [walletBalance]="walletBalance()" [companyName]="companyName()" [tenantId]="tenantId()"
+                [walletTransactions]="walletTransactions()" [walletSummary]="walletSummary()"
+                (rechargeWallet)="rechargeWallet()" />
+            }
+
+            @if (activePage() === 'profile') {
+            <ent-profile-page [adminName]="adminName()" [adminEmail]="adminEmail()" [companyName]="companyName()"
+                [taxId]="companyTaxId()" [tenantId]="tenantId()" [profileSecurity]="profileSecurity()" />
+            }
+        </div><!-- /content -->
+    </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- INVITE MODAL -->
+
+
+<div class="toast" [class.show]="isToastVisible()">
+    <div class="toast-icon" [style.background]="toastColor()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+            @if (toastColor().includes('green')) {
+            <polyline points="20 6 9 17 4 12" /> }
+            @else {
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" /> }
+        </svg>
+    </div>
+    <span>{{ toastMsg() }}</span>
+</div>
+}
+@else{
+<div style="height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #f8f9fa;">
+    <h2>Vérification de la sécurité...</h2>
+</div>
+}

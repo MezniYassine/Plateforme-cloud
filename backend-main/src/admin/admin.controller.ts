@@ -22,7 +22,6 @@ export class AdminController {
     }
     @Get('me')
     async getProfile(@Req() req) {
-        // req.user contient le payload du JWT (req.user.sub == id)
         const adminId = parseInt(req.user.sub, 10);
         return this.adminService.getProfile(adminId);
     }

@@ -13,7 +13,7 @@ export class Entreprise {
   @Column({ unique: true })
   identifiantFiscal: string;
 
-  @CreateDateColumn() // TypeORM gérera automatiquement cette date
+  @CreateDateColumn()
   dateCreation: Date;
 
   @Column()
