@@ -193,7 +193,46 @@
 </div><!-- /app -->
 
 <!-- INVITE MODAL -->
+<div class="modal-overlay" [class.show]="showInviteModal()" (click)="onOverlayClick($event)">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title">Inviter un collaborateur</div>
+                <div class="modal-sub">Un email d'invitation sera envoyer à l'utilisateur rejoindra votre espace</div>
+            </div>
+            <button class="modal-close" (click)="showInviteModal.set(false)">
+                <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body" [formGroup]="inviteForm">
+            <div class="profile-field">
+                <label>Prénom</label>
+                <input type="text" formControlName="prenom" placeholder="ex: Mohamed">
+            </div>
+            <div class="profile-field">
+                <label>Nom</label>
+                <input type="text" formControlName="nom" placeholder="ex: Ben Ali">
+            </div>
+            <div class="profile-field">
+                <label>Email</label>
+                <input type="email" formControlName="email" placeholder="ex: m.benali@entreprise.tn">
+            </div>
+        </div>
 
+        <div class="modal-footer">
+            <span style="font-size:12.5px;color:var(--text-muted)">L'invitation expire dans 48h</span>
+            <div class="modal-actions">
+                <button class="btn-modal cancel" (click)="showInviteModal.set(false)">Annuler</button>
+                <button class="btn-modal approve" (click)="inviterCollaborateur()" [disabled]="inviteForm.invalid">
+                    Envoyer l'invitation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="toast" [class.show]="isToastVisible()">
     <div class="toast-icon" [style.background]="toastColor()">

@@ -29,8 +29,6 @@ export class AuthService {
     Accept: 'application/json',
   });
 
-  // 3. ⚠️ IMPORTANT : On a supprimé 'role' du body. 
-  // C'est beaucoup plus sécurisé, seul l'email et le mot de passe suffisent !
   login(body: { email: string; password: string }) {
     return this.http.post<LoginResponse>(`${this.base}/auth/login`, body, {
       headers: this.jsonHeaders,
@@ -52,6 +50,12 @@ export class AuthService {
 
   registerPersonal(body: Record<string, unknown>) {
     return this.http.post<unknown>(`${this.base}/auth/register/personal`, body, {
+      headers: this.jsonHeaders,
+    });
+  }
+
+  setupPassword(body: { token: string; password: string }) {
+    return this.http.post<{ ok: boolean; message: string }>(`${this.base}/auth/setup`, body, {
       headers: this.jsonHeaders,
     });
   }

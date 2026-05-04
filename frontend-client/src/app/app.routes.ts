@@ -37,6 +37,16 @@ export const routes: Routes = [
       import('./login/login').then((m) => m.LoginComponent),
   },
   {
+    path: 'personal-invitation',
+    loadComponent: () =>
+      import('./personal/personal-invitation/personal-invitation').then((m) => m.PersonalInvitation),
+  },
+  {
+    path: 'auth/setup-password',
+    loadComponent: () =>
+      import('./personal/personal-invitation/personal-invitation').then((m) => m.PersonalInvitation),
+  },
+  {
     path: 'personal-dashboard',
     canActivate: [authGuard],
     loadComponent: () =>

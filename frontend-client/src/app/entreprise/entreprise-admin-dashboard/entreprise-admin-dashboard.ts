@@ -11,6 +11,7 @@ import { BillingPageComponent } from './pages/billing-page/billing-page';
 import { WalletPageComponent } from './pages/wallet-page/wallet-page';
 import { ProfilePageComponent } from './pages/profile-page/profile-page';
 import { isPlatformBrowser } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 
 
@@ -27,6 +28,7 @@ import { isPlatformBrowser } from '@angular/common';
     BillingPageComponent,
     WalletPageComponent,
     ProfilePageComponent,
+    ReactiveFormsModule
   ],
   templateUrl: './entreprise-admin-dashboard.html',
   styleUrl: './entreprise-admin-dashboard.scss',
@@ -61,6 +63,7 @@ export class EntrepriseAdminDashboard implements OnInit {
     const admin = this.actualAdmin();
     return admin ? `${admin.nom} ${admin.prenom}` : '';
   });
+  inviteForm!: FormGroup;
   adminEmail = computed(() => this.actualAdmin()?.email ?? '');
   companyName = computed(() => this.actualAdmin()?.entreprise?.nomEntreprise ?? '');
   companyTaxId = computed(() => this.actualAdmin()?.entreprise?.taxId ?? '');
@@ -178,15 +181,22 @@ export class EntrepriseAdminDashboard implements OnInit {
   isToastVisible = signal<boolean>(false);
 
   /* ── CONSTRUCTOR ─────────────────────────────────── */
-  constructor(private router: Router, private http: HttpClient) { }
+  constructor(private router: Router, private http: HttpClient, private fb: FormBuilder) { }
 
   ngOnInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      this.isBrowserAndReady = true;
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
     }
+
+    this.isBrowserAndReady = true;
     this.loadCurrentAdmin()
     this.setDate();
     this.loadData();
+    this.inviteForm = this.fb.group({
+      prenom: ['', Validators.required],
+      nom: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]]
+    });
   }
 
   /* ── API ─────────────────────────────────────────── */
@@ -194,6 +204,22 @@ export class EntrepriseAdminDashboard implements OnInit {
     // Load company info, team members and requests from backend
     // const url = `${environment.apiBaseUrl}/enterprise/dashboard`;
     // this.http.get(url).subscribe({ next: (data: any) => { ... } });
+  }
+
+  inviterCollaborateur() {
+    if (this.inviteForm.invalid) return; // Sécurité supplémentaire
+
+    // call api invite
+    this.http.post(`${environment.apiBaseUrl}/entreprise-admin/inviter-collaborateur`, this.inviteForm.value).subscribe({
+      next: (res: any) => {
+        this.showToast(res.message, 'var(--green)');
+        this.showInviteModal.set(false);
+        this.inviteForm.reset(); // Remet le formulaire à zéro pour la prochaine fois
+      },
+      error: (err) => {
+        this.showToast(err.error.message, 'var(--red)');
+      }
+    });
   }
 
   /* ── ACTIONS ─────────────────────────────────────── */

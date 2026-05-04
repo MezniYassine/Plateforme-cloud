@@ -9,6 +9,10 @@ import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
+import { AccountStatus } from 'src/enum/account-status.enum';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Client } from 'src/entities/client.entity';
 
 // --- DTOs ---
 export interface RegisterEnterpriseDto {
@@ -20,7 +24,7 @@ export interface RegisterEnterpriseDto {
   taxId: string;
 }
 
-export interface RegisterPersonalDto { // Renommé (anciennement Developer)
+export interface RegisterPersonalDto {
   firstName: string;
   lastName: string;
   email: string;
@@ -40,6 +44,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
+    @InjectRepository(Client) private usersRepo: Repository<Client>,
   ) { }
 
   // 1. Inscription d'une Entreprise (et de son premier Admin)
@@ -156,6 +161,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (!user.password) {
+      throw new UnauthorizedException('Account activation required');
+    }
+
     const passwordMatch = await bcrypt.compare(dto.password, user.password);
     if (!passwordMatch) {
       throw new UnauthorizedException('Invalid credentials');
@@ -197,5 +206,55 @@ export class AuthService {
     }
     const token = this.jwtService.sign({ mfaVerified: true });
     return { token };
+  }
+  async setupPassword(token: string, password: string) {
+    if (!token || !password) {
+      throw new BadRequestException('Token et mot de passe requis');
+    }
+
+    // 1. Vérifier le token
+    let decoded: any;
+    try {
+      decoded = this.jwtService.verify(token);
+    } catch {
+      throw new BadRequestException('Token invalide ou expiré');
+    }
+
+    // S'assurer que c'est bien un token d'invitation
+    if (decoded.type !== 'INVITATION' && decoded.type !== 'FORGOT_PASSWORD') {
+      throw new BadRequestException('Token invalide');
+    }
+
+    const userId = Number(decoded.sub ?? decoded.userId ?? decoded.id);
+    if (!userId) {
+      throw new BadRequestException('Token invalide');
+    }
+
+    // 2. Récupérer l'utilisateur
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new BadRequestException('Utilisateur non trouvé');
+    }
+
+    // 3. Vérification supplémentaire : L'email du token doit correspondre
+    // (Sauf si c'est un reset mot de passe où on peut vouloir changer l'email, mais pour l'invitation il faut que ce soit le même)
+    if (decoded.type === 'INVITATION' && user.email !== decoded.email) {
+      throw new BadRequestException('Incohérence entre le token et l\'utilisateur');
+    }
+
+    // 4. Hash du mot de passe
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 5. Mise à jour
+    user.password = hashedPassword;
+
+    if (user.status === AccountStatus.PENDING_VALIDATION) {
+      user.status = AccountStatus.APPROVED;
+    }
+    user.isEmailVerified = true;
+
+    await this.usersRepo.save(user);
+
+    return { ok: true, message: 'Mot de passe configuré avec succès. Vous pouvez maintenant vous connecter.' };
   }
 }

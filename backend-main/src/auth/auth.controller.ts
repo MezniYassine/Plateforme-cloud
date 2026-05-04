@@ -39,4 +39,13 @@ export class AuthController {
     console.log('MFA Code:', code);
     return this.authService.verifyMFA(code);
   }
+
+  @Post('setup')
+  @HttpCode(HttpStatus.OK)
+  async setupPassword(
+    @Body('token') token: string,
+    @Body('password') password: string,
+  ) {
+    return this.authService.setupPassword(token, password);
+  }
 }

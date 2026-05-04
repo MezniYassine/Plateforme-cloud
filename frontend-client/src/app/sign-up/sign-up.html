@@ -264,7 +264,8 @@
                     </svg>
                   </div>
                   <input id="ent-password" [type]="showPassword() ? 'text' : 'password'" formControlName="password"
-                    placeholder="........" autocomplete="new-password">
+                    placeholder="........" autocomplete="new-password" (focus)="passwordFocused.set(true)"
+                    (blur)="passwordFocused.set(false)">
                   <button type="button" class="field-visibility-btn" (click)="togglePassword()"
                     [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
 
@@ -281,6 +282,24 @@
                     </svg>
                     }
                   </button>
+                </div>
+
+                <div class="strength-wrap" *ngIf="password && passwordFocused()">
+                  <div class="strength-bars">
+                    <div class="sbar" [class.weak]="passwordScore >= 1 && passwordScore <= 1"
+                      [class.medium]="passwordScore >= 2" [class.strong]="passwordScore >= 3"></div>
+                    <div class="sbar" [class.medium]="passwordScore >= 2" [class.strong]="passwordScore >= 3"></div>
+                    <div class="sbar" [class.strong]="passwordScore >= 3"></div>
+                    <div class="sbar" [class.strong]="passwordScore >= 4"></div>
+                  </div>
+                  <div class="strength-label">{{ strengthLabel }}</div>
+                </div>
+
+                <div class="pw-rules" *ngIf="passwordFocused()">
+                  <div class="pw-rule" [class.ok]="rules.len">Au moins 8 caracteres</div>
+                  <div class="pw-rule" [class.ok]="rules.upper">Une lettre majuscule</div>
+                  <div class="pw-rule" [class.ok]="rules.num">Un chiffre</div>
+                  <div class="pw-rule" [class.ok]="rules.special">Un caractere special (!&#64;#$...)</div>
                 </div>
               </div>
               <div class="field-group dev-field">
@@ -399,7 +418,8 @@
                   </div>
 
                   <input id="dev-password" [type]="showPassword() ? 'text' : 'password'" formControlName="password"
-                    placeholder="........" autocomplete="new-password">
+                    placeholder="........" autocomplete="new-password" (focus)="passwordFocused.set(true)"
+                    (blur)="passwordFocused.set(false)">
 
                   <button type="button" class="field-visibility-btn" (click)="togglePassword()"
                     [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
@@ -417,6 +437,24 @@
                     </svg>
                     }
                   </button>
+                </div>
+
+                <div class="strength-wrap" *ngIf="password && passwordFocused()">
+                  <div class="strength-bars">
+                    <div class="sbar" [class.weak]="passwordScore >= 1 && passwordScore <= 1"
+                      [class.medium]="passwordScore >= 2" [class.strong]="passwordScore >= 3"></div>
+                    <div class="sbar" [class.medium]="passwordScore >= 2" [class.strong]="passwordScore >= 3"></div>
+                    <div class="sbar" [class.strong]="passwordScore >= 3"></div>
+                    <div class="sbar" [class.strong]="passwordScore >= 4"></div>
+                  </div>
+                  <div class="strength-label">{{ strengthLabel }}</div>
+                </div>
+
+                <div class="pw-rules" *ngIf="passwordFocused()">
+                  <div class="pw-rule" [class.ok]="rules.len">Au moins 8 caracteres</div>
+                  <div class="pw-rule" [class.ok]="rules.upper">Une lettre majuscule</div>
+                  <div class="pw-rule" [class.ok]="rules.num">Un chiffre</div>
+                  <div class="pw-rule" [class.ok]="rules.special">Un caractere special (!&#64;#$...)</div>
                 </div>
               </div>
 

@@ -387,6 +387,77 @@ input:focus {
   box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.12);
 }
 
+.strength-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.strength-bars {
+  display: flex;
+  gap: 4px;
+  height: 4px;
+}
+
+.sbar {
+  flex: 1;
+  border-radius: 999px;
+  background: var(--input-border);
+  transition: background .2s;
+}
+
+.sbar.weak {
+  background: #ef4444;
+}
+
+.sbar.medium {
+  background: #f59e0b;
+}
+
+.sbar.strong {
+  background: #16a34a;
+}
+
+.strength-label {
+  font-size: 11.5px;
+  color: var(--text-light);
+}
+
+.pw-rules {
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.pw-rule {
+  font-size: 12px;
+  color: var(--text-light);
+  transition: color .2s;
+}
+
+.pw-rule::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  vertical-align: 1px;
+}
+
+.pw-rule.ok {
+  color: #16a34a;
+}
+
+.pw-rule.ok::before {
+  background: currentColor;
+}
+
 /* SUBMIT BUTTON */
 .btn-submit {
   width: 100%;

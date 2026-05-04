@@ -28,6 +28,13 @@ export class UsersService {
     });
   }
 
+  async findById(id: number): Promise<Client | null> {
+    return this.clientRepo.findOne({
+      where: { id },
+      relations: ['entreprise', 'personal']
+    });
+  }
+
   async findAdminByEmail(email: string): Promise<Admin | null> {
     return this.adminRepo.findOne({ where: { email } });
   }

@@ -31,6 +31,7 @@ export class SignupComponent implements OnInit {
   readonly submitting = signal(false);
   readonly showPassword = signal(false);
   readonly showConfirmPassword = signal(false);
+  readonly passwordFocused = signal(false);
 
   private toastHide = 0;
 
@@ -79,6 +80,7 @@ export class SignupComponent implements OnInit {
 
   switchTab(tab: 'enterprise' | 'personal') {
     this.activeTab.set(tab);
+    this.passwordFocused.set(false);
     this.toast.set(null);
     void this.router.navigate(['/signup'], {
       queryParams: { type: tab },
@@ -92,6 +94,32 @@ export class SignupComponent implements OnInit {
 
   toggleConfirmPassword() {
     this.showConfirmPassword.update(v => !v);
+  }
+
+  get password() {
+    return this.activeForm.get('password')?.value ?? '';
+  }
+
+  get rules() {
+    const password = this.password;
+    return {
+      len: password.length >= 8,
+      upper: /[A-Z]/.test(password),
+      num: /[0-9]/.test(password),
+      special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
+    };
+  }
+
+  get passwordScore() {
+    return Object.values(this.rules).filter(Boolean).length;
+  }
+
+  get strengthLabel() {
+    return ['', 'Faible', 'Moyen', 'Fort', 'Tres fort'][this.passwordScore] || '';
+  }
+
+  private get activeForm() {
+    return this.activeTab() === 'enterprise' ? this.enterpriseForm : this.personalForm;
   }
 
   private flashToast(message: string, ms = 6000) {

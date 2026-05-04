@@ -22,8 +22,8 @@ export class Client {
   @Column({ unique: true })
   email: string;
 
-  @Column()
-  password: string;
+  @Column({ type: 'varchar', nullable: true })
+  password: string | null;
 
   // --- NOUVEAU : Rôle de l'utilisateur ---
   @Column({ type: 'enum', enum: RoleClient, default: RoleClient.PERSONNEL })

@@ -10,6 +10,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { AdminModule } from './admin/admin.module';
 import { PersonnelModule } from './personnel/personnel.module';
 import { EntrepriseAdminModule } from './entreprise-admin/entreprise-admin.module';
+import { EntrepriseUserModule } from './entreprise-user/entreprise-user.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { EntrepriseAdminModule } from './entreprise-admin/entreprise-admin.modul
     InfrastructureModule,
     AdminModule,
     EntrepriseAdminModule,
+    EntrepriseUserModule,
     PersonnelModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
