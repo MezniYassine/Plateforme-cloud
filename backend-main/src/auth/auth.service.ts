@@ -207,6 +207,45 @@ export class AuthService {
     const token = this.jwtService.sign({ mfaVerified: true });
     return { token };
   }
+
+  async forgotPassword(email: string) {
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw new BadRequestException('Email requis');
+    }
+
+    const user = await this.usersService.findByEmail(normalizedEmail);
+
+    if (user) {
+      const resetToken = this.jwtService.sign(
+        { sub: user.id, email: user.email, type: 'FORGOT_PASSWORD' },
+        { expiresIn: '30m' },
+      );
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:4200';
+      const resetUrl = `${frontendUrl.replace(/\/$/, '')}/auth/setup-password?token=${encodeURIComponent(resetToken)}`;
+
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: 'Reinitialisation de votre mot de passe Dynamix',
+        html: `
+          <h3>Reinitialisation du mot de passe</h3>
+          <p>Bonjour ${user.prenom} ${user.nom},</p>
+          <p>Vous avez demande la reinitialisation de votre mot de passe.</p>
+          <p><a href="${resetUrl}">Choisir un nouveau mot de passe</a></p>
+          <p>Ce lien expire dans 30 minutes.</p>
+          <p>Si vous n'etes pas a l'origine de cette demande, ignorez cet email.</p>
+        `,
+      }).catch(err => {
+        console.error("Erreur lors de l'envoi de l'email de reinitialisation:", err);
+      });
+    }
+
+    return {
+      ok: true,
+      message: 'Si un compte existe avec cet email, un lien de reinitialisation a ete envoye.',
+    };
+  }
+
   async setupPassword(token: string, password: string) {
     if (!token || !password) {
       throw new BadRequestException('Token et mot de passe requis');
@@ -238,7 +277,7 @@ export class AuthService {
 
     // 3. Vérification supplémentaire : L'email du token doit correspondre
     // (Sauf si c'est un reset mot de passe où on peut vouloir changer l'email, mais pour l'invitation il faut que ce soit le même)
-    if (decoded.type === 'INVITATION' && user.email !== decoded.email) {
+    if (decoded.email && user.email !== decoded.email) {
       throw new BadRequestException('Incohérence entre le token et l\'utilisateur');
     }
 

@@ -391,9 +391,43 @@
   color: var(--accent-blue);
   text-decoration: none;
   font-weight: 500;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .forgot-link:hover {
+  text-decoration: underline;
+}
+
+.forgot-modal {
+  text-align: left;
+}
+
+.forgot-modal .mfa-title,
+.forgot-modal .mfa-sub {
+  text-align: center;
+}
+
+.forgot-field {
+  margin-bottom: 18px;
+}
+
+.modal-secondary {
+  width: 100%;
+  margin-top: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text-light);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.modal-secondary:hover {
+  color: var(--accent-blue);
   text-decoration: underline;
 }
 

@@ -41,6 +41,12 @@ export class AuthService {
     });
   }
 
+  forgotPassword(email: string) {
+    return this.http.post<{ ok: boolean; message: string }>(`${this.base}/auth/forgot-password`, { email }, {
+      headers: this.jsonHeaders,
+    });
+  }
+
 
   registerEnterprise(body: Record<string, unknown>) {
     return this.http.post<unknown>(`${this.base}/auth/register/enterprise`, body, {

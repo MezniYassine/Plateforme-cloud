@@ -14,6 +14,9 @@ export class LoginComponent implements OnInit {
   pendingRole = '';
   showMFA = false;
   isLoading = false;
+  forgotMode = false;
+  forgotLoading = false;
+  forgotSent = false;
   errorMsg = '';
   fb = inject(FormBuilder);
   auth = inject(AuthService);
@@ -25,6 +28,10 @@ export class LoginComponent implements OnInit {
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
+  });
+
+  forgotForm = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
   });
 
   ngOnInit() {
@@ -52,6 +59,45 @@ export class LoginComponent implements OnInit {
         }
       });
     console.log(this.loginForm.value);
+  }
+
+  openForgotPassword() {
+    const currentEmail = this.loginForm.get('email')?.value ?? '';
+    this.forgotForm.patchValue({ email: currentEmail });
+    this.forgotMode = true;
+    this.forgotSent = false;
+    this.errorMsg = '';
+  }
+
+  closeForgotPassword() {
+    this.forgotMode = false;
+    this.forgotSent = false;
+    this.forgotLoading = false;
+  }
+
+  requestPasswordReset() {
+    this.forgotForm.markAllAsTouched();
+    if (this.forgotForm.invalid || this.forgotLoading) {
+      return;
+    }
+
+    this.forgotLoading = true;
+    this.errorMsg = '';
+
+    const email = this.forgotForm.getRawValue().email ?? '';
+    this.auth.forgotPassword(email).subscribe({
+      next: () => {
+        this.forgotLoading = false;
+        this.forgotSent = true;
+      },
+      error: () => {
+        this.forgotLoading = false;
+        this.errorMsg = 'Unable to send reset email. Please try again.';
+        setTimeout(() => {
+          this.errorMsg = '';
+        }, 4000);
+      },
+    });
   }
 
   onVerifyMFA(code: string) {

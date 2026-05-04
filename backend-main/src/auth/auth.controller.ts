@@ -40,6 +40,12 @@ export class AuthController {
     return this.authService.verifyMFA(code);
   }
 
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  forgotPassword(@Body('email') email: string) {
+    return this.authService.forgotPassword(email);
+  }
+
   @Post('setup')
   @HttpCode(HttpStatus.OK)
   async setupPassword(

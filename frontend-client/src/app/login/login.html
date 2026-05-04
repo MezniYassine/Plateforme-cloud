@@ -120,7 +120,7 @@
             </div>
 
             <div class="row-options">
-              <a href="#" class="forgot-link">Forgot Password?</a>
+              <button type="button" class="forgot-link" (click)="openForgotPassword()">Forgot Password?</button>
             </div>
           </div>
 
@@ -139,6 +139,46 @@
 </div>
 
 <!-- ══ MFA MODAL ══ -->
+<div class="modal-overlay" [class.show]="forgotMode">
+  <div class="mfa-modal forgot-modal">
+    @if (!forgotSent) {
+    <h3 class="mfa-title">Reset password</h3>
+    <p class="mfa-sub">Enter your email address and we will send you a link to choose a new password.</p>
+
+    <form [formGroup]="forgotForm" (ngSubmit)="requestPasswordReset()">
+      <div class="field-group forgot-field">
+        <label class="field-label">Email Address</label>
+        <div class="field-wrap">
+          <div class="fi">
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+          </div>
+          <input type="email" formControlName="email" placeholder="email@example.com" autocomplete="email">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-verify" [disabled]="forgotLoading || forgotForm.invalid">
+        {{ forgotLoading ? 'Sending...' : 'Send reset link' }}
+      </button>
+    </form>
+
+    <button type="button" class="modal-secondary" (click)="closeForgotPassword()">Back to login</button>
+    } @else {
+    <div class="mfa-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+    </div>
+    <h3 class="mfa-title">Check your email</h3>
+    <p class="mfa-sub">If an account exists with this email, a reset link has been sent.</p>
+    <button type="button" class="btn-verify" (click)="closeForgotPassword()">Done</button>
+    }
+  </div>
+</div>
+
 <div class="modal-overlay" [class.show]="showMFA" id="mfa-modal">
   <div class="mfa-modal">
     <div class="mfa-icon">

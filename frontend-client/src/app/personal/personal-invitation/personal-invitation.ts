@@ -23,13 +23,45 @@ export class PersonalInvitation {
   loading = false;
   success = false;
   errorMessage = '';
+  tokenType = '';
 
   ngOnInit() {
     this.token = this.route.snapshot.queryParamMap.get('token') ?? '';
 
     if (!this.token) {
       this.errorMessage = "Lien d'invitation invalide ou incomplet.";
+      return;
     }
+
+    this.tokenType = this.getTokenType(this.token);
+  }
+
+  get isForgotPassword() {
+    return this.tokenType === 'FORGOT_PASSWORD';
+  }
+
+  get pageTitle() {
+    return this.isForgotPassword ? 'Reinitialisez votre mot de passe' : "Vous avez ete invite a rejoindre l'equipe !";
+  }
+
+  get pageSubtitle() {
+    return this.isForgotPassword
+      ? 'Choisissez un nouveau mot de passe pour recuperer votre acces.'
+      : 'Creez votre mot de passe pour activer votre acces a la plateforme.';
+  }
+
+  get sectionTitle() {
+    return this.isForgotPassword ? 'Nouveau mot de passe' : 'Creez votre mot de passe';
+  }
+
+  get submitLabel() {
+    return this.isForgotPassword ? 'Reinitialiser mon mot de passe' : 'Activer mon compte';
+  }
+
+  get expiryText() {
+    return this.isForgotPassword
+      ? 'Ce lien de reinitialisation expire apres 30 minutes.'
+      : "Ce lien d'invitation expire apres 48h.";
   }
 
   get rules() {
@@ -80,6 +112,21 @@ export class PersonalInvitation {
         this.errorMessage = err?.error?.message ?? "Impossible d'activer le compte.";
       },
     });
+  }
+
+  private getTokenType(token: string) {
+    try {
+      const payload = token.split('.')[1];
+      if (!payload || typeof atob === 'undefined') {
+        return '';
+      }
+
+      const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const decoded = JSON.parse(atob(normalizedPayload));
+      return decoded?.type ?? '';
+    } catch {
+      return '';
+    }
   }
 
 }
