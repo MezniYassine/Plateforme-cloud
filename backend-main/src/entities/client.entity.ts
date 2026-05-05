@@ -43,6 +43,12 @@ export class Client {
   @CreateDateColumn()
   dateInscrit: Date;
 
+  @Column({ type: 'simple-array', nullable: true })
+  providers?: string[]; // 'local', 'google', ou 'microsoft'
+
+  @Column({ type: 'simple-array', nullable: true })
+  providerIds?: string[]; // L'ID unique fourni par Google/Microsoft
+
 
   // 1. Relation pour le Particulier (1 Client <-> 1 Profil Personnel)
   @OneToOne(() => Personal, (personal) => personal.client, { cascade: true, nullable: true })

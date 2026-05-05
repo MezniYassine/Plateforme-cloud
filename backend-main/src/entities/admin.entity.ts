@@ -16,4 +16,10 @@ export class Admin {
 
     @Column()
     password: string;
+
+    @Column({ type: 'simple-array', nullable: true })
+    providers?: string[];
+
+    @Column({ type: 'simple-array', nullable: true })
+    providerIds?: string[];
 }

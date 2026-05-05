@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
@@ -11,8 +12,11 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 import { AccountStatus } from 'src/enum/account-status.enum';
 import { Repository } from 'typeorm';
+import { Admin } from 'src/entities/admin.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Client } from 'src/entities/client.entity';
+import { Personal } from 'src/entities/personal.entity';
+import { RoleClient } from 'src/enum/role-client.enum';
 
 // --- DTOs ---
 export interface RegisterEnterpriseDto {
@@ -44,7 +48,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
-    @InjectRepository(Client) private usersRepo: Repository<Client>,
+    @InjectRepository(Client) private clientRepo: Repository<Client>,
+    @InjectRepository(Personal) private personalRepo: Repository<Personal>,
+    @InjectRepository(Admin) private adminRepo: Repository<Admin>,
   ) { }
 
   // 1. Inscription d'une Entreprise (et de son premier Admin)
@@ -292,8 +298,83 @@ export class AuthService {
     }
     user.isEmailVerified = true;
 
-    await this.usersRepo.save(user);
+    await this.clientRepo.save(user);
 
     return { ok: true, message: 'Mot de passe configuré avec succès. Vous pouvez maintenant vous connecter.' };
+  }
+  // Fonction générique pour gérer Google et Microsoft
+  async oauthLogin(oauthUser: any) {
+    if (!oauthUser) {
+      throw new InternalServerErrorException(`Erreur d'authentification ${oauthUser.provider}`);
+    }
+
+    const email = oauthUser.email.toLowerCase().trim();
+
+    // --- ÉTAPE 1 : RECHERCHE ADMIN ---
+    let admin = await this.adminRepo.findOne({ where: { email } });
+    if (admin) {
+      // Initialisation si les tableaux sont null
+      admin.providers = admin.providers || [];
+      admin.providerIds = admin.providerIds || [];
+
+      // Ajout à la liste si c'est un nouveau provider pour cet admin
+      if (!admin.providers.includes(oauthUser.provider)) {
+        admin.providers.push(oauthUser.provider);
+        admin.providerIds.push(oauthUser.providerId);
+        await this.adminRepo.save(admin);
+      }
+
+      const payload = { sub: admin.id, email: admin.email, role: 'GLOBAL_ADMIN' };
+      return { access_token: this.jwtService.sign(payload) };
+    }
+
+    // --- ÉTAPE 2 : RECHERCHE CLIENT ---
+    let user = await this.clientRepo.findOne({ where: { email } });
+
+    if (!user) {
+      // CRÉATION NOUVEAU COMPTE
+      const newUser = this.clientRepo.create({
+        email,
+        nom: oauthUser.lastName ?? 'Inconnu',
+        prenom: oauthUser.firstName ?? 'Inconnu',
+        password: null,
+        providers: [oauthUser.provider], // On crée le premier élément du tableau
+        providerIds: [oauthUser.providerId],
+        status: AccountStatus.APPROVED,
+        role: RoleClient.PERSONNEL,
+      });
+      user = await this.clientRepo.save(newUser);
+
+      await this.personalRepo.save(this.personalRepo.create({ id: user.id, profession: 'Non renseignée' }));
+    } else {
+      // MISE À JOUR COMPTE EXISTANT (LINKING)
+      user.providers = user.providers || [];
+      user.providerIds = user.providerIds || [];
+
+      if (!user.providers.includes(oauthUser.provider)) {
+        user.providers.push(oauthUser.provider);
+        user.providerIds.push(oauthUser.providerId);
+        await this.clientRepo.save(user);
+      }
+
+      // Vérification profil personnel
+      if (user.role === RoleClient.PERSONNEL) {
+        const existing = await this.personalRepo.findOne({ where: { id: user.id } });
+        if (!existing) {
+          await this.personalRepo.save(this.personalRepo.create({ id: user.id, profession: 'Non renseignée' }));
+        }
+      }
+    }
+
+    const payload = { sub: user.id, email: user.email, role: user.role, status: user.status };
+    return { access_token: this.jwtService.sign(payload) };
+  }
+
+  async googleLogin(googleUser: any) {
+    return this.oauthLogin({ ...googleUser, provider: 'google' });
+  }
+
+  async microsoftLogin(microsoftUser: any) {
+    return this.oauthLogin({ ...microsoftUser, provider: 'microsoft' });
   }
 }

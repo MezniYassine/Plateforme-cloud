@@ -4,8 +4,15 @@ import {
   Post,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Get,
+  Req,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import * as authService from './auth.service';
+import { GoogleAuthGuard } from './google-auth.guard';
+import { MicrosoftAuthGuard } from './microsoft-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -53,5 +60,38 @@ export class AuthController {
     @Body('password') password: string,
   ) {
     return this.authService.setupPassword(token, password);
+  }
+
+  // 1. L'utilisateur clique sur "Se connecter avec Google" dans Angular
+  // Ça appelle cette route, qui redirige vers la vraie page de login Google
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  async googleAuth(@Req() req) {
+    // Rien à faire ici, le Guard s'occupe de la redirection vers Google
+  }
+
+  // 2. Google renvoie l'utilisateur ici après qu'il ait mis son mot de passe
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  async googleAuthRedirect(@Req() req, @Res() res: any) {
+    // req.user contient les infos envoyées par la GoogleStrategy
+    const jwtToken = await this.authService.googleLogin(req.user);
+
+    // TRÈS IMPORTANT : On redirige vers ton FRONTEND Angular avec le token dans l'URL !
+    return res.redirect(`http://localhost:4200/login/success?token=${jwtToken.access_token}`);
+  }
+
+  @Get('microsoft')
+  @UseGuards(MicrosoftAuthGuard)
+  async microsoftAuth(@Req() req) {
+    // Redirige vers la page de login Microsoft
+  }
+
+  @Get('microsoft/callback')
+  @UseGuards(MicrosoftAuthGuard)
+  async microsoftAuthRedirect(@Req() req, @Res() res: Response) {
+    const jwtToken = await this.authService.microsoftLogin(req.user);
+
+    return res.redirect(`http://localhost:4200/login/success?token=${jwtToken.access_token}`);
   }
 }

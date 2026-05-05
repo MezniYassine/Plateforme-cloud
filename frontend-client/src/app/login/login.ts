@@ -146,4 +146,11 @@ export class LoginComponent implements OnInit {
     this.showPassword.update(v => !v);
   }
 
+  loginWithGoogle() {
+    window.location.href = 'http://localhost:3000/auth/google';
+  }
+
+  loginWithMicrosoft() {
+    window.location.href = 'http://localhost:3000/auth/microsoft';
+  }
 }

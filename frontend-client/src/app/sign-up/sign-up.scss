@@ -712,3 +712,57 @@ input:focus {
     font-size: 12px;
   }
 }
+
+
+/* -- Social login buttons -- */
+.btn-google,
+.btn-microsoft {
+  background: #f8fafc;
+  color: var(--text-dark);
+  border: 1.5px solid var(--border);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: none;
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-google:hover,
+.btn-microsoft:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 4px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.divider span {
+  font-size: 12px;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}

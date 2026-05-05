@@ -37,6 +37,11 @@ export const routes: Routes = [
       import('./login/login').then((m) => m.LoginComponent),
   },
   {
+    path: 'login/success',
+    loadComponent: () =>
+      import('./login/login-success').then((m) => m.LoginSuccessComponent),
+  },
+  {
     path: 'personal-invitation',
     loadComponent: () =>
       import('./personal/personal-invitation/personal-invitation').then((m) => m.PersonalInvitation),

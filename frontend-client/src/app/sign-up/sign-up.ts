@@ -213,4 +213,11 @@ export class SignupComponent implements OnInit {
         },
       });
   }
+  loginWithGoogle() {
+    window.location.href = 'http://localhost:3000/auth/google';
+  }
+
+  loginWithMicrosoft() {
+    window.location.href = 'http://localhost:3000/auth/microsoft';
+  }
 }
