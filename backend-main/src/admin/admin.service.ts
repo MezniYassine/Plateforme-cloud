@@ -60,5 +60,13 @@ export class AdminService {
     async getProfile(adminId: number) {
         return this.adminRepository.findOne({ where: { id: adminId } });
     }
+    async updateProfile(adminId: number, updateData: Partial<Admin>) {
+        const admin = await this.adminRepository.findOne({ where: { id: adminId } });
+        if (!admin) throw new NotFoundException('Admin non trouvé');
+        if (updateData.nom) admin.nom = updateData.nom;
+        if (updateData.prenom) admin.prenom = updateData.prenom;
+        if (updateData.email) admin.email = updateData.email;
+        return this.adminRepository.save(admin);
+    }
 
 }

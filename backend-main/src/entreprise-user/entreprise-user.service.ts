@@ -15,4 +15,5 @@ export class EntrepriseUserService {
         return this.clientRepository.findOne({ where: { id: clientId }, relations: ['entreprise'] });
     }
 
+
 }

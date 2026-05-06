@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { Client } from 'src/entities/client.entity';
 import { AccountStatus } from 'src/enum/account-status.enum';
 import { RoleClient } from 'src/enum/role-client.enum';
+import { Entreprise } from 'src/entities/entreprise.entity';
 
 export interface InviteDto {
     nom: string;
@@ -20,7 +21,12 @@ export class EntrepriseService {
         private readonly clientRepository: Repository<Client>,
         private readonly mailerService: MailerService,
         private readonly jwtService: JwtService,
+        @InjectRepository(Entreprise)
+        private readonly entrepriseRepository: Repository<Entreprise>
     ) { }
+
+
+
 
 
     async getProfile(clientId: number) {
@@ -84,6 +90,25 @@ export class EntrepriseService {
         });
 
         return { message: 'Invitation envoyee avec succes' };
+    }
+    async getUserByEntreprise(adminId: number) {
+    const admin = await this.clientRepository.findOne({ 
+        where: { id: adminId },
+        relations: ['entreprise']
+    });
+
+    if (!admin || !admin.entreprise) {
+        throw new NotFoundException("Cet administrateur n'est rattaché à aucune entreprise.");
+    }
+
+    const entrepriseId = admin.entreprise.id;
+
+    return this.clientRepository.find({
+        where: { 
+        entreprise: { id: entrepriseId },
+        role: RoleClient.ENTREPRISE_USER 
+        }
+    });
     }
 
 }

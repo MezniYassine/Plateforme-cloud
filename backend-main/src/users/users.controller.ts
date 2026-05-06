@@ -1,14 +1,29 @@
-import { Controller, Post, Body, Get, Patch, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Req, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Client } from '../entities/client.entity';
-import { AccountStatus } from 'src/enum/account-status.enum';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('users')
+@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @Post()
   async create(@Body() userData: Partial<Client>) {
     return this.usersService.create(userData);
+  }
+
+  @Get('me')
+  async getMe(@Req() req: any) {
+    const userId = req.user.sub;
+    return this.usersService.findByIdwithoutPassword(userId);
+  }
+  @Patch('update-profile')
+  async updateProfile(@Req() req: any, @Body() updateData: Partial<Client>) {
+    return this.usersService.updateProfile(req.user.sub, updateData);
+  }
+  @Patch('update-password')
+  async updatePassword(@Req() req: any, @Body() updateData: Partial<Client>) {
+    return this.usersService.updatePassword(req.user.sub, updateData);
   }
 }

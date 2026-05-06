@@ -42,5 +42,5 @@ export class BillingPageComponent {
     { label: 'K8s namespace isolé', price: '5.00 DT/mois' },
   ]);
 
-  constructor(public h: DashboardHelperService) {}
+  constructor(public h: DashboardHelperService) { }
 }

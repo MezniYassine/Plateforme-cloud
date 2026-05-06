@@ -2,6 +2,7 @@ import { Controller, Patch, Param, Body, ParseIntPipe, Get, UseGuards, Req } fro
 import { AdminService } from './admin.service';
 import { AccountStatus } from 'src/enum/account-status.enum';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Admin } from 'src/entities/admin.entity';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard)
@@ -24,5 +25,9 @@ export class AdminController {
     async getProfile(@Req() req) {
         const adminId = parseInt(req.user.sub, 10);
         return this.adminService.getProfile(adminId);
+    }
+    @Patch('update-profile')
+    async updateProfile(@Req() req: any, @Body() updateData: Partial<Admin>) {
+        return this.adminService.updateProfile(req.user.userId, updateData);
     }
 }

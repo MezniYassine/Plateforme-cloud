@@ -1,7 +1,7 @@
 import { Component, computed, signal, OnInit, ViewEncapsulation, inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../environments/environment';
 import { Tenant, Activity, Admin } from './dashboard-helper.service';
 import { DashboardOverviewComponent } from './pages/dashboard-overview/dashboard-overview';
 import { TenantsPageComponent } from './pages/tenants-page/tenants-page';
@@ -13,6 +13,8 @@ import { IamPageComponent } from './pages/iam-page/iam-page';
 import { CataloguePageComponent } from './pages/catalogue-page/catalogue-page';
 import { ProfilePageComponent } from './pages/profile-page/profile-page';
 import { isPlatformBrowser } from '@angular/common';
+import { Sidebar } from './pages/sidebar/sidebar';
+import { Topbar } from './pages/topbar/topbar';
 
 /* ── COMPONENT ────────────────────────────────────── */
 @Component({
@@ -28,6 +30,8 @@ import { isPlatformBrowser } from '@angular/common';
     IamPageComponent,
     CataloguePageComponent,
     ProfilePageComponent,
+    Sidebar,
+    Topbar,
   ],
   templateUrl: './admin-dashboard.html',
   styleUrl: './admin-dashboard.scss',

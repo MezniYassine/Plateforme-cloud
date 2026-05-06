@@ -29,7 +29,7 @@ export const routes: Routes = [
     path: 'admin-dashboard',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./admin/admin-dashboard/admin-dashboard').then((m) => m.AdminDashboard),
+      import('./admin/admin-dashboard').then((m) => m.AdminDashboard),
   },
   {
     path: 'login',
@@ -62,5 +62,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./entreprise/entreprise-admin-dashboard/entreprise-admin-dashboard').then((m) => m.EntrepriseAdminDashboard),
+  },
+  {
+    path: 'entreprise-user-dashboard',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./entreprise/entreprise-user/entreprise-user').then((m) => m.EntrepriseUserDashboard),
   }
 ];

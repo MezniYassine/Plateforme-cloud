@@ -1,0 +1,74 @@
+﻿<div style="max-width:540px">
+    <div class="section-card" style="margin-bottom:16px">
+        <form [formGroup]="profileForm" (ngSubmit)="onUpdate()">
+            <div class="card-header">
+                <div class="card-title">Mon profil</div>
+                <button class="btn-sm primary" type="submit" [disabled]="profileForm.invalid">Enregistrer</button>
+            </div>
+            <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+                <div
+                    style="display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--border-light)">
+                    <div class="user-av" style="width:50px;height:50px;font-size:17px;border-radius:12px">{{
+                        state.getInitials(state.actualUser()?.prenom+" "+state.actualUser()?.nom) }}</div>
+                    <div>
+                        <div style="font-size:14px;font-weight:600;color:var(--text-1)">{{ state.actualUser()?.nom+"
+                            "+state.actualUser()?.prenom }}</div>
+                        <div style="font-size:12px;color:var(--text-muted)">Utilisateur à· {{
+                            state.actualUser()?.entreprise?.nomEntreprise }}
+                        </div>
+                        <span class="badge approved" style="margin-top:4px">
+                            <div class="badge-dot"></div>Compte actif
+                        </span>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div class="profile-field"><label>Prénom</label><input formControlName="prenom" type="text"
+                            value="{{state.actualUser()?.prenom}}"></div>
+                    <div class="profile-field"><label>Nom</label><input formControlName="nom" type="text"
+                            value="{{state.actualUser()?.nom}}">
+                    </div>
+                </div>
+                <div class="profile-field"><label>Email</label><input formControlName="email" type="email"
+                        value="{{state.actualUser()?.email}}" readonly style="background:#f1f5f9;cursor:default">
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="section-card">
+        <div class="card-header">
+            <div class="card-title">Sécurité</div>
+        </div>
+        <div class="section-card">
+            <div class="card-header">
+                <div class="card-title">Sécurité</div>
+            </div>
+            <div style="padding:14px 22px;display:flex;flex-direction:column;gap:10px">
+
+                <div
+                    style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
+                    <div>
+                        <div style="font-size:13.5px;font-weight:600">Authentification MFA</div>
+                        <div style="font-size:12px;color:var(--text-muted)">Protégez votre compte avec un code TOTP
+                        </div>
+                    </div>
+                    <button class="btn-sm primary" type="button">Activer</button>
+                </div>
+
+                <div
+                    style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
+                    <div>
+                        <div style="font-size:13.5px;font-weight:600">Changer le mot de passe</div>
+                        <div style="font-size:12px;color:var(--text-muted)">Mettre à jour votre accès sécurisé</div>
+                    </div>
+                    <button class="btn-sm" type="button" (click)="showPasswordModal = true">Modifier</button>
+                </div>
+
+                @if (showPasswordModal) {
+                <app-change-password-modal (closeDialog)="showPasswordModal = false"></app-change-password-modal>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>

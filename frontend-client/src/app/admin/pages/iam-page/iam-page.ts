@@ -44,5 +44,5 @@ export class IamPageComponent {
     { label: 'Alertes de connexion suspecte', desc: 'Notification email si nouvel IP détecté', enabled: false },
   ]);
 
-  constructor(public h: DashboardHelperService) {}
+  constructor(public h: DashboardHelperService) { }
 }

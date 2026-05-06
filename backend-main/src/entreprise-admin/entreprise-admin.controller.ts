@@ -20,4 +20,8 @@ export class EntrepriseController {
         return this.entService.inviterCollaborateur(dto, req.user);
     }
 
+    @Get('users')
+    async getUserByEntreprise(@Req() req) {
+        return this.entService.getUserByEntreprise(req.user.sub);
+    }
 }

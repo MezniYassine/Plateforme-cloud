@@ -5,12 +5,12 @@ import { EntrepriseUserService } from './entreprise-user.service';
 @Controller('entreprise-user')
 @UseGuards(JwtAuthGuard)
 export class EntrepriseUserController {
-    constructor(private readonly entService: EntrepriseUserService) { }
+    constructor(private readonly entUserService: EntrepriseUserService) { }
 
     @Get('me')
     async getProfile(@Req() req) {
         const perId = parseInt(req.user.sub, 10);
-        return this.entService.getProfile(perId);
+        return this.entUserService.getProfile(perId);
     }
 
 }

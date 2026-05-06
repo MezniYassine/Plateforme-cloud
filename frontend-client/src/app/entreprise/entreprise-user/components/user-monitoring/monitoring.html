@@ -1,0 +1,64 @@
+﻿<div class="page-header-row" style="margin-bottom:20px">
+    <div>
+        <div class="page-h-title">Monitoring</div>
+        <div class="page-h-sub">Métriques CPU, RAM et réseau de vos instances en temps réel</div>
+    </div>
+</div>
+
+<div class="monitor-grid">
+    @for (vm of state.myVMs(); track vm.id) {
+    <div class="monitor-card">
+        <div class="mc-header">
+            <div>
+                <div class="mc-name">{{ vm.name }}</div>
+                <div class="mc-sub">{{ vm.os }} Â· {{ vm.ip }}</div>
+            </div>
+            <span class="badge" [class]="vm.status === 'running' ? 'approved' : 'suspended'">
+                <div class="badge-dot"></div>{{ vm.status === 'running' ? 'Online' : 'Offline' }}
+            </span>
+        </div>
+
+        @if (vm.status === 'running') {
+        <!-- Sparkline -->
+        <div class="sparkline">
+            @for (b of state.sparkData(vm.cpu); track $index) {
+            <div class="spark-bar" [style.height]="b+'%'"
+                [style.background]="b>80?'var(--red)':b>60?'var(--amber)':'var(--blue)'">
+            </div>
+            }
+        </div>
+        <div class="mc-metrics">
+            <div class="mc-metric">
+                <div class="mc-m-label">CPU</div>
+                <div class="mc-m-val" [style.color]="vm.cpu>80?'var(--red)':vm.cpu>60?'var(--amber)':'var(--text-1)'">{{
+                    vm.cpu }}%</div>
+            </div>
+            <div class="mc-metric">
+                <div class="mc-m-label">RAM</div>
+                <div class="mc-m-val">{{ vm.ram }}%</div>
+            </div>
+            <div class="mc-metric">
+                <div class="mc-m-label">Disque</div>
+                <div class="mc-m-val">12%</div>
+            </div>
+            <div class="mc-metric">
+                <div class="mc-m-label">RÃ©seau</div>
+                <div class="mc-m-val">â†‘ 2.1 MB/s</div>
+            </div>
+        </div>
+        } @else {
+        <div style="text-align:center;padding:28px 0;color:var(--text-muted);font-size:13px">Instance
+            arrêtée â€” pas de métriques</div>
+        }
+    </div>
+    }
+    @empty {
+    <div class="empty-state" style="grid-column:1/-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round"
+            width="40" height="40">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+        <p>Aucune instance à surveiller</p>
+    </div>
+    }
+</div>

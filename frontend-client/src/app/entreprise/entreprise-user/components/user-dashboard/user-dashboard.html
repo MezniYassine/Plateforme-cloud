@@ -1,0 +1,199 @@
+﻿@if (state.pendingOwnCount() > 0) {
+<div class="info-banner" (click)="state.setPage('my-requests')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" width="18"
+        height="18">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+    </svg>
+    <span><strong>{{ state.pendingOwnCount() }} demande(s)</strong> en attente de validation par votre Admin
+        Entreprise</span>
+    <span class="banner-link">Voir à</span>
+</div>
+}
+
+<!-- Stats -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Mes VMs actives</span>
+            <div class="stat-icon" style="background:var(--blue-light)">
+                <svg viewBox="0 0 24 24" stroke="var(--blue)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                    <rect x="2" y="3" width="20" height="5" rx="2" />
+                    <rect x="2" y="11" width="20" height="5" rx="2" />
+                </svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ state.myVMs().length }}</div>
+        <div class="stat-footer">
+            <span class="stat-delta up">{{ state.runningVmCount() }}
+                running</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Services actifs</span>
+            <div class="stat-icon" style="background:var(--teal-light)">
+                <svg viewBox="0 0 24 24" stroke="var(--teal)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                    <ellipse cx="12" cy="5" rx="9" ry="3" />
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                </svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ state.myServices().length }}</div>
+        <div class="stat-footer"><span class="stat-period">PaaS + SaaS</span></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Demandes en cours</span>
+            <div class="stat-icon" style="background:var(--amber-light)">
+                <svg viewBox="0 0 24 24" stroke="var(--amber)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M9 11l3 3L22 4" />
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                </svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ state.pendingOwnCount() }}</div>
+        <div class="stat-footer"><span class="stat-period">En attente admin</span></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <span class="stat-label">Consommation mois</span>
+            <div class="stat-icon" style="background:var(--purple-light)">
+                <svg viewBox="0 0 24 24" stroke="var(--purple)" fill="none" stroke-width="1.8" stroke-linecap="round">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+            </div>
+        </div>
+        <div class="stat-value">{{ state.mySpend() }}</div>
+        <div class="stat-footer"><span class="stat-period">DT ce mois</span></div>
+    </div>
+</div>
+
+<div class="main-grid">
+    <!-- VMs quick -->
+    <div class="section-card">
+        <div class="card-header">
+            <div>
+                <div class="card-title">Mes instances</div>
+                <div class="card-sub">Ressources IaaS assignÃ©es</div>
+            </div>
+            <button class="btn-sm primary" (click)="state.setPage('new-request')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    width="12" height="12">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Nouvelle demande
+            </button>
+        </div>
+        <div class="vm-mini-list">
+            @for (vm of state.myVMs(); track vm.id) {
+            <div class="vm-mini-row">
+                <div class="vm-mi-left">
+                    <div class="vm-status-dot" [class]="vm.status"></div>
+                    <div>
+                        <div class="vm-mi-name">{{ vm.name }}</div>
+                        <div class="vm-mi-sub">{{ vm.os }} Â· {{ vm.ip }}</div>
+                    </div>
+                </div>
+                @if (vm.status === 'running') {
+                <div class="vm-mi-metrics">
+                    <div class="mini-metric">
+                        <span class="mm-label">CPU</span>
+                        <div class="mini-bar">
+                            <div class="mini-fill" [style.width]="vm.cpu+'%'"
+                                [style.background]="vm.cpu>80?'var(--red)':vm.cpu>60?'var(--amber)':'var(--blue)'">
+                            </div>
+                        </div>
+                        <span class="mm-val">{{ vm.cpu }}%</span>
+                    </div>
+                    <div class="mini-metric">
+                        <span class="mm-label">RAM</span>
+                        <div class="mini-bar">
+                            <div class="mini-fill" [style.width]="vm.ram+'%'"
+                                [style.background]="vm.ram>80?'var(--red)':vm.ram>60?'var(--amber)':'var(--teal)'">
+                            </div>
+                        </div>
+                        <span class="mm-val">{{ vm.ram }}%</span>
+                    </div>
+                </div>
+                } @else {
+                <span style="font-size:12px;color:var(--text-muted)">Instance arrétée</span>
+                }
+                <span class="badge" [class]="vm.status === 'running' ? 'approved' : 'suspended'">
+                    <div class="badge-dot"></div>{{ vm.status === 'running' ? 'Running' : 'Stopped' }}
+                </span>
+            </div>
+            }
+            @empty {
+            <div class="empty-mini">
+                Aucune VM â€” <span class="link-btn" (click)="state.setPage('new-request')">faire une demande</span>
+            </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right -->
+    <div class="right-col">
+        <!-- Services mini -->
+        <div class="section-card">
+            <div class="card-header">
+                <div class="card-title">Mes services</div>
+                <button class="btn-sm" (click)="state.setPage('services')">Voir tout</button>
+            </div>
+            <div class="svc-mini-list">
+                @for (s of state.myServices(); track s.id) {
+                <div class="svc-mini-row">
+                    <div class="svc-icon-sm" [style.background]="s.bg">
+                        <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="s.color" stroke-width="1.8"
+                            stroke-linecap="round" width="14" height="14">
+                            @if (s.type==='db') {
+                            <ellipse cx="12" cy="5" rx="9" ry="3" />
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /> }
+                            @else {
+                            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" /> }
+                        </svg>
+                    </div>
+                    <div class="svc-mini-info">
+                        <div class="svc-mini-name">{{ s.name }}</div>
+                        <div class="svc-mini-url">{{ s.url }}</div>
+                    </div>
+                    <span class="badge approved">
+                        <div class="badge-dot"></div>Running
+                    </span>
+                </div>
+                }
+                @empty {
+                <div class="empty-mini">Aucun service actif</div>
+                }
+            </div>
+        </div>
+
+        <!-- Recent requests mini -->
+        <div class="section-card">
+            <div class="card-header">
+                <div class="card-title">Mes derniéres demandes</div>
+                <button class="btn-sm" (click)="state.setPage('my-requests')">Tout voir</button>
+            </div>
+            <div class="req-mini-list">
+                @for (r of state.myRequests().slice(0,4); track r.id) {
+                <div class="req-mini-row">
+                    <span class="type-pill" [attr.data-t]="r.type">{{ r.type.toUpperCase() }}</span>
+                    <div class="req-mi-info">
+                        <div class="req-mi-name">{{ r.name }}</div>
+                        <div class="req-mi-date">{{ r.date }}</div>
+                    </div>
+                    <span class="badge"
+                        [class]="r.status === 'pending' ? 'pending' : r.status === 'approved' ? 'approved' : 'rejected'">
+                        <div class="badge-dot"></div>
+                        {{ r.status === 'pending' ? 'En attente' : r.status === 'approved' ? 'Approuvée' :
+                        'Rejetée' }}
+                    </span>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

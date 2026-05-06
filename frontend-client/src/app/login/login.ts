@@ -138,6 +138,10 @@ export class LoginComponent implements OnInit {
       this.router.navigate(['/pending-approval']);
     }
 
+    else if (role == 'ENTREPRISE_USER') {
+      this.router.navigate(['/entreprise-user-dashboard']);
+    }
+
     else {
       this.router.navigate(['/console']);
     }

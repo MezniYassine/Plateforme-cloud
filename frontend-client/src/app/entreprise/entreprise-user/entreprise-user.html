@@ -1,0 +1,55 @@
+@if(isBrowserAndReady){
+
+<div class="app">
+    <app-sidebar />
+
+    <div class="main">
+        <app-topbar />
+
+        <div class="content">
+            @switch (state.activePage()) {
+            @case ('dashboard') {
+            <app-user-dashboard />
+            }
+            @case ('new-request') {
+            <app-new-request />
+            }
+            @case ('my-requests') {
+            <app-my-requests />
+            }
+            @case ('vms') {
+            <app-vms />
+            }
+            @case ('services') {
+            <app-services />
+            }
+            @case ('monitoring') {
+            <app-monitoring />
+            }
+            @case ('profile') {
+            <app-profile />
+            }
+            }
+        </div>
+    </div>
+</div>
+
+<div class="toast" [class.show]="state.isToastVisible()">
+    <div class="toast-icon" [style.background]="state.toastColor()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+            @if (!state.toastColor().includes('red')) {
+            <polyline points="20 6 9 17 4 12" />
+            } @else {
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+            }
+        </svg>
+    </div>
+    <span>{{ state.toastMsg() }}</span>
+</div>
+}
+@else{
+<div style="height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #f8f9fa;">
+    <h2>Vérification de la sécurité...</h2>
+</div>
+}

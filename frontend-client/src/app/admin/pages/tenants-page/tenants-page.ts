@@ -8,10 +8,10 @@ import { DashboardHelperService, Tenant } from '../../dashboard-helper.service';
   templateUrl: './tenants-page.html',
 })
 export class TenantsPageComponent {
-  tenants    = input.required<Tenant[]>();
+  tenants = input.required<Tenant[]>();
   activePage = input.required<string>();
 
-  openModal   = output<string>();
+  openModal = output<string>();
   quickAction = output<{ id: string; status: Tenant['status'] }>();
 
   currentFilter = signal<string>('all');
@@ -27,7 +27,7 @@ export class TenantsPageComponent {
     });
   });
 
-  constructor(public h: DashboardHelperService) {}
+  constructor(public h: DashboardHelperService) { }
 
   filterStatus(status: string) { this.currentFilter.set(status); }
   filterTable(event: Event) { this.currentSearch.set((event.target as HTMLInputElement).value); }
