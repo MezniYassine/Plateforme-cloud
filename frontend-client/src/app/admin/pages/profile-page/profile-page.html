@@ -1,38 +1,77 @@
 <div style="max-width:640px">
-  <div class="section-card" style="margin-bottom:16px">
-    <div class="card-header">
-      <div class="card-title">Profil Super Admin</div>
-      <button class="btn-sm primary">Enregistrer</button>
-    </div>
-    <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
-      <div style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--border-light)">
-        <div class="admin-avatar" style="width:56px;height:56px;font-size:20px;border-radius:14px">SA</div>
-        <div>
-          <div style="font-size:15px;font-weight:600">Super Admin</div>
-          <div style="font-size:12.5px;color:var(--text-muted)">admin&#64;dynamix.tn · Rôle : SUPER_ADMIN</div>
+  <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()">
+    <div class="section-card" style="margin-bottom:16px">
+      <div class="card-header">
+        <div class="card-title">Profil Super Admin</div>
+        <button type="submit" class="btn-sm primary" [disabled]="profileForm.invalid">Enregistrer</button>
+      </div>
+
+      <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+        <div
+          style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--border-light)">
+          <div class="admin-avatar" style="width:56px;height:56px;font-size:20px;border-radius:14px">
+            {{ getInitials() }}
+          </div>
+          <div>
+            <div style="font-size:15px;font-weight:600">{{ actualAdmin?.prenom }} {{ actualAdmin?.nom }}</div>
+            <div style="font-size:12.5px;color:var(--text-muted)">{{ actualAdmin?.email }} · Rôle : SUPER_ADMIN</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="profile-field">
+            <label>Prénom</label>
+            <input type="text" formControlName="prenom">
+          </div>
+          <div class="profile-field">
+            <label>Nom</label>
+            <input type="text" formControlName="nom">
+          </div>
+        </div>
+
+        <div class="profile-field">
+          <label>Email</label>
+          <input type="email" formControlName="email">
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div class="profile-field"><label>Prénom</label><input type="text" value="Super"></div>
-        <div class="profile-field"><label>Nom</label><input type="text" value="Admin"></div>
+    </div>
+  </form>
+
+  <div class="section-card">
+    <div class="card-header">
+      <div class="card-title">Sécurité du compte</div>
+    </div>
+    <div style="padding:16px 22px;display:flex;flex-direction:column;gap:10px">
+
+      <div
+        style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
+        <div>
+          <div style="font-size:13.5px;font-weight:600">Authentification MFA</div>
+          <div style="font-size:12px;color:var(--text-muted)">TOTP actif — Google Authenticator</div>
+        </div>
+        <button type="button" class="btn-sm">Reconfigurer</button>
       </div>
-      <div class="profile-field"><label>Email</label><input type="email" value="admin@dynamix.tn"></div>
-      <div class="profile-field"><label>Téléphone</label><input type="text" value="+216 71 000 000"></div>
+
+      <div
+        style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
+        <div>
+          <div style="font-size:13.5px;font-weight:600">Changer le mot de passe</div>
+        </div>
+        <button type="button" class="btn-sm" (click)="showPasswordModal = true">Modifier</button>
+      </div>
+      @if (showPasswordModal) {
+      <app-change-password-modal (closeDialog)="showPasswordModal = false" [role]="role"></app-change-password-modal>
+      }
+      <div
+        style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
+        <div>
+          <div style="font-size:13.5px;font-weight:600">Journal d'audit</div>
+          <div style="font-size:12px;color:var(--text-muted)">Toutes vos actions sont tracées</div>
+        </div>
+        <button type="button" class="btn-sm primary">Voir les logs</button>
+      </div>
     </div>
   </div>
 
-  <div class="section-card">
-    <div class="card-header"><div class="card-title">Sécurité du compte</div></div>
-    <div style="padding:16px 22px;display:flex;flex-direction:column;gap:10px">
-      @for (item of profileSecurity(); track item.label) {
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
-        <div>
-          <div style="font-size:13.5px;font-weight:600">{{ item.label }}</div>
-          <div style="font-size:12px;color:var(--text-muted)">{{ item.desc }}</div>
-        </div>
-        <button class="btn-sm" [class]="item.primary ? 'primary' : ''">{{ item.action }}</button>
-      </div>
-      }
-    </div>
-  </div>
+
 </div>

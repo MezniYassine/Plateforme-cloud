@@ -66,9 +66,8 @@ export class EntrepriseAdminDashboard implements OnInit {
   inviteForm!: FormGroup;
   adminEmail = computed(() => this.actualAdmin()?.email ?? '');
   companyName = computed(() => this.actualAdmin()?.entreprise?.nomEntreprise ?? '');
-  companyTaxId = computed(() => this.actualAdmin()?.entreprise?.taxId ?? '');
-  taxId = signal<string>('TN12345678900');
-  tenantId = signal<string>('tenant-acme-x8k2j');
+  companyTaxId = computed(() => this.actualAdmin()?.entreprise?.identifiantFiscal ?? '');
+
 
   /* ── WALLET & BUDGET ────────────────────────────── */
   walletBalance = signal<number>(1240.50);
@@ -164,13 +163,7 @@ export class EntrepriseAdminDashboard implements OnInit {
     { type: 'approve', msg: '<strong>Nextcloud</strong> — déploiement validé et actif', time: 'Il y a 7j', color: 'var(--green)', bg: 'var(--green-light)' },
   ]);
 
-  /* ── PROFILE ─────────────────────────────────────── */
-  profileSecurity = signal([
-    { label: 'Authentification MFA', desc: 'TOTP actif — requis à chaque connexion', action: 'Reconfigurer', primary: false },
-    { label: 'Changer le mot de passe', desc: 'Dernière modification il y a 21 jours', action: 'Modifier', primary: false },
-    { label: 'Sessions actives', desc: '1 session active en ce moment', action: 'Gérer', primary: false },
-    { label: 'Journal d\'audit', desc: 'Toutes vos actions sont tracées', action: 'Voir', primary: true },
-  ]);
+
 
   /* ── MODAL ───────────────────────────────────────── */
   showInviteModal = signal<boolean>(false);

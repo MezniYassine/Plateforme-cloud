@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Client } from 'src/entities/client.entity';
 import { AccountStatus } from 'src/enum/account-status.enum';
 import { Admin } from 'src/entities/admin.entity';
+import bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AdminService {
@@ -67,6 +68,26 @@ export class AdminService {
         if (updateData.prenom) admin.prenom = updateData.prenom;
         if (updateData.email) admin.email = updateData.email;
         return this.adminRepository.save(admin);
+    }
+    async updatePassword(userId: number, dto: any) {
+        const user = await this.adminRepository.findOne({ where: { id: userId } });
+        if (!user) throw new NotFoundException('Utilisateur introuvable');
+
+        if (!dto.oldPassword || !user.password) {
+            throw new BadRequestException('Données de mot de passe manquantes');
+        }
+
+        const isMatch = await bcrypt.compare(dto.oldPassword, user.password);
+
+        if (!isMatch) {
+            throw new BadRequestException('L\'ancien mot de passe est incorrect');
+        }
+
+        user.password = await bcrypt.hash(dto.newPassword, 10);
+
+        await this.clientRepo.save(user);
+
+        return { message: 'Mot de passe mis à jour' };
     }
 
 }

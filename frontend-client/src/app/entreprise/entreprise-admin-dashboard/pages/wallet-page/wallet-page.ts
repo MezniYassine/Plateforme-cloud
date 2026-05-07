@@ -16,7 +16,6 @@ interface WalletSummaryItem {
 export class WalletPageComponent {
   walletBalance = input.required<number>();
   companyName = input.required<string>();
-  tenantId = input.required<string>();
   walletTransactions = input.required<WalletTransaction[]>();
   walletSummary = input.required<WalletSummaryItem[]>();
 

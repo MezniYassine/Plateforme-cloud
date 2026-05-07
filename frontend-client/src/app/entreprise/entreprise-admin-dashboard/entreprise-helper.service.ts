@@ -11,7 +11,7 @@ export interface Admin {
     id: string; email: string; nom: string; prenom: string;
     entreprise?: {
         nomEntreprise: string;
-        taxId: string;
+        identifiantFiscal: string;
     };
 }
 

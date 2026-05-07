@@ -1,5 +1,5 @@
 ﻿<aside class="sidebar">
-    <div class="sidebar-logo">
+    <a class="sidebar-logo" [routerLink]="['']">
         <div class="logo-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
                 <path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -11,7 +11,7 @@
             <div class="logo-text">Dynamix</div>
             <div class="logo-sub">{{ state.actualUser()?.entreprise?.nomEntreprise }}</div>
         </div>
-    </div>
+    </a>
 
     <div class="sidebar-section">
         <div class="sidebar-label">Tableau de bord</div>

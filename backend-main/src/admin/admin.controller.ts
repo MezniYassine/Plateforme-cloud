@@ -30,4 +30,8 @@ export class AdminController {
     async updateProfile(@Req() req: any, @Body() updateData: Partial<Admin>) {
         return this.adminService.updateProfile(req.user.userId, updateData);
     }
+    @Patch('update-password')
+    async updatePassword(@Req() req: any, @Body() dto: any) {
+        return this.adminService.updatePassword(req.user.userId, dto);
+    }
 }

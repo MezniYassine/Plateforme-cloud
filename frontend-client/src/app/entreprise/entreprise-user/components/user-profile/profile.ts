@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { DashboardHelperService } from '../../dashboard-helper.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ChangePasswordModalComponent } from '../../change-password';
+import { ChangePasswordModalComponent } from '../../../../common/change-password';
 
 @Component({
   selector: 'app-profile',

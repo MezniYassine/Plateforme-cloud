@@ -179,14 +179,14 @@
 
             <!-- PAGE: PORTEFEUILLE -->
             @if (activePage() === 'wallet') {
-            <ent-wallet-page [walletBalance]="walletBalance()" [companyName]="companyName()" [tenantId]="tenantId()"
+            <ent-wallet-page [walletBalance]="walletBalance()" [companyName]="companyName()"
                 [walletTransactions]="walletTransactions()" [walletSummary]="walletSummary()"
                 (rechargeWallet)="rechargeWallet()" />
             }
 
             @if (activePage() === 'profile') {
             <ent-profile-page [adminName]="adminName()" [adminEmail]="adminEmail()" [companyName]="companyName()"
-                [taxId]="companyTaxId()" [tenantId]="tenantId()" [profileSecurity]="profileSecurity()" />
+                [taxId]="companyTaxId()" />
             }
         </div><!-- /content -->
     </div><!-- /main -->
