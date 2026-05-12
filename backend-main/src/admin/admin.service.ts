@@ -18,21 +18,17 @@ export class AdminService {
     ) { }
 
     async updateStatus(id: number, status: AccountStatus): Promise<Client> {
-        // 1. Ton ancienne logique (Légèrement améliorée avec NotFoundException)
         const client = await this.clientRepo.findOne({ where: { id } });
 
         if (!client) {
-            throw new NotFoundException('Client not found'); // Plus propre pour NestJS qu'une simple Error
+            throw new NotFoundException('Client not found');
         }
 
         client.status = status;
         const updatedClient = await this.clientRepo.save(client);
-
-        // 2. La nouvelle logique : Envoi de l'email selon le statut
-        // Adapte 'ACTIVE' et 'REJECTED' selon les vraies valeurs de ton enum AccountStatus
         if (status === AccountStatus.APPROVED) {
             await this.mailerService.sendMail({
-                to: client.email, // Assure-toi que ton entité Client a bien une propriété email
+                to: client.email,
                 subject: 'Bienvenue chez Dynamix ! Votre compte est activé 🎉',
                 html: `
           <h3>Félicitations !</h3>
@@ -50,7 +46,16 @@ export class AdminService {
         `,
             }).catch(err => console.error('Erreur email:', err));
         }
-
+        else if (status === AccountStatus.SUSPENDED) {
+            await this.mailerService.sendMail({
+                to: client.email,
+                subject: "Suspension de votre compte",
+                html: `
+                <h3>Bonjour,</h3>
+                <p>Malheureusement, votre compte a été suspendu pour le moment.</p>
+                `
+            }).catch(err => console.error('Erreur email:', err));
+        }
         return updatedClient;
     }
     async findAll() {

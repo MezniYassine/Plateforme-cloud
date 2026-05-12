@@ -59,6 +59,8 @@ export class EntrepriseAdminDashboard implements OnInit {
 
   /* ── COMPANY INFO ───────────────────────────────── */
   actualAdmin = signal<Admin | null>(null);
+  teamMembers = signal<TeamMember[]>([]);
+
   adminName = computed(() => {
     const admin = this.actualAdmin();
     return admin ? `${admin.nom} ${admin.prenom}` : '';
@@ -95,15 +97,6 @@ export class EntrepriseAdminDashboard implements OnInit {
   pendingRequestsCount = computed(() => this.resourceRequests().filter(r => r.status === 'pending').length);
 
   activeResourcesCount = computed(() => this.deployedResources().length);
-
-  /* ── TEAM MEMBERS ───────────────────────────────── */
-  teamMembers = signal<TeamMember[]>([
-    { id: 'm1', name: 'Anis Mrad', email: 'a.mrad@acme.com', color: '#1a56e8', active: true, vms: 3, services: 2, spend: 82 },
-    { id: 'm2', name: 'Sarra Ben Salah', email: 's.bensalah@acme.com', color: '#7c3aed', active: true, vms: 1, services: 3, spend: 55 },
-    { id: 'm3', name: 'Khalil Azizi', email: 'k.azizi@acme.com', color: '#0ea5e9', active: true, vms: 2, services: 1, spend: 46 },
-    { id: 'm4', name: 'Ines Gharbi', email: 'i.gharbi@acme.com', color: '#16a34a', active: false, vms: 0, services: 0, spend: 0 },
-  ]);
-
   teamSpend = computed(() => this.teamMembers().map(m => ({ name: m.name, spend: m.spend, color: m.color })));
 
   /* ── DEPLOYED RESOURCES ─────────────────────────── */
@@ -194,9 +187,12 @@ export class EntrepriseAdminDashboard implements OnInit {
 
   /* ── API ─────────────────────────────────────────── */
   loadData() {
-    // Load company info, team members and requests from backend
-    // const url = `${environment.apiBaseUrl}/enterprise/dashboard`;
-    // this.http.get(url).subscribe({ next: (data: any) => { ... } });
+    const url = `${environment.apiBaseUrl}/entreprise-admin/users`;
+    this.http.get(url).subscribe({
+      next: (data: any) => {
+        this.teamMembers.set(data);
+      }
+    });
   }
 
   inviterCollaborateur() {

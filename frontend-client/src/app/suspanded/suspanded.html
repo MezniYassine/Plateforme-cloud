@@ -1,0 +1,92 @@
+<nav>
+    <a class="logo" href="#">
+        <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+            </svg>
+        </div>
+        <span class="logo-text">Dynamix Services</span>
+    </a>
+    <span class="nav-company">Connecté en tant que : <strong id="nav-company">{{actualUser()?.prenom
+            }} {{actualUser()?.nom}}</strong></span>
+</nav>
+
+<div class="page-body">
+    <div class="card">
+
+        <div class="card-header">
+            <div class="header-inner">
+                <div class="h-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        <line x1="12" y1="15" x2="12" y2="17" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="h-label">
+                        <div class="h-dot"></div>
+                        Compte suspendu
+                    </div>
+                    <div class="h-title">Accès temporairement bloqué</div>
+                    <div class="h-sub">Votre espace cloud a été suspendu par l'administrateur Dynamix Services.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="message-block">
+                <div class="msg-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="msg-title">Motif de la suspension</div>
+                    <div class="msg-text" id="suspension-reason">
+                        Votre compte est en cours de vérification suite à une anomalie détectée sur votre dossier.
+                        Contactez le support pour régulariser votre situation et réactiver votre accès.
+                    </div>
+                </div>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span class="detail-key">Client</span>
+                    <span class="detail-val" id="detail-company">{{getDisplayName()}}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-key">Statut</span>
+                    <span class="detail-val red">SUSPENDED</span>
+                </div>
+            </div>
+
+            <div class="contact-row">
+                <svg viewBox="0 0 24 24">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                </svg>
+                Pour réactiver votre compte, contactez :
+                <a href="mailto:support@dynamix-services.com">support@dynamix-services.com</a>
+            </div>
+
+        </div>
+        <div class="card-footer">
+            <span class="footer-ref">Réf. : <strong id="suspension-ref">SUS-2025-06-0042</strong></span>
+            <button class="logout-btn" onclick="handleLogout()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Se déconnecter
+            </button>
+        </div>
+
+    </div>
+</div>

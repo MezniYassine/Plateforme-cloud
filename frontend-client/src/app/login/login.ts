@@ -45,7 +45,7 @@ export class LoginComponent implements OnInit {
         next: (res) => {
           if (res.requiresMFA) {
             this.pendingRole = res.user.role;
-            this.showMFA = true;   // affiche le modal OTP
+            this.showMFA = true;
           } else {
             this.saveTokenAndRedirect(res.token, res.user.role, res.user.status);
           }
@@ -140,6 +140,11 @@ export class LoginComponent implements OnInit {
 
     else if (role == 'ENTREPRISE_USER') {
       this.router.navigate(['/entreprise-user-dashboard']);
+    }
+
+    else if (status == 'SUSPENDED') {
+      console.log("Vers Suspended");
+      this.router.navigate(['/suspended']);
     }
 
     else {

@@ -9,7 +9,7 @@ import { Personal } from 'src/entities/personal.entity';
 import { Admin } from 'src/entities/admin.entity';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './jwt.strategy';
-import { GoogleStrategy } from './google.strategy'; // <-- Add GoogleStrategy
+import { GoogleStrategy } from './google.strategy';
 import { MicrosoftStrategy } from './microsoft.strategy';
 
 @Module({

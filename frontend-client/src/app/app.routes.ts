@@ -68,5 +68,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./entreprise/entreprise-user/entreprise-user').then((m) => m.EntrepriseUserDashboard),
+  },
+  {
+    path: 'suspended',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./suspanded/suspanded').then((m) => m.Suspended),
   }
 ];

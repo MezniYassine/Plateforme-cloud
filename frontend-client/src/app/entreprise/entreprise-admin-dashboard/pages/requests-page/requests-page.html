@@ -1,98 +1,97 @@
-﻿            <div class="section-card">
-                <div class="card-header">
-                    <div>
-                        <div class="card-title">Demandes de provisionnement</div>
-                        <div class="card-sub">Approuvez ou rejetez les demandes de votre équipe à chaque approbation
-                            délenche le paiement et le déploiement</div>
-                    </div>
-                    <div class="card-actions">
-                        <div class="filter-tabs" style="margin:0">
-                            <button class="filter-tab" [class.active]="reqFilter()==='all'"
-                                (click)="filterChange.emit('all')">Toutes</button>
-                            <button class="filter-tab" [class.active]="reqFilter()==='pending'"
-                                (click)="filterChange.emit('pending')">En attente <span class="tab-count">{{
-                                    pendingRequestsCount() }}</span></button>
-                            <button class="filter-tab" [class.active]="reqFilter()==='approved'"
-                                (click)="filterChange.emit('approved')">ApprouvÃ©es</button>
-                            <button class="filter-tab" [class.active]="reqFilter()==='rejected'"
-                                (click)="filterChange.emit('rejected')">RejetÃ©es</button>
-                        </div>
-                    </div>
+﻿<div class="section-card">
+    <div class="card-header">
+        <div>
+            <div class="card-title">Demandes de provisionnement</div>
+            <div class="card-sub">Approuvez ou rejetez les demandes de votre équipe à chaque approbation
+                délenche le paiement et le déploiement</div>
+        </div>
+        <div class="card-actions">
+            <div class="filter-tabs" style="margin:0">
+                <button class="filter-tab" [class.active]="reqFilter()==='all'"
+                    (click)="filterChange.emit('all')">Toutes</button>
+                <button class="filter-tab" [class.active]="reqFilter()==='pending'"
+                    (click)="filterChange.emit('pending')">En attente <span class="tab-count">{{
+                        pendingRequestsCount() }}</span></button>
+                <button class="filter-tab" [class.active]="reqFilter()==='approved'"
+                    (click)="filterChange.emit('approved')">Approuvées</button>
+                <button class="filter-tab" [class.active]="reqFilter()==='rejected'"
+                    (click)="filterChange.emit('rejected')">Rejetées</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="requests-detail-list">
+        @for (r of filteredRequests(); track r.id) {
+        <div class="request-detail-card" [class]="r.status">
+            <!-- Left: service icon + info -->
+            <div class="rdc-left">
+                <div class="rdc-icon" [style.background]="serviceColor(r.type).bg">
+                    <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="serviceColor(r.type).color" stroke-width="1.8"
+                        stroke-linecap="round">
+                        @if (r.type === 'vm') {
+                        <rect x="2" y="3" width="20" height="5" rx="2" />
+                        <rect x="2" y="11" width="20" height="5" rx="2" /> }
+                        @else if (r.type === 'db') {
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /> }
+                        @else {
+                        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" /> }
+                    </svg>
                 </div>
-
-                <div class="requests-detail-list">
-                    @for (r of filteredRequests(); track r.id) {
-                    <div class="request-detail-card" [class]="r.status">
-                        <!-- Left: service icon + info -->
-                        <div class="rdc-left">
-                            <div class="rdc-icon" [style.background]="serviceColor(r.type).bg">
-                                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="serviceColor(r.type).color"
-                                    stroke-width="1.8" stroke-linecap="round">
-                                    @if (r.type === 'vm') {
-                                    <rect x="2" y="3" width="20" height="5" rx="2" />
-                                    <rect x="2" y="11" width="20" height="5" rx="2" /> }
-                                    @else if (r.type === 'db') {
-                                    <ellipse cx="12" cy="5" rx="9" ry="3" />
-                                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-                                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /> }
-                                    @else {
-                                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" /> }
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="rdc-name">{{ r.name }}</div>
-                                <div class="rdc-type">{{ r.type === 'vm' ? 'Machine Virtuelle IaaS' : r.type === 'db' ?
-                                    'Base de donnÃ©es PaaS' : 'Application SaaS' }}</div>
-                            </div>
-                        </div>
-
-                        <!-- Center: specs -->
-                        <div class="rdc-specs">
-                            <div class="spec-item"><span class="spec-k">Demandeur</span><span class="spec-v">{{ r.user
-                                    }}</span></div>
-                            <div class="spec-item"><span class="spec-k">Configuration</span><span class="spec-v">{{
-                                    r.specs }}</span></div>
-                            <div class="spec-item"><span class="spec-k">Date demande</span><span class="spec-v">{{
-                                    r.date }}</span></div>
-                            <div class="spec-item"><span class="spec-k">Justification</span><span class="spec-v">{{
-                                    r.justification }}</span></div>
-                        </div>
-
-                        <!-- Right: cost + actions -->
-                        <div class="rdc-right">
-                            <div class="rdc-cost">
-                                <div class="cost-val">{{ r.cost }} DT</div>
-                                <div class="cost-label">par mois</div>
-                            </div>
-                            <span class="badge" [class]="r.status">
-                                <div class="badge-dot"></div>
-                                {{ r.status === 'pending' ? 'En attente' : r.status === 'approved' ? 'ApprouvÃ©e' :
-                                'RejetÃ©e' }}
-                            </span>
-                            @if (r.status === 'pending') {
-                            <div class="rdc-btns">
-                                <button class="btn-modal approve" (click)="approveRequest.emit(r.id)">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                                        stroke-linecap="round" width="13" height="13">
-                                        <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                    Approuver & Payer
-                                </button>
-                                <button class="btn-modal reject" (click)="rejectRequest.emit(r.id)">Rejeter</button>
-                            </div>
-                            }
-                        </div>
-                    </div>
-                    }
-                    @empty {
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"
-                            stroke-linecap="round">
-                            <path d="M9 11l3 3L22 4" />
-                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                        </svg>
-                        <p>Aucune demande dans cette catÃ©gorie</p>
-                    </div>
-                    }
+                <div>
+                    <div class="rdc-name">{{ r.name }}</div>
+                    <div class="rdc-type">{{ r.type === 'vm' ? 'Machine Virtuelle IaaS' : r.type === 'db' ?
+                        'Base de données PaaS' : 'Application SaaS' }}</div>
                 </div>
             </div>
+
+            <!-- Center: specs -->
+            <div class="rdc-specs">
+                <div class="spec-item"><span class="spec-k">Demandeur</span><span class="spec-v">{{ r.user
+                        }}</span></div>
+                <div class="spec-item"><span class="spec-k">Configuration</span><span class="spec-v">{{
+                        r.specs }}</span></div>
+                <div class="spec-item"><span class="spec-k">Date demande</span><span class="spec-v">{{
+                        r.date }}</span></div>
+                <div class="spec-item"><span class="spec-k">Justification</span><span class="spec-v">{{
+                        r.justification }}</span></div>
+            </div>
+
+            <!-- Right: cost + actions -->
+            <div class="rdc-right">
+                <div class="rdc-cost">
+                    <div class="cost-val">{{ r.cost }} DT</div>
+                    <div class="cost-label">par mois</div>
+                </div>
+                <span class="badge" [class]="r.status">
+                    <div class="badge-dot"></div>
+                    {{ r.status === 'pending' ? 'En attente' : r.status === 'approved' ? 'ApprouvÃ©e' :
+                    'RejetÃ©e' }}
+                </span>
+                @if (r.status === 'pending') {
+                <div class="rdc-btns">
+                    <button class="btn-modal approve" (click)="approveRequest.emit(r.id)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" width="13" height="13">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Approuver & Payer
+                    </button>
+                    <button class="btn-modal reject" (click)="rejectRequest.emit(r.id)">Rejeter</button>
+                </div>
+                }
+            </div>
+        </div>
+        }
+        @empty {
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round">
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+            <p>Aucune demande dans cette catégorie</p>
+        </div>
+        }
+    </div>
+</div>
