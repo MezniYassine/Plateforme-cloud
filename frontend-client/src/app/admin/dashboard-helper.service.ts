@@ -5,6 +5,7 @@ export interface Tenant {
   firstName: string; lastName: string; taxId: string;
   createdAt: string; registered: string;
   status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  accountType: 'personnel' | 'entreprise';
   vms: number; tenantId: string;
 }
 

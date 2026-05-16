@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { DashboardHelperService, Tenant, Activity } from '../../dashboard-helper.service';
 
 interface InfraMetric { label: string; val: string; pct: number; color: string; }
@@ -20,6 +20,8 @@ export class DashboardOverviewComponent {
   navigateTo = output<string>();
   openModal = output<string>();
   quickAction = output<{ id: string; status: Tenant['status'] }>();
+
+  pendingTenants = computed(() => this.tenants().filter(t => t.status === 'pending').slice(0, 5));
 
   constructor(public h: DashboardHelperService) { }
 

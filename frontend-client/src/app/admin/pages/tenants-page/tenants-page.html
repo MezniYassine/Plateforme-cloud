@@ -1,26 +1,23 @@
 <div class="section-card">
   <div class="card-header">
     <div>
-      <div class="card-title">{{ activePage() === 'inscriptions' ? 'Inscriptions en attente' : 'Tous les locataires' }}</div>
+      <div class="card-title">{{ activePage() === 'inscriptions' ? 'Inscriptions en attente' : 'Locataires approuvés' }}</div>
       <div class="card-sub">{{ filteredTenants().length }} compte(s) trouvé(s)</div>
     </div>
     <div class="card-actions">
       <button class="btn-sm">Exporter CSV</button>
-      <button class="btn-sm primary" (click)="showAllTenants()">Tous les comptes</button>
     </div>
   </div>
 
   <div class="filter-bar">
     <div class="search-wrap">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-      <input type="text" placeholder="Rechercher une entreprise…" (input)="filterTable($event)">
+      <input type="text" placeholder="Rechercher par nom, email ou entreprise..." (input)="filterTable($event)">
     </div>
     <div class="filter-tabs">
-      <button class="filter-tab" [class.active]="currentFilter()==='all'" (click)="filterStatus('all')">Tous</button>
-      <button class="filter-tab" [class.active]="currentFilter()==='pending'" (click)="filterStatus('pending')">En attente</button>
-      <button class="filter-tab" [class.active]="currentFilter()==='approved'" (click)="filterStatus('approved')">Approuvés</button>
-      <button class="filter-tab" [class.active]="currentFilter()==='rejected'" (click)="filterStatus('rejected')">Rejetés</button>
-      <button class="filter-tab" [class.active]="currentFilter()==='suspended'" (click)="filterStatus('suspended')">Suspendus</button>
+      <button class="filter-tab" [class.active]="currentTypeFilter()==='all'" (click)="filterType('all')">Tous</button>
+      <button class="filter-tab" [class.active]="currentTypeFilter()==='personnel'" (click)="filterType('personnel')">Personnel</button>
+      <button class="filter-tab" [class.active]="currentTypeFilter()==='entreprise'" (click)="filterType('entreprise')">Entreprise</button>
     </div>
   </div>
 
@@ -28,7 +25,7 @@
     <table>
       <thead>
         <tr>
-          <th>Entreprise</th><th>ID Fiscal</th><th>Date inscription</th><th>Statut</th><th>Actions</th>
+          <th>Compte</th><th>Type</th><th>ID Fiscal</th><th>Date inscription</th><th>Statut</th><th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -43,6 +40,7 @@
               </div>
             </div>
           </td>
+          <td>{{ t.accountType === 'personnel' ? 'Personnel' : 'Entreprise' }}</td>
           <td><span class="mono-tag">{{ t.taxId }}</span></td>
           <td class="text-muted">{{ h.formatDate(t.registered) }}</td>
           <td><span class="badge" [class]="t.status"><div class="badge-dot"></div>{{ h.getBadgeLabel(t.status) }}</span></td>
@@ -61,6 +59,10 @@
               <button class="action-btn view" (click)="$event.stopPropagation(); openModal.emit(t.id)">Détails</button>
             </div>
           </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="6" class="text-muted" style="text-align:center;padding:24px">Aucun compte trouvé.</td>
         </tr>
         }
       </tbody>

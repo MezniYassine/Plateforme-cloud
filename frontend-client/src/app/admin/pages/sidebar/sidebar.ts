@@ -8,7 +8,7 @@ import { Admin } from '../../dashboard-helper.service';
 })
 export class Sidebar {
   @Input() activePage = 'dashboard';
-  @Input() enterpriseCount = 0;
+  @Input() tenantCount = 0;
   @Input() pendingCount = 0;
   @Input() actualAdmin: Admin | null = null;
 

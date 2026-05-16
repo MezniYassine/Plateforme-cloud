@@ -75,7 +75,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (t of tenants().slice(0,5); track t.id) {
+          @for (t of pendingTenants(); track t.id) {
           <tr (click)="openModal.emit(t.id)">
             <td>
               <div class="cell-company">

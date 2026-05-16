@@ -70,6 +70,7 @@ export class AdminDashboard implements OnInit {
   enterpriseCount = signal<number>(0);
   activeDevCount = signal<number>(0);
   pendingCount = computed(() => this.tenants().filter(t => t.status === 'pending').length);
+  tenantCount = computed(() => this.tenants().filter(t => t.status === 'approved').length);
 
   /* ── INFRA METRICS ───────────────────────────────── */
   infraMetrics = signal([
@@ -104,7 +105,7 @@ export class AdminDashboard implements OnInit {
     const url = `${environment.apiBaseUrl.replace(/\/$/, '')}/admin/clients`;
     this.http.get<any[]>(url).subscribe({
       next: (clients) => {
-        this.enterpriseCount.set(clients.filter(c => c.role === 'ENTREPRISE_ADMIN').length);
+        this.enterpriseCount.set(clients.filter(c => c.role === 'ENTREPRISE_ADMIN' && c.status === 'APPROVED').length);
         this.activeDevCount.set(clients.filter(c => c.role === 'ENTREPRISE_USER' || c.role === 'PERSONNEL').length);
 
         const relevant = clients.filter(c => c.role === 'ENTREPRISE_ADMIN' || c.role === 'PERSONNEL');
@@ -117,7 +118,8 @@ export class AdminDashboard implements OnInit {
           taxId: c.entreprise?.identifiantFiscal || '-',
           createdAt: c.dateInscrit,
           registered: c.dateInscrit,
-          status: c.status === 'PENDING_VALIDATION' ? 'pending' : c.status === 'APPROVED' ? 'approved' : 'rejected',
+          status: this.mapClientStatus(c.status),
+          accountType: c.role === 'PERSONNEL' ? 'personnel' : 'entreprise',
           vms: 0,
           tenantId: `tenant-${c.id}`,
         })));
@@ -125,7 +127,7 @@ export class AdminDashboard implements OnInit {
         const sorted = [...relevant].sort((a, b) => new Date(b.dateInscrit).getTime() - new Date(a.dateInscrit).getTime());
         this.activities.set(sorted.slice(0, 5).map(c => {
           const comp = c.entreprise?.nomEntreprise || 'Particulier';
-          const typeStr = c.status === 'PENDING_VALIDATION' ? 'register' : c.status === 'APPROVED' ? 'approve' : 'reject';
+          const typeStr = this.mapClientStatus(c.status) === 'pending' ? 'register' : c.status === 'APPROVED' ? 'approve' : 'reject';
           const msgs: Record<string, string> = { register: `<strong>${comp}</strong> — nouvelle inscription`, approve: `<strong>${comp}</strong> — compte approuvé`, reject: `<strong>${comp}</strong> — compte rejeté` };
           const colors: Record<string, string> = { approve: 'var(--green)', register: 'var(--blue)', reject: 'var(--red)' };
           const bgs: Record<string, string> = { approve: 'var(--green-light)', register: 'var(--blue-light)', reject: 'var(--red-light)' };
@@ -183,6 +185,13 @@ export class AdminDashboard implements OnInit {
 
   formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }); }
   getBadgeLabel(s: string): string { return ({ pending: 'En attente', approved: 'Approuvé', rejected: 'Rejeté', suspended: 'Suspendu' } as Record<string, string>)[s] || s; }
+
+  private mapClientStatus(status: string): Tenant['status'] {
+    if (status === 'PENDING_VALIDATION' || status === 'PENDING_APPROVAL') return 'pending';
+    if (status === 'APPROVED') return 'approved';
+    if (status === 'SUSPENDED') return 'suspended';
+    return 'rejected';
+  }
 
   pushActivity(type: string, company: string) {
     const labelMap: Record<string, string> = { approved: 'approuvé', rejected: 'rejeté', suspended: 'suspendu' };

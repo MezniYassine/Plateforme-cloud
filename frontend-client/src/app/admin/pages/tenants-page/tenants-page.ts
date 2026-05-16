@@ -14,24 +14,26 @@ export class TenantsPageComponent {
   openModal = output<string>();
   quickAction = output<{ id: string; status: Tenant['status'] }>();
 
-  currentFilter = signal<string>('all');
+  currentTypeFilter = signal<Tenant['accountType'] | 'all'>('all');
   currentSearch = signal<string>('');
 
   filteredTenants = computed(() => {
-    const filter = this.currentFilter();
+    const typeFilter = this.currentTypeFilter();
     const search = this.currentSearch().toLowerCase();
     return this.tenants().filter(t => {
-      const matchStatus = filter === 'all' || t.status === filter;
-      const matchSearch = !search || t.company.toLowerCase().includes(search) || t.email.toLowerCase().includes(search);
-      return matchStatus && matchSearch;
+      const matchPage = this.activePage() === 'inscriptions'
+        ? t.status === 'pending'
+        : t.status === 'approved';
+      const matchType = typeFilter === 'all' || t.accountType === typeFilter;
+      const matchSearch = !search || t.company.toLowerCase().includes(search) || t.email.toLowerCase().includes(search) || `${t.firstName} ${t.lastName}`.toLowerCase().includes(search);
+      return matchPage && matchType && matchSearch;
     });
   });
 
   constructor(public h: DashboardHelperService) { }
 
-  filterStatus(status: string) { this.currentFilter.set(status); }
+  filterType(type: Tenant['accountType'] | 'all') { this.currentTypeFilter.set(type); }
   filterTable(event: Event) { this.currentSearch.set((event.target as HTMLInputElement).value); }
-  showAllTenants() { this.filterStatus('all'); }
 
   onQuickAction(id: string, status: Tenant['status']) {
     this.quickAction.emit({ id, status });
