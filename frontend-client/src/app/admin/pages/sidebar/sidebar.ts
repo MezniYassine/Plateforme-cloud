@@ -3,6 +3,7 @@ import { Admin } from '../../dashboard-helper.service';
 
 @Component({
   selector: 'app-sidebar',
+  standalone: true,
   imports: [],
   templateUrl: './sidebar.html',
 })

@@ -21,14 +21,13 @@
       <div class="card-title">Nœuds VMware ESXi</div>
       <div class="card-sub">Infrastructure physique · Datacenter Bizerte</div>
     </div>
-    <button class="btn-sm primary">+ Ajouter un hôte</button>
   </div>
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
           <th>Hôte ESXi</th><th>IP</th><th>vCPU total</th><th>RAM</th>
-          <th>CPU %</th><th>RAM %</th><th>VMs</th><th>Statut</th>
+          <th>CPU %</th><th>RAM %</th><th>VMs</th><th>Statut</th><th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -63,9 +62,63 @@
           <td><span class="badge" [class]="h.status">
             <div class="badge-dot"></div>{{ h.status === 'approved' ? 'Online' : 'Offline' }}
           </span></td>
+          <td>
+            <div class="vm-row-action">
+              <button class="btn-sm primary" (click)="openVmModal(h)">Voir VMs</button>
+            </div>
+          </td>
         </tr>
         }
       </tbody>
     </table>
+  </div>
+
+  <div class="modal-overlay" [class.show]="showVmModal()" (click)="closeVmModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">VMs sur {{ selectedHost()?.name }}</div>
+          <div class="modal-sub">{{ selectedHost()?.ip }} · {{ vms().length }} VM(s)</div>
+        </div>
+        <button class="modal-close" type="button" (click)="closeVmModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="vm-summary">
+          <div class="card">
+            <div style="font-size:12px;color:var(--text-muted)">Hôtes</div>
+            <div style="font-size:16px;font-weight:700">1</div>
+          </div>
+          <div class="card">
+            <div style="font-size:12px;color:var(--text-muted)">VMs</div>
+            <div style="font-size:16px;font-weight:700">{{ vms().length }}</div>
+          </div>
+        </div>
+
+        <div class="vm-list">
+          @if (isLoadingVms()) {
+          <div>Chargement des VMs...</div>
+          } @else {
+            @if (vms().length === 0) {
+              <div>Aucune VM trouvée pour cet hôte.</div>
+            } @else {
+              @for (vm of vms(); track vm.id) {
+              <div class="vm-item">
+                <div class="vm-meta">
+                  <div class="vm-name">{{ vm.name }}</div>
+                  <div class="vm-state">{{ vm.ram }} · {{ getVmStatusLabel(vm.state) }}</div>
+                </div>
+                <button class="vm-action-btn" [class.start]="vm.state === 'poweredOff'" [class.stop]="vm.state === 'poweredOn'" [class.disabled]="vm.isActionPending" (click)="toggleVmPower(vm)">
+                  {{ vm.state === 'poweredOn' ? 'Arrêter' : 'Démarrer' }}
+                </button>
+              </div>
+              }
+            }
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm secondary" type="button" (click)="closeVmModal()">Fermer</button>
+      </div>
+    </div>
   </div>
 </div>

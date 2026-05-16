@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+﻿import { Component, computed, input, output } from '@angular/core';
 import { DashboardHelperService, Tenant, Activity } from '../../dashboard-helper.service';
 
 interface InfraMetric { label: string; val: string; pct: number; color: string; }
@@ -16,6 +16,7 @@ export class DashboardOverviewComponent {
   activeDevCount = input.required<number>();
   activities = input.required<Activity[]>();
   infraMetrics = input.required<InfraMetric[]>();
+  activeVmCount = input.required<number>();
 
   navigateTo = output<string>();
   openModal = output<string>();

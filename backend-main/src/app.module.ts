@@ -11,6 +11,7 @@ import { AdminModule } from './admin/admin.module';
 import { PersonnelModule } from './personnel/personnel.module';
 import { EntrepriseAdminModule } from './entreprise-admin/entreprise-admin.module';
 import { EntrepriseUserModule } from './entreprise-user/entreprise-user.module';
+import { EsxiModule } from './esxi/esxi.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { EntrepriseUserModule } from './entreprise-user/entreprise-user.module';
     EntrepriseAdminModule,
     EntrepriseUserModule,
     PersonnelModule,
+    EsxiModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

@@ -15,7 +15,7 @@
 
       @if (activePage() === 'dashboard') {
       <app-dashboard-overview [tenants]="tenants()" [enterpriseCount]="enterpriseCount()"
-        [pendingCount]="pendingCount()" [activeDevCount]="activeDevCount()" [activities]="activities()"
+        [pendingCount]="pendingCount()" [activeDevCount]="activeDevCount()" [activeVmCount]="activeVmCount()" [activities]="activities()"
         [infraMetrics]="infraMetrics()" (navigateTo)="setPage($event)" (openModal)="openModal($event)"
         (quickAction)="handleQuickAction($event)" />
       }

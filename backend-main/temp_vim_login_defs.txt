@@ -1,0 +1,17 @@
+﻿
+              <complexType>
+                 <sequence>
+                    <element name="returnval" type="vim25:UserSession" />
+                 </sequence>
+              </complexType>
+           </element>
+>          <element name="Login"  type="vim25:LoginRequestType" />
+>          <element name="LoginResponse">
+              <complexType>
+                 <sequence>
+                    <element name="returnval" type="vim25:UserSession" />
+                 </sequence>
+              </complexType>
+           </element>
+
+

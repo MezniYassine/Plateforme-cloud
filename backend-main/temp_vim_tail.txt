@@ -1,0 +1,200 @@
+﻿            <soap:fault name="NotFoundFault" use="literal" />
+         </fault>
+         <fault name="TaskInProgressFault">
+            <soap:fault name="TaskInProgressFault" use="literal" />
+         </fault>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="VCenterUpdateVStorageObjectMetadataEx_Task">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="InvalidDatastoreFault">
+            <soap:fault name="InvalidDatastoreFault" use="literal" />
+         </fault>
+         <fault name="InvalidStateFault">
+            <soap:fault name="InvalidStateFault" use="literal" />
+         </fault>
+         <fault name="NotFoundFault">
+            <soap:fault name="NotFoundFault" use="literal" />
+         </fault>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="CreateFilter">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="InvalidPropertyFault">
+            <soap:fault name="InvalidPropertyFault" use="literal" />
+         </fault>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="RetrieveProperties">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="InvalidPropertyFault">
+            <soap:fault name="InvalidPropertyFault" use="literal" />
+         </fault>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="CheckForUpdates">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="InvalidCollectorVersionFault">
+            <soap:fault name="InvalidCollectorVersionFault" use="literal" />
+         </fault>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="WaitForUpdates">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="InvalidCollectorVersionFault">
+            <soap:fault name="InvalidCollectorVersionFault" use="literal" />
+         </fault>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="CancelWaitForUpdates">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="WaitForUpdatesEx">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="InvalidCollectorVersionFault">
+            <soap:fault name="InvalidCollectorVersionFault" use="literal" />
+         </fault>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="RetrievePropertiesEx">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="InvalidPropertyFault">
+            <soap:fault name="InvalidPropertyFault" use="literal" />
+         </fault>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="ContinueRetrievePropertiesEx">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="InvalidPropertyFault">
+            <soap:fault name="InvalidPropertyFault" use="literal" />
+         </fault>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="CancelRetrievePropertiesEx">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="InvalidPropertyFault">
+            <soap:fault name="InvalidPropertyFault" use="literal" />
+         </fault>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="CreatePropertyCollector">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="DestroyPropertyCollector">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+      <operation name="DestroyPropertyFilter">
+         <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+         <input>
+            <soap:body use="literal" />
+         </input>
+         <output>
+            <soap:body use="literal" />
+         </output>
+         <fault name="RuntimeFault">
+            <soap:fault name="RuntimeFault" use="literal" />
+         </fault>
+      </operation>
+   </binding>
+</definitions>

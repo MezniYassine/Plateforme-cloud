@@ -1,0 +1,11 @@
+﻿HTTP/1.1 400 Bad Request
+date: Thu, 14 May 2026 10:44:06 GMT
+content-security-policy: upgrade-insecure-requests
+content-type: text/plain; charset=utf-8
+strict-transport-security: max-age=31536000
+x-content-type-options: nosniff
+x-frame-options: DENY
+x-xss-protection: 1
+content-length: 0
+x-envoy-upstream-service-time: 2
+

@@ -1,0 +1,6 @@
+﻿HTTP/1.1 400 Bad Request
+date: Thu, 14 May 2026 10:45:21 GMT
+content-type: text/plain; charset=utf-8
+content-length: 0
+x-envoy-upstream-service-time: 1
+

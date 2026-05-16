@@ -1,0 +1,47 @@
+﻿
+                    <element name="returnval" type="vim25:UserSession" />
+                 </sequence>
+              </complexType>
+           </element>
+>          <element name="Login"  type="vim25:LoginRequestType" />
+           <element name="LoginResponse">
+              <complexType>
+                 <sequence>
+                    <element name="returnval" type="vim25:UserSession" />
+           <element name="AcquireLocalTicket"  type="vim25:AcquireLocalTicketRequestType" />
+           <element name="AcquireLocalTicketResponse">
+              <complexType>
+                 <sequence>
+>                   <element name="returnval" type="vim25:SessionManagerLocalTicket" />
+                 </sequence>
+              </complexType>
+           </element>
+           <element name="AcquireGenericServiceTicket"  type="vim25:AcquireGenericServiceTicketRequestType" />
+           <element name="AcquireGenericServiceTicketResponse">
+              <complexType>
+                 <sequence>
+>                   <element name="returnval" type="vim25:SessionManagerGenericServiceTicket" />
+                 </sequence>
+              </complexType>
+           </element>
+           <element name="TerminateSession"  type="vim25:TerminateSessionRequestType" />
+           <fault name="InvalidLocaleFault" message="vim25:InvalidLocaleFaultMsg"/>
+           <fault name="InvalidLoginFault" message="vim25:InvalidLoginFaultMsg"/>
+           <fault name="RuntimeFault" message="vim25:RuntimeFaultFaultMsg"/>
+        </operation>
+>       <operation name="Login">
+           <input message="vim25:LoginRequestMsg" />
+           <output message="vim25:LoginResponseMsg" />
+           <fault name="InvalidLocaleFault" message="vim25:InvalidLocaleFaultMsg"/>
+           <fault name="InvalidLoginFault" message="vim25:InvalidLoginFaultMsg"/>
+           <fault name="RuntimeFault">
+              <soap:fault name="RuntimeFault" use="literal" />
+           </fault>
+        </operation>
+>       <operation name="Login">
+           <soap:operation soapAction="urn:vim25/8.0.2.0" style="document" />
+           <input>
+              <soap:body use="literal" />
+           </input>
+
+

@@ -79,6 +79,7 @@ export class AdminDashboard implements OnInit {
     { label: 'Stockage (SAN)', val: '41%', pct: 41, color: 'amber' },
     { label: 'Pods Kubernetes', val: '124 / 200', pct: 62, color: 'blue' },
   ]);
+  activeVmCount = signal<number>(0);
 
   /* ── TOAST ───────────────────────────────────────── */
   toastMsg = signal<string>('');
@@ -97,7 +98,25 @@ export class AdminDashboard implements OnInit {
       this.isBrowserAndReady = true;
       this.loadTenants();
       this.loadCurrentAdmin();
+      this.loadInfraMetrics();
     }
+  }
+
+  loadInfraMetrics() {
+    const url = `${environment.apiBaseUrl.replace(/\/$/, '')}/esxi/host-stats`;
+    this.http.get<any>(url).subscribe({
+      next: (res) => {
+        const data = res?.data ?? res;
+        if (!data) return;
+        this.activeVmCount.set(Number(data.vmsCount) || 0);
+      this.infraMetrics.update(list => list.map(m => {
+          if (m.label.includes('CPU')) { m.val = `${data.cpuPercent}%`; m.pct = Number(data.cpuPercent) ?? m.pct; }
+          if (m.label.includes('RAM')) { m.val = `${data.ramPercent}%`; m.pct = Number(data.ramPercent) ?? m.pct; }
+          return m;
+        }));
+      },
+      error: (err) => console.warn('Failed to load infra metrics', err)
+    });
   }
 
   /* ── API ─────────────────────────────────────────── */

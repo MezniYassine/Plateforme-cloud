@@ -1,0 +1,16 @@
+﻿
+     <complexType name="LoginByTokenRequestType">
+        <sequence>
+           <element name="_this" type="vim25:ManagedObjectReference" />
+           <element name="locale" type="xsd:string" minOccurs="0" />
+        </sequence>
+     </complexType>
+>    <complexType name="LoginRequestType">
+        <sequence>
+           <element name="_this" type="vim25:ManagedObjectReference" />
+           <element name="userName" type="xsd:string" />
+           <element name="password" type="xsd:string" />
+           <element name="locale" type="xsd:string" minOccurs="0" />
+        </sequence>
+
+

@@ -1,0 +1,49 @@
+﻿
+         <element name="SetServiceAccount"  
+type="vim25:SetServiceAccountRequestType" />
+         <element name="SetServiceAccountResponse">
+         <element name="AcquireCimServicesTicket"  
+type="vim25:AcquireCimServicesTicketRequestType" />
+         <element name="AcquireCimServicesTicketResponse">
+                  <element name="returnval" type="vim25:HostServiceTicket" />
+         <element name="RetrieveServiceContent"  
+type="vim25:RetrieveServiceContentRequestType" />
+         <element name="RetrieveServiceContentResponse">
+                  <element name="returnval" type="vim25:ServiceContent" />
+         <element name="QueryServiceList"  
+type="vim25:QueryServiceListRequestType" />
+         <element name="QueryServiceListResponse">
+                  <element name="returnval" 
+type="vim25:ServiceManagerServiceInfo" minOccurs="0" maxOccurs="unbounded" />
+         <element name="UpdateServiceMessage"  
+type="vim25:UpdateServiceMessageRequestType" />
+         <element name="UpdateServiceMessageResponse">
+         <element name="AcquireGenericServiceTicket"  
+type="vim25:AcquireGenericServiceTicketRequestType" />
+         <element name="AcquireGenericServiceTicketResponse">
+                  <element name="returnval" 
+type="vim25:SessionManagerGenericServiceTicket" />
+         <element name="DisallowedChangeByServiceFault" 
+type="vim25:DisallowedChangeByService"/>
+         <element name="TestTimeService"  
+type="vim25:TestTimeServiceRequestType" />
+         <element name="TestTimeServiceResponse">
+                  <element name="returnval" 
+type="vim25:HostDateTimeSystemServiceTestResult" minOccurs="0" />
+         <element name="ReconfigureServiceConsoleReservation"  
+type="vim25:ReconfigureServiceConsoleReservationRequestType" />
+         <element name="ReconfigureServiceConsoleReservationResponse">
+         <element name="AddServiceConsoleVirtualNic"  
+type="vim25:AddServiceConsoleVirtualNicRequestType" />
+         <element name="AddServiceConsoleVirtualNicResponse">
+         <element name="RemoveServiceConsoleVirtualNic"  
+type="vim25:RemoveServiceConsoleVirtualNicRequestType" />
+         <element name="RemoveServiceConsoleVirtualNicResponse">
+         <element name="UpdateServiceConsoleVirtualNic"  
+type="vim25:UpdateServiceConsoleVirtualNicRequestType" />
+         <element name="UpdateServiceConsoleVirtualNicResponse">
+         <element name="RestartServiceConsoleVirtualNic"  
+type="vim25:RestartServiceConsoleVirtualNicRequestType" />
+         <element name="RestartServiceConsoleVirtualNicResponse">
+
+

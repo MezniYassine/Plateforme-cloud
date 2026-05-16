@@ -1,29 +1,96 @@
-import { Component, signal } from '@angular/core';
-
-interface ESXiHost {
-  id: string; name: string; model: string; ip: string;
-  vcpu: number; ram: number; cpuPct: number; ramPct: number;
-  vms: number; status: 'approved' | 'rejected';
-}
+﻿import { Component, signal, inject, OnInit } from '@angular/core';
+import { EsxiService } from './esxi-page.service';
 
 @Component({
   selector: 'app-esxi-page',
   standalone: true,
-  imports: [],
   templateUrl: './esxi-page.html',
+  styleUrls: ['./esxi-page.scss']
 })
-export class EsxiPageComponent {
+export class EsxiPageComponent implements OnInit {
+  private esxiService = inject(EsxiService);
+
+  // Tes stats du haut (Cards)
   esxiStats = signal([
-    { label: 'Hôtes ESXi', val: '4', sub: 'En ligne', bg: 'var(--blue-light)', color: 'var(--blue)' },
-    { label: 'vCPU total', val: '256', sub: '72% alloués', bg: 'var(--teal-light)', color: 'var(--teal)' },
-    { label: 'RAM totale', val: '1 TB', sub: '58% utilisés', bg: 'var(--purple-light)', color: 'var(--purple)' },
-    { label: 'VMs actives', val: '87', sub: 'Sur 4 hôtes', bg: 'var(--green-light)', color: 'var(--green)' },
+    { label: 'Hôtes ESXi', val: '1', sub: 'En ligne', bg: 'var(--blue-light)', color: 'var(--blue)' },
+    { label: 'vCPU total', val: '0', sub: 'Calcul en cours...', bg: 'var(--teal-light)', color: 'var(--teal)' },
+    { label: 'RAM totale', val: '0 GB', sub: 'Calcul en cours...', bg: 'var(--purple-light)', color: 'var(--purple)' },
+    { label: 'VMs actives', val: '0', sub: 'Sur 1 hôte', bg: 'var(--green-light)', color: 'var(--green)' },
   ]);
 
-  esxiHosts = signal<ESXiHost[]>([
-    { id: 'h1', name: 'esxi-host-01', model: 'Dell PowerEdge R750', ip: '10.0.0.11', vcpu: 64, ram: 256, cpuPct: 72, ramPct: 65, vms: 24, status: 'approved' },
-    { id: 'h2', name: 'esxi-host-02', model: 'Dell PowerEdge R750', ip: '10.0.0.12', vcpu: 64, ram: 256, cpuPct: 58, ramPct: 71, vms: 22, status: 'approved' },
-    { id: 'h3', name: 'esxi-host-03', model: 'HP ProLiant DL380', ip: '10.0.0.13', vcpu: 64, ram: 256, cpuPct: 45, ramPct: 42, vms: 19, status: 'approved' },
-    { id: 'h4', name: 'esxi-host-04', model: 'HP ProLiant DL380', ip: '10.0.0.14', vcpu: 64, ram: 256, cpuPct: 31, ramPct: 38, vms: 22, status: 'approved' },
-  ]);
+  // Ton tableau de serveurs
+  esxiHosts = signal<any[]>([]);
+  selectedHost = signal<any | null>(null);
+  vms = signal<any[]>([]);
+  showVmModal = signal(false);
+  isLoadingVms = signal(false);
+
+  ngOnInit() {
+    this.loadData();
+  }
+
+  loadData() {
+    this.esxiService.getHostStats().subscribe((data) => {
+      this.esxiHosts.set([{
+        id: 'h1',
+        name: data.hostname,
+        model: 'Lab Desktop (i7)',
+        ip: data.ip,
+        vcpu: data.vcpuTotal,
+        ram: data.ramTotal,
+        cpuPct: data.cpuPercent,
+        ramPct: data.ramPercent,
+        vms: data.totalVmsCount ?? data.vmsCount,
+        status: data.status === 'Online' ? 'approved' : 'rejected'
+      }]);
+
+      this.esxiStats.update(stats => {
+        stats[1].val = data.vcpuTotal.toString();
+        stats[1].sub = `${data.cpuPercent}% alloués`;
+        stats[2].val = data.ramTotal;
+        stats[2].sub = `${data.ramPercent}% utilisés`;
+        stats[3].val = data.vmsCount.toString();
+        return [...stats];
+      });
+    });
+  }
+
+  openVmModal(host: any) {
+    this.selectedHost.set(host);
+    this.showVmModal.set(true);
+    this.isLoadingVms.set(true);
+    this.esxiService.getVms().subscribe((data) => {
+      this.vms.set(data || []);
+      this.isLoadingVms.set(false);
+    }, () => {
+      this.vms.set([]);
+      this.isLoadingVms.set(false);
+    });
+  }
+
+  closeVmModal() {
+    this.showVmModal.set(false);
+    this.selectedHost.set(null);
+    this.vms.set([]);
+  }
+
+  toggleVmPower(vm: any) {
+    if (vm.isActionPending) {
+      return;
+    }
+    const action = vm.state === 'poweredOn' ? 'stop' : 'start';
+    vm.isActionPending = true;
+    this.esxiService.toggleVmPower(vm.id, action).subscribe(() => {
+      vm.state = action === 'start' ? 'poweredOn' : 'poweredOff';
+      vm.isActionPending = false;
+      this.vms.update(current => [...current]);
+    }, () => {
+      vm.isActionPending = false;
+      this.vms.update(current => [...current]);
+    });
+  }
+
+  getVmStatusLabel(state: string) {
+    return state === 'poweredOn' ? 'Running' : 'Stopped';
+  }
 }
