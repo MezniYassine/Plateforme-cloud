@@ -1,8 +1,8 @@
-﻿<div class="section-card">
+<div class="section-card">
     <div class="card-header">
         <div>
             <div class="card-title">Mes demandes</div>
-            <div class="card-sub">Historique completé · {{ state.myRequests().length }} demande(s)</div>
+            <div class="card-sub">Historique complet · {{ state.myRequests().length }} demande(s)</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
             <div class="filter-tabs">
@@ -48,14 +48,10 @@
 
             <!-- Center: details -->
             <div class="mrc-center">
-                <div class="mrc-field"><span class="mrc-key">Justification</span><span class="mrc-val">{{
-                        r.justification }}</span></div>
+                <div class="mrc-field"><span class="mrc-key">Réponse Admin</span><span class="mrc-val">{{
+                        r.commentaireAdmin }}</span></div>
                 <div class="mrc-field"><span class="mrc-key">Date</span><span class="mrc-val">{{ r.date
                         }}</span></div>
-                @if (r.status === 'rejected' && r.rejectReason) {
-                <div class="mrc-field"><span class="mrc-key">Motif rejet</span><span class="mrc-val"
-                        style="color:var(--red)">{{ r.rejectReason }}</span></div>
-                }
             </div>
 
             <!-- Right: cost + status -->

@@ -1,7 +1,7 @@
-﻿            <div class="page-header-row">
+            <div class="page-header-row">
                 <div>
                     <div class="page-h-title">Mes services PaaS / SaaS</div>
-                    <div class="page-h-sub">Bases de donnÃ©es et applications dÃ©ployÃ©es sur votre compte</div>
+                    <div class="page-h-sub">Bases de données et applications déployées sur votre compte</div>
                 </div>
                 <button class="btn-sm primary" (click)="state.setPage('new-request')">+ Demander un service</button>
             </div>
@@ -23,7 +23,7 @@
                         </div>
                         <div style="flex:1;min-width:0">
                             <div class="vfc-name">{{ s.name }}</div>
-                            <div class="vfc-os">{{ s.type === 'db' ? 'Base de donnÃ©es PaaS' : 'Application SaaS' }}
+                            <div class="vfc-os">{{ s.type === 'db' ? 'Base de données PaaS' : 'Application SaaS' }}
                             </div>
                         </div>
                         <span class="badge approved">
@@ -35,7 +35,7 @@
                                 s.url }}</span></div>
                         <div class="svc-detail"><span class="svc-dk">Configuration</span><span class="svc-dv">{{ s.specs
                                 }}</span></div>
-                        <div class="svc-detail"><span class="svc-dk">CoÃ»t mensuel</span><span class="svc-dv"
+                        <div class="svc-detail"><span class="svc-dk">Coût mensuel</span><span class="svc-dv"
                                 style="font-weight:700;color:var(--blue)">{{ s.cost }} DT</span></div>
                     </div>
                     <div class="svc-fc-footer">

@@ -5,6 +5,7 @@ export interface ResourceRequest {
     id: string; name: string; type: 'vm' | 'db' | 'saas';
     user: string; specs: string; cost: number; date: string;
     justification: string;
+    commentaireAdmin?: string;
     status: 'pending' | 'approved' | 'rejected';
 }
 export interface Admin {

@@ -3,7 +3,7 @@
     <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Catalogue de services</div>
     <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px">Gérez les offres IaaS, PaaS et SaaS disponibles pour les clients</div>
   </div>
-  <button class="btn-sm primary">+ Nouveau service</button>
+  <button class="btn-sm primary" (click)="openCreateModal()">+ Nouveau service</button>
 </div>
 
 <div class="catalogue-tabs">
@@ -12,6 +12,11 @@
   }
 </div>
 
+@if (isLoading()) {
+  <div style="text-align:center;padding:40px;color:var(--text-muted)">Chargement...</div>
+} @else if (filteredCatalogue().length === 0) {
+  <div style="text-align:center;padding:40px;color:var(--text-muted)">Aucun service trouvé</div>
+} @else {
 <div class="catalogue-grid">
   @for (s of filteredCatalogue(); track s.id) {
   <div class="catalogue-card">
@@ -23,20 +28,218 @@
         <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
       </svg>
     </div>
-    <div class="cat-name">{{ s.name }}</div>
-    <div class="cat-desc">{{ s.desc }}</div>
+    <div class="cat-name">{{ s.name || s.nomService }}</div>
+    <div class="cat-desc">{{ s.description }}</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-      <div class="cat-price">{{ s.price }} DT<span>/mois</span></div>
-      <span class="badge" [class]="s.active?'approved':'suspended'">
-        <div class="badge-dot"></div>{{ s.active ? 'Actif' : 'Inactif' }}
+      <div class="cat-price">{{ s.price || s.prix }} DT<span>/mois</span></div>
+      <span class="badge" [class]="(s.active || s.isActive)?'approved':'suspended'">
+        <div class="badge-dot"></div>{{ (s.active || s.isActive) ? 'Actif' : 'Inactif' }}
       </span>
     </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:8px">
+      {{ s.vcpu }} vCPU · {{ s.ramMB }} GB RAM · {{ s.stockageGB }} GB SSD
+    </div>
     <div style="display:flex;gap:6px;margin-top:12px">
-      <button class="btn-sm" style="flex:1">Modifier</button>
-      <button class="action-btn" [class]="s.active?'suspend':'approve'" (click)="toggleService(s.id)">
-        {{ s.active ? 'Désactiver' : 'Activer' }}
+      <button class="btn-sm" style="flex:1" (click)="openEditModal(s)">Modifier</button>
+      <button class="action-btn" [class]="(s.active || s.isActive)?'suspend':'approve'" (click)="toggleService(s)">
+        {{ (s.active || s.isActive) ? 'Désactiver' : 'Activer' }}
+      </button>
+      <button class="action-btn delete" (click)="deleteService(s.id)" title="Supprimer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
       </button>
     </div>
   </div>
   }
 </div>
+}
+
+<!-- Modal -->
+@if (isModalOpen()) {
+<div class="modal-overlay active" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3>{{ isEditMode() ? 'Modifier le service' : 'Créer un nouveau service' }}</h3>
+      <button class="close-btn" (click)="closeModal()">×</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:15px">
+      <div>
+        <label>Nom du service</label>
+        <input type="text" [value]="formName()" (change)="onNameChange($any($event).target.value)" placeholder="Ex: VM Standard" />
+      </div>
+
+      <div>
+        <label>Description</label>
+        <textarea [value]="formDesc()" (change)="onDescChange($any($event).target.value)" placeholder="Ex: Instance IaaS 2 vCPU / 4 GB RAM / 50 GB SSD" rows="2"></textarea>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+        <div>
+          <label>Type</label>
+          <select [value]="formType()" (change)="onTypeChange($any($event).target.value)">
+            <option value="vm">IaaS</option>
+            <option value="db">PaaS</option>
+            <option value="saas">SaaS</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Prix (DT/mois)</label>
+          <input type="number" [value]="formPrice()" (change)="onPriceChange($any($event).target.value)" placeholder="0" step="0.01" />
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+        <div>
+          <label>CPU (vCPU)</label>
+          <input type="number" [value]="formCpu()" (change)="onCpuChange($any($event).target.value)" placeholder="0" min="0" />
+        </div>
+
+        <div>
+          <label>RAM (GB)</label>
+          <input type="number" [value]="formRam()" (change)="onRamChange($any($event).target.value)" placeholder="0" min="0" />
+        </div>
+      </div>
+
+      <div>
+        <label>Stockage (GB)</label>
+        <input type="number" [value]="formStorage()" (change)="onStorageChange($any($event).target.value)" placeholder="0" min="0" />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+        <div>
+          <label>Couleur de fond</label>
+          <input type="color" [value]="formBg()" (change)="onBgChange($any($event).target.value)" />
+        </div>
+
+        <div>
+          <label>Couleur du texte</label>
+          <input type="color" [value]="formColor()" (change)="onColorChange($any($event).target.value)" />
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+        <button type="button" class="btn-sm secondary" (click)="closeModal()">Annuler</button>
+        <button type="button" class="btn-sm primary" (click)="saveService()">{{ isEditMode() ? 'Modifier' : 'Créer' }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Toast -->
+@if (isToastVisible()) {
+<div class="toast" [style.background]="toastColor()">{{ toastMsg() }}</div>
+}
+
+<style>
+  .modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0,0,0,0.6) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999 !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    z-index: 10000;
+    position: relative;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #999;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .close-btn:hover {
+    color: #333;
+  }
+
+  textarea {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: inherit;
+  }
+
+  input[type="text"], input[type="number"], input[type="color"], select, textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+
+  input[type="color"] {
+    cursor: pointer;
+    height: 36px;
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+
+  .action-btn.delete {
+    background: var(--red-light);
+    color: var(--red);
+    width: 36px;
+    padding: 0;
+  }
+
+  .action-btn.delete svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    color: white;
+    z-index: 9998;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+</style>

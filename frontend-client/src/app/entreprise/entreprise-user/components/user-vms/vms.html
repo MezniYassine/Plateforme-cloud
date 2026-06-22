@@ -1,7 +1,7 @@
-﻿            <div class="page-header-row">
+            <div class="page-header-row">
                 <div>
                     <div class="page-h-title">Mes machines virtuelles</div>
-                    <div class="page-h-sub">Instances IaaS dÃ©ployÃ©es et assignÃ©es Ã  votre compte</div>
+                    <div class="page-h-sub">Instances IaaS déployées et assignées à votre compte</div>
                 </div>
                 <button class="btn-sm primary" (click)="state.setPage('new-request')">+ Demander une VM</button>
             </div>
@@ -63,10 +63,11 @@
                         <span class="mono-tag">{{ vm.cost }} DT/mois</span>
                         <div style="display:flex;gap:6px">
                             @if (vm.status === 'running') { <button class="action-btn stop"
-                                (click)="state.vmAction(vm.id,'stop')">ArrÃªter</button> }
+                                (click)="state.vmAction(vm.id,'stop')">Arrêter</button> }
                             @if (vm.status === 'stopped') { <button class="action-btn start"
-                                (click)="state.vmAction(vm.id,'start')">DÃ©marrer</button> }
+                                (click)="state.vmAction(vm.id,'start')">Démarrer</button> }
                             <button class="action-btn console">Console</button>
+                            <button class="action-btn delete" (click)="state.deleteVm(vm.id)">Suppr.</button>
                         </div>
                     </div>
                 </div>
@@ -78,7 +79,7 @@
                         <rect x="2" y="3" width="20" height="5" rx="2" />
                         <rect x="2" y="11" width="20" height="5" rx="2" />
                     </svg>
-                    <p>Aucune VM assignÃ©e pour l'instant</p>
+                    <p>Aucune VM assignée pour l'instant</p>
                     <button class="btn-sm primary" (click)="state.setPage('new-request')">Faire une demande de VM</button>
                 </div>
                 }

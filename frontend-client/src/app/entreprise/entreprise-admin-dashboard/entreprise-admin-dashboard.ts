@@ -1,4 +1,4 @@
-import { Component, computed, signal, OnInit, ViewEncapsulation, PLATFORM_ID, inject } from '@angular/core';
+import { Component, computed, signal, OnInit, OnDestroy, ViewEncapsulation, PLATFORM_ID, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -12,6 +12,7 @@ import { WalletPageComponent } from './pages/wallet-page/wallet-page';
 import { ProfilePageComponent } from './pages/profile-page/profile-page';
 import { isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DemandeService } from '../../services/demande.service';
 
 
 
@@ -34,7 +35,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
   styleUrl: './entreprise-admin-dashboard.scss',
   encapsulation: ViewEncapsulation.None
 })
-export class EntrepriseAdminDashboard implements OnInit {
+export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
 
 
 
@@ -43,6 +44,7 @@ export class EntrepriseAdminDashboard implements OnInit {
   currentDate = signal<string>('');
   isBrowserAndReady = false;
   private platformId = inject(PLATFORM_ID);
+  private pollInterval: any;
 
 
   readonly PAGE_TITLES: Record<string, string> = {
@@ -74,7 +76,11 @@ export class EntrepriseAdminDashboard implements OnInit {
   /* ── WALLET & BUDGET ────────────────────────────── */
   walletBalance = signal<number>(1240.50);
   monthlyBudget = signal<number>(500);
-  monthlySpend = signal<number>(247);
+  monthlySpend = computed(() => {
+    return this.resourceRequests()
+      .filter(r => r.status === 'approved')
+      .reduce((sum, r) => sum + r.cost, 0);
+  });
   forecast = computed(() => Math.round(this.monthlySpend() * (30 / new Date().getDate())));
   budgetUsedPct = computed(() => Math.round((this.monthlySpend() / this.monthlyBudget()) * 100));
 
@@ -100,13 +106,18 @@ export class EntrepriseAdminDashboard implements OnInit {
   teamSpend = computed(() => this.teamMembers().map(m => ({ name: m.name, spend: m.spend, color: m.color })));
 
   /* ── DEPLOYED RESOURCES ─────────────────────────── */
-  deployedResources = signal<DeployedResource[]>([
-    { id: 'd1', name: 'vm-prod-backend-01', type: 'vm', owner: 'Anis Mrad', specs: '4 vCPU · 8 GB RAM', cost: 18.50, ip: '10.0.1.10', cpu: 62, ram: 74 },
-    { id: 'd2', name: 'vm-dev-staging-02', type: 'vm', owner: 'Khalil Azizi', specs: '2 vCPU · 4 GB RAM', cost: 9.20, ip: '10.0.1.11', cpu: 28, ram: 41 },
-    { id: 'd3', name: 'PostgreSQL 16', type: 'db', owner: 'Sarra Ben Salah', specs: '4 GB RAM · 50 GB', cost: 8.00, url: 'db.prod-01:5432' },
-    { id: 'd4', name: 'Redis 7', type: 'db', owner: 'Sarra Ben Salah', specs: '1 GB RAM', cost: 4.50, url: 'cache-01:6379' },
-    { id: 'd5', name: 'Nextcloud', type: 'saas', owner: 'Anis Mrad', specs: '2 vCPU · 4 GB', cost: 12.00, url: 'cloud.acme.com' },
-  ]);
+  deployedResources = computed<DeployedResource[]>(() => {
+    return this.resourceRequests()
+      .filter(r => r.status === 'approved')
+      .map(r => ({
+        id: 'dep-' + r.id,
+        name: r.name,
+        type: r.type,
+        owner: r.user,
+        specs: r.specs,
+        cost: r.cost,
+      }));
+  });
 
   resFilter = signal<string>('all');
 
@@ -160,6 +171,14 @@ export class EntrepriseAdminDashboard implements OnInit {
 
   /* ── MODAL ───────────────────────────────────────── */
   showInviteModal = signal<boolean>(false);
+  reviewAction = signal<'approve' | 'reject' | null>(null);
+  reviewRequestId = signal<string | number | null>(null);
+  reviewJustification = signal<string>('');
+  reviewSubmitting = signal<boolean>(false);
+  reviewRequest = computed(() => {
+    const id = this.reviewRequestId();
+    return id == null ? null : this.resourceRequests().find(r => r.id === id) ?? null;
+  });
 
   /* ── TOAST ───────────────────────────────────────── */
   toastMsg = signal<string>('');
@@ -167,6 +186,8 @@ export class EntrepriseAdminDashboard implements OnInit {
   isToastVisible = signal<boolean>(false);
 
   /* ── CONSTRUCTOR ─────────────────────────────────── */
+  private demandeService = inject(DemandeService);
+
   constructor(private router: Router, private http: HttpClient, private fb: FormBuilder) { }
 
   ngOnInit() {
@@ -175,14 +196,28 @@ export class EntrepriseAdminDashboard implements OnInit {
     }
 
     this.isBrowserAndReady = true;
-    this.loadCurrentAdmin()
+    this.loadCurrentAdmin();
     this.setDate();
     this.loadData();
+    this.loadAdminDemandes();
+
+    // Auto-refresh requests and data every 4 seconds
+    this.pollInterval = setInterval(() => {
+      this.loadAdminDemandes();
+      this.loadData();
+    }, 4000);
+
     this.inviteForm = this.fb.group({
       prenom: ['', Validators.required],
       nom: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]]
     });
+  }
+
+  ngOnDestroy() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+    }
   }
 
   /* ── API ─────────────────────────────────────────── */
@@ -192,6 +227,36 @@ export class EntrepriseAdminDashboard implements OnInit {
       next: (data: any) => {
         this.teamMembers.set(data);
       }
+    });
+  }
+
+  /** Charger toutes les demandes de l'entreprise depuis l'API */
+  loadAdminDemandes() {
+    this.demandeService.getAdminDemandes().subscribe({
+      next: (demandes) => {
+        const statusMap: Record<string, 'pending' | 'approved' | 'rejected'> = {
+          EN_ATTENTE: 'pending', APPROUVEE: 'approved', REJETEE: 'rejected',
+        };
+        const mapped: ResourceRequest[] = demandes.map(d => {
+          const cat = d.catalogue;
+          const specs = cat ? `${cat.vcpu} vCPU - ${cat.ramMB} GB RAM - ${cat.stockageGB} GB SSD` : '';
+          const user = d.client ? `${d.client.prenom} ${d.client.nom}` : 'Inconnu';
+          return {
+            id: String(d.id),
+            name: d.nomInstanceSouhaite,
+            type: 'vm' as 'vm' | 'db' | 'saas',
+            user,
+            specs,
+            cost: cat ? Number(cat.prix) : 0,
+            date: new Date(d.dateDemande).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+            justification: d.justification,
+            commentaireAdmin: d.commentaireAdmin,
+            status: statusMap[d.status] ?? 'pending',
+          };
+        });
+        this.resourceRequests.set(mapped);
+      },
+      error: (err) => console.error('Erreur chargement demandes admin', err)
     });
   }
 
@@ -211,49 +276,200 @@ export class EntrepriseAdminDashboard implements OnInit {
     });
   }
 
-  /* ── ACTIONS ─────────────────────────────────────── */
-  approveRequest(id: string) {
-    const req = this.resourceRequests().find(r => r.id === id);
+  approveRequest(id: string | number) {
+    this.openReviewModal('approve', id);
+    const req = this.resourceRequests().find(r => r.id === id)!;
     if (!req) return;
 
-    // Backend call: POST /enterprise/requests/:id/approve
-    // This triggers payment deduction + provisioning
-    this.walletBalance.update(b => +(b - req.cost).toFixed(2));
-    this.monthlySpend.update(s => s + req.cost);
+    // 1. NOTIFICATION IMMÉDIATE : On prévient que VMware travaille
+    this.showToast(`⏳ Déploiement de ${req.name} en cours... Veuillez patienter.`, 'var(--blue)'); // Remplace par ta couleur d'info
 
+    // (Optionnel mais recommandé) 2. On met à jour l'UI locale pour griser la ligne en attendant la réponse
     this.resourceRequests.update(list =>
-      list.map(r => r.id === id ? { ...r, status: 'approved' as const } : r)
+      list.map(r => r.id === id ? { ...r, status: 'EN_COURS' as any } : r)
     );
 
-    // Add to deployed resources
-    this.deployedResources.update(list => [...list, {
-      id: 'dep-' + id, name: req.name, type: req.type,
-      owner: req.user, specs: req.specs, cost: req.cost,
-      ip: req.type === 'vm' ? '10.0.1.' + Math.floor(Math.random() * 99 + 10) : undefined,
-    }]);
+    const body = { commentaireAdmin: "Validé et déployé depuis le dashboard." };
 
-    this.pushActivity('approve', req.name);
-    this.showToast(`✓ ${req.name} approuvé — déploiement lancé`, 'var(--green)');
+    this.http.patch(`${environment.apiBaseUrl}/demande/${id}/approuver`, body).subscribe({
+      next: (response: any) => {
+        this.walletBalance.update(b => +(b - req.cost).toFixed(2));
+        this.resourceRequests.update(list =>
+          list.map(r => r.id === id ? { ...r, status: 'approved' as any } : r)
+        );
+        this.pushActivity('approve', req.name);
+
+        // On écrase l'ancien toast avec le message de succès
+        this.showToast(`✓ ${req.name} déployé avec succès sur VMware !`, 'var(--green)');
+      },
+      error: (err) => {
+        // ÉCHEC : On remet la demande en attente (ou rejetée) dans l'UI et on lance le Toast rouge.
+        console.error("Erreur de déploiement :", err);
+
+        this.resourceRequests.update(list =>
+          list.map(r => r.id === id ? { ...r, status: 'REJETEE' as any } : r)
+        );
+
+        this.showToast(`❌ Échec : ${err.error?.message || 'Erreur ESXi'}`, 'var(--red)');
+      }
+    });
   }
 
-  rejectRequest(id: string) {
+  rejectRequest(id: string | number) {
+    this.openReviewModal('reject', id);
+    return;
+
+    const req = this.resourceRequests().find(r => r.id === id)!;
+    if (!req) return;
+
+    // 1. Pour rejeter, le backend EXIGE une justification. 
+    // On utilise un simple prompt() pour le test, tu pourras remplacer par un modal Angular plus tard.
+    const motifRefus = window.prompt("Veuillez saisir le motif du refus :");
+
+    // Si l'admin annule le prompt, on annule l'action
+    if (!motifRefus) return;
+
+    const body = { commentaireAdmin: motifRefus };
+
+    // 2. Appel HTTP vers ton endpoint de rejet
+    this.http.patch(`${environment.apiBaseUrl}/demande/${id}/rejeter`, body).subscribe({
+      next: () => {
+        // 3. EN CAS DE SUCCÈS : On met à jour l'UI
+        this.resourceRequests.update(list =>
+          list.map(r => r.id === id ? { ...r, status: 'REJETEE' as any } : r)
+        );
+
+        this.pushActivity('reject', req.name);
+        this.showToast(`${req.name} — demande rejetée`, 'var(--red)');
+      },
+      error: (err) => {
+        console.error("Erreur lors du rejet :", err);
+        this.showToast(`❌ Erreur : ${err.error?.message || 'Erreur serveur'}`, 'var(--red)');
+      }
+    });
+  }
+
+  openReviewModal(action: 'approve' | 'reject', id: string | number) {
     const req = this.resourceRequests().find(r => r.id === id);
     if (!req) return;
 
-    this.resourceRequests.update(list =>
-      list.map(r => r.id === id ? { ...r, status: 'rejected' as const } : r)
-    );
+    this.reviewAction.set(action);
+    this.reviewRequestId.set(id);
+    this.reviewJustification.set('');
+  }
 
-    this.pushActivity('reject', req.name);
-    this.showToast(`${req.name} — demande rejetée`, 'var(--red)');
+  closeReviewModal() {
+    if (this.reviewSubmitting()) return;
+    this.reviewAction.set(null);
+    this.reviewRequestId.set(null);
+    this.reviewJustification.set('');
+  }
+
+  onReviewOverlayClick(e: MouseEvent) {
+    if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
+      this.closeReviewModal();
+    }
+  }
+
+  confirmReview() {
+    const req = this.reviewRequest();
+    const action = this.reviewAction();
+    const commentaireAdmin = this.reviewJustification().trim();
+
+    if (!req || !action) return;
+
+    if (!commentaireAdmin) {
+      this.showToast('Veuillez saisir une justification admin', 'var(--amber)');
+      return;
+    }
+
+    if (action === 'approve') {
+      this.performApproveRequest(req, commentaireAdmin);
+      return;
+    }
+
+    this.performRejectRequest(req, commentaireAdmin);
+  }
+
+  private performApproveRequest(req: ResourceRequest, commentaireAdmin: string) {
+    const id = req.id;
+    const body = { commentaireAdmin };
+
+    this.reviewSubmitting.set(true);
+    this.showToast(`Déploiement de ${req.name} en cours... Veuillez patienter.`, 'var(--blue)');
+
+    this.http.patch(`${environment.apiBaseUrl}/demande/${id}/approuver`, body).subscribe({
+      next: (response: any) => {
+        this.walletBalance.update(b => +(b - req.cost).toFixed(2));
+
+        this.resourceRequests.update(list =>
+          list.map(r => r.id === id ? { ...r, status: 'approved', commentaireAdmin } : r)
+        );
+        this.pushActivity('approve', req.name);
+        this.reviewSubmitting.set(false);
+        this.closeReviewModal();
+        this.showToast(`${req.name} déployé avec succès sur VMware`, 'var(--green)');
+      },
+      error: (err) => {
+        console.error('Erreur de déploiement :', err);
+
+        this.resourceRequests.update(list =>
+          list.map(r => r.id === id ? { ...r, status: 'rejected', commentaireAdmin } : r)
+        );
+
+        this.reviewSubmitting.set(false);
+        this.closeReviewModal();
+        this.showToast(`Échec : ${err.error?.message || 'Erreur ESXi'}`, 'var(--red)');
+      }
+    });
+  }
+
+  private performRejectRequest(req: ResourceRequest, commentaireAdmin: string) {
+    const id = req.id;
+    const body = { commentaireAdmin };
+
+    this.reviewSubmitting.set(true);
+
+    this.http.patch(`${environment.apiBaseUrl}/demande/${id}/rejeter`, body).subscribe({
+      next: () => {
+        this.resourceRequests.update(list =>
+          list.map(r => r.id === id ? { ...r, status: 'rejected', commentaireAdmin } : r)
+        );
+
+        this.pushActivity('reject', req.name);
+        this.reviewSubmitting.set(false);
+        this.closeReviewModal();
+        this.showToast(`${req.name} — demande rejetée`, 'var(--red)');
+      },
+      error: (err) => {
+        console.error('Erreur lors du rejet :', err);
+        this.reviewSubmitting.set(false);
+        this.showToast(`Erreur : ${err.error?.message || 'Erreur serveur'}`, 'var(--red)');
+      }
+    });
   }
 
   toggleMember(id: string) {
     const m = this.teamMembers().find(m => m.id === id);
     if (!m) return;
     const newState = !m.active;
-    this.teamMembers.update(list => list.map(item => item.id === id ? { ...item, active: newState } : item));
-    this.showToast(`${m.name} — ${newState ? 'compte réactivé' : 'compte suspendu'}`, newState ? 'var(--green)' : '#64748b');
+    const statusStr = newState ? 'APPROVED' : 'SUSPENDED';
+
+    this.http.patch(`${environment.apiBaseUrl}/users/${id}/status`, { status: statusStr }).subscribe({
+      next: () => {
+        this.teamMembers.update(list => list.map(item => item.id === id ? { ...item, active: newState } : item));
+        this.showToast(`${m.name} � ${newState ? 'compte r�activ�' : 'compte suspendu'}`, newState ? 'var(--green)' : '#64748b');
+      },
+      error: (err) => {
+        this.showToast('Erreur lors du changement de statut', 'var(--red)');
+        console.error(err);
+      }
+    });
+  }
+
+  logout() {
+    localStorage.removeItem('access_token');
+    this.router.navigate(['/login']);
   }
 
   rechargeWallet() {
@@ -328,3 +544,5 @@ export class EntrepriseAdminDashboard implements OnInit {
 
   }
 }
+
+

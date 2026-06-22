@@ -3,19 +3,19 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 @Entity()
 export class Admin {
     @PrimaryGeneratedColumn()
-    id: number;
+    id!: number;
 
     @Column()
-    nom: string;
+    nom!: string;
 
     @Column()
-    prenom: string;
+    prenom!: string;
 
     @Column({ unique: true })
-    email: string;
+    email!: string;
 
     @Column()
-    password: string;
+    password!: string;
 
     @Column({ type: 'simple-array', nullable: true })
     providers?: string[];

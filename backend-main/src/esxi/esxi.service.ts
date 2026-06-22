@@ -155,153 +155,699 @@ export class EsxiService {
     }
   }
 
-  private runVsphereCommand(
-    command: string,
-    args: Record<string, unknown>,
-  ): Promise<unknown> {
-    return new Promise((resolve, reject) => {
-      this.vsphereClient
-        .runCommand(command, args)
-        .once('result', resolve)
-        .once('error', reject);
-    });
-  }
-
-  private unwrapSoapValue(value: any): any {
-    if (value && typeof value === 'object' && '$value' in value) {
-      return value.$value;
+    private runVsphereCommand(
+        command: string,
+        args: Record<string, unknown>,
+    ): Promise<unknown> {
+        return new Promise((resolve, reject) => {
+        this.vsphereClient
+            .runCommand(command, args)
+            .once('result', resolve)
+            .once('error', reject);
+        });
     }
 
-    return value;
-  }
-  async powerControl(vmId: string, action: 'start' | 'stop'): Promise<void> {
-    try {
-        const command = action === 'start' ? 'PowerOnVM_Task' : 'PowerOffVM_Task';
-        
-        await this.runVsphereCommand(command, {
-            _this: {
-                attributes: { 'xsi:type': 'ManagedObjectReference', type: 'VirtualMachine' },
-                $value: vmId
-            }
+    private unwrapSoapValue(value: any): any {
+        if (value && typeof value === 'object' && '$value' in value) {
+        return value.$value;
+        }
+
+        return value;
+    }
+    async powerControl(vmId: string, action: 'start' | 'stop'): Promise<void> {
+        // Résoudre le vrai MoRef ESXi (ex: "vm-5") à partir d'un nom ou d'une référence stockée
+        const target = await this.resolveVmTarget(vmId, vmId);
+
+        if (!target) {
+            throw new Error(`VM "${vmId}" introuvable sur l'ESXi. Elle n'existe pas ou a été supprimée.`);
+        }
+
+        // Vérifier si l'action est déjà dans l'état souhaité
+        const isAlreadyOn = target.state === 'poweredOn';
+        const isAlreadyOff = target.state === 'poweredOff' || target.state === 'suspended';
+
+        if (action === 'start' && isAlreadyOn) {
+            this.logger.warn(`VM ${target.name} est déjà allumée, action ignorée.`);
+            return;
+        }
+        if (action === 'stop' && isAlreadyOff) {
+            this.logger.warn(`VM ${target.name} est déjà éteinte, action ignorée.`);
+            return;
+        }
+
+        try {
+            const command = action === 'start' ? 'PowerOnVM_Task' : 'PowerOffVM_Task';
+
+            const taskResult: any = await this.runVsphereCommand(command, {
+                _this: target.ref,
+            });
+
+            // Attendre la fin de la tâche ESXi
+            await this.waitForTaskCompletion(taskResult?.returnval);
+
+            this.logger.log(`✅ Action ${action} terminée avec succès pour la VM ${target.name} (${target.id})`);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            this.logger.error(`❌ Échec du PowerControl pour ${target.name}: ${message}`);
+            throw error;
+        }
+    }
+
+    async getVmRuntime(vmReference?: string | null, vmName?: string): Promise<{ id: string; name: string; state: string } | null> {
+        const target = await this.resolveVmTarget(vmReference, vmName);
+
+        if (!target) {
+            return null;
+        }
+
+        return {
+            id: target.id,
+            name: target.name,
+            state: target.state,
+        };
+    }
+
+    async deleteVm(vmReference?: string | null, vmName?: string): Promise<void> {
+        const target = await this.resolveVmTarget(vmReference, vmName);
+
+        if (!target) {
+            this.logger.warn(`VM déjà absente sur ESXi: ${vmName ?? vmReference}`);
+            return;
+        }
+
+        if (target.name.toLowerCase().startsWith('template')) {
+            throw new Error('Refus de supprimer un template ESXi.');
+        }
+
+        if (target.state === 'poweredOn') {
+            this.logger.log(`Extinction de ${target.name} avant suppression.`);
+            const powerTaskResult: any = await this.runVsphereCommand('PowerOffVM_Task', {
+                _this: target.ref,
+            });
+            await this.waitForTaskCompletion(powerTaskResult?.returnval);
+        }
+
+        this.logger.log(`Suppression ESXi de ${target.name} (${target.id}).`);
+        const destroyResult: any = await this.runVsphereCommand('Destroy_Task', {
+            _this: target.ref,
         });
+
+        await this.waitForTaskCompletion(destroyResult?.returnval);
+    }
+
+async getHostStats(): Promise<any> {
+    try {
+        const serviceContent = this.vsphereClient.serviceContent;
+
+        // 1. Création d'une vue pour cibler le HostSystem (le serveur physique)
+        const containerView: any = await new Promise((resolve, reject) => {
+        this.vsphereClient.client.CreateContainerView(
+            {
+            _this: serviceContent.viewManager,
+            container: serviceContent.rootFolder,
+            type: ['HostSystem'],
+            recursive: true,
+            },
+            (err, res) => {
+            if (err) return reject(err);
+            resolve(res.returnval);
+            },
+        );
+        });
+
+        // 2. Définition des propriétés à extraire pour correspondre à ton tableau
+        const spec = {
+        propSet: [
+            {
+            type: 'HostSystem',
+            all: false,
+            pathSet: [
+                'name',
+                'summary.hardware.memorySize',         // RAM Totale (Bytes)
+                'summary.quickStats.overallMemoryUsage', // RAM Utilisée (MB)
+                'summary.quickStats.overallCpuUsage',    // CPU Utilisé (MHz)
+                'summary.hardware.numCpuCores',          // Nombre de Coeurs (VCPU)
+                'summary.hardware.cpuModel',             // Pour info (i7-7700HQ)
+                'summary.hardware.cpuMhz',               // Vitesse par coeur (2800 MHz)
+            ],
+            },
+        ],
+        objectSet: [
+            {
+            obj: containerView,
+            skip: true,
+            selectSet: [
+                {
+                attributes: { 'xsi:type': 'TraversalSpec' },
+                name: 'viewTraversalSpec',
+                type: 'ContainerView',
+                path: 'view',
+                skip: false,
+                },
+            ],
+            },
+        ],
+        };
+
+        // 3. Appel à l'API VMware
+        const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
+        _this: serviceContent.propertyCollector,
+        specSet: [spec],
+        options: {},
+        });
+
+        if (!result || !result.returnval || !result.returnval.objects) {
+        throw new Error("Aucun hôte ESXi détecté.");
+        }
+
+        const props = result.returnval.objects[0].propSet;
+
+        // --- EXTRACTION DES VALEURS ---
+        const rawName = this.unwrapSoapValue(props.find((p) => p.name === 'name')?.val);
+        const numCores = this.unwrapSoapValue(props.find((p) => p.name === 'summary.hardware.numCpuCores')?.val);
+        const mhzPerCore = this.unwrapSoapValue(props.find((p) => p.name === 'summary.hardware.cpuMhz')?.val); // 2800
         
-        this.logger.log(`✅ Action ${action} envoyée avec succès à la VM ${vmId}`);
+        const totalRamBytes = this.unwrapSoapValue(props.find((p) => p.name === 'summary.hardware.memorySize')?.val);
+        const usedRamMb = this.unwrapSoapValue(props.find((p) => p.name === 'summary.quickStats.overallMemoryUsage')?.val);
+        const usedCpuMhz = this.unwrapSoapValue(props.find((p) => p.name === 'summary.quickStats.overallCpuUsage')?.val);
+
+        // --- CALCULS POUR LE TABLEAU (DYNAMIX UI) ---
+        
+        // RAM
+        const totalRamGb = Math.round(totalRamBytes / (1024 * 1024 * 1024));
+        const ramUsagePercent = Math.round((usedRamMb / (totalRamGb * 1024)) * 100);
+
+        // CPU (Basé sur la vitesse totale cumulée)
+        const totalCpuCapacityMhz = mhzPerCore * numCores; 
+        const cpuUsagePercent = Math.round((usedCpuMhz / totalCpuCapacityMhz) * 100);
+
+        // Ajouter le vrai nombre de VMs actives à partir de l'état des VMs
+        const vms = await this.getVms();
+        const activeVmsCount = vms.filter(vm => vm.state === 'poweredOn').length;
+        const totalVmsCount = vms.length;
+
+        // 4. Retour du format exact pour ton frontend Angular
+        return {
+        hostname: "esxi-host-01", 
+        ip: this.configService.get('ESXI_HOST'), // Ex: 192.168.8.132
+        vcpuTotal: numCores,          // Affichera 4 ou 8 selon ton CPU
+        ramTotal: `${totalRamGb} GB`, // Affichera "8 GB"
+        cpuPercent: cpuUsagePercent,  // Pour ta barre d'avancement
+        ramPercent: ramUsagePercent,  // Pour ta barre d'avancement
+        vmsCount: activeVmsCount,
+        totalVmsCount,
+        status: 'Online'
+        };
+
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        this.logger.error(`❌ Échec du PowerControl: ${message}`);
+        this.logger.error(`❌ Erreur getHostStats: ${message}`);
         throw error;
     }
     }
 
-    async getHostStats(): Promise<any> {
+    async cloneAndReconfigure(templateName: string, newName: string, ramMB: number, vcpu: number, storageGB?: number): Promise<any> {
         try {
-            const serviceContent = this.vsphereClient.serviceContent;
+        // 1. Récupérer les références nécessaires (Template, Folder, Pool, Datastore)
+        const templateRef = await this.findMoRefByName('VirtualMachine', templateName);
+        const resourcePool = await this.getFirstMoRef('ResourcePool');
+        const datastore = await this.getFirstMoRef('Datastore');
 
-            // 1. Création d'une vue pour cibler le HostSystem (le serveur physique)
-            const containerView: any = await new Promise((resolve, reject) => {
-            this.vsphereClient.client.CreateContainerView(
-                {
-                _this: serviceContent.viewManager,
-                container: serviceContent.rootFolder,
-                type: ['HostSystem'],
-                recursive: true,
-                },
-                (err, res) => {
-                if (err) return reject(err);
-                resolve(res.returnval);
-                },
-            );
-            });
+        if (!templateRef) throw new Error(`Template "${templateName}" introuvable.`);
+        const destinationFolder = await this.getVmFolder(templateRef);
 
-            // 2. Définition des propriétés à extraire pour correspondre à ton tableau
-            const spec = {
-            propSet: [
-                {
-                type: 'HostSystem',
-                all: false,
-                pathSet: [
-                    'name',
-                    'summary.hardware.memorySize',         // RAM Totale (Bytes)
-                    'summary.quickStats.overallMemoryUsage', // RAM Utilisée (MB)
-                    'summary.quickStats.overallCpuUsage',    // CPU Utilisé (MHz)
-                    'summary.hardware.numCpuCores',          // Nombre de Coeurs (VCPU)
-                    'summary.hardware.cpuModel',             // Pour info (i7-7700HQ)
-                    'summary.hardware.cpuMhz',               // Vitesse par coeur (2800 MHz)
-                ],
-                },
-            ],
-            objectSet: [
-                {
-                obj: containerView,
-                skip: true,
-                selectSet: [
-                    {
-                    attributes: { 'xsi:type': 'TraversalSpec' },
-                    name: 'viewTraversalSpec',
-                    type: 'ContainerView',
-                    path: 'view',
-                    skip: false,
-                    },
-                ],
-                },
-            ],
-            };
+        // 2. Définition de la spécification de clonage
+        const cloneSpec = {
+        // 1. D'abord la localisation
+        location: {
+            datastore: datastore,
+            pool: resourcePool,
+        },
+        // 2. Ensuite l'indicateur template (OBLIGATOIRE)
+        template: false, 
+        // 3. Enfin l'option de mise sous tension
+        config: {
+            name: newName,
+            numCPUs: vcpu,
+            memoryMB: ramMB,
+        },
+        powerOn: false,
+        };
 
-            // 3. Appel à l'API VMware
-            const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
-            _this: serviceContent.propertyCollector,
-            specSet: [spec],
-            options: {},
-            });
+        // 3. Appel de la tâche de clonage
+        const taskRef: any = await new Promise((resolve, reject) => {
+        this.vsphereClient.client.CloneVM_Task(
+            {
+            _this: templateRef,
+            folder: destinationFolder,
+            name: newName,
+            spec: cloneSpec,
+            },
+            (err, res) => {
+            if (err) {
+                this.logger.error(`Erreur SOAP Clone: ${err.message}`);
+                return reject(err);
+            }
+            // res.returnval contient le MoRef de la Task (ex: task-123)
+            resolve(res.returnval);
+            },
+        );
+        });
 
-            if (!result || !result.returnval || !result.returnval.objects) {
-            throw new Error("Aucun hôte ESXi détecté.");
+        const taskId = this.unwrapSoapValue(taskRef?.value ?? taskRef);
+        this.logger.log(`🚀 Clonage démarré pour ${newName}. Task ID: ${taskId}`);
+        try {
+            await this.waitForTaskCompletion(taskRef);
+        } catch (error) {
+            if (this.isUnsupportedCloneError(error)) {
+                this.logger.warn('CloneVM_Task non supporté, fallback vers copie datastore + register VM.');
+                return this.cloneWithDatastoreCopy(templateRef, destinationFolder, resourcePool, newName, ramMB, vcpu, storageGB);
             }
 
-            const props = result.returnval.objects[0].propSet;
-
-            // --- EXTRACTION DES VALEURS ---
-            const rawName = this.unwrapSoapValue(props.find((p) => p.name === 'name')?.val);
-            const numCores = this.unwrapSoapValue(props.find((p) => p.name === 'summary.hardware.numCpuCores')?.val);
-            const mhzPerCore = this.unwrapSoapValue(props.find((p) => p.name === 'summary.hardware.cpuMhz')?.val); // 2800
-            
-            const totalRamBytes = this.unwrapSoapValue(props.find((p) => p.name === 'summary.hardware.memorySize')?.val);
-            const usedRamMb = this.unwrapSoapValue(props.find((p) => p.name === 'summary.quickStats.overallMemoryUsage')?.val);
-            const usedCpuMhz = this.unwrapSoapValue(props.find((p) => p.name === 'summary.quickStats.overallCpuUsage')?.val);
-
-            // --- CALCULS POUR LE TABLEAU (DYNAMIX UI) ---
-            
-            // RAM
-            const totalRamGb = Math.round(totalRamBytes / (1024 * 1024 * 1024));
-            const ramUsagePercent = Math.round((usedRamMb / (totalRamGb * 1024)) * 100);
-
-            // CPU (Basé sur la vitesse totale cumulée)
-            const totalCpuCapacityMhz = mhzPerCore * numCores; 
-            const cpuUsagePercent = Math.round((usedCpuMhz / totalCpuCapacityMhz) * 100);
-
-            // Ajouter le vrai nombre de VMs actives à partir de l'état des VMs
-            const vms = await this.getVms();
-            const activeVmsCount = vms.filter(vm => vm.state === 'poweredOn').length;
-            const totalVmsCount = vms.length;
-
-            // 4. Retour du format exact pour ton frontend Angular
-            return {
-            hostname: "esxi-host-01", 
-            ip: this.configService.get('ESXI_HOST'), // Ex: 192.168.8.132
-            vcpuTotal: numCores,          // Affichera 4 ou 8 selon ton CPU
-            ramTotal: `${totalRamGb} GB`, // Affichera "8 GB"
-            cpuPercent: cpuUsagePercent,  // Pour ta barre d'avancement
-            ramPercent: ramUsagePercent,  // Pour ta barre d'avancement
-            vmsCount: activeVmsCount,
-            totalVmsCount,
-            status: 'Online'
-            };
-
-        } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            this.logger.error(`❌ Erreur getHostStats: ${message}`);
             throw error;
         }
+        this.logger.log(`✅ Clonage terminé pour ${newName}. Task ID: ${taskId}`);
+        await this.resizeVmStorageByName(newName, storageGB);
+        // Résoudre le vrai MoRef VMware de la VM clonée (ex: "13") pour le stocker en BDD
+        const clonedVmRef = await this.findMoRefByName('VirtualMachine', newName);
+        const vmMoRef: string | undefined = clonedVmRef?.$value;
+        this.logger.log(`📌 vmReference stocké en BDD: ${vmMoRef ?? taskId}`);
+        return vmMoRef ?? taskId;
+        } catch (error) {
+            this.logger.error(`❌ Échec cloneAndReconfigure: ${error.message}`);
+            throw error;
         }
+    }
+
+    private async getVmFolder(vmRef: any): Promise<any> {
+        const serviceContent = this.vsphereClient.serviceContent;
+        const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
+            _this: serviceContent.propertyCollector,
+            specSet: [
+                {
+                    propSet: [
+                        { type: 'VirtualMachine', all: false, pathSet: ['parent'] },
+                    ],
+                    objectSet: [{ obj: vmRef, skip: false }],
+                },
+            ],
+            options: {},
+        });
+
+        const folder = result?.returnval?.objects?.[0]?.propSet?.find(
+            (prop: any) => prop.name === 'parent',
+        )?.val;
+
+        if (!folder) {
+            throw new Error('Impossible de trouver le dossier parent du template.');
+        }
+
+        return folder;
+    }
+
+    private async cloneWithDatastoreCopy(
+        templateRef: any,
+        destinationFolder: any,
+        resourcePool: any,
+        newName: string,
+        ramMB: number,
+        vcpu: number,
+        storageGB?: number,
+    ): Promise<string> {
+        const serviceContent = this.vsphereClient.serviceContent;
+        const datacenter = await this.getFirstMoRef('Datacenter');
+        const host = await this.getFirstMoRef('HostSystem');
+        const templateVmxPath = await this.getVmPathName(templateRef);
+        const { sourceFolderPath, destinationFolderPath, destinationVmxPath } =
+            this.buildDatastoreClonePaths(templateVmxPath, newName);
+
+        this.logger.log(`Copie datastore: ${sourceFolderPath} -> ${destinationFolderPath}`);
+        const copyResult: any = await this.runVsphereCommand('CopyDatastoreFile_Task', {
+            _this: serviceContent.fileManager,
+            sourceName: sourceFolderPath,
+            sourceDatacenter: datacenter,
+            destinationName: destinationFolderPath,
+            destinationDatacenter: datacenter,
+            force: false,
+        });
+        const copyTaskRef = copyResult?.returnval;
+
+        await this.waitForTaskCompletion(copyTaskRef);
+        const copyTaskId = this.unwrapSoapValue(copyTaskRef?.value ?? copyTaskRef);
+        this.logger.log(`Copie datastore terminée. Task ID: ${copyTaskId}`);
+
+        const registerResult: any = await this.runVsphereCommand('RegisterVM_Task', {
+            _this: destinationFolder,
+            path: destinationVmxPath,
+            name: newName,
+            asTemplate: false,
+            pool: resourcePool,
+            host,
+        });
+        const registerTaskRef = registerResult?.returnval;
+
+        await this.waitForTaskCompletion(registerTaskRef);
+        const registeredVm = await this.findMoRefByName('VirtualMachine', newName);
+
+        if (!registeredVm) {
+            throw new Error(`VM "${newName}" enregistrée mais introuvable après RegisterVM_Task.`);
+        }
+
+        const reconfigResult: any = await this.runVsphereCommand('ReconfigVM_Task', {
+            _this: registeredVm,
+            spec: {
+                numCPUs: vcpu,
+                memoryMB: ramMB,
+            },
+        });
+        const reconfigTaskRef = reconfigResult?.returnval;
+
+        await this.waitForTaskCompletion(reconfigTaskRef);
+        await this.resizeVmStorageByName(newName, storageGB);
+        return this.unwrapSoapValue(registeredVm?.value ?? registeredVm);
+    }
+
+    private async resizeVmStorageByName(vmName: string, storageGB?: number): Promise<void> {
+        const requestedStorageGB = Number(storageGB);
+
+        if (!Number.isFinite(requestedStorageGB) || requestedStorageGB <= 0) {
+            return;
+        }
+
+        const vmRef = await this.findMoRefByName('VirtualMachine', vmName);
+
+        if (!vmRef) {
+            throw new Error(`VM "${vmName}" introuvable pour redimensionner le stockage.`);
+        }
+
+        const deviceChange = await this.buildStorageDeviceChange(vmRef, requestedStorageGB);
+
+        if (deviceChange.length === 0) {
+            return;
+        }
+
+        const reconfigResult: any = await this.runVsphereCommand('ReconfigVM_Task', {
+            _this: vmRef,
+            spec: { deviceChange },
+        });
+
+        await this.waitForTaskCompletion(reconfigResult?.returnval);
+    }
+
+    private async buildStorageDeviceChange(vmRef: any, storageGB?: number): Promise<any[]> {
+        const requestedStorageGB = Number(storageGB);
+
+        if (!Number.isFinite(requestedStorageGB) || requestedStorageGB <= 0) {
+            return [];
+        }
+
+        const disk = await this.getPrimaryVirtualDisk(vmRef);
+
+        if (!disk) {
+            throw new Error("Impossible de trouver le disque virtuel à redimensionner.");
+        }
+
+        const currentCapacityKB = Number(this.unwrapSoapValue(disk.capacityInKB));
+        const requestedCapacityKB = Math.round(requestedStorageGB * 1024 * 1024);
+
+        if (Number.isFinite(currentCapacityKB) && requestedCapacityKB <= currentCapacityKB) {
+            this.logger.log(
+                `Le stockage demandé (${requestedStorageGB} GB / ${requestedCapacityKB} KB) est inférieur ou égal à la capacité actuelle (${Math.round(currentCapacityKB / 1024 / 1024)} GB / ${currentCapacityKB} KB). Redimensionnement ignoré.`,
+            );
+            return [];
+        }
+
+        const updatedDisk = JSON.parse(JSON.stringify(disk));
+        const diskKey = Number(this.unwrapSoapValue(updatedDisk.key));
+
+        if (!Number.isFinite(diskKey) || diskKey <= 0) {
+            throw new Error("Impossible de redimensionner le disque: clé VMware du disque invalide.");
+        }
+
+        updatedDisk.key = diskKey;
+        updatedDisk.capacityInKB = requestedCapacityKB;
+        updatedDisk.attributes = {
+            ...(updatedDisk.attributes ?? {}),
+            'xsi:type': 'VirtualDisk',
+        };
+
+        this.logger.log(`Stockage demandé: ${requestedStorageGB} GB (${updatedDisk.capacityInKB} KB), disque VMware key=${diskKey}`);
+
+        return [
+            {
+                attributes: { 'xsi:type': 'VirtualDeviceConfigSpec' },
+                operation: 'edit',
+                device: updatedDisk,
+            },
+        ];
+    }
+
+    private async getPrimaryVirtualDisk(vmRef: any): Promise<any | null> {
+        const serviceContent = this.vsphereClient.serviceContent;
+        const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
+            _this: serviceContent.propertyCollector,
+            specSet: [
+                {
+                    propSet: [
+                        { type: 'VirtualMachine', all: false, pathSet: ['config.hardware.device'] },
+                    ],
+                    objectSet: [{ obj: vmRef, skip: false }],
+                },
+            ],
+            options: {},
+        });
+
+        const rawDevices = result?.returnval?.objects?.[0]?.propSet?.find(
+            (prop: any) => prop.name === 'config.hardware.device',
+        )?.val;
+
+        const devices = Array.isArray(rawDevices)
+            ? rawDevices
+            : Array.isArray(rawDevices?.VirtualDevice)
+                ? rawDevices.VirtualDevice
+                : Array.isArray(rawDevices?.device)
+                    ? rawDevices.device
+                    : [];
+
+        return devices.find((device: any) => {
+            const type = device?.attributes?.['xsi:type'] ?? device?.attributes?.type ?? device?.type;
+            return type === 'VirtualDisk' || (device?.capacityInKB !== undefined && device?.backing);
+        }) ?? null;
+    }
+
+    private async getVmPathName(vmRef: any): Promise<string> {
+        const serviceContent = this.vsphereClient.serviceContent;
+        const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
+            _this: serviceContent.propertyCollector,
+            specSet: [
+                {
+                    propSet: [
+                        { type: 'VirtualMachine', all: false, pathSet: ['config.files.vmPathName'] },
+                    ],
+                    objectSet: [{ obj: vmRef, skip: false }],
+                },
+            ],
+            options: {},
+        });
+
+        const vmxPath = this.unwrapSoapValue(
+            result?.returnval?.objects?.[0]?.propSet?.find(
+                (prop: any) => prop.name === 'config.files.vmPathName',
+            )?.val,
+        );
+
+        if (!vmxPath) {
+            throw new Error('Impossible de trouver le chemin .vmx du template.');
+        }
+
+        return vmxPath;
+    }
+
+    private buildDatastoreClonePaths(templateVmxPath: string, newName: string) {
+        const match = templateVmxPath.match(/^(\[[^\]]+\]\s+)(.+)\/([^/]+\.vmx)$/);
+
+        if (!match) {
+            throw new Error(`Chemin VMX VMware non supporté: ${templateVmxPath}`);
+        }
+
+        const datastorePrefix = match[1];
+        const templateFolder = match[2];
+        const vmxFileName = match[3];
+        const parentPath = templateFolder.includes('/')
+            ? `${templateFolder.slice(0, templateFolder.lastIndexOf('/'))}/`
+            : '';
+        const destinationFolder = `${parentPath}${newName}`;
+
+        return {
+            sourceFolderPath: `${datastorePrefix}${templateFolder}`,
+            destinationFolderPath: `${datastorePrefix}${destinationFolder}`,
+            destinationVmxPath: `${datastorePrefix}${destinationFolder}/${vmxFileName}`,
+        };
+    }
+
+    private isUnsupportedCloneError(error: unknown): boolean {
+        const message = error instanceof Error ? error.message : String(error);
+        return message.includes('CloneVM_Task') && message.includes('pas supporté');
+    }
+
+    private async waitForTaskCompletion(taskRef: any, timeoutMs = 10 * 60 * 1000): Promise<void> {
+        const startedAt = Date.now();
+        let lastLoggedState: string | undefined;
+
+        while (Date.now() - startedAt < timeoutMs) {
+            const taskInfo = await this.getTaskInfo(taskRef);
+            const state = this.unwrapSoapValue(taskInfo?.state);
+            const taskId = this.unwrapSoapValue(taskRef?.value ?? taskRef);
+
+            if (state && state !== lastLoggedState) {
+                this.logger.debug(`Task VMware ${taskId}: ${state}`);
+                lastLoggedState = state;
+            }
+
+            if (state === 'success') {
+                return;
+            }
+
+            if (state === 'error') {
+                const localizedMessage =
+                    this.unwrapSoapValue(taskInfo?.error?.localizedMessage) ??
+                    this.unwrapSoapValue(taskInfo?.error?.fault?.faultMessage?.[0]?.message) ??
+                    JSON.stringify(taskInfo?.error);
+
+                if (localizedMessage === 'The operation is not supported on the object.') {
+                    throw new Error(
+                        'CloneVM_Task n’est pas supporté par cet objet ESXi. Sur un ESXi standalone, le clonage SOAP direct nécessite généralement vCenter ; sinon il faut utiliser une stratégie de copie/register VM.',
+                    );
+                }
+
+                throw new Error(`La tâche VMware a échoué: ${localizedMessage}`);
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+
+        throw new Error('Timeout: la tâche VMware de clonage est toujours en cours.');
+    }
+
+    private async getTaskInfo(taskRef: any): Promise<any> {
+        const serviceContent = this.vsphereClient.serviceContent;
+        const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
+            _this: serviceContent.propertyCollector,
+            specSet: [
+                {
+                    propSet: [
+                        { type: 'Task', all: false, pathSet: ['info.state', 'info.error'] },
+                    ],
+                    objectSet: [{ obj: taskRef, skip: false }],
+                },
+            ],
+            options: {},
+        });
+
+        const props = result?.returnval?.objects?.[0]?.propSet ?? [];
+        return {
+            state: props.find((prop: any) => prop.name === 'info.state')?.val,
+            error: props.find((prop: any) => prop.name === 'info.error')?.val,
+        };
+    }
+
+    /**
+     * Trouve un objet (VM, Host, etc.) par son nom exact
+     */
+    private async resolveVmTarget(vmReference?: string | null, vmName?: string): Promise<{ id: string; name: string; state: string; ref: any } | null> {
+        const vms = await this.getVms();
+        const normalizedReference = vmReference?.trim();
+        const normalizedName = vmName?.trim().toLowerCase();
+
+        const foundVm = vms.find((vm: any) => {
+            const id = String(vm?.id ?? '');
+            const name = String(vm?.name ?? '');
+            return (
+                (normalizedReference && (id === normalizedReference || name.toLowerCase() === normalizedReference.toLowerCase())) ||
+                (normalizedName && name.toLowerCase() === normalizedName)
+            );
+        });
+
+        if (!foundVm) {
+            return null;
+        }
+
+        const id = String(foundVm.id);
+
+        return {
+            id,
+            name: foundVm.name,
+            state: foundVm.state,
+            ref: {
+                attributes: { 'xsi:type': 'ManagedObjectReference', type: 'VirtualMachine' },
+                $value: id,
+            },
+        };
+    }
+
+    private async findMoRefByName(type: string, name: string): Promise<any> {
+        try {
+            const vmsResponse: any = await this.getVms(); 
+            
+            this.logger.debug(`VMS Response reçue : ${JSON.stringify(vmsResponse)}`);
+
+            // Puisque vmsResponse est DIRECTEMENT le tableau :
+            if (!Array.isArray(vmsResponse)) {
+            this.logger.error("❌ La réponse n'est pas un tableau.");
+            return null;
+            }
+
+            const foundVm = vmsResponse.find(
+            (vm: any) => vm && vm.name && vm.name.toLowerCase() === name.toLowerCase()
+            );
+
+            if (foundVm) {
+            this.logger.log(`✅ Template trouvé ! Nom: ${foundVm.name}, ID VMware: ${foundVm.id}`);
+            return {
+                attributes: { 'xsi:type': 'ManagedObjectReference', type: 'VirtualMachine' },
+                $value: foundVm.id // C'est ici qu'on injecte le "3"
+            };
+            }
+
+            this.logger.warn(`⚠️ Aucune VM trouvée avec le nom : ${name}`);
+            return null;
+
+        } catch (error) {
+            this.logger.error(`❌ Erreur dans findMoRefByName : ${error.message}`);
+            return null;
+        }
+    }
+    /**
+     * Récupère le premier objet d'un type donné (utile pour le Datastore ou Pool par défaut)
+     */
+    private async getFirstMoRef(type: 'Datastore' | 'ResourcePool' | 'Datacenter' | 'HostSystem'): Promise<any> {
+    const serviceContent = this.vsphereClient.serviceContent;
+    
+    // Utilisation simplifiée pour ton lab (récupère le premier trouvé)
+    const containerView: any = await new Promise((resolve, reject) => {
+        this.vsphereClient.client.CreateContainerView({
+        _this: serviceContent.viewManager,
+        container: serviceContent.rootFolder,
+        type: [type],
+        recursive: true
+        }, (err, res) => err ? reject(err) : resolve(res.returnval));
+    });
+
+    const result: any = await new Promise((resolve, reject) => {
+        this.vsphereClient.client.RetrievePropertiesEx({
+        _this: serviceContent.propertyCollector,
+        specSet: [{
+            propSet: [{ type: type, all: false, pathSet: ['name'] }],
+            objectSet: [{ obj: containerView, skip: true, selectSet: [{
+            attributes: { 'xsi:type': 'TraversalSpec' },
+            name: 'viewTraversalSpec', type: 'ContainerView', path: 'view', skip: false
+            }]}]
+        }],
+        options: {}
+        }, (err, res) => err ? reject(err) : resolve(res));
+    });
+
+    return result?.returnval?.objects[0]?.obj || null;
+    }
 
 }

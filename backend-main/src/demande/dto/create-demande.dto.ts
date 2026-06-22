@@ -1,0 +1,23 @@
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+
+export class CreateDemandeDto {
+  @IsNotEmpty()
+  @IsString()
+  nomInstanceSouhaite!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  justification!: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  catalogueId!: number;
+
+  @IsOptional()
+  @IsString()
+  templateName?: string;
+
+  @IsOptional()
+  @IsString()
+  versionPaas?: string;
+}

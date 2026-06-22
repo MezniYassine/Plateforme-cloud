@@ -7,6 +7,7 @@ import { Client } from 'src/entities/client.entity';
 import { AccountStatus } from 'src/enum/account-status.enum';
 import { RoleClient } from 'src/enum/role-client.enum';
 import { Entreprise } from 'src/entities/entreprise.entity';
+import { Demande, DemandeStatus } from 'src/demande/entities/demande.entity';
 
 export interface InviteDto {
     nom: string;
@@ -22,7 +23,9 @@ export class EntrepriseService {
         private readonly mailerService: MailerService,
         private readonly jwtService: JwtService,
         @InjectRepository(Entreprise)
-        private readonly entrepriseRepository: Repository<Entreprise>
+        private readonly entrepriseRepository: Repository<Entreprise>,
+        @InjectRepository(Demande)
+        private readonly demandeRepository: Repository<Demande>
     ) { }
 
 
@@ -92,23 +95,65 @@ export class EntrepriseService {
         return { message: 'Invitation envoyee avec succes' };
     }
     async getUserByEntreprise(adminId: number) {
-    const admin = await this.clientRepository.findOne({ 
-        where: { id: adminId },
-        relations: ['entreprise']
-    });
+        const admin = await this.clientRepository.findOne({
+            where: { id: adminId },
+            relations: ['entreprise']
+        });
 
-    if (!admin || !admin.entreprise) {
-        throw new NotFoundException("Cet administrateur n'est rattaché à aucune entreprise.");
-    }
-
-    const entrepriseId = admin.entreprise.id;
-
-    return this.clientRepository.find({
-        where: { 
-        entreprise: { id: entrepriseId },
-        role: RoleClient.ENTREPRISE_USER 
+        if (!admin || !admin.entreprise) {
+            throw new NotFoundException("Cet administrateur n'est rattaché à aucune entreprise.");
         }
-    });
+
+        const entrepriseId = admin.entreprise.id;
+
+        // Récupérer les utilisateurs avec leurs services
+        const users = await this.clientRepository.find({
+            where: {
+                entreprise: { id: entrepriseId },
+                role: RoleClient.ENTREPRISE_USER
+            },
+            relations: ['services']
+        });
+
+        // Couleurs pour les avatars
+        const COLORS = ['#1a56e8', '#7c3aed', '#0ea5e9', '#16a34a', '#d97706', '#dc2626', '#0891b2', '#9333ea'];
+
+        // Pour chaque user, calculer les stats
+        const result = await Promise.all(users.map(async (u, index) => {
+            // Nombre de VMs = services de type MachineVirtuelle
+            const vmCount = (u.services || []).filter(s => s['type'] === 'MachineVirtuelle').length;
+            const totalServices = (u.services || []).length;
+
+            // Consommation mensuelle = somme des prix des demandes approuvées ce mois
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+            const approvedDemandes = await this.demandeRepository.find({
+                where: {
+                    client: { id: u.id },
+                    status: DemandeStatus.APPROUVEE,
+                },
+                relations: ['catalogue']
+            });
+
+            const monthlySpend = approvedDemandes
+                .filter(d => new Date(d.dateDemande) >= startOfMonth)
+                .reduce((sum, d) => sum + (d.catalogue ? Number(d.catalogue.prix) : 0), 0);
+
+            return {
+                id: String(u.id),
+                name: `${u.prenom} ${u.nom}`,
+                email: u.email,
+                color: COLORS[index % COLORS.length],
+                active: u.status === AccountStatus.APPROVED,
+                status: u.status,
+                vms: vmCount,
+                services: totalServices,
+                spend: Math.round(monthlySpend * 100) / 100,
+            };
+        }));
+
+        return result;
     }
 
 }

@@ -1,4 +1,4 @@
-import { Component, computed, signal, OnInit, ViewEncapsulation, inject, PLATFORM_ID } from '@angular/core';
+import { Component, computed, signal, OnInit, OnDestroy, ViewEncapsulation, inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -31,19 +31,20 @@ import { Topbar } from './pages/topbar/topbar';
     CataloguePageComponent,
     ProfilePageComponent,
     Sidebar,
-    Topbar,
+    Topbar
   ],
   templateUrl: './admin-dashboard.html',
   styleUrl: './admin-dashboard.scss',
   encapsulation: ViewEncapsulation.None
 })
-export class AdminDashboard implements OnInit {
+export class AdminDashboard implements OnInit, OnDestroy {
 
   /* ── NAVIGATION ──────────────────────────────────── */
   activePage = signal<string>('dashboard');
   currentDate = signal<string>('');
   private platformId = inject(PLATFORM_ID);
   isBrowserAndReady = false;
+  private pollInterval: any;
 
   readonly PAGE_TITLES: Record<string, string> = {
     dashboard: "Vue d'ensemble",
@@ -99,6 +100,18 @@ export class AdminDashboard implements OnInit {
       this.loadTenants();
       this.loadCurrentAdmin();
       this.loadInfraMetrics();
+
+      // Poll tenants list and infrastructure metrics every 4 seconds
+      this.pollInterval = setInterval(() => {
+        this.loadTenants();
+        this.loadInfraMetrics();
+      }, 4000);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
     }
   }
 
@@ -109,7 +122,7 @@ export class AdminDashboard implements OnInit {
         const data = res?.data ?? res;
         if (!data) return;
         this.activeVmCount.set(Number(data.vmsCount) || 0);
-      this.infraMetrics.update(list => list.map(m => {
+        this.infraMetrics.update(list => list.map(m => {
           if (m.label.includes('CPU')) { m.val = `${data.cpuPercent}%`; m.pct = Number(data.cpuPercent) ?? m.pct; }
           if (m.label.includes('RAM')) { m.val = `${data.ramPercent}%`; m.pct = Number(data.ramPercent) ?? m.pct; }
           return m;

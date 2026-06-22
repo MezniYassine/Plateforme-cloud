@@ -56,6 +56,10 @@
                         r.date }}</span></div>
                 <div class="spec-item"><span class="spec-k">Justification</span><span class="spec-v">{{
                         r.justification }}</span></div>
+                @if (r.commentaireAdmin) {
+                <div class="spec-item"><span class="spec-k">Justification admin</span><span class="spec-v">{{
+                        r.commentaireAdmin }}</span></div>
+                }
             </div>
 
             <!-- Right: cost + actions -->

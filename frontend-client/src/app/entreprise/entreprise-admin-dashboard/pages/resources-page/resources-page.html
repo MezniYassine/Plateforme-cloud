@@ -1,9 +1,9 @@
-﻿            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
                 <div>
                     <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Ressources de
                         l'organisation</div>
-                    <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px">Toutes les instances dÃ©ployÃ©es
-                        par votre Ã©quipe</div>
+                    <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px">Toutes les instances déployées
+                        par votre équipe</div>
                 </div>
                 <div class="filter-tabs">
                     <button class="filter-tab" [class.active]="resFilter()==='all'"
@@ -11,7 +11,7 @@
                     <button class="filter-tab" [class.active]="resFilter()==='vm'"
                         (click)="filterChange.emit('vm')">VMs</button>
                     <button class="filter-tab" [class.active]="resFilter()==='db'" (click)="filterChange.emit('db')">Bases
-                        de donnÃ©es</button>
+                        de données</button>
                     <button class="filter-tab" [class.active]="resFilter()==='saas'"
                         (click)="filterChange.emit('saas')">SaaS</button>
                 </div>
@@ -23,12 +23,12 @@
                         <thead>
                             <tr>
                                 <th>Ressource</th>
-                                <th>PropriÃ©taire</th>
+                                <th>Propriétaire</th>
                                 <th>Type</th>
                                 <th>Config.</th>
                                 <th>CPU</th>
                                 <th>RAM</th>
-                                <th>CoÃ»t/mois</th>
+                                <th>Coût/mois</th>
                                 <th>Statut</th>
                             </tr>
                         </thead>
@@ -79,7 +79,7 @@
                                         </div>
                                         <span style="font-size:12px;font-weight:600">{{ r.cpu }}%</span>
                                     </div>
-                                    } @else { <span style="color:var(--text-muted);font-size:12px">â€”</span> }
+                                    } @else { <span style="color:var(--text-muted);font-size:12px">—</span> }
                                 </td>
                                 <td>
                                     @if (r.ram !== undefined) {
@@ -91,7 +91,7 @@
                                         </div>
                                         <span style="font-size:12px;font-weight:600">{{ r.ram }}%</span>
                                     </div>
-                                    } @else { <span style="color:var(--text-muted);font-size:12px">â€”</span> }
+                                    } @else { <span style="color:var(--text-muted);font-size:12px">—</span> }
                                 </td>
                                 <td style="font-family:'DM Mono',monospace;font-weight:600;font-size:13px">{{ r.cost }}
                                     DT</td>

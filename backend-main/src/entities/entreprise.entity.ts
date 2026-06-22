@@ -5,21 +5,21 @@ import { Client } from './client.entity';
 export class Entreprise {
   // Clé primaire ET clé étrangère
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  nomEntreprise: string;
+  nomEntreprise!: string;
 
   @Column({ unique: true })
-  identifiantFiscal: string;
+  identifiantFiscal!: string;
 
   @CreateDateColumn()
-  dateCreation: Date;
+  dateCreation!: Date;
 
   @Column()
-  maxUtilisateurs: number;
+  maxUtilisateurs!: number;
 
   @OneToMany(() => Client, (client) => client.entreprise)
-  clients: Client[];
+  clients!: Client[];
 
 }
