@@ -91,17 +91,19 @@ button {
 .logo-icon {
   width: 30px;
   height: 30px;
-  background: var(--blue);
-  border-radius: 8px;
+  background: transparent;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.logo-icon svg {
-  width: 15px;
-  height: 15px;
+.logo-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .logo-text {
@@ -1529,4 +1531,32 @@ button {
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px;
+  border: none;
+  background: var(--red-light);
+  color: var(--red);
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.logout-btn:hover {
+  background: var(--red);
+  color: #fff;
+}
+
+.logout-btn svg {
+  width: 15px;
+  height: 15px;
 }

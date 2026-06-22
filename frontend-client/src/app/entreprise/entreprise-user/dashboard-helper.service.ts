@@ -1,14 +1,16 @@
-import { HttpClient } from '@angular/common/http';
-import { computed, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
+﻿import { HttpClient } from '@angular/common/http';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { DemandeService, DemandeApiItem } from '../../services/demande.service';
+import { Router } from '@angular/router';
 
 export interface MyRequest {
   id: string; name: string; type: 'vm' | 'db' | 'saas';
   specs: string; cost: number; date: string;
   justification: string;
   status: 'pending' | 'approved' | 'rejected';
-  rejectReason?: string;
+  commentaireAdmin?: string;
 }
 
 export interface MyVM {
@@ -30,29 +32,29 @@ export interface CatalogItem {
   price: number; specs: string[];
   bg: string; color: string;
 }
+
+export interface VmTemplate { id: string; name: string; label: string }
+
 export interface EntrepriseUser {
   id: string;
   email: string;
   nom: string;
   prenom: string;
   role: string;
-  entreprise?: {
-    nomEntreprise: string;
-    taxId: string;
-  };
+  entreprise?: { nomEntreprise: string; taxId: string; };
 }
 
 @Injectable({ providedIn: 'root' })
 export class DashboardHelperService {
-  /* ── NAVIGATION ─────────────────────────────────── */
+  private readonly base = environment.apiBaseUrl.replace(/\/$/, '');
+
   activePage = signal<string>('dashboard');
   currentDate = signal<string>('');
   private fb = inject(FormBuilder);
   profileForm!: FormGroup;
 
-
   readonly PAGE_TITLES: Record<string, string> = {
-    dashboard: 'Vue d\'ensemble',
+    dashboard: "Vue d'ensemble",
     'new-request': 'Demander une ressource',
     'my-requests': 'Mes demandes',
     vms: 'Mes VMs (IaaS)',
@@ -62,39 +64,20 @@ export class DashboardHelperService {
   };
 
   private http = inject(HttpClient);
-
+  private demandeService = inject(DemandeService);
+  private router = inject(Router);
 
   pageTitle = computed(() => this.PAGE_TITLES[this.activePage()] ?? 'Dashboard');
   setPage(p: string) { this.activePage.set(p); }
 
-  /* ── USER / COMPANY ─────────────────────────────── */
-  userName = signal<string>('Anis Mrad');
+  userName = signal<string>('');
   actualUser = signal<EntrepriseUser | null>(null);
-  companyName = signal<string>('Acme Corporation');
-  mySpend = signal<number>(82);
+  companyName = signal<string>('');
+  mySpend = signal<number>(0);
 
-  /* ── MY VMs ─────────────────────────────────────── */
-  myVMs = signal<MyVM[]>([
-    { id: 'v1', name: 'vm-prod-backend-01', os: 'Ubuntu 22.04', ip: '10.0.1.10', vcpu: 4, ram_gb: 8, disk: 100, cost: 18.50, cpu: 62, ram: 74, status: 'running' },
-    { id: 'v2', name: 'vm-dev-staging-02', os: 'Debian 12', ip: '10.0.1.11', vcpu: 2, ram_gb: 4, disk: 50, cost: 9.20, cpu: 28, ram: 41, status: 'running' },
-    { id: 'v3', name: 'vm-test-03', os: 'CentOS 9', ip: '10.0.1.12', vcpu: 2, ram_gb: 4, disk: 50, cost: 9.20, cpu: 0, ram: 0, status: 'stopped' },
-  ]);
-
-  /* ── MY SERVICES ────────────────────────────────── */
-  myServices = signal<MyService[]>([
-    { id: 's1', name: 'PostgreSQL 16', type: 'db', url: 'db.prod-01:5432', specs: '4 GB RAM · 50 GB SSD', cost: 8.00, bg: 'var(--teal-light)', color: 'var(--teal)' },
-    { id: 's2', name: 'Redis 7', type: 'db', url: 'cache-01:6379', specs: '1 GB RAM · SSD', cost: 4.50, bg: 'var(--red-light)', color: 'var(--red)' },
-    { id: 's3', name: 'Nextcloud', type: 'saas', url: 'cloud.acme.com', specs: '2 vCPU · 4 GB · 200 GB', cost: 12.00, bg: 'var(--blue-light)', color: 'var(--blue)' },
-  ]);
-
-  /* ── MY REQUESTS ────────────────────────────────── */
-  myRequests = signal<MyRequest[]>([
-    { id: 'r1', name: 'vm-prod-backend-01', type: 'vm', specs: '4 vCPU · 8 GB RAM · 100 GB', cost: 18.50, date: 'Aujourd\'hui, 09h14', justification: 'Backend API v2 production', status: 'pending' },
-    { id: 'r2', name: 'PostgreSQL 16 db-prod', type: 'db', specs: '4 GB RAM · 50 GB SSD', cost: 8.00, date: 'Hier, 16h30', justification: 'DB pour module CRM', status: 'pending' },
-    { id: 'r3', name: 'vm-dev-staging-02', type: 'vm', specs: '2 vCPU · 4 GB RAM · 50 GB', cost: 9.20, date: 'Il y a 3 jours', justification: 'Environnement de staging', status: 'approved' },
-    { id: 'r4', name: 'Redis 7', type: 'db', specs: '1 GB RAM · SSD', cost: 4.50, date: 'Il y a 5 jours', justification: 'Cache sessions utilisateurs', status: 'approved' },
-    { id: 'r5', name: 'Elasticsearch 8', type: 'db', specs: '2 vCPU · 8 GB · 100 GB', cost: 14.00, date: 'Il y a 8 jours', justification: 'Moteur de recherche produits', status: 'rejected', rejectReason: 'Budget insuffisant ce mois — réessayer en juillet.' },
-  ]);
+  myVMs = signal<MyVM[]>([]);
+  myServices = signal<MyService[]>([]);
+  myRequests = signal<MyRequest[]>([]);
 
   myReqFilter = signal<string>('all');
 
@@ -106,32 +89,17 @@ export class DashboardHelperService {
   pendingOwnCount = computed(() => this.myRequests().filter(r => r.status === 'pending').length);
   runningVmCount = computed(() => this.myVMs().filter(v => v.status === 'running').length);
 
-  /* ── CATALOG ────────────────────────────────────── */
   catalogFilter = signal<string>('all');
 
   catalogTabs = signal([
     { key: 'all', label: 'Tout' },
-    { key: 'vm', label: 'IaaS â€” VMs' },
-    { key: 'db', label: 'PaaS â€” Bases de donnÃ©es' },
-    { key: 'saas', label: 'SaaS â€” Applications' },
+    { key: 'vm', label: 'IaaS - VMs' },
+    { key: 'db', label: 'PaaS - Bases de donnees' },
+    { key: 'saas', label: 'SaaS - Applications' },
   ]);
 
-  catalogItems = signal<CatalogItem[]>([
-    { id: 'c1', name: 'VM Standard', desc: '2 vCPU · 4 GB RAM · 50 GB SSD. Idéale pour les environnements de développement et staging.', type: 'vm', price: 9.20, specs: ['2 vCPU', '4 GB RAM', '50 GB SSD'], bg: 'var(--blue-light)', color: 'var(--blue)' },
-    { id: 'c2', name: 'VM Performance', desc: '4 vCPU · 8 GB RAM · 100 GB SSD. Conçue pour les charges de production backend.', type: 'vm', price: 18.50, specs: ['4 vCPU', '8 GB RAM', '100 GB SSD'], bg: 'var(--blue-light)', color: 'var(--blue)' },
-    { id: 'c3', name: 'VM Pro', desc: '8 vCPU · 16 GB RAM · 200 GB SSD. Pour les applications critiques haute disponibilité.', type: 'vm', price: 36.00, specs: ['8 vCPU', '16 GB RAM', '200 GB'], bg: 'var(--blue-light)', color: 'var(--blue)' },
-    { id: 'c4', name: 'PostgreSQL 16', desc: 'Base de données relationnelle managée avec sauvegardes automatiques et haute disponibilité.', type: 'db', price: 8.00, specs: ['1 vCPU', '4 GB RAM', '50 GB SSD'], bg: 'var(--teal-light)', color: 'var(--teal)' },
-    { id: 'c5', name: 'MySQL 8.4', desc: 'Base de données open source managée, optimisée pour les applications web et e-commerce.', type: 'db', price: 7.50, specs: ['1 vCPU', '2 GB RAM', '30 GB SSD'], bg: 'var(--teal-light)', color: 'var(--teal)' },
-    { id: 'c6', name: 'Redis 7', desc: 'Cache en mémoire ultra-rapide pour sessions, files de messages et rate limiting.', type: 'db', price: 4.50, specs: ['0.5 vCPU', '1 GB RAM', 'SSD'], bg: 'var(--red-light)', color: 'var(--red)' },
-    { id: 'c7', name: 'MongoDB 7', desc: 'Base NoSQL orientée document, idéale pour les données flexibles et non structurées.', type: 'db', price: 9.00, specs: ['1 vCPU', '4 GB RAM', '60 GB'], bg: 'var(--green-light)', color: 'var(--green)' },
-    { id: 'c8', name: 'Odoo ERP 17', desc: 'Suite ERP complète : CRM, comptabilité, RH, inventaire. Déploiement en un clic, souverain.', type: 'saas', price: 35.00, specs: ['4 vCPU', '8 GB', '500 GB'], bg: 'var(--purple-light)', color: 'var(--purple)' },
-    { id: 'c9', name: 'Nextcloud', desc: 'Espace collaboratif souverain : fichiers partagés, agenda d\'équipe, visioconférence intégrée.', type: 'saas', price: 12.00, specs: ['2 vCPU', '4 GB', '200 GB'], bg: 'var(--blue-light)', color: 'var(--blue)' },
-    { id: 'c10', name: 'GitLab CE', desc: 'Plateforme DevOps complète : CI/CD, dépôts Git, registre Docker et gestion de projets agiles.', type: 'saas', price: 18.00, specs: ['4 vCPU', '8 GB', '100 GB'], bg: 'var(--amber-light)', color: 'var(--amber)' },
-    { id: 'c11', name: 'Mattermost', desc: 'Messagerie d\'équipe sécurisée et souveraine, alternative à Slack avec intégrations DevOps.', type: 'saas', price: 8.00, specs: ['2 vCPU', '4 GB', '50 GB'], bg: 'var(--teal-light)', color: 'var(--teal)' },
-    { id: 'c12', name: 'Grafana Stack', desc: 'Monitoring et visualisation : Grafana + Prometheus + Loki pour surveiller vos applications.', type: 'saas', price: 14.00, specs: ['2 vCPU', '4 GB', '100 GB'], bg: 'var(--amber-light)', color: 'var(--amber)' },
-  ]);
+  catalogItems = signal<CatalogItem[]>([]);
 
-  /* ── PREFILL (resubmit flow) ────────────────────── */
   filteredCatalog = computed(() => {
     const f = this.catalogFilter();
     return f === 'all' ? this.catalogItems() : this.catalogItems().filter(i => i.type === f);
@@ -140,12 +108,12 @@ export class DashboardHelperService {
   selectedService = signal<CatalogItem | null>(null);
   instanceName = '';
   justification = '';
+  vmTemplates = signal<VmTemplate[]>([]);
+  selectedTemplateName = signal<string>('');
 
   selectService(s: CatalogItem) { this.selectedService.set(s); }
+  updateTemplateName(val: string) { this.selectedTemplateName.set(val); }
 
-
-
-  /* ── TOAST ───────────────────────────────────────── */
   toastMsg = signal<string>('');
   toastColor = signal<string>('var(--green)');
   isToastVisible = signal<boolean>(false);
@@ -157,7 +125,6 @@ export class DashboardHelperService {
     setTimeout(() => this.isToastVisible.set(false), 3500);
   }
 
-  /* ── HELPERS ─────────────────────────────────────── */
   getInitials(name: string): string {
     return (name || '??').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   }
@@ -169,7 +136,10 @@ export class DashboardHelperService {
     });
   }
 
-  /* ── VM ACTIONS ─────────────────────────────────── */
+  statusText(s: string) {
+    return ({ pending: 'En attente', approved: 'Approuve', rejected: 'Rejete', suspended: 'Suspendu' } as any)[s] || s;
+  }
+
   setDate() {
     this.currentDate.set(new Date().toLocaleDateString('fr-FR', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -180,25 +150,68 @@ export class DashboardHelperService {
     const svc = this.selectedService();
     if (!svc) return;
 
-    const name = this.instanceName.trim() || `${svc.type}-${Math.floor(Math.random() * 99 + 1).toString().padStart(2, '0')}`;
+    if (!this.instanceName.trim()) {
+      this.showToast("Veuillez saisir un nom pour l'instance", 'var(--amber)');
+      return;
+    }
+    if (!this.justification.trim()) {
+      this.showToast('Veuillez saisir une justification', 'var(--amber)');
+      return;
+    }
 
-    const newReq: MyRequest = {
-      id: 'r-' + Date.now(),
-      name,
-      type: svc.type,
-      specs: svc.specs.join(' Â· '),
-      cost: svc.price,
-      date: 'Ã€ l\'instant',
-      justification: this.justification.trim() || '(Aucune justification fournie)',
-      status: 'pending',
+    const payload = {
+      nomInstanceSouhaite: this.instanceName.trim(),
+      justification: this.justification.trim(),
+      catalogueId: Number(svc.id),
+      templateName: svc.type === 'vm' ? (this.selectedTemplateName() || undefined) : undefined,
     };
 
-    this.myRequests.update(list => [newReq, ...list]);
-    this.selectedService.set(null);
-    this.instanceName = '';
-    this.justification = '';
-    this.setPage('my-requests');
-    this.showToast(`Demande "${name}" soumise â€” en attente de validation`, 'var(--blue)');
+    this.demandeService.create(payload).subscribe({
+      next: (demande) => {
+        const newReq: MyRequest = this.mapApiDemande(demande);
+        this.myRequests.update(list => [newReq, ...list]);
+        this.selectedService.set(null);
+        this.instanceName = '';
+        this.justification = '';
+        this.setPage('my-requests');
+        this.showToast('Demande soumise - en attente de validation', 'var(--blue)');
+      },
+      error: (err) => {
+        this.showToast(err?.error?.message ?? 'Impossible de soumettre la demande', 'var(--red)');
+      }
+    });
+  }
+
+  loadMyDemandes() {
+    this.demandeService.getMyDemandes().subscribe({
+      next: (demandes) => {
+        this.myRequests.set(demandes.map(d => this.mapApiDemande(d)));
+      },
+      error: () => { }
+    });
+  }
+
+  private mapApiDemande(d: DemandeApiItem): MyRequest {
+    const statusMap: Record<string, 'pending' | 'approved' | 'rejected'> = {
+      EN_ATTENTE: 'pending',
+      APPROUVEE: 'approved',
+      REJETEE: 'rejected',
+    };
+    const cat = d.catalogue;
+    const specs = cat ? cat.vcpu + ' vCPU - ' + cat.ramMB + ' GB RAM - ' + cat.stockageGB + ' GB SSD' : '';
+    return {
+      id: String(d.id),
+      name: d.nomInstanceSouhaite,
+      type: 'vm',
+      specs,
+      cost: cat ? Number(cat.prix) : 0,
+      date: new Date(d.dateDemande).toLocaleDateString('fr-FR', {
+        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+      }),
+      justification: d.justification,
+      status: statusMap[d.status] ?? 'pending',
+      commentaireAdmin: d.commentaireAdmin,
+    };
   }
 
   resubmitRequest(r: MyRequest) {
@@ -219,24 +232,128 @@ export class DashboardHelperService {
         : { ...vm, status: 'running' as const, cpu: 20, ram: 30 };
     }));
     const vm = this.myVMs().find(v => v.id === id);
-    const msg = action === 'stop' ? `${vm?.name} arrêtée` : `${vm?.name} démarrée`;
+    const msg = action === 'stop' ? (vm?.name + ' arretee') : (vm?.name + ' demarree');
     this.showToast(msg, action === 'stop' ? 'var(--amber)' : 'var(--green)');
-  }
-  statusText(s: string) {
-    return ({ pending: 'En attente', approved: 'Approuvé', rejected: 'Rejeté', suspended: 'Suspendu' } as any)[s] || s;
   }
 
   loadUserData() {
-    this.http.get(`${environment.apiBaseUrl}/users/me`).subscribe({
+    this.http.get(`${this.base}/users/me`).subscribe({
       next: (data: any) => {
         this.actualUser.set(data);
+        this.userName.set(((data.prenom ?? '') + ' ' + (data.nom ?? '')).trim());
+        this.companyName.set(data.entreprise?.nomEntreprise ?? '');
       }
     });
   }
-  updateProfile(data: any) {
-    return this.http.patch(`${environment.apiBaseUrl}/users/update-profile`, data);
+
+  loadVmTemplates() {
+    this.http.get<any>(`${this.base}/esxi/vms`).subscribe({
+      next: (res) => {
+        const list = Array.isArray(res) ? res : (res?.data ?? []);
+        const templates = (list || [])
+          .filter((vm: any) => String(vm?.name || '').toLowerCase().includes('template'))
+          .map((vm: any) => ({
+            id: String(vm.id),
+            name: vm.name,
+            label: String(vm.name).replace(/template\s*/i, '').trim() || vm.name
+          }));
+        this.vmTemplates.set(templates);
+        if (templates.length > 0 && !this.selectedTemplateName()) {
+          this.selectedTemplateName.set(templates[0].name);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load ESXi templates', err);
+        this.showToast('Impossible de charger les templates ESXi', 'var(--red)');
+      }
+    });
   }
+
+  loadMyVms() {
+    this.http.get<any[]>(`${this.base}/esxi/my-vms`).subscribe({
+      next: (data) => {
+        const mapped: MyVM[] = (data || []).map((vm: any) => {
+          const isRunning = ['running', 'started'].includes(String(vm.status || '').toLowerCase());
+          return {
+            id: String(vm.id),
+            name: vm.nomPersonnalise || vm.name || ('vm-' + vm.id),
+            os: vm.os || '',
+            ip: vm.ipAddress || vm.ip || '',
+            vcpu: vm.vCPU || vm.vcpu || 1,
+            ram_gb: vm.ramGB || vm.ram_gb || 1,
+            disk: vm.stockageGB || vm.disk || 20,
+            cost: 0,
+            cpu: 0,
+            ram: 0,
+            status: isRunning ? 'running' as const : 'stopped' as const,
+          };
+        });
+        this.myVMs.set(mapped);
+      },
+      error: () => { }
+    });
+  }
+
+  provisionVm(payload: { name: string; ramGB: number; vCPU: number; storageGB?: number; templateName?: string }) {
+    return this.http.post<any>(`${this.base}/esxi/provision`, payload);
+  }
+
+  deleteVm(id: string) {
+    const numericId = Number(id);
+    if (!confirm('Confirmer la suppression de la VM ?')) return;
+    this.http.delete<any>(`${this.base}/esxi/my-vms/`).subscribe({
+      next: (res) => {
+        this.myVMs.update(list => list.filter(v => v.id !== String(id)));
+        this.showToast(res?.message ?? 'VM supprimee', 'var(--red)');
+      },
+      error: (err) => {
+        this.showToast(err?.error?.message ?? 'Impossible de supprimer la VM', 'var(--red)');
+      }
+    });
+  }
+
+  loadCatalog() {
+    this.http.get<any[]>(`${this.base}/catalogue`).subscribe({
+      next: (data) => {
+        const items: CatalogItem[] = (data || []).map((cat: any) => {
+          const isVm = cat.type === 'vm' || cat.vcpu !== undefined || cat.ramMB !== undefined;
+          const type = isVm ? 'vm' : (cat.type || 'saas');
+          const specs = cat.specs
+            ? (typeof cat.specs === 'string' ? cat.specs.split('.').map((s: string) => s.trim()) : cat.specs)
+            : [
+              (cat.vcpu || 0) + ' vCPU',
+              (cat.ramMB || 0) + ' GB RAM',
+              (cat.stockageGB || 0) + ' GB SSD'
+            ];
+          return {
+            id: String(cat.id),
+            name: cat.nomService || cat.name || 'Service sans nom',
+            desc: cat.description || cat.desc || '',
+            type: type as 'vm' | 'db' | 'saas',
+            price: Number(cat.prix !== undefined ? cat.prix : (cat.price || 0)),
+            specs,
+            bg: cat.bg || 'var(--blue-light)',
+            color: cat.color || 'var(--blue)',
+          };
+        });
+        this.catalogItems.set(items);
+      },
+      error: (err) => {
+        console.error('Failed to load catalog', err);
+        this.showToast('Impossible de charger le catalogue', 'var(--red)');
+      }
+    });
+  }
+
+  updateProfile(data: any) {
+    return this.http.patch(`${this.base}/users/update-profile`, data);
+  }
+
   updatePassword(data: any) {
-    return this.http.patch(`${environment.apiBaseUrl}/users/update-password`, data);
+    return this.http.patch(`${this.base}/users/update-password`, data);
+  }
+  logout() {
+    localStorage.removeItem('access_token');
+    this.router.navigate(['/login']);
   }
 }

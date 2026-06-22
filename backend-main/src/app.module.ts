@@ -5,13 +5,21 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { AdminModule } from './admin/admin.module';
 import { PersonnelModule } from './personnel/personnel.module';
 import { EntrepriseAdminModule } from './entreprise-admin/entreprise-admin.module';
 import { EntrepriseUserModule } from './entreprise-user/entreprise-user.module';
 import { EsxiModule } from './esxi/esxi.module';
+import { Admin } from './entities/admin.entity';
+import { Client } from './entities/client.entity';
+import { Entreprise } from './entities/entreprise.entity';
+import { MachineVirtuelle } from './entities/machineVirtuelle.entity';
+import { Personal } from './entities/personal.entity';
+import { ServiceInstance } from './entities/serviceInstance.entity';
+import { CatalogueModule } from './catalogue/catalogue.module';
+import { Catalogue } from './catalogue/entities/catalogue.entity';
+import { DemandeModule } from './demande/demande.module';
 
 @Module({
   imports: [
@@ -23,13 +31,13 @@ import { EsxiModule } from './esxi/esxi.module';
       username: process.env.DB_USERNAME ?? 'postgres',
       password: process.env.DB_PASSWORD ?? 'password',
       database: process.env.DB_NAME ?? 'dynamix_db',
+      entities: [Admin, Client, Entreprise, MachineVirtuelle, Personal, ServiceInstance,Catalogue],
       autoLoadEntities: true,
       synchronize: true, // disable in production
       logging: false,
     }),
     AuthModule,
     UsersModule,
-    InfrastructureModule,
     AdminModule,
     EntrepriseAdminModule,
     EntrepriseUserModule,
@@ -53,6 +61,8 @@ import { EsxiModule } from './esxi/esxi.module';
         },
       }),
     }),
+    CatalogueModule,
+    DemandeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

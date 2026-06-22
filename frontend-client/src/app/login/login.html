@@ -4,21 +4,17 @@
   <div class="left-panel">
     <a class="logo" [routerLink]="['']">
       <div class="logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
+        <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Services" />
       </div>
       <span class="logo-text">Dynamix Services</span>
     </a>
 
     <div class="left-content">
       <h2 class="left-headline">
-        Welcome back<br>to your <span class="hl-teal">sovereign<br>cloud.</span>
+        Bienvenue<br>sur votre <span class="hl-teal">cloud<br>souverain.</span>
       </h2>
       <p class="left-sub">
-        Your infrastructure. Your data. Your rules. Sign in to manage your cloud resources with full control.
+        Votre infrastructure. Vos données. Vos règles. Connectez-vous pour gérer vos ressources cloud en toute liberté.
       </p>
 
       <div class="feature-list">
@@ -28,7 +24,7 @@
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <span class="feature-text"><strong>JWT + MFA</strong> — secure two-factor authentication</span>
+          <span class="feature-text"><strong>JWT + MFA</strong> — authentification à double facteur sécurisée</span>
         </div>
         <div class="feature-item">
           <div class="feature-check" style="background:rgba(0,212,255,0.1);">
@@ -36,7 +32,7 @@
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <span class="feature-text"><strong>RBAC</strong> — access adapted to your exact role</span>
+          <span class="feature-text"><strong>RBAC</strong> — accès adapté à votre rôle exact</span>
         </div>
 
         <div class="feature-item">
@@ -45,7 +41,7 @@
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <span class="feature-text"><strong>Sovereign data</strong> — hosted locally</span>
+          <span class="feature-text"><strong>Données souveraines</strong> — hébergées localement</span>
         </div>
       </div>
     </div>
@@ -53,15 +49,15 @@
     <div class="stats-row">
       <div class="stat">
         <span class="stat-val">99.<span>9</span>%</span>
-        <span class="stat-lbl">Uptime SLA</span>
+        <span class="stat-lbl">SLA de disponibilité</span>
       </div>
       <div class="stat">
         <span class="stat-val"><span>100</span>%</span>
-        <span class="stat-lbl">Sovereignty</span>
+        <span class="stat-lbl">Souveraineté</span>
       </div>
       <div class="stat">
         <span class="stat-val"><span>24</span>/7</span>
-        <span class="stat-lbl">Expert support</span>
+        <span class="stat-lbl">Support expert</span>
       </div>
     </div>
   </div>
@@ -69,15 +65,15 @@
   <!-- ══ RIGHT PANEL ══ -->
   <div class="right-panel">
     <div class="form-card">
-      <h1 class="form-title">Sign In</h1>
-      <p class="form-subtitle">Log in to your Dynamix workspace</p>
+      <h1 class="form-title">Connexion</h1>
+      <p class="form-subtitle">Connectez-vous à votre espace Dynamix</p>
 
       <!-- ══ UNIFIED LOGIN ══ -->
       <div class="form-panel active">
         <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
           <div class="fields-grid">
             <div class="field-group">
-              <label class="field-label">Email Address</label>
+              <label class="field-label">Adresse e-mail</label>
               <div class="field-wrap">
                 <div class="fi">
                   <svg viewBox="0 0 24 24">
@@ -90,7 +86,7 @@
             </div>
 
             <div class="field-group">
-              <label class="field-label">Password</label>
+              <label class="field-label">Mot de passe</label>
               <div class="field-wrap">
                 <div class="fi">
                   <svg viewBox="0 0 24 24">
@@ -120,42 +116,50 @@
             </div>
 
             <div class="row-options">
-              <button type="button" class="forgot-link" (click)="openForgotPassword()">Forgot Password?</button>
+              <button type="button" class="forgot-link" (click)="openForgotPassword()">Mot de passe oublié ?</button>
             </div>
           </div>
 
           <button type="submit" class="btn-submit btn-enterprise" [class.loading]="isLoading"
             [disabled]="isLoading || loginForm.invalid">
             <div class="spinner"></div>
-            <span class="btn-label">Log In</span>
+            <span class="btn-label">Se connecter</span>
           </button>
 
           <div class="divider">
-            <span>or</span>
+            <span>ou</span>
           </div>
 
           <button type="button" class="btn-submit btn-google" (click)="loginWithGoogle()">
             <svg class="google-icon" viewBox="0 0 24 24">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4" />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853" />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05" />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335" />
             </svg>
-            <span class="btn-label">Continue with Google</span>
+            <span class="btn-label">Continuer avec Google</span>
           </button>
 
           <button type="button" class="btn-submit btn-microsoft" (click)="loginWithMicrosoft()">
             <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M11.4 2H2v9.4h9.4V2z" fill="#f25022"/>
-              <path d="M22 2h-9.4v9.4H22V2z" fill="#7fba00"/>
-              <path d="M11.4 12.6H2V22h9.4v-9.4z" fill="#00a4ef"/>
-              <path d="M22 12.6h-9.4V22H22v-9.4z" fill="#ffb900"/>
+              <path d="M11.4 2H2v9.4h9.4V2z" fill="#f25022" />
+              <path d="M22 2h-9.4v9.4H22V2z" fill="#7fba00" />
+              <path d="M11.4 12.6H2V22h9.4v-9.4z" fill="#00a4ef" />
+              <path d="M22 12.6h-9.4V22H22v-9.4z" fill="#ffb900" />
             </svg>
-            <span class="btn-label">Continue with Microsoft</span>
+            <span class="btn-label">Continuer avec Microsoft</span>
           </button>
         </form>
 
-        <p class="bottom-link">Don't have an account yet? <a routerLink="/signup">Sign Up here</a></p>
+        <p class="bottom-link">Vous n'avez pas encore de compte ? <a routerLink="/signup">Inscrivez-vous ici</a></p>
       </div>
 
     </div>
@@ -166,12 +170,12 @@
 <div class="modal-overlay" [class.show]="forgotMode">
   <div class="mfa-modal forgot-modal">
     @if (!forgotSent) {
-    <h3 class="mfa-title">Reset password</h3>
-    <p class="mfa-sub">Enter your email address and we will send you a link to choose a new password.</p>
+    <h3 class="mfa-title">Réinitialiser le mot de passe</h3>
+    <p class="mfa-sub">Entrez votre adresse e-mail et nous vous enverrons un lien pour choisir un nouveau mot de passe.</p>
 
     <form [formGroup]="forgotForm" (ngSubmit)="requestPasswordReset()">
       <div class="field-group forgot-field">
-        <label class="field-label">Email Address</label>
+        <label class="field-label">Adresse e-mail</label>
         <div class="field-wrap">
           <div class="fi">
             <svg viewBox="0 0 24 24">
@@ -184,11 +188,11 @@
       </div>
 
       <button type="submit" class="btn-verify" [disabled]="forgotLoading || forgotForm.invalid">
-        {{ forgotLoading ? 'Sending...' : 'Send reset link' }}
+        {{ forgotLoading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation' }}
       </button>
     </form>
 
-    <button type="button" class="modal-secondary" (click)="closeForgotPassword()">Back to login</button>
+    <button type="button" class="modal-secondary" (click)="closeForgotPassword()">Retour à la connexion</button>
     } @else {
     <div class="mfa-icon">
       <svg viewBox="0 0 24 24">
@@ -196,9 +200,9 @@
         <path d="M9 12l2 2 4-4" />
       </svg>
     </div>
-    <h3 class="mfa-title">Check your email</h3>
-    <p class="mfa-sub">If an account exists with this email, a reset link has been sent.</p>
-    <button type="button" class="btn-verify" (click)="closeForgotPassword()">Done</button>
+    <h3 class="mfa-title">Vérifiez vos e-mails</h3>
+    <p class="mfa-sub">Si un compte existe avec cette adresse, un lien de réinitialisation a été envoyé.</p>
+    <button type="button" class="btn-verify" (click)="closeForgotPassword()">Terminé</button>
     }
   </div>
 </div>
@@ -211,8 +215,8 @@
         <path d="M9 12l2 2 4-4" />
       </svg>
     </div>
-    <h3 class="mfa-title">MFA Verification</h3>
-    <p class="mfa-sub">Enter the 6-digit code sent to your authenticator app.</p>
+    <h3 class="mfa-title">Vérification MFA</h3>
+    <p class="mfa-sub">Entrez le code à 6 chiffres envoyé à votre application d'authentification.</p>
 
     <div class="otp-row">
       <input class="otp-input" type="text" maxlength="1" id="otp1">
@@ -223,8 +227,8 @@
       <input class="otp-input" type="text" maxlength="1" id="otp6">
     </div>
 
-    <button class="btn-verify" (click)="submitMFA()">Verify and log in</button>
-    <p class="mfa-resend">Didn't receive the code? <a (click)="resetMFA()">Resend</a></p>
+    <button class="btn-verify" (click)="submitMFA()">Vérifier et se connecter</button>
+    <p class="mfa-resend">Vous n'avez pas reçu le code ? <a (click)="resetMFA()">Renvoyer</a></p>
   </div>
 </div>
 

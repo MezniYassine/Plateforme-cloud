@@ -1,10 +1,7 @@
-import { Component, computed, signal, OnInit, ViewEncapsulation, PLATFORM_ID, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit, OnDestroy, ViewEncapsulation, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { environment } from '../../../environments/environment';
-import { CatalogItem, DashboardHelperService, MyRequest, MyService, MyVM } from './dashboard-helper.service';
+import { FormsModule } from '@angular/forms';
+import { DashboardHelperService } from './dashboard-helper.service';
 import { UserDashboardComponent } from './components/user-dashboard/user-dashboard';
 import { Sidebar } from './components/user-sidebar/sidebar';
 import { Topbar } from './components/user-topbar/topbar';
@@ -35,10 +32,13 @@ import { Profile } from './components/user-profile/profile';
   styleUrl: './entreprise-user.scss',
   encapsulation: ViewEncapsulation.None,
 })
-export class EntrepriseUserDashboard implements OnInit {
+export class EntrepriseUserDashboard implements OnInit, OnDestroy {
   isBrowserAndReady = false;
   private platformId = inject(PLATFORM_ID);
+  private pollInterval: any;
+
   constructor(public state: DashboardHelperService) { }
+
   ngOnInit() {
     if (!isPlatformBrowser(this.platformId)) {
       return;
@@ -46,7 +46,20 @@ export class EntrepriseUserDashboard implements OnInit {
     this.isBrowserAndReady = true;
     this.state.setDate();
     this.state.loadUserData();
+    this.state.loadMyDemandes();
+    this.state.loadMyVms();
+    this.state.loadVmTemplates();
+    this.state.loadCatalog();
+
+    this.pollInterval = setInterval(() => {
+      this.state.loadMyDemandes();
+      this.state.loadMyVms();
+    }, 4000);
   }
 
-
+  ngOnDestroy() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+    }
+  }
 }

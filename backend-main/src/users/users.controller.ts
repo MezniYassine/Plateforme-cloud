@@ -1,7 +1,8 @@
-import { Controller, Post, Body, Get, Patch, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Req, UseGuards, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Client } from '../entities/client.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AccountStatus } from '../enum/account-status.enum';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -25,5 +26,9 @@ export class UsersController {
   @Patch('update-password')
   async updatePassword(@Req() req: any, @Body() updateData: Partial<Client>) {
     return this.usersService.updatePassword(req.user.sub, updateData);
+  }
+  @Patch(':id/status')
+  async updateStatus(@Param('id') id: string, @Body('status') status: AccountStatus) {
+    return this.usersService.updateStatus(Number(id), status);
   }
 }

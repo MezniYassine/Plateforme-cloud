@@ -1,4 +1,4 @@
-*,
+﻿*,
 *::before,
 *::after {
     box-sizing: border-box;
@@ -44,14 +44,14 @@ body {
     overflow: hidden
 }
 
-/* ══ LAYOUT ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â LAYOUT Ã¢â€¢ÂÃ¢â€¢Â */
 .app {
     display: flex;
     height: 100vh;
     overflow: hidden
 }
 
-/* ══ SIDEBAR ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â SIDEBAR Ã¢â€¢ÂÃ¢â€¢Â */
 .sidebar {
     width: var(--sidebar-w);
     background: var(--bg-white);
@@ -62,7 +62,7 @@ body {
     overflow-y: auto;
 }
 
-.sb-logo {
+.sidebar-logo {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -71,19 +71,22 @@ body {
     text-decoration: none;
 }
 
-.sb-logo-icon {
+.logo-icon {
     width: 30px;
     height: 30px;
-    background: var(--blue);
-    border-radius: 8px;
+    background: transparent;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
-.sb-logo-icon svg {
-    width: 14px;
-    height: 14px
+.logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 .profile-field {
@@ -101,7 +104,7 @@ body {
 .profile-field input {
     padding: 10px 14px;
     border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--r-sm);
     font-family: 'DM Sans', sans-serif;
     font-size: 13.5px;
     color: var(--text-primary);
@@ -117,24 +120,24 @@ body {
 }
 
 
-.sb-logo-name {
+.logo-text {
     font-family: 'Syne', sans-serif;
     font-size: 13.5px;
     font-weight: 700;
     color: var(--text-1)
 }
 
-.sb-logo-role {
+.logo-sub {
     font-size: 10px;
     color: var(--text-3);
     letter-spacing: .4px
 }
 
-.sb-section {
+.sidebar-section {
     padding: 14px 10px 6px
 }
 
-.sb-sec-label {
+.sidebar-label {
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 1px;
@@ -194,7 +197,7 @@ body {
     color: #fff
 }
 
-.sb-footer {
+.sidebar-footer {
     margin-top: auto;
     padding: 12px 10px;
     border-top: 1px solid var(--border-l)
@@ -241,7 +244,7 @@ body {
     color: var(--text-3)
 }
 
-/* ══ MAIN ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â MAIN Ã¢â€¢ÂÃ¢â€¢Â */
 .main {
     flex: 1;
     display: flex;
@@ -249,7 +252,7 @@ body {
     overflow: hidden
 }
 
-/* ══ TOPBAR ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â TOPBAR Ã¢â€¢ÂÃ¢â€¢Â */
 .topbar {
     height: var(--topbar-h);
     background: var(--bg-white);
@@ -360,14 +363,14 @@ body {
     color: var(--text-2)
 }
 
-/* ══ CONTENT ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â CONTENT Ã¢â€¢ÂÃ¢â€¢Â */
 .content {
     flex: 1;
     overflow-y: auto;
     padding: 22px 26px
 }
 
-/* ══ SECTION TABS ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â SECTION TABS Ã¢â€¢ÂÃ¢â€¢Â */
 .section-tabs {
     display: flex;
     gap: 6px;
@@ -420,7 +423,7 @@ body {
     color: var(--blue)
 }
 
-/* ══ PANELS ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â PANELS Ã¢â€¢ÂÃ¢â€¢Â */
 .panel {
     display: none
 }
@@ -429,7 +432,7 @@ body {
     display: block
 }
 
-/* ══ STAT ROW ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â STAT ROW Ã¢â€¢ÂÃ¢â€¢Â */
 .stat-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -489,7 +492,7 @@ body {
     margin-top: 6px
 }
 
-/* ══ GRID 2-COL ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â GRID 2-COL Ã¢â€¢ÂÃ¢â€¢Â */
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 340px;
@@ -503,7 +506,7 @@ body {
     gap: 14px
 }
 
-/* ══ SECTION CARD ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â SECTION CARD Ã¢â€¢ÂÃ¢â€¢Â */
 .sc {
     background: var(--bg-white);
     border: 1px solid var(--border);
@@ -532,7 +535,7 @@ body {
     margin-top: 2px
 }
 
-/* ══ BUTTONS ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â BUTTONS Ã¢â€¢ÂÃ¢â€¢Â */
 .btn {
     font-family: 'DM Sans', sans-serif;
     font-size: 12.5px;
@@ -598,7 +601,7 @@ body {
     background: #fecaca
 }
 
-/* ══ VM CARDS ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â VM CARDS Ã¢â€¢ÂÃ¢â€¢Â */
 .vm-list {
     padding: 8px 12px 16px;
     display: flex;
@@ -780,7 +783,7 @@ body {
     background: var(--blue-m)
 }
 
-/* ══ BADGE ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â BADGE Ã¢â€¢ÂÃ¢â€¢Â */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -841,7 +844,7 @@ body {
     }
 }
 
-/* ══ CATALOG CARDS ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â CATALOG CARDS Ã¢â€¢ÂÃ¢â€¢Â */
 .catalog-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -945,7 +948,7 @@ body {
     color: var(--text-2)
 }
 
-/* ══ WALLET PANEL ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â WALLET PANEL Ã¢â€¢ÂÃ¢â€¢Â */
 .wallet-hero {
     background: linear-gradient(135deg, var(--blue) 0%, #1d4ed8 100%);
     border-radius: var(--r);
@@ -1011,7 +1014,7 @@ body {
     stroke-linecap: round
 }
 
-/* ══ INVOICE TABLE ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â INVOICE TABLE Ã¢â€¢ÂÃ¢â€¢Â */
 .inv-table {
     width: 100%;
     border-collapse: collapse
@@ -1049,7 +1052,7 @@ body {
     vertical-align: middle
 }
 
-/* ══ MONITORING ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â MONITORING Ã¢â€¢ÂÃ¢â€¢Â */
 .monitor-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1120,7 +1123,7 @@ body {
     color: var(--text-1)
 }
 
-/* ══ DEPLOY MODAL ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â DEPLOY MODAL Ã¢â€¢ÂÃ¢â€¢Â */
 .modal-ov {
     position: fixed;
     inset: 0;
@@ -1144,7 +1147,7 @@ body {
     background: var(--bg-white);
     border-radius: var(--r);
     width: 100%;
-    max-width: 540px;
+    max-width: 640px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, .15);
     transform: translateY(16px) scale(.98);
     transition: transform .25s;
@@ -1153,6 +1156,247 @@ body {
 
 .modal-ov.show .modal {
     transform: translateY(0) scale(1)
+}
+
+/* Ã¢â€¢ÂÃ¢â€¢Â WIZARD STEPPER Ã¢â€¢ÂÃ¢â€¢Â */
+.wizard-stepper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px
+}
+
+.wz-step {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-shrink: 0
+}
+
+.wz-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-3);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .25s;
+    flex-shrink: 0
+}
+
+.wz-num svg {
+    width: 12px;
+    height: 12px
+}
+
+.wz-step.active .wz-num {
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, .3)
+}
+
+.wz-step.done .wz-num {
+    background: var(--green);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, .25)
+}
+
+.wz-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-3);
+    transition: color .25s
+}
+
+.wz-step.active .wz-label {
+    color: var(--blue)
+}
+
+.wz-step.done .wz-label {
+    color: var(--green)
+}
+
+.wz-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin: 0 10px;
+    border-radius: 2px;
+    transition: background .25s
+}
+
+.wz-line.done {
+    background: var(--green)
+}
+
+/* Ã¢â€¢ÂÃ¢â€¢Â PLAN CARDS (STEP 2) Ã¢â€¢ÂÃ¢â€¢Â */
+.plan-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-height: 340px;
+    overflow-y: auto;
+    padding: 2px 2px 4px
+}
+
+.plan-grid::-webkit-scrollbar {
+    width: 4px
+}
+
+.plan-grid::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px
+}
+
+.plan-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px;
+    cursor: pointer;
+    transition: all .2s;
+    background: var(--bg-white);
+    position: relative;
+    overflow: hidden
+}
+
+.plan-card:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, .1);
+    transform: translateY(-2px)
+}
+
+.plan-card.selected {
+    border-color: var(--blue);
+    background: var(--blue-l);
+    box-shadow: 0 4px 20px rgba(37, 99, 235, .15)
+}
+
+.plan-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px
+}
+
+.plan-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0
+}
+
+.plan-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 100px;
+    letter-spacing: .4px
+}
+
+.plan-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    animation: pop-in .2s cubic-bezier(.36, .07, .19, .97)
+}
+
+.plan-check svg {
+    width: 11px;
+    height: 11px
+}
+
+@keyframes pop-in {
+    0% {
+        transform: scale(0)
+    }
+
+    80% {
+        transform: scale(1.15)
+    }
+
+    100% {
+        transform: scale(1)
+    }
+}
+
+.plan-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-1);
+    margin-bottom: 3px
+}
+
+.plan-desc {
+    font-size: 11.5px;
+    color: var(--text-2);
+    line-height: 1.5;
+    margin-bottom: 10px
+}
+
+.plan-specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px
+}
+
+.plan-spec-chip {
+    font-size: 11px;
+    background: var(--bg-page);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 5px;
+    color: var(--text-2);
+    font-weight: 500
+}
+
+.plan-card.selected .plan-spec-chip {
+    background: rgba(37, 99, 235, .08);
+    border-color: #93c5fd;
+    color: var(--blue)
+}
+
+.plan-price {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--blue)
+}
+
+.plan-price span {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-3);
+    font-family: 'DM Sans', sans-serif
+}
+
+/* Ã¢â€¢ÂÃ¢â€¢Â EMPTY PLANS Ã¢â€¢ÂÃ¢â€¢Â */
+.empty-plans {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 32px 0;
+    color: var(--text-3);
+    font-size: 13px
+}
+
+.empty-plans svg {
+    width: 36px;
+    height: 36px;
+    stroke: var(--text-3)
 }
 
 .modal-head {
@@ -1272,7 +1516,7 @@ body {
     color: var(--blue)
 }
 
-/* ══ TOAST ══ */
+/* Ã¢â€¢ÂÃ¢â€¢Â TOAST Ã¢â€¢ÂÃ¢â€¢Â */
 .toast {
     position: fixed;
     bottom: 24px;
@@ -1317,6 +1561,34 @@ body {
     stroke-linecap: round
 }
 
+.logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px;
+    border: none;
+    background: var(--red-l);
+    color: var(--red);
+    font-size: 12.5px;
+    font-weight: 600;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.logout-btn:hover {
+    background: var(--red);
+    color: #fff;
+}
+
+.logout-btn svg {
+    width: 15px;
+    height: 15px;
+}
+
 ::-webkit-scrollbar {
     width: 5px;
     height: 5px
@@ -1326,3 +1598,32 @@ body {
     background: var(--border);
     border-radius: 3px
 }
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px;
+    border: none;
+    background: var(--red-l);
+    color: var(--red);
+    font-size: 12.5px;
+    font-weight: 600;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.logout-btn:hover {
+    background: var(--red);
+    color: #fff;
+}
+
+.logout-btn svg {
+    width: 15px;
+    height: 15px;
+}
+

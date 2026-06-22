@@ -1,24 +1,19 @@
-@if( isBrowserAndReady){
+﻿@if( isBrowserAndReady){
 <div class="app">
 
-  <!-- ══════ SIDEBAR ══════ -->
   <aside class="sidebar">
-    <a class="sb-logo" href="#">
-      <div class="sb-logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Logo">
       </div>
       <div>
-        <div class="sb-logo-name">Dynamix</div>
-        <div class="sb-logo-role">Espace Personnel</div>
+        <div class="logo-text">Dynamix</div>
+        <div class="logo-sub">Espace Personnel</div>
       </div>
-    </a>
+    </div>
 
-    <div class="sb-section">
-      <div class="sb-sec-label">Principal</div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Principal</div>
       <div class="nav-item" [class.active]="activeTab() === 'overview'" (click)="switchTab('overview')">
         <svg viewBox="0 0 24 24">
           <rect x="3" y="3" width="7" height="7" />
@@ -52,8 +47,8 @@
       </div>
     </div>
 
-    <div class="sb-section">
-      <div class="sb-sec-label">Mon compte</div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Mon compte</div>
       <div class="nav-item" [class.active]="activeTab() === 'monitor'" (click)="switchTab('monitor')">
         <svg viewBox="0 0 24 24">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -76,25 +71,34 @@
       </div>
     </div>
 
-    <div class="sb-footer">
+    <div class="sidebar-footer">
       <div class="user-card">
-        <div class="user-av">{{ actualPers()?.client?.nom?.charAt(0) }}{{ actualPers()?.client?.prenom?.charAt(0) }}
+        <div class="user-av"
+          style="border-radius:9px; background:linear-gradient(135deg,var(--blue),#60a5fa); display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; color:#fff;">
+          {{ actualPers()?.client?.nom?.charAt(0) }}{{ actualPers()?.client?.prenom?.charAt(0) }}
         </div>
         <div>
           <div class="user-name">{{ actualPers ()?.client?.nom }} {{ actualPers()?.client?.prenom }}</div>
           <div class="user-email">{{ actualPers()?.client?.email }}</div>
         </div>
       </div>
+      <button class="logout-btn" (click)="logout()" title="DÃ©connexion">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      </button>
     </div>
   </aside>
 
-  <!-- ══════ MAIN ══════ -->
+  <!-- â•â•â•â•â•â• MAIN â•â•â•â•â•â• -->
   <div class="main">
     <!-- TOPBAR -->
     <div class="topbar">
       <div class="tb-left">
         <div class="tb-title">{{ titles[activeTab()] || "Vue d'ensemble" }}</div>
-        <div class="tb-bread">Personnel · Espace Cloud Dynamix</div>
+        <div class="tb-bread">Personnel Â· Espace Cloud Dynamix</div>
       </div>
       <div class="tb-right">
         <div class="wallet-chip" (click)="switchTab('billing')">
@@ -159,13 +163,13 @@
   </div>
 </div>
 
-<!-- ══ DEPLOY MODAL ══ -->
+<!-- â•â• DEPLOY MODAL â•â• -->
 <div class="modal-ov" [class.show]="isDeployModalOpen()" (click)="onOverlayClick($event)">
   <div class="modal">
     <div class="modal-head">
       <div>
-        <div class="modal-title">{{ deployType() === 'vm' ? 'Déployer une VM' : 'Déployer ' + deployName() }}</div>
-        <div class="modal-sub">{{ deployType() === 'vm' ? 'Infrastructure as a Service — VMware ESXi' : 'Platform /
+        <div class="modal-title">{{ deployType() === 'vm' ? 'DÃ©ployer une VM' : 'DÃ©ployer ' + deployName() }}</div>
+        <div class="modal-sub">{{ deployType() === 'vm' ? 'Infrastructure as a Service â€” VMware ESXi' : 'Platform /
           Software as a Service' }}</div>
       </div>
       <button class="modal-x" (click)="closeModal()">
@@ -178,56 +182,97 @@
 
     <div class="modal-body">
       @if (deployType() === 'vm') {
+
+      <!-- â”€â”€ STEPPER â”€â”€ -->
+      <div class="wizard-stepper">
+        <div class="wz-step" [class.active]="deployStep() >= 1" [class.done]="deployStep() > 1">
+          <div class="wz-num">
+            @if(deployStep() > 1){
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            } @else { 1 }
+          </div>
+          <div class="wz-label">CaractÃ©ristiques</div>
+        </div>
+        <div class="wz-line" [class.done]="deployStep() > 1"></div>
+        <div class="wz-step" [class.active]="deployStep() >= 2">
+          <div class="wz-num">2</div>
+          <div class="wz-label">Plan IaaS</div>
+        </div>
+      </div>
+
+      <!-- â”€â”€ Ã‰TAPE 1 : CaractÃ©ristiques â”€â”€ -->
+      @if (deployStep() === 1) {
       <div class="field">
         <div class="field-label">Nom de l'instance</div>
-        <input type="text" placeholder="ex: prod-web-01" (input)="updateDeployName($any($event.target).value)">
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <div class="field-label">Système d'exploitation</div>
-          <select>
-            <option>Ubuntu 22.04 LTS</option>
-            <option>Debian 12</option>
-            <option>CentOS 9</option>
-            <option>Windows Server 2022</option>
-          </select>
-        </div>
-        <div class="field">
-          <div class="field-label">Région</div>
-          <select>
-            <option>Tunisie - DC Bizerte</option>
-          </select>
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <div class="field-label">vCPU</div>
-          <select (change)="updateCpu($any($event.target).value)">
-            <option value="1">1 vCPU</option>
-            <option value="2" selected>2 vCPU</option>
-            <option value="4">4 vCPU</option>
-            <option value="8">8 vCPU</option>
-          </select>
-        </div>
-        <div class="field">
-          <div class="field-label">RAM</div>
-          <select (change)="updateRam($any($event.target).value)">
-            <option value="2">2 GB</option>
-            <option value="4" selected>4 GB</option>
-            <option value="8">8 GB</option>
-            <option value="16">16 GB</option>
-          </select>
-        </div>
+        <input type="text" placeholder="ex: prod-web-01" [value]="deployVmName()"
+          (input)="updateDeployName($any($event.target).value)">
       </div>
       <div class="field">
-        <div class="field-label">Stockage SSD (GB)</div>
-        <select (change)="updateDisk($any($event.target).value)">
-          <option value="50" selected>50 GB</option>
-          <option value="100">100 GB</option>
-          <option value="200">200 GB</option>
-          <option value="500">500 GB</option>
+        <div class="field-label">SystÃ¨me d'exploitation</div>
+        <select (change)="updateTemplateName($any($event.target).value)" [disabled]="vmTemplates().length === 0">
+          @if (vmTemplates().length === 0) {
+          <option value="">Aucun template disponible</option>
+          } @else {
+          @for (template of vmTemplates(); track template.id) {
+          <option [value]="template.name" [selected]="template.name === selectedTemplateName()">{{ template.label }}
+          </option>
+          }
+          }
         </select>
       </div>
+      }
+
+      <!-- â”€â”€ Ã‰TAPE 2 : Plans IaaS â”€â”€ -->
+      @if (deployStep() === 2) {
+      @if (vmPlans().length === 0) {
+      <div class="empty-plans">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        Aucun plan IaaS disponible dans le catalogue
+      </div>
+      } @else {
+      <div class="plan-grid">
+        @for (plan of vmPlans(); track plan.name) {
+        <div class="plan-card" [class.selected]="selectedPlan()?.name === plan.name" (click)="selectPlan(plan)">
+          <div class="plan-card-top">
+            <div class="plan-icon" [style.background]="plan.bg">
+              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" stroke-linecap="round"
+                width="18" height="18">
+                <rect x="2" y="3" width="20" height="5" rx="2" />
+                <rect x="2" y="11" width="20" height="5" rx="2" />
+              </svg>
+            </div>
+            @if (plan.tag) {
+            <span class="plan-tag" [style.background]="plan.tagColor ?? 'var(--blue-l)'" [style.color]="plan.color">{{
+              plan.tag }}</span>
+            }
+            @if (selectedPlan()?.name === plan.name) {
+            <div class="plan-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            }
+          </div>
+          <div class="plan-name">{{ plan.name }}</div>
+          <div class="plan-desc">{{ plan.desc }}</div>
+          <div class="plan-specs">
+            @for (spec of plan.specs; track spec) {
+            <span class="plan-spec-chip">{{ spec }}</span>
+            }
+          </div>
+          <div class="plan-price">{{ plan.price }} <span>DT/mois</span></div>
+        </div>
+        }
+      </div>
+      }
+      }
+
       } @else {
       <div class="field">
         <div class="field-label">Nom de l'instance</div>
@@ -241,7 +286,7 @@
       </div>
       <div class="field-row">
         <div class="field">
-          <div class="field-label">Plan mémoire</div>
+          <div class="field-label">Plan mÃ©moire</div>
           <select>
             <option>2 GB RAM</option>
             <option selected>4 GB RAM</option>
@@ -261,22 +306,51 @@
     </div>
 
     <div class="modal-foot">
-      <div class="cost-preview" style="flex:1;margin-right:14px">
-        <span class="cost-label">Coût estimé</span>
+      @if (deployType() === 'vm' && deployStep() === 1) {
+      <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
+      <button class="btn btn-primary" style="margin-left:auto" (click)="goToStep2()">
+        Suivant
+        <svg viewBox="0 0 24 24">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </button>
+      } @else if (deployType() === 'vm' && deployStep() === 2) {
+      <button class="btn btn-ghost" (click)="goToStep1()">
+        <svg viewBox="0 0 24 24">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        Retour
+      </button>
+      <div class="cost-preview" style="flex:1;margin:0 14px">
+        <span class="cost-label">CoÃ»t estimÃ©</span>
         <span class="cost-val">~{{costPreview()}} DT/mois</span>
       </div>
-      <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
-      <button class="btn btn-primary" style="margin-left:8px" (click)="confirmDeploy()">
+      <button class="btn btn-primary" [disabled]="isDeploying() || !selectedPlan()" (click)="confirmDeploy()">
         <svg viewBox="0 0 24 24">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
-        Déployer
+        DÃ©ployer
       </button>
+      } @else {
+      <div class="cost-preview" style="flex:1;margin-right:14px">
+        <span class="cost-label">CoÃ»t estimÃ©</span>
+        <span class="cost-val">~{{costPreview()}} DT/mois</span>
+      </div>
+      <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
+      <button class="btn btn-primary" style="margin-left:8px" [disabled]="isDeploying()" (click)="confirmDeploy()">
+        <svg viewBox="0 0 24 24">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+        DÃ©ployer
+      </button>
+      }
     </div>
   </div>
 </div>
 
-<!-- ══ TOAST ══ -->
+<!-- â•â• TOAST â•â• -->
 <div class="toast" [class.show]="isToastVisible()">
   <div class="toast-ic" [style.background]="toastColor()">
     <svg viewBox="0 0 24 24">
@@ -293,6 +367,6 @@
 }
 @else{
 <div style="height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #f8f9fa;">
-  <h2>Vérification de la sécurité...</h2>
+  <h2>VÃ©rification de la sÃ©curitÃ©...</h2>
 </div>
 }

@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, OnInit, PLATFORM_ID, signal, ViewEncapsulation } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, PLATFORM_ID, signal, ViewEncapsulation } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { Personal, VM } from './personal-dashboard-helper.service';
+import { Personal, VM, VmEntity, VmTemplate, ServiceItem } from './personal-dashboard-helper.service';
 import { PersonalDashboardHelperService } from './personal-dashboard-helper.service';
 import { OverviewTabComponent } from './tabs/overview-tab/overview-tab';
 import { IaasTabComponent } from './tabs/iaas-tab/iaas-tab';
@@ -30,7 +30,7 @@ import { environment } from '../../../environments/environment';
   styleUrl: './personal-dashboard.scss',
   encapsulation: ViewEncapsulation.None,
 })
-export class PersonalDashboard implements OnInit {
+export class PersonalDashboard implements OnInit, OnDestroy {
   /* inject() runs before property initializers, fixing TS2729 */
   h = inject(PersonalDashboardHelperService);
 
@@ -39,6 +39,8 @@ export class PersonalDashboard implements OnInit {
   private platformId = inject(PLATFORM_ID);
   isBrowserAndReady = false;
   actualPers = signal<Personal | null>(null);
+  isDeploying = signal<boolean>(false);
+  private vmPoll?: ReturnType<typeof setInterval>;
 
 
 
@@ -55,7 +57,14 @@ export class PersonalDashboard implements OnInit {
     if (isPlatformBrowser(this.platformId)) {
       this.isBrowserAndReady = true;
       this.loadCurrentPers();
+      this.loadVmTemplates();
+      this.h.loadCatalog(() => this.loadMyVms());
+      this.startVmPolling();
     }
+  }
+
+  ngOnDestroy() {
+    this.stopVmPolling();
   }
 
   titles: Record<string, string> = {
@@ -65,11 +74,7 @@ export class PersonalDashboard implements OnInit {
   };
 
   /* ── VMs ──────────────────────────────────────────── */
-  vms = signal<VM[]>([
-    { id: 'vm-001', name: 'prod-web-01', os: 'Ubuntu 22.04', cpu: 4, ram: 8, disk: 100, cpuUse: 62, ramUse: 74, status: 'running', ip: '10.0.1.10', cost: 18.50 },
-    { id: 'vm-002', name: 'dev-api-02', os: 'Debian 12', cpu: 2, ram: 4, disk: 50, cpuUse: 28, ramUse: 41, status: 'running', ip: '10.0.1.11', cost: 9.20 },
-    { id: 'vm-003', name: 'staging-03', os: 'CentOS 9', cpu: 2, ram: 4, disk: 80, cpuUse: 0, ramUse: 0, status: 'stopped', ip: '10.0.1.12', cost: 0 },
-  ]);
+  vms = signal<VM[]>([]);
 
   monitorBars = signal<Record<string, number[]>>({});
 
@@ -81,10 +86,20 @@ export class PersonalDashboard implements OnInit {
   deployRam = signal<number>(4);
   deployDisk = signal<number>(50);
   deployVmName = signal<string>('');
+  vmTemplates = signal<VmTemplate[]>([]);
+  selectedTemplateName = signal<string>('');
+  deployStep = signal<1 | 2>(1);
+  selectedPlan = signal<ServiceItem | null>(null);
 
-  costPreview = computed(() =>
-    ((this.deployCpu() * 2.5) + (this.deployRam() * 1.2) + (this.deployDisk() * 0.05)).toFixed(2)
+  vmPlans = computed(() =>
+    this.h.catalogItems().filter(item => item.icon === 'vm')
   );
+
+  costPreview = computed(() => {
+    const plan = this.selectedPlan();
+    if (plan) return parseFloat(plan.price || '0').toFixed(2);
+    return '0.00';
+  });
 
   /* ── TOAST ────────────────────────────────────────── */
   toastMsg = signal<string>('');
@@ -106,22 +121,55 @@ export class PersonalDashboard implements OnInit {
 
     if (action === 'delete') {
       if (!confirm(`Supprimer ${vm.name} ?`)) return;
-      this.vms.update(list => list.filter(v => v.id !== id));
-      this.showToast(`${vm.name} supprimée`, 'var(--red)');
+      this.h.deleteVm(id).subscribe({
+        next: () => {
+          this.vms.update(list => list.filter(v => v.id !== id));
+          this.showToast(`${vm.name} supprimée`, 'var(--red)');
+        },
+        error: (err) => {
+          this.showToast(err?.error?.message ?? 'Suppression impossible', 'var(--red)');
+        },
+      });
       return;
     }
 
+    // Mettre la VM en état "provisioning" pendant l'appel API (feedback visuel)
     this.vms.update(list => {
       const newList = [...list];
-      if (action === 'stop') {
-        newList[vmIndex] = { ...vm, status: 'stopped', cpuUse: 0, ramUse: 0 };
-        this.showToast(`${vm.name} arrêtée`, 'var(--amber)');
-      } else if (action === 'start') {
-        this.ensureMonitorBars(vm.id);
-        newList[vmIndex] = { ...vm, status: 'running', cpuUse: 35, ramUse: 40 };
-        this.showToast(`${vm.name} démarrée`, 'var(--green)');
-      }
+      newList[vmIndex] = { ...vm, status: 'provisioning' };
       return newList;
+    });
+
+    this.h.powerVm(id, action).subscribe({
+      next: (res) => {
+        const newStatus: VM['status'] = res.newStatus === 'RUNNING' ? 'running' : 'stopped';
+        this.vms.update(list => {
+          const idx = list.findIndex(v => v.id === id);
+          if (idx === -1) return list;
+          const newList = [...list];
+          if (newStatus === 'running') {
+            this.ensureMonitorBars(id);
+            newList[idx] = { ...list[idx], status: 'running', cpuUse: 35, ramUse: 40 };
+          } else {
+            newList[idx] = { ...list[idx], status: 'stopped', cpuUse: 0, ramUse: 0 };
+          }
+          return newList;
+        });
+        const label = action === 'start' ? 'démarrée' : 'arrêtée';
+        const color = action === 'start' ? 'var(--green)' : 'var(--amber)';
+        this.showToast(`${vm.name} ${label}`, color);
+      },
+      error: (err) => {
+        // Restaurer l'état original en cas d'erreur
+        this.vms.update(list => {
+          const idx = list.findIndex(v => v.id === id);
+          if (idx === -1) return list;
+          const newList = [...list];
+          newList[idx] = { ...vm };
+          return newList;
+        });
+        this.showToast(err?.error?.message ?? `Impossible d'exécuter l'action`, 'var(--red)');
+      },
     });
   }
 
@@ -137,7 +185,44 @@ export class PersonalDashboard implements OnInit {
     this.deployRam.set(4);
     this.deployDisk.set(50);
     this.deployVmName.set('');
+    this.deployStep.set(1);
+    this.selectedPlan.set(null);
+    if (!this.selectedTemplateName() && this.vmTemplates().length > 0) {
+      this.selectedTemplateName.set(this.vmTemplates()[0].name);
+    }
     this.isDeployModalOpen.set(true);
+  }
+
+  goToStep2() {
+    if (!this.deployVmName().trim()) {
+      this.showToast("Veuillez saisir un nom d'instance", 'var(--red)');
+      return;
+    }
+    if (!this.selectedTemplateName() && this.vmTemplates().length > 0) {
+      this.showToast('Veuillez sélectionner un système d\'exploitation', 'var(--red)');
+      return;
+    }
+    this.deployStep.set(2);
+  }
+
+  goToStep1() {
+    this.deployStep.set(1);
+  }
+
+  selectPlan(plan: ServiceItem) {
+    this.selectedPlan.set(plan);
+    (plan.specs ?? []).forEach(spec => {
+      const lower = spec.toLowerCase().trim();
+      const num = parseInt(lower.match(/\d+/)?.[0] ?? '0', 10);
+      if (!num) return;
+      if (lower.includes('vcpu') || lower.includes('cpu')) {
+        this.deployCpu.set(num);
+      } else if (lower.includes('ram')) {
+        this.deployRam.set(num);
+      } else if (lower.includes('gb') || lower.includes('ssd') || lower.includes('stockage')) {
+        if (!lower.includes('ram')) this.deployDisk.set(num);
+      }
+    });
   }
 
   closeModal() { this.isDeployModalOpen.set(false); }
@@ -148,35 +233,52 @@ export class PersonalDashboard implements OnInit {
 
   confirmDeploy() {
     const isVm = this.deployType() === 'vm';
-    this.closeModal();
-
     if (isVm) {
       const name = this.deployVmName() || 'new-vm';
-      const newVm: VM = {
-        id: 'vm-0' + Date.now(), name,
-        os: 'Ubuntu 22.04',
-        cpu: this.deployCpu(), ram: this.deployRam(), disk: this.deployDisk(),
-        cpuUse: 0, ramUse: 0, status: 'provisioning',
-        ip: '10.0.1.' + Math.floor(Math.random() * 99 + 10),
-        cost: parseFloat(this.costPreview()),
-      };
-      this.vms.update(l => [...l, newVm]);
-      this.showToast(`${name} en cours de déploiement…`, 'var(--blue)');
+      const templateName = this.selectedTemplateName();
 
-      setTimeout(() => {
-        this.vms.update(list => {
-          const idx = list.findIndex(v => v.id === newVm.id);
-          if (idx !== -1) {
-            this.ensureMonitorBars(newVm.id);
-            const nl = [...list];
-            nl[idx] = { ...list[idx], status: 'running', cpuUse: 15, ramUse: 20 };
-            return nl;
-          }
-          return list;
-        });
-        this.showToast(`${name} est opérationnelle !`, 'var(--green)');
-      }, 3000);
+      if (!templateName) {
+        this.showToast('Aucun template ESXi disponible', 'var(--red)');
+        return;
+      }
+
+      const selectedPlan = this.selectedPlan();
+
+      if (!selectedPlan) {
+        this.showToast('Veuillez sélectionner un plan IaaS', 'var(--red)');
+        return;
+      }
+
+      if (!selectedPlan.id) {
+        this.showToast('Plan catalogue invalide', 'var(--red)');
+        return;
+      }
+
+      this.isDeploying.set(true);
+      this.h.createVm({
+        name,
+        ramGB: this.deployRam(),
+        vCPU: this.deployCpu(),
+        storageGB: this.deployDisk(),
+        templateName,
+        catalogueId: selectedPlan.id,
+      }).subscribe({
+        next: (res) => {
+          this.closeModal();
+          this.isDeploying.set(false);
+          this.vms.update(list => [this.mapVm(res.vm), ...list]);
+          this.showToast(`${name} en cours de déploiement...`, 'var(--blue)');
+          this.startVmPolling();
+        },
+        error: (err) => {
+          this.isDeploying.set(false);
+          this.showToast(err?.error?.message ?? 'Déploiement impossible', 'var(--red)');
+        },
+      });
+      return;
+
     } else {
+      this.closeModal();
       this.showToast('Service déployé avec succès !', 'var(--green)');
     }
   }
@@ -204,6 +306,7 @@ export class PersonalDashboard implements OnInit {
   updateRam(val: string) { this.deployRam.set(parseInt(val, 10)); }
   updateDisk(val: string) { this.deployDisk.set(parseInt(val, 10)); }
   updateDeployName(val: string) { this.deployVmName.set(val); }
+  updateTemplateName(val: string) { this.selectedTemplateName.set(val); }
 
   loadCurrentPers() {
     const url = `${environment.apiBaseUrl.replace(/\/$/, '')}/personal/me`;
@@ -215,6 +318,64 @@ export class PersonalDashboard implements OnInit {
       error: (err) => console.error('Failed to load current Personal', err)
     });
 
+  }
+
+  loadMyVms() {
+    this.h.getMyVms().subscribe({
+      next: (entities) => {
+        const mapped = entities.map((vm) => this.mapVm(vm));
+        this.vms.set(mapped);
+        mapped.forEach((vm) => this.ensureMonitorBars(vm.id));
+      },
+      error: (err) => {
+        console.error('Failed to load personal VMs', err);
+        this.showToast('Impossible de charger vos VMs', 'var(--red)');
+      },
+    });
+  }
+
+  loadVmTemplates() {
+    this.h.getVmTemplates().subscribe({
+      next: (res) => {
+        const templates = (res.data ?? [])
+          .filter((vm) => vm.name.toLowerCase().startsWith('template'))
+          .map((vm) => ({
+            id: vm.id,
+            name: vm.name,
+            label: vm.name.replace(/^template\s*/i, '').trim() || vm.name,
+          }));
+
+        this.vmTemplates.set(templates);
+
+        if (templates.length > 0 && !this.selectedTemplateName()) {
+          this.selectedTemplateName.set(templates[0].name);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load ESXi templates', err);
+        this.showToast('Impossible de charger les templates ESXi', 'var(--red)');
+      },
+    });
+  }
+
+  private mapVm(entity: VmEntity): VM {
+    return this.h.toVm(entity);
+  }
+
+  private startVmPolling() {
+    if (this.vmPoll) return;
+    this.vmPoll = setInterval(() => this.loadMyVms(), 4000);
+  }
+
+  private stopVmPolling() {
+    if (!this.vmPoll) return;
+    clearInterval(this.vmPoll);
+    this.vmPoll = undefined;
+  }
+
+  logout() {
+    localStorage.removeItem('access_token');
+    this.router.navigate(['/login']);
   }
 
 }

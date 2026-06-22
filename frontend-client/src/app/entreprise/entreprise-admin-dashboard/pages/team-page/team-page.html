@@ -1,4 +1,4 @@
-﻿<div class="section-card">
+<div class="section-card">
     <div class="card-header">
         <div>
             <div class="card-title">Mon équipe</div>
@@ -19,36 +19,72 @@
 
     <div class="team-grid">
         @for (m of teamMembers(); track m.id) {
-        <div class="member-card">
-            <div class="member-top">
-                <div class="member-av" [style.background]="m.color">{{ getInitials(m.name) }}</div>
-                <div>
-                    <div class="member-name">{{ m.name }}</div>
-                    <div class="member-email">{{ m.email }}</div>
+        <div class="member-card" [class.member-inactive]="!m.active">
+            <!-- Header gradient banner -->
+            <div class="member-banner" [style.background]="'linear-gradient(135deg, ' + m.color + ' 0%, ' + m.color + '99 100%)'"></div>
+
+            <div class="member-body">
+                <div class="member-top">
+                    <div class="member-av" [style.background]="m.color">{{ getInitials(m.name) }}</div>
+                    <div class="member-info">
+                        <div class="member-name">{{ m.name }}</div>
+                        <div class="member-email">{{ m.email }}</div>
+                    </div>
+                    <span class="badge" [class]="m.active ? 'approved' : 'suspended'" style="margin-left:auto">
+                        <div class="badge-dot"></div>{{ m.active ? 'Actif' : 'Suspendu' }}
+                    </span>
                 </div>
-                <span class="badge" [class]="m.active ? 'approved' : 'suspended'" style="margin-left:auto">
-                    <div class="badge-dot"></div>{{ m.active ? 'Actif' : 'Suspendu' }}
-                </span>
-            </div>
-            <div class="member-stats">
-                <div class="mstat">
-                    <div class="mstat-val">{{ m.vms }}</div>
-                    <div class="mstat-label">VMs</div>
+
+                <div class="member-stats">
+                    <div class="mstat">
+                        <div class="mstat-icon" style="color: var(--blue); background: var(--blue-light);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                <line x1="8" y1="21" x2="16" y2="21"/>
+                                <line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                        </div>
+                        <div class="mstat-val">{{ m.vms }}</div>
+                        <div class="mstat-label">VMs</div>
+                    </div>
+                    <div class="mstat">
+                        <div class="mstat-icon" style="color: var(--purple); background: var(--purple-light);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                        </div>
+                        <div class="mstat-val">{{ m.services }}</div>
+                        <div class="mstat-label">Services</div>
+                    </div>
+                    <div class="mstat">
+                        <div class="mstat-icon" style="color: var(--green); background: var(--green-light);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
+                                <line x1="12" y1="1" x2="12" y2="23"/>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                        </div>
+                        <div class="mstat-val">{{ m.spend }} <small>DT</small></div>
+                        <div class="mstat-label">Ce mois</div>
+                    </div>
                 </div>
-                <div class="mstat">
-                    <div class="mstat-val">{{ m.services }}</div>
-                    <div class="mstat-label">Services</div>
+
+                <div class="member-actions">
+                    <button class="btn-sm" [class]="m.active ? '' : 'primary'" (click)="toggleMember.emit(m.id)">
+                        @if (m.active) {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12">
+                                <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                            </svg>
+                            Suspendre
+                        } @else {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Réactiver
+                        }
+                    </button>
                 </div>
-                <div class="mstat">
-                    <div class="mstat-val">{{ m.spend }} DT</div>
-                    <div class="mstat-label">Ce mois</div>
-                </div>
-            </div>
-            <div class="member-actions">
-                <button class="btn-sm">Voir ressources</button>
-                <button class="btn-sm" [class]="m.active ? '' : 'primary'" (click)="toggleMember.emit(m.id)">
-                    {{ m.active ? 'Suspendre' : 'Réactiver' }}
-                </button>
             </div>
         </div>
         }

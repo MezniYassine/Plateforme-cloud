@@ -1,17 +1,13 @@
-﻿<aside class="sidebar">
-    <a class="sidebar-logo" [routerLink]="['']">
+<aside class="sidebar">
+    <div class="sidebar-logo">
         <div class="logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
-            </svg>
+            <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Logo">
         </div>
         <div>
             <div class="logo-text">Dynamix</div>
             <div class="logo-sub">{{ state.actualUser()?.entreprise?.nomEntreprise }}</div>
         </div>
-    </a>
+    </div>
 
     <div class="sidebar-section">
         <div class="sidebar-label">Tableau de bord</div>
@@ -83,7 +79,6 @@
             Mon profil
         </div>
     </div>
-
     <div class="sidebar-footer">
         <div class="user-card" (click)="state.setPage('profile')">
             <div class="user-av">{{ state.getInitials(state.actualUser()?.prenom || '') +
@@ -93,5 +88,13 @@
                 <div class="user-role">{{ state.actualUser()?.entreprise?.nomEntreprise}}</div>
             </div>
         </div>
+        <button class="logout-btn" (click)="logout()" title="Déconnexion">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+        </button>
     </div>
+
 </aside>
