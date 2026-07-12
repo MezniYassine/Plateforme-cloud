@@ -27,8 +27,21 @@ export class ResourcesPageComponent {
     return map[type] ?? map.vm;
   }
 
-  memberColor(name: string): string {
+  memberColor(name: string, resourceOwnerColor?: string): string {
+    if (resourceOwnerColor) return resourceOwnerColor;
     const member = this.teamMembers().find(m => m.name === name);
     return member?.color ?? '#94a3b8';
+  }
+
+  statusClass(status?: string): string {
+    if (!status) return 'approved'; // Fallback
+    switch (status) {
+      case 'RUNNING': return 'approved';
+      case 'STOPPED': return 'rejected';
+      case 'PROVISIONING': return 'pending';
+      case 'FAILED': return 'rejected';
+      case 'AWAITING_PAYMENT': return 'pending';
+      default: return 'suspended';
+    }
   }
 }

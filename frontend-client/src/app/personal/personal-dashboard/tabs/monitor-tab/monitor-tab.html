@@ -20,11 +20,11 @@
       <div class="mon-metrics">
         <div class="mon-metric">
           <div class="mon-m-label">CPU</div>
-          <div class="mon-m-val" [style.color]="h.metricColor(v.cpuUse)">{{v.cpuUse}}%</div>
+          <div class="mon-m-val" [style.color]="h.metricColor(v.cpuUse)">{{ v.cpuUse !== null ? v.cpuUse + '%' : '—' }}</div>
         </div>
         <div class="mon-metric">
           <div class="mon-m-label">RAM</div>
-          <div class="mon-m-val" [style.color]="h.metricColor(v.ramUse)">{{v.ramUse}}%</div>
+          <div class="mon-m-val" [style.color]="h.metricColor(v.ramUse)">{{ v.ramUse !== null ? v.ramUse + '%' : '—' }}</div>
         </div>
         <div class="mon-metric">
           <div class="mon-m-label">Disque</div>

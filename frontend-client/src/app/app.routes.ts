@@ -74,5 +74,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./suspanded/suspanded').then((m) => m.Suspended),
+  },
+  {
+    path: 'vm-console',
+    loadComponent: () =>
+      import('./vm-console/vm-console').then((m) => m.VmConsoleComponent),
   }
 ];

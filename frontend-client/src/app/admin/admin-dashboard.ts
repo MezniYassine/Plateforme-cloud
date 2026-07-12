@@ -1,4 +1,4 @@
-import { Component, computed, signal, OnInit, OnDestroy, ViewEncapsulation, inject, PLATFORM_ID } from '@angular/core';
+﻿import { Component, computed, signal, OnInit, OnDestroy, ViewEncapsulation, inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -16,7 +16,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Sidebar } from './pages/sidebar/sidebar';
 import { Topbar } from './pages/topbar/topbar';
 
-/* ── COMPONENT ────────────────────────────────────── */
+/* · COMPONENT · */
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -39,7 +39,7 @@ import { Topbar } from './pages/topbar/topbar';
 })
 export class AdminDashboard implements OnInit, OnDestroy {
 
-  /* ── NAVIGATION ──────────────────────────────────── */
+  /* · NAVIGATION · */
   activePage = signal<string>('dashboard');
   currentDate = signal<string>('');
   private platformId = inject(PLATFORM_ID);
@@ -63,7 +63,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
 
   setPage(p: string) { this.activePage.set(p); }
 
-  /* ── TENANT DATA ─────────────────────────────────── */
+  /* · TENANT DATA · */
   tenants = signal<Tenant[]>([]);
   actualAdmin = signal<Admin | null>(null);
   activities = signal<Activity[]>([]);
@@ -73,7 +73,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
   pendingCount = computed(() => this.tenants().filter(t => t.status === 'pending').length);
   tenantCount = computed(() => this.tenants().filter(t => t.status === 'approved').length);
 
-  /* ── INFRA METRICS ───────────────────────────────── */
+  /* · INFRA METRICS · */
   infraMetrics = signal([
     { label: 'CPU global (ESXi)', val: '72%', pct: 72, color: 'blue' },
     { label: 'RAM globale', val: '58%', pct: 58, color: 'teal' },
@@ -82,12 +82,12 @@ export class AdminDashboard implements OnInit, OnDestroy {
   ]);
   activeVmCount = signal<number>(0);
 
-  /* ── TOAST ───────────────────────────────────────── */
+  /* · TOAST · */
   toastMsg = signal<string>('');
   toastColor = signal<string>('var(--green)');
   isToastVisible = signal<boolean>(false);
 
-  /* ── CONSTRUCTOR ─────────────────────────────────── */
+  /* · CONSTRUCTOR · */
   constructor(private router: Router, private http: HttpClient) {
 
   }
@@ -132,7 +132,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
     });
   }
 
-  /* ── API ─────────────────────────────────────────── */
+  /* · API · */
   loadTenants() {
     const url = `${environment.apiBaseUrl.replace(/\/$/, '')}/admin/clients`;
     this.http.get<any[]>(url).subscribe({
@@ -160,7 +160,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
         this.activities.set(sorted.slice(0, 5).map(c => {
           const comp = c.entreprise?.nomEntreprise || 'Particulier';
           const typeStr = this.mapClientStatus(c.status) === 'pending' ? 'register' : c.status === 'APPROVED' ? 'approve' : 'reject';
-          const msgs: Record<string, string> = { register: `<strong>${comp}</strong> — nouvelle inscription`, approve: `<strong>${comp}</strong> — compte approuvé`, reject: `<strong>${comp}</strong> — compte rejeté` };
+          const msgs: Record<string, string> = { register: `<strong>${comp}</strong> - nouvelle inscription`, approve: `<strong>${comp}</strong> - compte approuvé`, reject: `<strong>${comp}</strong> - compte rejeté` };
           const colors: Record<string, string> = { approve: 'var(--green)', register: 'var(--blue)', reject: 'var(--red)' };
           const bgs: Record<string, string> = { approve: 'var(--green-light)', register: 'var(--blue-light)', reject: 'var(--red-light)' };
           return { type: typeStr, msg: msgs[typeStr], time: new Date(c.dateInscrit).toLocaleDateString('fr-FR'), color: colors[typeStr] || 'var(--blue)', bg: bgs[typeStr] || 'var(--blue-light)' };
@@ -180,7 +180,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
 
   }
 
-  /* ── TENANT ACTIONS ──────────────────────────────── */
+  /* · TENANT ACTIONS · */
   quickAction(id: string, newStatus: Tenant['status']) {
     const idx = this.tenants().findIndex(t => t.id === id);
     if (idx === -1) return;
@@ -210,7 +210,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
   onOverlayClick(e: MouseEvent) { if ((e.target as HTMLElement).classList.contains('modal-overlay')) this.closeModal(); }
   modalAction(s: Tenant['status']) { const cur = this.selectedTenant(); if (cur) { this.quickAction(cur.id, s); this.closeModal(); } }
 
-  /* ── HELPERS ─────────────────────────────────────── */
+  /* · HELPERS · */
   setDate() {
     this.currentDate.set(new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
   }
@@ -229,7 +229,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
     const labelMap: Record<string, string> = { approved: 'approuvé', rejected: 'rejeté', suspended: 'suspendu' };
     this.activities.update(list => [{
       type: type === 'approved' ? 'approve' : 'reject',
-      msg: `<strong>${company}</strong> — compte ${labelMap[type] || type}`,
+      msg: `<strong>${company}</strong> - compte ${labelMap[type] || type}`,
       time: "À l'instant",
       color: type === 'approved' ? 'var(--green)' : 'var(--red)',
       bg: type === 'approved' ? 'var(--green-light)' : 'var(--red-light)',

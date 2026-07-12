@@ -1,9 +1,9 @@
-﻿<div class="section-card">
+<div class="section-card">
     <div class="card-header">
         <div>
             <div class="card-title">Demandes de provisionnement</div>
-            <div class="card-sub">Approuvez ou rejetez les demandes de votre équipe à chaque approbation
-                délenche le paiement et le déploiement</div>
+            <div class="card-sub">Approuvez ou rejetez les demandes de votre équipe. Chaque approbation
+                déclenche le paiement et le déploiement</div>
         </div>
         <div class="card-actions">
             <div class="filter-tabs" style="margin:0">
@@ -70,8 +70,8 @@
                 </div>
                 <span class="badge" [class]="r.status">
                     <div class="badge-dot"></div>
-                    {{ r.status === 'pending' ? 'En attente' : r.status === 'approved' ? 'ApprouvÃ©e' :
-                    'RejetÃ©e' }}
+                    {{ r.status === 'pending' ? 'En attente' : r.status === 'approved' ? 'Approuvée' :
+                    'Rejetée' }}
                 </span>
                 @if (r.status === 'pending') {
                 <div class="rdc-btns">
@@ -99,3 +99,4 @@
         }
     </div>
 </div>
+

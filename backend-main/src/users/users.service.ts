@@ -8,6 +8,7 @@ import { Admin } from '../entities/admin.entity';
 import { RoleClient } from 'src/enum/role-client.enum';
 import { AccountStatus } from 'src/enum/account-status.enum';
 import * as bcrypt from 'bcryptjs';
+import { WalletService } from 'src/wallet/wallet.service';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,7 @@ export class UsersService {
     private entrepriseRepo: Repository<Entreprise>,
     @InjectRepository(Admin)
     private adminRepo: Repository<Admin>,
+    private readonly walletService: WalletService,
   ) { }
 
   async findByEmail(email: string): Promise<Client | null> {
@@ -118,7 +120,12 @@ export class UsersService {
       entreprise: savedEntreprise,       // Lie le client à l'entreprise
     });
 
-    return this.clientRepo.save(client);
+    const savedClient = await this.clientRepo.save(client);
+
+    // 3. Créer le wallet à 0 DT pour l'admin d'entreprise
+    await this.walletService.createWalletForClient(savedClient);
+
+    return savedClient;
   }
 
   /** Create a Personal user (Particulier) atomically */
@@ -145,6 +152,9 @@ export class UsersService {
       profession: data.profession,
     });
     await this.personalRepo.save(personalProfile);
+
+    // 3. Créer le wallet à 0 DT pour le particulier
+    await this.walletService.createWalletForClient(savedClient);
 
     // Optionnel : on attache l'objet pour le retour propre de la fonction
     savedClient.personal = personalProfile;

@@ -54,8 +54,8 @@ export class CatalogueService {
   // PATCH update catalogue
   update(id: number, payload: CatalogueItem) {
     const backendPayload: any = {};
-    if (payload.name) backendPayload.nomService = payload.name;
-    if (payload.description) backendPayload.description = payload.description;
+    if (payload.name !== undefined) backendPayload.nomService = payload.name;
+    if (payload.description !== undefined) backendPayload.description = payload.description;
     if (payload.vcpu !== undefined) backendPayload.vcpu = payload.vcpu;
     if (payload.ramMB !== undefined) backendPayload.ramMB = payload.ramMB;
     if (payload.stockageGB !== undefined) backendPayload.stockageGB = payload.stockageGB;

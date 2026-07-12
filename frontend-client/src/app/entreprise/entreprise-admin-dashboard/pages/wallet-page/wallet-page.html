@@ -1,4 +1,4 @@
-﻿<div class="wallet-hero">
+<div class="wallet-hero">
     <div>
         <div class="wallet-bal-label">Solde disponible</div>
         <div class="wallet-bal"><span>DT </span>{{ walletBalance() }}</div>
@@ -27,7 +27,7 @@
 <div class="main-grid">
     <div class="section-card">
         <div class="card-header">
-            <div class="card-title">Transactions rÃ©centes</div>
+            <div class="card-title">Transactions récentes</div>
         </div>
         <table class="inv-table">
             <thead>
@@ -45,7 +45,7 @@
                     <td style="font-size:12.5px;color:var(--text-muted)">{{ t.date }}</td>
                     <td>
                         <span class="badge" [class]="t.type === 'credit' ? 'approved' : 'rejected'">
-                            <div class="badge-dot"></div>{{ t.type === 'credit' ? 'CrÃ©dit' : 'DÃ©bit' }}
+                            <div class="badge-dot"></div>{{ t.type === 'credit' ? 'Crédit' : 'Débit' }}
                         </span>
                     </td>
                     <td style="font-family:'DM Mono',monospace;font-weight:700"
@@ -60,7 +60,7 @@
     <div class="right-col">
         <div class="section-card">
             <div class="card-header">
-                <div class="card-title">RÃ©capitulatif</div>
+                <div class="card-title">Récapitulatif</div>
             </div>
             <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
                 @for (s of walletSummary(); track s.label) {

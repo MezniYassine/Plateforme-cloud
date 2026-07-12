@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 
-/* ── INTERFACES ─────────────────────────────────── */
+/* â”€â”€ INTERFACES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export interface ResourceRequest {
     id: string; name: string; type: 'vm' | 'db' | 'saas';
     user: string; specs: string; cost: number; date: string;
@@ -25,14 +25,13 @@ export interface DeployedResource {
     id: string; name: string; type: 'vm' | 'db' | 'saas';
     owner: string; specs: string; cost: number;
     ip?: string; url?: string; cpu?: number; ram?: number;
-}
-
-export interface Invoice {
-    id: string; period: string; ref: string; amount: number; paid: boolean;
+    status?: string;
+    statusLabel?: string;
+    ownerColor?: string;
 }
 
 export interface WalletTransaction {
-    id: string; desc: string; date: string; type: 'credit' | 'debit'; amount: number;
+    id: string; desc: string; date: string; type: 'credit' | 'debit'; amount: number; memberName?: string;
 }
 
 export interface Activity { type: string; msg: string; time: string; color: string; bg: string; }
@@ -56,3 +55,5 @@ export class EntrepriseDashboardHelperService {
         return ({ pending: 'En attente', approved: 'Approuvé', rejected: 'Rejeté', suspended: 'Suspendu' } as Record<string, string>)[s] || s;
     }
 }
+
+

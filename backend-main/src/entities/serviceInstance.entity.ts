@@ -22,6 +22,9 @@ export abstract class ServiceInstance {
   @CreateDateColumn()
   dateCreation!: Date;
 
+  @Column({ type: 'timestamp', nullable: true })
+  dateProchaineFacturation!: Date | null;
+
   @ManyToOne(() => Client, (client) => client.services)
   client!: Client;
 }

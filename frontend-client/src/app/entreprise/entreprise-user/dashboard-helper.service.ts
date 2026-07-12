@@ -1,9 +1,10 @@
-﻿import { HttpClient } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { DemandeService, DemandeApiItem } from '../../services/demande.service';
 import { Router } from '@angular/router';
+import { WalletService } from '../../services/wallet.service';
 
 export interface MyRequest {
   id: string; name: string; type: 'vm' | 'db' | 'saas';
@@ -16,7 +17,7 @@ export interface MyRequest {
 export interface MyVM {
   id: string; name: string; os: string; ip: string;
   vcpu: number; ram_gb: number; disk: number; cost: number;
-  cpu: number; ram: number;
+  cpu: number | null; ram: number | null;
   status: 'running' | 'stopped';
 }
 
@@ -66,6 +67,7 @@ export class DashboardHelperService {
   private http = inject(HttpClient);
   private demandeService = inject(DemandeService);
   private router = inject(Router);
+  private walletSvc = inject(WalletService);
 
   pageTitle = computed(() => this.PAGE_TITLES[this.activePage()] ?? 'Dashboard');
   setPage(p: string) { this.activePage.set(p); }
@@ -73,7 +75,17 @@ export class DashboardHelperService {
   userName = signal<string>('');
   actualUser = signal<EntrepriseUser | null>(null);
   companyName = signal<string>('');
-  mySpend = signal<number>(0);
+  
+  mySpend = computed(() => {
+    const vmsCost = this.myVMs().reduce((acc, vm) => acc + (vm.cost || 0), 0);
+    const servicesCost = this.myServices().reduce((acc, s) => acc + (s.cost || 0), 0);
+    return vmsCost + servicesCost;
+  });
+
+  // --- Wallet ---
+  walletSolde = signal<number>(0);
+  walletDevise = signal<string>('DT');
+  walletLoading = signal<boolean>(false);
 
   myVMs = signal<MyVM[]>([]);
   myServices = signal<MyService[]>([]);
@@ -129,7 +141,11 @@ export class DashboardHelperService {
     return (name || '??').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   }
 
-  sparkData(base: number): number[] {
+  sparkData(base: number | null): number[] {
+    if (base === null) {
+      return [];
+    }
+
     return Array.from({ length: 14 }, () => {
       const jitter = Math.floor(Math.random() * 24) - 12;
       return Math.max(8, Math.min(95, base + jitter));
@@ -225,15 +241,48 @@ export class DashboardHelperService {
   }
 
   vmAction(id: string, action: 'stop' | 'start') {
-    this.myVMs.update(list => list.map(vm => {
-      if (vm.id !== id) return vm;
-      return action === 'stop'
-        ? { ...vm, status: 'stopped' as const, cpu: 0, ram: 0 }
-        : { ...vm, status: 'running' as const, cpu: 20, ram: 30 };
-    }));
     const vm = this.myVMs().find(v => v.id === id);
-    const msg = action === 'stop' ? (vm?.name + ' arretee') : (vm?.name + ' demarree');
-    this.showToast(msg, action === 'stop' ? 'var(--amber)' : 'var(--green)');
+    if (!vm) return;
+
+    const newStatus = action === 'stop' ? 'stopped' as const : 'running' as const;
+    const previousStatus = vm.status;
+
+    // Mise à jour optimiste de l'UI (feedback immédiat)
+    this.myVMs.update(list => list.map(v =>
+      v.id === id
+        ? { ...v, status: newStatus, cpu: newStatus === 'running' ? null : 0, ram: newStatus === 'running' ? null : 0 }
+        : v
+    ));
+    this.showToast(
+      action === 'stop' ? `Arrêt de ${vm.name} en cours...` : `Démarrage de ${vm.name} en cours...`,
+      'var(--amber)'
+    );
+
+    // Appel API réel
+    this.http.post<any>(`${this.base}/esxi/my-vms/${id}/power`, { action }).subscribe({
+      next: (res) => {
+        const actualStatus = res?.newStatus === 'RUNNING' ? 'running' as const : 'stopped' as const;
+        this.myVMs.update(list => list.map(v =>
+          v.id === id
+            ? { ...v, status: actualStatus, cpu: actualStatus === 'running' ? null : 0, ram: actualStatus === 'running' ? null : 0 }
+            : v
+        ));
+        this.showToast(
+          action === 'stop' ? `${vm.name} arrêtée` : `${vm.name} démarrée`,
+          action === 'stop' ? 'var(--amber)' : 'var(--green)'
+        );
+      },
+      error: (err) => {
+        // Revenir à l'état précédent en cas d'erreur
+        this.myVMs.update(list => list.map(v =>
+          v.id === id ? { ...v, status: previousStatus } : v
+        ));
+        this.showToast(
+          err?.error?.message ?? `Impossible d'${action === 'stop' ? 'arrêter' : 'démarrer'} la VM`,
+          'var(--red)'
+        );
+      }
+    });
   }
 
   loadUserData() {
@@ -274,6 +323,23 @@ export class DashboardHelperService {
       next: (data) => {
         const mapped: MyVM[] = (data || []).map((vm: any) => {
           const isRunning = ['running', 'started'].includes(String(vm.status || '').toLowerCase());
+          
+          // Récupérer le prix de l'offre catalogue ou l'estimer dynamiquement selon la puissance de l'instance
+          let cost = 0;
+          if (vm.catalogue && vm.catalogue.prix !== undefined) {
+            cost = Number(vm.catalogue.prix);
+          } else {
+            // Formule d'estimation réaliste si pas liée au catalogue : 10 DT de base + 5 DT/vCPU + 2.5 DT/GB RAM + 0.1 DT/GB SSD
+            const vcpuCount = vm.vCPU || vm.vcpu || 1;
+            const ramGb = vm.ramGB || vm.ram_gb || 1;
+            const storageGb = vm.stockageGB || vm.disk || 20;
+            cost = 10 + (vcpuCount * 5) + (ramGb * 2.5) + (storageGb * 0.1);
+          }
+          // Formater avec 2 décimales maximum
+          cost = Math.round(cost * 100) / 100;
+          const cpuUsage = isRunning ? this.normalizePercent(vm.cpuUse ?? vm.cpu ?? vm.cpuUsage) : 0;
+          const ramUsage = isRunning ? this.normalizePercent(vm.ramUse ?? vm.ram ?? vm.ramUsage) : 0;
+
           return {
             id: String(vm.id),
             name: vm.nomPersonnalise || vm.name || ('vm-' + vm.id),
@@ -282,9 +348,9 @@ export class DashboardHelperService {
             vcpu: vm.vCPU || vm.vcpu || 1,
             ram_gb: vm.ramGB || vm.ram_gb || 1,
             disk: vm.stockageGB || vm.disk || 20,
-            cost: 0,
-            cpu: 0,
-            ram: 0,
+            cost,
+            cpu: cpuUsage,
+            ram: ramUsage,
             status: isRunning ? 'running' as const : 'stopped' as const,
           };
         });
@@ -294,17 +360,55 @@ export class DashboardHelperService {
     });
   }
 
-  provisionVm(payload: { name: string; ramGB: number; vCPU: number; storageGB?: number; templateName?: string }) {
+  private normalizePercent(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const numeric = Number(value);
+
+    if (!Number.isFinite(numeric)) {
+      return null;
+    }
+
+    return Math.max(0, Math.min(100, Math.round(numeric)));
+  }
+  provisionVm(payload: { name: string; ramGB: number; vCPU: number; storageGB?: number; templateName?: string; catalogueId?: number }) {
     return this.http.post<any>(`${this.base}/esxi/provision`, payload);
   }
 
+  loadWallet() {
+    this.walletSvc.getWallet().subscribe({
+      next: (data) => {
+        this.walletSolde.set(data.solde);
+        this.walletDevise.set(data.devise);
+      },
+      error: () => { }
+    });
+  }
+
+  rechargerWallet() {
+    if (this.walletLoading()) return;
+    this.walletLoading.set(true);
+    this.walletSvc.recharger().subscribe({
+      next: (res) => {
+        this.walletSolde.set(res.nouveauSolde);
+        this.walletLoading.set(false);
+        this.showToast(`Wallet rechargé ! Nouveau solde : ${res.nouveauSolde.toFixed(3)} DT`, 'var(--green)');
+      },
+      error: (err) => {
+        this.walletLoading.set(false);
+        this.showToast(err?.error?.message ?? 'Impossible de recharger le wallet', 'var(--red)');
+      }
+    });
+  }
+
   deleteVm(id: string) {
-    const numericId = Number(id);
     if (!confirm('Confirmer la suppression de la VM ?')) return;
-    this.http.delete<any>(`${this.base}/esxi/my-vms/`).subscribe({
+    this.http.delete<any>(`${this.base}/esxi/my-vms/${id}`).subscribe({
       next: (res) => {
         this.myVMs.update(list => list.filter(v => v.id !== String(id)));
-        this.showToast(res?.message ?? 'VM supprimee', 'var(--red)');
+        this.showToast(res?.message ?? 'VM supprimée', 'var(--red)');
       },
       error: (err) => {
         this.showToast(err?.error?.message ?? 'Impossible de supprimer la VM', 'var(--red)');

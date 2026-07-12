@@ -1,4 +1,4 @@
-﻿*,
+*,
 *::before,
 *::after {
     box-sizing: border-box;
@@ -446,6 +446,39 @@ body {
     border-radius: var(--r);
     padding: 18px 20px;
     box-shadow: var(--sh-sm);
+}
+
+.wallet-card {
+    background: linear-gradient(135deg, var(--bg-white), var(--purple-l));
+    border-color: #d8b4fe;
+}
+
+.wallet-recharge-btn {
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-sm);
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.wallet-recharge-btn:hover {
+    background: #6d28d9;
+}
+
+.wallet-recharge-btn:active {
+    transform: scale(0.96);
+}
+
+.wallet-recharge-btn:disabled {
+    background: #c4b5fd;
+    cursor: not-allowed;
 }
 
 .sc-top {
@@ -1627,3 +1660,308 @@ body {
     height: 15px;
 }
 
+/* --- PREMIUM VM FULL CARD STYLES --- */
+.vm-cards-grid,
+.svc-cards-grid,
+.monitor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.vm-full-card,
+.svc-full-card,
+.monitor-card {
+  padding: 18px;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--sh-sm);
+  transition: box-shadow .2s, transform .2s;
+}
+
+.vm-full-card:hover,
+.svc-full-card:hover,
+.monitor-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, .08);
+  transform: translateY(-2px);
+}
+
+.vfc-header,
+.svc-fc-header,
+.mc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.vfc-name,
+.mc-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-1);
+  word-break: break-word;
+}
+
+.vfc-os,
+.mc-sub {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+.vfc-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.vfc-spec,
+.mc-metric {
+  background: var(--bg-page);
+  border-radius: var(--r-sm);
+  padding: 10px;
+}
+
+.vspec-k,
+.mc-m-label,
+.svc-dk {
+  font-size: 10.5px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  font-weight: 600;
+}
+
+.vspec-v,
+.mc-m-val {
+  font-size: 13px;
+  color: var(--text-1);
+  font-weight: 700;
+  margin-top: 3px;
+}
+
+.vfc-usage {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.usage-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.usage-label {
+  font-size: 12px;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.usage-bar {
+  height: 7px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.usage-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .8s ease;
+}
+
+.vfc-footer,
+.svc-fc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-l);
+}
+
+.action-btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  border: 1.5px solid;
+  white-space: nowrap;
+  transition: background .18s, border-color .18s;
+}
+
+.action-btn.stop {
+  color: var(--amber);
+  border-color: #fcd34d;
+  background: var(--amber-l);
+}
+.action-btn.stop:hover {
+  background: #fde68a;
+}
+
+.action-btn.start {
+  color: var(--green);
+  border-color: #86efac;
+  background: var(--green-l);
+}
+.action-btn.start:hover {
+  background: #bbf7d0;
+}
+
+.action-btn.console {
+  color: var(--blue);
+  border-color: var(--blue-m);
+  background: var(--blue-l);
+}
+.action-btn.console:hover {
+  background: var(--blue-m);
+}
+
+.action-btn.delete {
+  color: var(--red);
+  border-color: #fca5a5;
+  background: var(--red-l);
+}
+.action-btn.delete:hover {
+  background: #fecaca;
+}
+
+
+
+/* Align personal IaaS VM cards with entreprise user cards */
+.page-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.page-h-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-1);
+}
+
+.page-h-sub {
+  font-size: 12.5px;
+  color: var(--text-3);
+  margin-top: 3px;
+}
+
+.btn-sm {
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-white);
+  color: var(--text-2);
+  transition: background .18s, border-color .18s, color .18s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.btn-sm:hover {
+  background: var(--bg-page);
+  border-color: #94a3b8;
+}
+
+.btn-sm.primary {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+}
+
+.btn-sm.primary:hover {
+  background: #1d4ed8;
+}
+
+.mono-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  background: #f1f5f9;
+  color: var(--text-2);
+  padding: 3px 7px;
+  border-radius: 5px;
+}
+
+.vm-cards-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.vm-full-card {
+  padding: 18px;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--sh-sm);
+  transition: box-shadow .2s, transform .2s;
+}
+
+.vm-full-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, .08);
+  transform: translateY(-2px);
+}
+
+.vfc-header {
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.vfc-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.vfc-specs-grid {
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.vfc-spec {
+  border-radius: var(--r-sm);
+  padding: 10px;
+}
+
+.vfc-footer {
+  padding-top: 14px;
+  border-top: 1px solid var(--border-l);
+}
+
+.usage-bar {
+  height: 7px;
+}
+
+@media (max-width: 1180px) {
+  .vm-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .page-header-row,
+  .vfc-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .vm-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}

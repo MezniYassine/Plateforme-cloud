@@ -1,87 +1,91 @@
-            <div class="page-header-row">
-                <div>
-                    <div class="page-h-title">Mes machines virtuelles</div>
-                    <div class="page-h-sub">Instances IaaS déployées et assignées à votre compte</div>
-                </div>
-                <button class="btn-sm primary" (click)="state.setPage('new-request')">+ Demander une VM</button>
+﻿<div class="page-header-row">
+    <div>
+        <div class="page-h-title">Mes machines virtuelles</div>
+        <div class="page-h-sub">Instances IaaS déployées et assignées à votre compte</div>
+    </div>
+    <button class="btn-sm primary" (click)="state.setPage('new-request')">+ Demander une VM</button>
+</div>
+
+<div class="vm-cards-grid">
+    @for (vm of state.myVMs(); track vm.id) {
+    <div class="vm-full-card">
+        <div class="vfc-header">
+            <div>
+                <div class="vfc-name">{{ vm.name }}</div>
+                <div class="vfc-os">{{ vm.os }}</div>
             </div>
+            <span class="badge" [class]="vm.status === 'running' ? 'approved' : 'suspended'">
+                <div class="badge-dot"></div>{{ vm.status === 'running' ? 'Running' : 'Stopped' }}
+            </span>
+        </div>
 
-            <div class="vm-cards-grid">
-                @for (vm of state.myVMs(); track vm.id) {
-                <div class="vm-full-card">
-                    <div class="vfc-header">
-                        <div>
-                            <div class="vfc-name">{{ vm.name }}</div>
-                            <div class="vfc-os">{{ vm.os }}</div>
-                        </div>
-                        <span class="badge" [class]="vm.status === 'running' ? 'approved' : 'suspended'">
-                            <div class="badge-dot"></div>{{ vm.status === 'running' ? 'Running' : 'Stopped' }}
-                        </span>
-                    </div>
+        <div class="vfc-specs-grid">
+            <div class="vfc-spec">
+                <div class="vspec-k">vCPU</div>
+                <div class="vspec-v">{{ vm.vcpu }}</div>
+            </div>
+            <div class="vfc-spec">
+                <div class="vspec-k">RAM</div>
+                <div class="vspec-v">{{ vm.ram_gb }} GB</div>
+            </div>
+            <div class="vfc-spec">
+                <div class="vspec-k">Disque</div>
+                <div class="vspec-v">{{ vm.disk }} GB</div>
+            </div>
+            <div class="vfc-spec">
+                <div class="vspec-k">IP</div>
+                <div class="vspec-v">{{ vm.ip }}</div>
+            </div>
+        </div>
 
-                    <div class="vfc-specs-grid">
-                        <div class="vfc-spec">
-                            <div class="vspec-k">vCPU</div>
-                            <div class="vspec-v">{{ vm.vcpu }}</div>
-                        </div>
-                        <div class="vfc-spec">
-                            <div class="vspec-k">RAM</div>
-                            <div class="vspec-v">{{ vm.ram_gb }} GB</div>
-                        </div>
-                        <div class="vfc-spec">
-                            <div class="vspec-k">Disque</div>
-                            <div class="vspec-v">{{ vm.disk }} GB</div>
-                        </div>
-                        <div class="vfc-spec">
-                            <div class="vspec-k">IP</div>
-                            <div class="vspec-v">{{ vm.ip }}</div>
-                        </div>
-                    </div>
-
-                    @if (vm.status === 'running') {
-                    <div class="vfc-usage">
-                        <div class="usage-row">
-                            <span class="usage-label">CPU {{ vm.cpu }}%</span>
-                            <div class="usage-bar">
-                                <div class="usage-fill" [style.width]="vm.cpu+'%'"
-                                    [style.background]="vm.cpu>80?'var(--red)':vm.cpu>60?'var(--amber)':'var(--blue)'">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="usage-row">
-                            <span class="usage-label">RAM {{ vm.ram }}%</span>
-                            <div class="usage-bar">
-                                <div class="usage-fill" [style.width]="vm.ram+'%'"
-                                    [style.background]="vm.ram>80?'var(--red)':vm.ram>60?'var(--amber)':'var(--teal)'">
-                                </div>
-                            </div>
-                        </div>
+        @if (vm.status === 'running') {
+        <div class="vfc-usage">
+            <div class="usage-row">
+                <span class="usage-label">CPU {{ vm.cpu !== null ? vm.cpu + '%' : '?' }}</span>
+                <div class="usage-bar">
+                    @if (vm.cpu !== null) {
+                    <div class="usage-fill" [style.width]="vm.cpu+'%'"
+                        [style.background]="vm.cpu>80?'var(--red)':vm.cpu>60?'var(--amber)':'var(--blue)'">
                     </div>
                     }
-
-                    <div class="vfc-footer">
-                        <span class="mono-tag">{{ vm.cost }} DT/mois</span>
-                        <div style="display:flex;gap:6px">
-                            @if (vm.status === 'running') { <button class="action-btn stop"
-                                (click)="state.vmAction(vm.id,'stop')">Arrêter</button> }
-                            @if (vm.status === 'stopped') { <button class="action-btn start"
-                                (click)="state.vmAction(vm.id,'start')">Démarrer</button> }
-                            <button class="action-btn console">Console</button>
-                            <button class="action-btn delete" (click)="state.deleteVm(vm.id)">Suppr.</button>
-                        </div>
-                    </div>
                 </div>
-                }
-                @empty {
-                <div class="empty-state" style="grid-column:1/-1">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.4"
-                        stroke-linecap="round" width="40" height="40">
-                        <rect x="2" y="3" width="20" height="5" rx="2" />
-                        <rect x="2" y="11" width="20" height="5" rx="2" />
-                    </svg>
-                    <p>Aucune VM assignée pour l'instant</p>
-                    <button class="btn-sm primary" (click)="state.setPage('new-request')">Faire une demande de VM</button>
-                </div>
-                }
             </div>
+            <div class="usage-row">
+                <span class="usage-label">RAM {{ vm.ram !== null ? vm.ram + '%' : '?' }}</span>
+                <div class="usage-bar">
+                    @if (vm.ram !== null) {
+                    <div class="usage-fill" [style.width]="vm.ram+'%'"
+                        [style.background]="vm.ram>80?'var(--red)':vm.ram>60?'var(--amber)':'var(--teal)'">
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+        }
 
+        <div class="vfc-footer">
+            <span class="mono-tag">{{ vm.cost }} DT/mois</span>
+            <div style="display:flex;gap:6px">
+                @if (vm.status === 'running') { <button class="action-btn stop"
+                    (click)="state.vmAction(vm.id,'stop')">Arrêter</button> }
+                @if (vm.status === 'stopped') { <button class="action-btn start"
+                    (click)="state.vmAction(vm.id,'start')">Démarrer</button> }
+                <button class="action-btn console" [routerLink]="['/vm-console']"
+                    [state]="{ id: vm.id, returnUrl: '/entreprise-user-dashboard' }">Console</button>
+                <button class="action-btn delete" (click)="state.deleteVm(vm.id)">Suppr.</button>
+            </div>
+        </div>
+    </div>
+    }
+    @empty {
+    <div class="empty-state" style="grid-column:1/-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round"
+            width="40" height="40">
+            <rect x="2" y="3" width="20" height="5" rx="2" />
+            <rect x="2" y="11" width="20" height="5" rx="2" />
+        </svg>
+        <p>Aucune VM assignée pour l'instant</p>
+        <button class="btn-sm primary" (click)="state.setPage('new-request')">Faire une demande de VM</button>
+    </div>
+    }
+</div>

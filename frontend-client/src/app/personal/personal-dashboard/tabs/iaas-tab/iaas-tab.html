@@ -1,56 +1,74 @@
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+<div class="page-header-row">
   <div>
-    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Mes machines virtuelles</div>
-    <div style="font-size:12.5px;color:var(--text-3);margin-top:2px">Infrastructure as a Service Â· VMware ESXi</div>
+    <div class="page-h-title">Mes machines virtuelles</div>
+    <div class="page-h-sub">Instances IaaS déployées et assignées à votre compte</div>
   </div>
-  <button class="btn btn-primary" (click)="openDeploy.emit({ type: 'vm', name: '' })">
-    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-    Nouvelle VM
-  </button>
+  <button class="btn-sm primary" (click)="openDeploy.emit({ type: 'vm', name: '' })">+ Demander une VM</button>
 </div>
 
-<div class="grid-3">
+<div class="vm-cards-grid">
   @for (v of vms(); track v.id) {
-  <div class="sc">
-    <div class="sc-head">
+  <div class="vm-full-card">
+    <div class="vfc-header">
       <div>
-        <div class="sc-title">{{v.name}}</div>
-        <div class="sc-desc">{{v.os}}</div>
+        <div class="vfc-name">{{ v.name }}</div>
+        <div class="vfc-os">{{ v.os }}</div>
       </div>
-      <span class="badge" [class]="v.status"><div class="badge-dot"></div>{{v.status}}</span>
+      <span class="badge" [class]="v.status === 'running' ? 'approved' : v.status === 'provisioning' ? 'pending' : 'suspended'">
+        <div class="badge-dot"></div>{{ v.status === 'running' ? 'Running' : v.status === 'provisioning' ? 'Provisioning' : 'Stopped' }}
+      </span>
     </div>
-    <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="background:var(--bg-page);border-radius:var(--r-sm);padding:10px;text-align:center">
-          <div style="font-size:10.5px;color:var(--text-3)">vCPU</div>
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text-1)">{{v.cpu}}</div>
+
+    <div class="vfc-specs-grid">
+      <div class="vfc-spec">
+        <div class="vspec-k">vCPU</div>
+        <div class="vspec-v">{{ v.cpu }}</div>
+      </div>
+      <div class="vfc-spec">
+        <div class="vspec-k">RAM</div>
+        <div class="vspec-v">{{ v.ram }} GB</div>
+      </div>
+      <div class="vfc-spec">
+        <div class="vspec-k">Disque</div>
+        <div class="vspec-v">{{ v.disk }} GB</div>
+      </div>
+      <div class="vfc-spec">
+        <div class="vspec-k">IP</div>
+        <div class="vspec-v">{{ v.ip }}</div>
+      </div>
+    </div>
+
+    @if (v.status === 'running') {
+    <div class="vfc-usage">
+      <div class="usage-row">
+        <span class="usage-label">CPU {{ v.cpuUse !== null ? v.cpuUse + '%' : '—' }}</span>
+        <div class="usage-bar">
+          <div class="usage-fill" [style.width.%]="v.cpuUse ?? 0"
+            [style.background]="v.cpuUse !== null && v.cpuUse > 80 ? 'var(--red)' : v.cpuUse !== null && v.cpuUse > 60 ? 'var(--amber)' : 'var(--blue)'">
+          </div>
         </div>
-        <div style="background:var(--bg-page);border-radius:var(--r-sm);padding:10px;text-align:center">
-          <div style="font-size:10.5px;color:var(--text-3)">RAM</div>
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text-1)">{{v.ram}}<span style="font-size:11px;font-weight:400"> GB</span></div>
+      </div>
+      <div class="usage-row">
+        <span class="usage-label">RAM {{ v.ramUse !== null ? v.ramUse + '%' : '—' }}</span>
+        <div class="usage-bar">
+          <div class="usage-fill" [style.width.%]="v.ramUse ?? 0"
+            [style.background]="v.ramUse !== null && v.ramUse > 80 ? 'var(--red)' : v.ramUse !== null && v.ramUse > 60 ? 'var(--amber)' : 'var(--teal)'">
+          </div>
         </div>
       </div>
-      @if (v.status === 'running') {
-      <div class="metric-row">
-        <div class="metric-label">CPU {{v.cpuUse}}%</div>
-        <div class="metric-bar"><div class="metric-fill" [style.width.%]="v.cpuUse" [style.background]="h.metricColor(v.cpuUse)"></div></div>
-      </div>
-      <div class="metric-row">
-        <div class="metric-label">RAM {{v.ramUse}}%</div>
-        <div class="metric-bar"><div class="metric-fill" [style.width.%]="v.ramUse" [style.background]="h.metricColor(v.ramUse)"></div></div>
-      </div>
-      } @else {
-      <div style="font-size:12.5px;color:var(--text-3);text-align:center;padding:10px 0">Instance arrÃªtÃ©e</div>
-      }
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:11.5px;color:var(--text-3)">{{v.catalogName}}</span>
-        <span style="font-family:'DM Mono',monospace;font-size:11px;background:var(--bg-page);padding:2px 8px;border-radius:5px">{{v.cost}} DT/mois</span>
-      </div>
-      <div class="vm-actions" style="margin-top:0;padding-top:10px;border-top:1px solid var(--border-l)">
-        @if (v.status === 'running') { <button class="vm-btn stop" (click)="onVmAction(v.id, 'stop')">ArrÃªter</button> }
-        @if (v.status === 'stopped') { <button class="vm-btn start" (click)="onVmAction(v.id, 'start')">DÃ©marrer</button> }
-        <button class="vm-btn console">Console</button>
-        <button class="vm-btn delete" (click)="onVmAction(v.id, 'delete')" style="margin-left:auto">Suppr.</button>
+    </div>
+    }
+
+    <div class="vfc-footer">
+      <span class="mono-tag">{{ v.cost }} DT/mois</span>
+      <div style="display:flex;gap:6px">
+        @if (v.status === 'running') { <button class="action-btn stop"
+          (click)="onVmAction(v.id,'stop')">ArrÃªter</button> }
+        @if (v.status === 'stopped') { <button class="action-btn start"
+          (click)="onVmAction(v.id,'start')">DÃ©marrer</button> }
+        <button class="action-btn console" [routerLink]="['/vm-console']"
+          [state]="{ id: v.id, returnUrl: '/personal-dashboard' }">Console</button>
+        <button class="action-btn delete" (click)="onVmAction(v.id,'delete')">Suppr.</button>
       </div>
     </div>
   </div>

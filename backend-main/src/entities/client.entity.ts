@@ -8,6 +8,7 @@ import { RoleClient } from 'src/enum/role-client.enum';
 import { AccountStatus } from 'src/enum/account-status.enum';
 import { MFAStatus } from 'src/enum/mfa-status.enum';
 import { ServiceInstance } from './serviceInstance.entity';
+import { Wallet } from './wallet.entity';
 
 
 @Entity('client')
@@ -64,4 +65,8 @@ export class Client {
 
   @OneToMany(() => ServiceInstance, (service) => service.client)
   services!: ServiceInstance[];
+
+  @OneToOne(() => Wallet, (wallet) => wallet.user)
+  @JoinColumn()
+  wallet: Wallet;
 }

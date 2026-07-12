@@ -1,4 +1,4 @@
-<div class="page-header-row" style="margin-bottom:20px">
+﻿<div class="page-header-row" style="margin-bottom:20px">
     <div>
         <div class="page-h-title">Monitoring</div>
         <div class="page-h-sub">Métriques CPU, RAM et réseau de vos instances en temps réel</div>
@@ -11,7 +11,7 @@
         <div class="mc-header">
             <div>
                 <div class="mc-name">{{ vm.name }}</div>
-                <div class="mc-sub">{{ vm.os }} Â· {{ vm.ip }}</div>
+                <div class="mc-sub">{{ vm.os }} · {{ vm.ip }}</div>
             </div>
             <span class="badge" [class]="vm.status === 'running' ? 'approved' : 'suspended'">
                 <div class="badge-dot"></div>{{ vm.status === 'running' ? 'Online' : 'Offline' }}
@@ -30,12 +30,11 @@
         <div class="mc-metrics">
             <div class="mc-metric">
                 <div class="mc-m-label">CPU</div>
-                <div class="mc-m-val" [style.color]="vm.cpu>80?'var(--red)':vm.cpu>60?'var(--amber)':'var(--text-1)'">{{
-                    vm.cpu }}%</div>
+                <div class="mc-m-val" [style.color]="vm.cpu !== null && vm.cpu>80?'var(--red)':vm.cpu !== null && vm.cpu>60?'var(--amber)':'var(--text-1)'">{{ vm.cpu !== null ? vm.cpu + '%' : '?' }}</div>
             </div>
             <div class="mc-metric">
                 <div class="mc-m-label">RAM</div>
-                <div class="mc-m-val">{{ vm.ram }}%</div>
+                <div class="mc-m-val">{{ vm.ram !== null ? vm.ram + '%' : '?' }}</div>
             </div>
             <div class="mc-metric">
                 <div class="mc-m-label">Disque</div>
@@ -43,12 +42,12 @@
             </div>
             <div class="mc-metric">
                 <div class="mc-m-label">Réseau</div>
-                <div class="mc-m-val">↑ 2.1 MB/s</div>
+                <div class="mc-m-val">  2.1 MB/s</div>
             </div>
         </div>
         } @else {
         <div style="text-align:center;padding:28px 0;color:var(--text-muted);font-size:13px">Instance
-            arrêtée â€” pas de métriques</div>
+            arrêtée — pas de métriques</div>
         }
     </div>
     }

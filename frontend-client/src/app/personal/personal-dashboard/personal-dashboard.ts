@@ -35,7 +35,6 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   h = inject(PersonalDashboardHelperService);
 
   activeTab = signal<string>('overview');
-  wallet = signal<number>(142.50);
   private platformId = inject(PLATFORM_ID);
   isBrowserAndReady = false;
   actualPers = signal<Personal | null>(null);
@@ -59,6 +58,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
       this.loadCurrentPers();
       this.loadVmTemplates();
       this.h.loadCatalog(() => this.loadMyVms());
+      this.h.loadWallet();
       this.startVmPolling();
     }
   }
@@ -149,7 +149,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
           const newList = [...list];
           if (newStatus === 'running') {
             this.ensureMonitorBars(id);
-            newList[idx] = { ...list[idx], status: 'running', cpuUse: 35, ramUse: 40 };
+            newList[idx] = { ...list[idx], status: 'running', cpuUse: null, ramUse: null };
           } else {
             newList[idx] = { ...list[idx], status: 'stopped', cpuUse: 0, ramUse: 0 };
           }
@@ -158,6 +158,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
         const label = action === 'start' ? 'démarrée' : 'arrêtée';
         const color = action === 'start' ? 'var(--green)' : 'var(--amber)';
         this.showToast(`${vm.name} ${label}`, color);
+        this.loadMyVms();
       },
       error: (err) => {
         // Restaurer l'état original en cas d'erreur
@@ -285,8 +286,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
 
   /* ── WALLET ───────────────────────────────────────── */
   openRecharge() {
-    this.wallet.update(w => w + 100);
-    this.showToast('Wallet rechargé de 100 DT', 'var(--green)');
+    this.h.rechargerWallet();
   }
 
   /* ── HELPERS ──────────────────────────────────────── */

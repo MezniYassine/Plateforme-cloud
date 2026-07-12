@@ -1,4 +1,4 @@
-<div class="stats-row">
+﻿<div class="stats-row">
   @for (s of billingStats(); track s.label) {
   <div class="stat-card">
     <div class="stat-header">
@@ -29,7 +29,7 @@
       <table>
         <thead>
           <tr>
-            <th>Client</th><th>Période</th><th>Ressources</th><th>Montant</th><th>Statut</th><th></th>
+            <th>Client</th><th>Période</th><th>Ressources</th><th>Montant</th><th>Statut</th>
           </tr>
         </thead>
         <tbody>
@@ -50,7 +50,6 @@
             <td><span class="badge" [class]="i.paid?'approved':'pending'">
               <div class="badge-dot"></div>{{ i.paid ? 'Payée' : 'En attente' }}
             </span></td>
-            <td><button class="btn-sm">PDF</button></td>
           </tr>
           }
         </tbody>
@@ -65,21 +64,21 @@
         <div class="chart-bars">
           @for (b of revenueChart(); track $index) {
           <div class="chart-bar-wrap">
-            <div class="chart-bar" [style.height]="b.pct+'%'"></div>
+            <div class="chart-bar" [style.height]="b.pct+'%'" title="{{ b.val }} DT"></div>
             <div class="chart-label">{{ b.label }}</div>
           </div>
           }
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-light)">
-          <span style="font-size:12.5px;color:var(--text-muted)">Total juin 2025</span>
-          <span style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green)">1 842 DT</span>
+          <span style="font-size:12.5px;color:var(--text-muted)">{{ currentMonthTotal().label }}</span>
+          <span style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green)">{{ currentMonthTotal().val }}</span>
         </div>
       </div>
     </div>
     <div class="section-card">
       <div class="card-header">
         <div class="card-title">Grille tarifaire</div>
-        <button class="btn-sm primary">Modifier</button>
+        <button class="btn-sm primary" (click)="navigateTo.emit('catalogue')">Modifier</button>
       </div>
       <div class="infra-list" style="padding:14px 16px">
         @for (r of pricingRules(); track r.label) {

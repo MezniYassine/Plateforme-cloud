@@ -1,11 +1,11 @@
-@if(isBrowserAndReady){
+﻿@if(isBrowserAndReady){
 <div class="app">
 
-  <!-- ══════════ SIDEBAR ══════════ -->
+  <!-- · SIDEBAR · -->
   <app-sidebar [activePage]="activePage()" [tenantCount]="tenantCount()" [pendingCount]="pendingCount()"
     [actualAdmin]="actualAdmin()" (pageChange)="setPage($event)" />
 
-  <!-- ══════════ MAIN ══════════ -->
+  <!-- · MAIN · -->
   <div class="main">
 
     <!-- TOPBAR -->
@@ -38,7 +38,7 @@
       }
 
       @if (activePage() === 'billing') {
-      <app-billing-page />
+      <app-billing-page (navigateTo)="setPage($event)" />
       }
 
       @if (activePage() === 'iam') {
@@ -57,14 +57,14 @@
   </div><!-- /main -->
 </div><!-- /app -->
 
-<!-- ══════════ MODAL DÉTAIL TENANT ══════════ -->
+<!-- · MODAL DÉTAIL TENANT · -->
 <div class="modal-overlay" [class.show]="selectedTenant() !== null" (click)="onOverlayClick($event)">
   @if (selectedTenant(); as t) {
   <div class="modal">
     <div class="modal-header">
       <div>
         <div class="modal-title">{{ t.company }}</div>
-        <div class="modal-sub">Dossier d'inscription — {{ formatDate(t.registered) }}</div>
+        <div class="modal-sub">Dossier d'inscription - {{ formatDate(t.registered) }}</div>
       </div>
       <button class="modal-close" (click)="closeModal()">
         <svg viewBox="0 0 24 24">
@@ -110,7 +110,7 @@
   }
 </div>
 
-<!-- ══════════ TOAST ══════════ -->
+<!-- · TOAST · -->
 <div class="toast" [class.show]="isToastVisible()">
   <div class="toast-icon" [style.background]="toastColor()">
     <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">

@@ -1,4 +1,4 @@
-<div class="section-card">
+﻿<div class="section-card">
     <div class="card-header">
         <div>
             <div class="card-title">Mes demandes</div>
@@ -60,8 +60,7 @@
                 <span class="badge"
                     [class]="r.status === 'pending' ? 'pending' : r.status === 'approved' ? 'approved' : 'rejected'">
                     <div class="badge-dot"></div>
-                    {{ r.status === 'pending' ? 'En attente admin' : r.status === 'approved' ? 'Approuvée &
-                    déployée' : 'Rejetée' }}
+                    {{ r.status === 'pending' ? 'En attente admin' : r.status === 'approved' ? 'Approuvée & déployée' : 'Rejetée' }}
                 </span>
                 @if (r.status === 'rejected') {
                 <button class="btn-sm primary" style="margin-top:4px;font-size:11.5px;padding:5px 10px"

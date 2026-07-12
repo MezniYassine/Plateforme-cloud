@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, computed, effect, output } from '@angular/core';
 import { ChangePasswordModalComponent } from '../../../../common/change-password';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { environment } from '../../../../../environments/environment';
@@ -7,6 +7,7 @@ import { HttpClient } from '@angular/common/http';
 const PATTERNS = {
   TAX_ID: /^\d{7,8}[a-z]\/?[mpe]\/?[anpb]\/?\d{3}$/i
 };
+
 @Component({
   selector: 'ent-profile-page',
   standalone: true,
@@ -15,24 +16,41 @@ const PATTERNS = {
 })
 
 export class ProfilePageComponent {
-  adminName = input.required<string>();
+  adminNom = input.required<string>();
+  adminPrenom = input.required<string>();
   adminEmail = input.required<string>();
   companyName = input.required<string>();
   taxId = input.required<string>();
+
+  profileUpdated = output<void>();
+
+  adminName = computed(() => `${this.adminPrenom()} ${this.adminNom()}`);
 
   showPasswordModal = false;
   private http = inject(HttpClient);
   fb = inject(FormBuilder);
   profileForm!: FormGroup;
-  ngOnInit() {
+
+  constructor() {
     this.profileForm = this.fb.group({
-      adminNom: [this.adminName().split(' ')[1] || ''],
-      adminPrenom: [this.adminName().split(' ')[0] || ''],
-      adminEmail: [this.adminEmail(), [Validators.required, Validators.email]],
-      companyName: [this.companyName(), Validators.required],
-      taxId: [this.taxId(), Validators.required, Validators.pattern(PATTERNS.TAX_ID)],
+      adminNom: [''],
+      adminPrenom: [''],
+      adminEmail: ['', [Validators.required, Validators.email]],
+      companyName: ['', Validators.required],
+      taxId: ['', [Validators.required, Validators.pattern(PATTERNS.TAX_ID)]],
+    });
+
+    effect(() => {
+      this.profileForm.patchValue({
+        adminNom: this.adminNom(),
+        adminPrenom: this.adminPrenom(),
+        adminEmail: this.adminEmail(),
+        companyName: this.companyName(),
+        taxId: this.taxId()
+      }, { emitEvent: false });
     });
   }
+
   onUpdate() {
     if (this.profileForm.valid) {
       const payload = {
@@ -44,7 +62,10 @@ export class ProfilePageComponent {
       };
 
       this.updateProfile(payload).subscribe({
-        next: () => alert('Profil entreprise mis à jour avec succès !'),
+        next: () => {
+          alert('Profil entreprise mis à jour avec succès !');
+          this.profileUpdated.emit();
+        },
         error: (err) => console.error('Erreur update:', err)
       });
     }
@@ -58,3 +79,4 @@ export class ProfilePageComponent {
     return this.http.patch(`${environment.apiBaseUrl}/users/update-profile`, data);
   }
 }
+

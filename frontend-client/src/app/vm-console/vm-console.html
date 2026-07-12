@@ -1,0 +1,42 @@
+<div class="console-wrapper">
+    <h2 class="console-title">Console Active : {{ vm?.nomPersonnalise || 'Chargement...' }}</h2>
+
+    @if (vm) {
+    <div class="vm-metadata-bar">
+        <div class="meta-item">
+            <span class="meta-label">Machine :</span>
+            <span class="meta-value">{{ vm.nomPersonnalise }}</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">OS :</span>
+            <span class="meta-value">{{ vm.os }}</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Statut :</span>
+            <span class="status-badge" [class.running]="vm.status === 'RUNNING'">
+                <span class="dot"></span> {{ vm.status }}
+            </span>
+        </div>
+    </div>
+    }
+
+    <div id="wmks-container"></div>
+
+    <div class="console-actions">
+        <div class="left-actions">
+            @if (vm?.status === 'RUNNING') {
+            <button class="btn btn-danger" (click)="changerStatut('stop')">
+                <i class="icon-power"></i> Forcer l'arrêt
+            </button>
+            } @else {
+            <button class="btn btn-success" (click)="changerStatut('start')">
+                <i class="icon-power"></i> Démarrer
+            </button>
+            }
+        </div>
+
+        <div class="right-actions">
+            <button class="btn btn-primary" [routerLink]="returnUrl">← Retour</button>
+        </div>
+    </div>
+</div>

@@ -29,10 +29,13 @@ export class ProvisioningService {
     
     const savedVm = await this.vmRepository.save(newVm);
 
+    // Nom unique pour l'hyperviseur ESXi (évite les conflits entre utilisateurs)
+    const esxiName = `${config.name}-${savedVm.id}`;
+
     // 2. Lancer le clonage sur l'ESXi en arrière-plan
     this.esxiService.cloneAndReconfigure(
       'Win2000-Template',
-      config.name,
+      esxiName,
       config.ram * 1024, // Conversion GB -> MB pour VMware
       config.cpu,
       config.storage

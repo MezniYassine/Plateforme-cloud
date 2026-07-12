@@ -1,16 +1,16 @@
 import { Component, input, output } from '@angular/core';
 import { VM, ServiceItem } from '../../personal-dashboard-helper.service';
 import { PersonalDashboardHelperService } from '../../personal-dashboard-helper.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-overview-tab',
   standalone: true,
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './overview-tab.html',
 })
 export class OverviewTabComponent {
   vms    = input.required<VM[]>();
-  wallet = input.required<number>();
 
   openDeploy  = output<{ type: 'vm' | 'catalog'; name: string }>();
   switchTab   = output<string>();
@@ -20,5 +20,9 @@ export class OverviewTabComponent {
 
   onVmAction(id: string, action: 'stop' | 'start' | 'delete') {
     this.vmAction.emit({ id, action });
+  }
+
+  get totalSpend(): number {
+    return this.vms().reduce((acc, vm) => acc + (vm.cost || 0), 0);
   }
 }

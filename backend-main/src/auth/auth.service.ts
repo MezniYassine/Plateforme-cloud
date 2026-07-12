@@ -18,6 +18,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Client } from 'src/entities/client.entity';
 import { Personal } from 'src/entities/personal.entity';
 import { RoleClient } from 'src/enum/role-client.enum';
+import { WalletService } from 'src/wallet/wallet.service';
 
 // --- DTOs ---
 export interface RegisterEnterpriseDto {
@@ -49,6 +50,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
+    private readonly walletService: WalletService,
     @InjectRepository(Client) private clientRepo: Repository<Client>,
     @InjectRepository(Personal) private personalRepo: Repository<Personal>,
     @InjectRepository(Admin) private adminRepo: Repository<Admin>,
@@ -347,6 +349,8 @@ export class AuthService {
       user = await this.clientRepo.save(newUser);
 
       await this.personalRepo.save(this.personalRepo.create({ id: user.id, profession: 'Non renseignée' }));
+      // Créer le wallet à 0 DT pour le nouveau compte OAuth
+      await this.walletService.createWalletForClient(user);
     } else {
       // MISE À JOUR COMPTE EXISTANT (LINKING)
       user.providers = user.providers || [];

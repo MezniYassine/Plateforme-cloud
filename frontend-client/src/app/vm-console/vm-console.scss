@@ -1,0 +1,179 @@
+.console-wrapper {
+    padding: 24px;
+    background-color: #f8fafc;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    .console-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 20px;
+    }
+
+    .vm-metadata-bar {
+        display: flex;
+        gap: 40px;
+        background: #ffffff;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 24px;
+        border: 1px solid #e2e8f0;
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+
+            .meta-label {
+                color: #64748b;
+            }
+
+            .meta-value {
+                font-weight: 600;
+                color: #0f172a;
+            }
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            background-color: #f1f5f9;
+            color: #475569;
+
+            &.running {
+                background-color: #dcfce7;
+                color: #15803d;
+
+                .dot {
+                    background-color: #22c55e;
+                }
+            }
+
+            .dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background-color: #94a3b8;
+            }
+        }
+    }
+
+    /* ==========================================================================
+       CONSOLES VMWARE (WMKS) - CORRECTIF ANTI-ECRAN BLANC ET SANS COULOIR NOIR
+       ========================================================================== */
+
+    // 1. On crée une zone centrale qui va absorber l'affichage
+    .console-center-zone {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    // 2. Le conteneur MKS doit impérativement avoir une largeur stable (100% ou fixe) 
+    // pour éviter les crashs de wmks.js
+    #wmks-container {
+        position: relative !important;
+        width: 100% !important;
+        max-width: 1024px !important;
+        /* Estime la largeur maximale de ton Windows 7 (ex: 1024 ou 1280) */
+        height: calc(100vh - 240px) !important;
+        min-height: 600px !important;
+        background-color: #000000 !important;
+        border-radius: 12px;
+        overflow: hidden !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    // 3. On force le canvas généré à prendre toute la hauteur, sa largeur s'adaptera sans planter
+    ::ng-deep #wmks-container canvas {
+        display: block !important;
+        height: 100% !important;
+        width: auto !important;
+        margin: 0 auto !important;
+        /* Centre le canvas à l'intérieur du bloc noir */
+    }
+
+    /* ==========================================================================
+       BOUTONS ET ACTIONS
+       ========================================================================== */
+    .console-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+
+        .left-actions,
+        .right-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease-in-out;
+
+            &-primary {
+                background: #2563eb;
+                color: white;
+
+                &:hover {
+                    background: #1d4ed8;
+                }
+            }
+
+            &-success {
+                background: #10b981;
+                color: white;
+
+                &:hover {
+                    background: #059669;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+                }
+
+                &:active {
+                    transform: translateY(1px);
+                }
+            }
+
+            &-danger {
+                background: #ef4444;
+                color: white;
+
+                &:hover {
+                    background: #dc2626;
+                }
+            }
+
+            &-warning {
+                background: #f59e0b;
+                color: white;
+
+                &:hover {
+                    background: #d97706;
+                }
+            }
+
+            &-secondary {
+                background: #e2e8f0;
+                color: #475569;
+
+                &:hover {
+                    background: #cbd5e1;
+                }
+            }
+        }
+    }
+}

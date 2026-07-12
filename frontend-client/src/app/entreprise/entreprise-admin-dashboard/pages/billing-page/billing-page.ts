@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { Invoice, TeamMember } from '../../entreprise-helper.service';
+import { TeamMember, WalletTransaction } from '../../entreprise-helper.service';
 
 interface BudgetAlert {
   label: string;
@@ -18,7 +18,7 @@ export class BillingPageComponent {
   monthlyBudget = input.required<number>();
   forecast = input.required<number>();
   budgetUsedPct = input.required<number>();
-  invoices = input.required<Invoice[]>();
+  transactions = input.required<WalletTransaction[]>();
   teamSpend = input.required<Array<Pick<TeamMember, 'name' | 'spend' | 'color'>>>();
   budgetAlerts = input.required<BudgetAlert[]>();
 
@@ -26,3 +26,4 @@ export class BillingPageComponent {
     return (name || '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   }
 }
+

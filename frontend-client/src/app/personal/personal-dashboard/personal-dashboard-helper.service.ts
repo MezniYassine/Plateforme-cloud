@@ -1,6 +1,7 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { WalletService } from '../../services/wallet.service';
 
 export interface Personal {
   id: number;
@@ -15,7 +16,7 @@ export interface Personal {
 
 export interface VM {
   id: string; name: string; os: string; cpu: number; ram: number;
-  disk: number; cpuUse: number; ramUse: number;
+  disk: number; cpuUse: number | null; ramUse: number | null;
   status: 'running' | 'stopped' | 'provisioning'; ip: string; cost: number;
   catalogName: string;
 }
@@ -39,6 +40,8 @@ export interface VmEntity {
   stockageGB: number;
   ipAddress?: string | null;
   vmReference?: string | null;
+  cpuUse?: number | null;
+  ramUse?: number | null;
   os?: string | null;
   catalogue?: VmCatalogue | null;
 }
@@ -80,8 +83,13 @@ export interface Invoice {
 @Injectable({ providedIn: 'root' })
 export class PersonalDashboardHelperService {
   private readonly base = environment.apiBaseUrl.replace(/\/$/, '');
+  private http = inject(HttpClient);
+  private walletSvc = inject(WalletService);
 
-  constructor(private http: HttpClient) {}
+  // --- Wallet ---
+  walletSolde = signal<number>(0);
+  walletDevise = signal<string>('DT');
+  walletLoading = signal<boolean>(false);
 
   getMyVms() {
     return this.http.get<VmEntity[]>(`${this.base}/esxi/my-vms`);
@@ -133,18 +141,38 @@ export class PersonalDashboardHelperService {
       FAILED: 'stopped',
     };
 
+    const isRunning = entity.status === 'RUNNING';
+
+    // Calculer le prix de l'offre catalogue ou l'estimer dynamiquement selon la puissance de l'instance
+    let cost = 0;
+    if (entity.catalogue && entity.catalogue.prix !== undefined) {
+      cost = Number(entity.catalogue.prix);
+    } else {
+      cost = Number(this.getCatalogPriceForVm(entity));
+      if (!cost || cost <= 0) {
+        // Formule d'estimation réaliste si pas liée au catalogue : 10 DT de base + 5 DT/vCPU + 2.5 DT/GB RAM + 0.1 DT/GB SSD
+        const vcpuCount = entity.vCPU || 1;
+        const ramGb = entity.ramGB || 1;
+        const storageGb = entity.stockageGB || 20;
+        cost = 10 + (vcpuCount * 5) + (ramGb * 2.5) + (storageGb * 0.1);
+      }
+    }
+    cost = Math.round(cost * 100) / 100;
+    const cpuUsage = isRunning ? this.normalizePercent(entity.cpuUse) : 0;
+    const ramUsage = isRunning ? this.normalizePercent(entity.ramUse) : 0;
+
     return {
       id: String(entity.id),
       name: entity.nomPersonnalise,
-      os: entity.os ?? 'Windows 2000',
+      os: entity.os ?? 'Windows 7',
       cpu: entity.vCPU,
       ram: entity.ramGB,
       disk: entity.stockageGB,
-      cpuUse: entity.status === 'RUNNING' ? 15 : 0,
-      ramUse: entity.status === 'RUNNING' ? 20 : 0,
+      cpuUse: cpuUsage,
+      ramUse: ramUsage,
       status: statusMap[entity.status] ?? 'provisioning',
       ip: entity.ipAddress ?? entity.vmReference ?? 'Provisioning',
-      cost: Number(entity.catalogue?.prix ?? this.getCatalogPriceForVm(entity)),
+      cost,
       catalogName: entity.catalogue?.nomService ?? this.getCatalogNameForVm(entity),
     };
   }
@@ -171,9 +199,23 @@ export class PersonalDashboardHelperService {
     return Number(plan?.price ?? 0);
   }
 
-  metricColor(v: number): string {
-    if (v > 80) return 'var(--red)';
-    if (v > 60) return 'var(--amber)';
+  private normalizePercent(value: number | null | undefined): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    const numeric = Number(value);
+
+    if (!Number.isFinite(numeric)) {
+      return null;
+    }
+
+    return Math.max(0, Math.min(100, Math.round(numeric)));
+  }
+  metricColor(v: number | null): string {
+    const value = v ?? 0;
+    if (value > 80) return 'var(--red)';
+    if (value > 60) return 'var(--amber)';
     return 'var(--blue)';
   }
 
@@ -217,6 +259,34 @@ export class PersonalDashboardHelperService {
       error: (err) => {
         console.error('Failed to load catalog', err);
         onDone?.();
+      }
+    });
+  }
+
+  loadWallet() {
+    this.walletSvc.getWallet().subscribe({
+      next: (data) => {
+        this.walletSolde.set(data.solde);
+        this.walletDevise.set(data.devise);
+      },
+      error: () => { }
+    });
+  }
+
+  rechargerWallet() {
+    if (this.walletLoading()) return;
+    this.walletLoading.set(true);
+    this.walletSvc.recharger().subscribe({
+      next: (res) => {
+        this.walletSolde.set(res.nouveauSolde);
+        this.walletLoading.set(false);
+        // Toast is normally handled at component level or via a notification service
+        // For simplicity, we just log or alert if needed, or rely on UI updates
+      },
+      error: (err) => {
+        this.walletLoading.set(false);
+        console.error('Erreur recharge wallet', err);
+        alert(err?.error?.message ?? 'Impossible de recharger le wallet');
       }
     });
   }

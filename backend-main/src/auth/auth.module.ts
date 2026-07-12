@@ -11,10 +11,12 @@ import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './jwt.strategy';
 import { GoogleStrategy } from './google.strategy';
 import { MicrosoftStrategy } from './microsoft.strategy';
+import { WalletModule } from 'src/wallet/wallet.module';
 
 @Module({
   imports: [
     UsersModule,
+    WalletModule,
     TypeOrmModule.forFeature([Client, Personal, Admin]),
     PassportModule,
     JwtModule.register({

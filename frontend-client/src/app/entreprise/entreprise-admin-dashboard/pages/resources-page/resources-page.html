@@ -26,6 +26,7 @@
                                 <th>Propriétaire</th>
                                 <th>Type</th>
                                 <th>Config.</th>
+                                <th>Adresse IP</th>
                                 <th>CPU</th>
                                 <th>RAM</th>
                                 <th>Coût/mois</th>
@@ -54,15 +55,13 @@
                                         </div>
                                         <div>
                                             <div style="font-weight:600;font-size:13.5px">{{ r.name }}</div>
-                                            <div style="font-size:11.5px;color:var(--text-muted)">{{ r.ip || r.url }}
-                                            </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
                                     <div style="display:flex;align-items:center;gap:7px">
                                         <div style="width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff"
-                                            [style.background]="memberColor(r.owner)">{{ getInitials(r.owner) }}</div>
+                                            [style.background]="memberColor(r.owner, r.ownerColor)">{{ getInitials(r.owner) }}</div>
                                         <span style="font-size:13px">{{ r.owner }}</span>
                                     </div>
                                 </td>
@@ -70,7 +69,14 @@
                                 </td>
                                 <td style="font-size:12.5px;color:var(--text-secondary)">{{ r.specs }}</td>
                                 <td>
-                                    @if (r.cpu !== undefined) {
+                                    @if (r.ip) {
+                                    <span class="mono-tag">{{ r.ip }}</span>
+                                    } @else {
+                                    <span style="color:var(--text-muted);font-size:12px">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (r.cpu !== null && r.cpu !== undefined) {
                                     <div style="display:flex;align-items:center;gap:6px">
                                         <div class="mini-bar">
                                             <div class="mini-fill" [style.width]="r.cpu+'%'"
@@ -82,7 +88,7 @@
                                     } @else { <span style="color:var(--text-muted);font-size:12px">—</span> }
                                 </td>
                                 <td>
-                                    @if (r.ram !== undefined) {
+                                    @if (r.ram !== null && r.ram !== undefined) {
                                     <div style="display:flex;align-items:center;gap:6px">
                                         <div class="mini-bar">
                                             <div class="mini-fill" [style.width]="r.ram+'%'"
@@ -95,8 +101,8 @@
                                 </td>
                                 <td style="font-family:'DM Mono',monospace;font-weight:600;font-size:13px">{{ r.cost }}
                                     DT</td>
-                                <td><span class="badge approved">
-                                        <div class="badge-dot"></div>Running
+                                <td><span class="badge" [class]="statusClass(r.status)">
+                                        <div class="badge-dot"></div>{{ r.statusLabel || 'Running' }}
                                     </span></td>
                             </tr>
                             }

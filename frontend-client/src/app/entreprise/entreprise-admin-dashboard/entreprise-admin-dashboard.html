@@ -1,4 +1,4 @@
-﻿@if(isBrowserAndReady){
+@if(isBrowserAndReady){
 <div class="app">
 
     <aside class="sidebar">
@@ -71,7 +71,7 @@
                     <line x1="1" y1="10" x2="23" y2="10" />
                 </svg>
                 Portefeuille
-                <span class="wallet-chip-sb">{{ walletBalance() }} DT</span>
+                <span class="wallet-chip-sb">{{ formatMoney(walletBalance()) }} {{ walletDevise() }}</span>
             </div>
         </div>
 
@@ -130,7 +130,7 @@
                         <rect x="1" y="4" width="22" height="16" rx="2" />
                         <line x1="1" y1="10" x2="23" y2="10" />
                     </svg>
-                    <span>{{ walletBalance() }} DT</span>
+                    <span>{{ formatMoney(walletBalance()) }} {{ walletDevise() }}</span>
                 </div>
                 <div class="topbar-btn" (click)="setPage('profile')">
                     <svg viewBox="0 0 24 24">
@@ -175,7 +175,7 @@
             <!-- PAGE: BUDGET & FACTURATION -->
             @if (activePage() === 'billing') {
             <ent-billing-page [monthlySpend]="monthlySpend()" [monthlyBudget]="monthlyBudget()" [forecast]="forecast()"
-                [budgetUsedPct]="budgetUsedPct()" [invoices]="invoices()" [teamSpend]="teamSpend()"
+                [budgetUsedPct]="budgetUsedPct()" [transactions]="walletTransactions()" [teamSpend]="billingTeamSpend()"
                 [budgetAlerts]="budgetAlerts()" />
             }
 
@@ -187,8 +187,8 @@
             }
 
             @if (activePage() === 'profile') {
-            <ent-profile-page [adminName]="adminName()" [adminEmail]="adminEmail()" [companyName]="companyName()"
-                [taxId]="companyTaxId()" />
+            <ent-profile-page [adminNom]="adminNom()" [adminPrenom]="adminPrenom()" [adminEmail]="adminEmail()" [companyName]="companyName()"
+                [taxId]="companyTaxId()" (profileUpdated)="loadCurrentAdmin()" />
             }
         </div><!-- /content -->
     </div><!-- /main -->
@@ -256,7 +256,7 @@
         <div class="modal-header">
             <div>
                 <div class="modal-title">Inviter un collaborateur</div>
-                <div class="modal-sub">Un email d'invitation sera envoyer à l'utilisateur rejoindra votre espace</div>
+                <div class="modal-sub">Un email d'invitation sera envoyé à l'utilisateur qui rejoindra votre espace</div>
             </div>
             <button class="modal-close" (click)="showInviteModal.set(false)">
                 <svg viewBox="0 0 24 24">
@@ -310,4 +310,6 @@
     <h2>Vérification de la sécurité...</h2>
 </div>
 }
+
+
 

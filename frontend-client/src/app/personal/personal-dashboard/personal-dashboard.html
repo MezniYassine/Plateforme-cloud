@@ -1,4 +1,4 @@
-﻿@if( isBrowserAndReady){
+@if( isBrowserAndReady){
 <div class="app">
 
   <aside class="sidebar">
@@ -82,7 +82,7 @@
           <div class="user-email">{{ actualPers()?.client?.email }}</div>
         </div>
       </div>
-      <button class="logout-btn" (click)="logout()" title="DÃ©connexion">
+      <button class="logout-btn" (click)="logout()" title="Déconnexion">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
           <polyline points="16 17 21 12 16 7"></polyline>
@@ -98,7 +98,7 @@
     <div class="topbar">
       <div class="tb-left">
         <div class="tb-title">{{ titles[activeTab()] || "Vue d'ensemble" }}</div>
-        <div class="tb-bread">Personnel Â· Espace Cloud Dynamix</div>
+        <div class="tb-bread">Personnel · Espace Cloud Dynamix</div>
       </div>
       <div class="tb-right">
         <div class="wallet-chip" (click)="switchTab('billing')">
@@ -108,7 +108,7 @@
           </svg>
           <div>
             <div class="wallet-label">Solde</div>
-            <div class="wallet-amount">{{ wallet().toFixed(2) }} DT</div>
+            <div class="wallet-amount">{{ h.walletSolde().toFixed(3) }} {{ h.walletDevise() }}</div>
           </div>
         </div>
         <div class="tb-btn">
@@ -131,7 +131,7 @@
     <div class="content">
 
       @if (activeTab() === 'overview') {
-      <app-overview-tab [vms]="vms()" [wallet]="wallet()" (openDeploy)="handleOpenDeploy($event)"
+      <app-overview-tab [vms]="vms()" (openDeploy)="handleOpenDeploy($event)"
         (switchTab)="switchTab($event)" (vmAction)="handleVmAction($event)" />
       }
 
@@ -152,7 +152,7 @@
       }
 
       @if (activeTab() === 'billing') {
-      <app-billing-tab [wallet]="wallet()" (openRecharge)="openRecharge()" />
+      <app-billing-tab (openRecharge)="openRecharge()" />
       }
 
       @if (activeTab() === 'profile') {
@@ -163,13 +163,13 @@
   </div>
 </div>
 
-<!-- â•â• DEPLOY MODAL â•â• -->
+<!-- â• â•  DEPLOY MODAL â• â•  -->
 <div class="modal-ov" [class.show]="isDeployModalOpen()" (click)="onOverlayClick($event)">
   <div class="modal">
     <div class="modal-head">
       <div>
-        <div class="modal-title">{{ deployType() === 'vm' ? 'DÃ©ployer une VM' : 'DÃ©ployer ' + deployName() }}</div>
-        <div class="modal-sub">{{ deployType() === 'vm' ? 'Infrastructure as a Service â€” VMware ESXi' : 'Platform /
+        <div class="modal-title">{{ deployType() === 'vm' ? 'Déployer une VM' : 'Déployer ' + deployName() }}</div>
+        <div class="modal-sub">{{ deployType() === 'vm' ? 'Infrastructure as a Service — VMware ESXi' : 'Platform /
           Software as a Service' }}</div>
       </div>
       <button class="modal-x" (click)="closeModal()">
@@ -193,7 +193,7 @@
             </svg>
             } @else { 1 }
           </div>
-          <div class="wz-label">CaractÃ©ristiques</div>
+          <div class="wz-label">Caractéristiques</div>
         </div>
         <div class="wz-line" [class.done]="deployStep() > 1"></div>
         <div class="wz-step" [class.active]="deployStep() >= 2">
@@ -202,7 +202,6 @@
         </div>
       </div>
 
-      <!-- â”€â”€ Ã‰TAPE 1 : CaractÃ©ristiques â”€â”€ -->
       @if (deployStep() === 1) {
       <div class="field">
         <div class="field-label">Nom de l'instance</div>
@@ -210,7 +209,7 @@
           (input)="updateDeployName($any($event.target).value)">
       </div>
       <div class="field">
-        <div class="field-label">SystÃ¨me d'exploitation</div>
+        <div class="field-label">Système d'exploitation</div>
         <select (change)="updateTemplateName($any($event.target).value)" [disabled]="vmTemplates().length === 0">
           @if (vmTemplates().length === 0) {
           <option value="">Aucun template disponible</option>
@@ -224,7 +223,6 @@
       </div>
       }
 
-      <!-- â”€â”€ Ã‰TAPE 2 : Plans IaaS â”€â”€ -->
       @if (deployStep() === 2) {
       @if (vmPlans().length === 0) {
       <div class="empty-plans">
@@ -286,7 +284,7 @@
       </div>
       <div class="field-row">
         <div class="field">
-          <div class="field-label">Plan mÃ©moire</div>
+          <div class="field-label">Plan mémoire</div>
           <select>
             <option>2 GB RAM</option>
             <option selected>4 GB RAM</option>
@@ -324,18 +322,18 @@
         Retour
       </button>
       <div class="cost-preview" style="flex:1;margin:0 14px">
-        <span class="cost-label">CoÃ»t estimÃ©</span>
+        <span class="cost-label">Coût estimé</span>
         <span class="cost-val">~{{costPreview()}} DT/mois</span>
       </div>
       <button class="btn btn-primary" [disabled]="isDeploying() || !selectedPlan()" (click)="confirmDeploy()">
         <svg viewBox="0 0 24 24">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
-        DÃ©ployer
+        Déployer
       </button>
       } @else {
       <div class="cost-preview" style="flex:1;margin-right:14px">
-        <span class="cost-label">CoÃ»t estimÃ©</span>
+        <span class="cost-label">Coût estimé</span>
         <span class="cost-val">~{{costPreview()}} DT/mois</span>
       </div>
       <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
@@ -343,7 +341,7 @@
         <svg viewBox="0 0 24 24">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
-        DÃ©ployer
+        Déployer
       </button>
       }
     </div>
@@ -367,6 +365,6 @@
 }
 @else{
 <div style="height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #f8f9fa;">
-  <h2>VÃ©rification de la sÃ©curitÃ©...</h2>
+  <h2>Vérification de la sécurité...</h2>
 </div>
 }

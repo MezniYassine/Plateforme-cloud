@@ -24,4 +24,14 @@ export class EntrepriseController {
     async getUserByEntreprise(@Req() req) {
         return this.entService.getUserByEntreprise(req.user.sub);
     }
+
+    @Get('org-vms')
+    async getOrgVms(@Req() req) {
+        return this.entService.getOrgVms(req.user.sub);
+    }
+    @Get('billing')
+    async getBilling(@Req() req) {
+        return this.entService.getBilling(req.user.sub);
+    }
 }
+

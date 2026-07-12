@@ -1,5 +1,5 @@
-import { Component, input, output, signal } from '@angular/core';
-import { Invoice } from '../../personal-dashboard-helper.service';
+import { Component, output, signal, inject } from '@angular/core';
+import { Invoice, PersonalDashboardHelperService } from '../../personal-dashboard-helper.service';
 
 @Component({
   selector: 'app-billing-tab',
@@ -8,7 +8,7 @@ import { Invoice } from '../../personal-dashboard-helper.service';
   templateUrl: './billing-tab.html',
 })
 export class BillingTabComponent {
-  wallet = input.required<number>();
+  h = inject(PersonalDashboardHelperService);
   openRecharge = output<void>();
 
   invoices = signal<Invoice[]>([

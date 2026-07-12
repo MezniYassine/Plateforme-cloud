@@ -1,6 +1,6 @@
-﻿            <div class="stats-row">
+            <div class="stats-row">
                 <div class="stat-card">
-                    <div class="stat-header"><span class="stat-label">DÃ©pense juin</span>
+                    <div class="stat-header"><span class="stat-label">Dépense juin</span>
                         <div class="stat-icon" style="background:var(--blue-light)"><svg viewBox="0 0 24 24"
                                 stroke="var(--blue)" fill="none" stroke-width="1.8" stroke-linecap="round">
                                 <line x1="12" y1="1" x2="12" y2="23" />
@@ -19,7 +19,7 @@
                             </svg></div>
                     </div>
                     <div class="stat-value">{{ monthlyBudget() }}</div>
-                    <div class="stat-footer"><span class="stat-period">DT allouÃ©s</span></div>
+                    <div class="stat-footer"><span class="stat-period">DT alloués</span></div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header"><span class="stat-label">Restant</span>
@@ -33,14 +33,14 @@
                     <div class="stat-footer"><span class="stat-period">DT disponibles</span></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-header"><span class="stat-label">PrÃ©vision fin de mois</span>
+                    <div class="stat-header"><span class="stat-label">Prévision fin de mois</span>
                         <div class="stat-icon" style="background:var(--purple-light)"><svg viewBox="0 0 24 24"
                                 stroke="var(--purple)" fill="none" stroke-width="1.8" stroke-linecap="round">
                                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                             </svg></div>
                     </div>
                     <div class="stat-value">{{ forecast() }}</div>
-                    <div class="stat-footer"><span class="stat-period">DT estimÃ©s</span></div>
+                    <div class="stat-footer"><span class="stat-period">DT estimés</span></div>
                 </div>
             </div>
 
@@ -54,8 +54,8 @@
                         <line x1="12" y1="9" x2="12" y2="13" />
                     </svg></div>
                 <div>
-                    <div class="alert-title">Attention : {{ budgetUsedPct() }}% du budget consommÃ©</div>
-                    <div class="alert-sub">Envisagez d'augmenter votre budget ou de rÃ©duire les ressources actives</div>
+                    <div class="alert-title">Attention : {{ budgetUsedPct() }}% du budget consommé</div>
+                    <div class="alert-sub">Envisagez d'augmenter votre budget ou de réduire les ressources actives</div>
                 </div>
             </div>
             }
@@ -64,31 +64,40 @@
                 <div class="section-card">
                     <div class="card-header">
                         <div>
-                            <div class="card-title">Historique des factures</div>
-                            <div class="card-sub">GÃ©nÃ©ration automatique mensuelle</div>
+                            <div class="card-title">Transactions des membres</div>
+                            <div class="card-sub">Mouvements réels du wallet entreprise</div>
                         </div>
                         <button class="btn-sm">Exporter</button>
                     </div>
                     <table class="inv-table">
                         <thead>
                             <tr>
-                                <th>PÃ©riode</th>
-                                <th>RÃ©fÃ©rence</th>
+                                <th>Date</th>
+                                <th>Membre</th>
+                                <th>Description</th>
+                                <th>Type</th>
                                 <th>Montant</th>
-                                <th>Statut</th>
-                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            @for (i of invoices(); track i.id) {
+                            @for (t of transactions(); track t.id) {
                             <tr>
-                                <td style="font-weight:600">{{ i.period }}</td>
-                                <td><span class="mono-tag">{{ i.ref }}</span></td>
-                                <td style="font-family:'DM Mono',monospace;font-weight:700">{{ i.amount }} DT</td>
-                                <td><span class="badge" [class]="i.paid?'approved':'pending'">
-                                        <div class="badge-dot"></div>{{ i.paid?'PayÃ©e':'En attente' }}
+                                <td style="font-size:12.5px;color:var(--text-muted)">{{ t.date }}</td>
+                                <td style="font-weight:600">{{ t.memberName || 'Entreprise' }}</td>
+                                <td>{{ t.desc }}</td>
+                                <td><span class="badge" [class]="t.type === 'credit' ? 'approved' : 'rejected'">
+                                        <div class="badge-dot"></div>{{ t.type === 'credit' ? 'Credit' : 'Debit' }}
                                     </span></td>
-                                <td><button class="btn-sm">PDF</button></td>
+                                <td style="font-family:'DM Mono',monospace;font-weight:700"
+                                    [style.color]="t.type === 'credit' ? 'var(--green)' : 'var(--red)'">
+                                    {{ t.type === 'credit' ? '+' : '-' }}{{ t.amount }} DT
+                                </td>
+                            </tr>
+                            } @empty {
+                            <tr>
+                                <td colspan="5" style="padding:22px;text-align:center;color:var(--text-muted)">
+                                    Aucune transaction wallet pour cette entreprise.
+                                </td>
                             </tr>
                             }
                         </tbody>
@@ -98,7 +107,7 @@
                 <div class="right-col">
                     <div class="section-card">
                         <div class="card-header">
-                            <div class="card-title">RÃ©partition par membre</div>
+                            <div class="card-title">Répartition par membre</div>
                         </div>
                         <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
                             @for (m of teamSpend(); track m.name) {
@@ -110,7 +119,7 @@
                                 </div>
                                 <div class="breakdown-bar-wrap">
                                     <div class="breakdown-bar">
-                                        <div class="breakdown-fill" [style.width]="(m.spend/monthlyBudget()*100)+'%'"
+                                        <div class="breakdown-fill" [style.width]="(monthlyBudget() > 0 ? (m.spend / monthlyBudget() * 100) : 0)+'%'"
                                             [style.background]="m.color"></div>
                                     </div>
                                 </div>
@@ -141,3 +150,7 @@
                     </div>
                 </div>
             </div>
+
+
+
+
