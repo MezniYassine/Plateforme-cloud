@@ -18,9 +18,11 @@ export class DashboardOverview {
   teamSpend = input.required<Array<Pick<TeamMember, 'name' | 'spend' | 'color'>>>();
   pendingRequestsCount = input.required<number>();
 
-  readonly budgetUsedPct = computed(() =>
-    Math.round((this.monthlySpend() / this.monthlyBudget()) * 100)
-  );
+  readonly budgetUsedPct = computed(() => {
+    const b = this.monthlyBudget();
+    if (!b || b === 0) return 0;
+    return Math.round((this.monthlySpend() / b) * 100);
+  });
 
   navigateTo = output<string>();
   approveRequest = output<string>();

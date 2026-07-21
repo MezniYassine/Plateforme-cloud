@@ -4,13 +4,13 @@ import { Router } from '@angular/router';
 
 import { Personal, VM, VmEntity, VmTemplate, ServiceItem } from './personal-dashboard-helper.service';
 import { PersonalDashboardHelperService } from './personal-dashboard-helper.service';
-import { OverviewTabComponent } from './tabs/overview-tab/overview-tab';
-import { IaasTabComponent } from './tabs/iaas-tab/iaas-tab';
-import { PaasTabComponent } from './tabs/paas-tab/paas-tab';
-import { SaasTabComponent } from './tabs/saas-tab/saas-tab';
-import { MonitorTabComponent } from './tabs/monitor-tab/monitor-tab';
-import { BillingTabComponent } from './tabs/billing-tab/billing-tab';
-import { ProfileTabComponent } from './tabs/profile-tab/profile-tab';
+import { OverviewTabComponent } from './components/overview-tab/overview-tab';
+import { IaasTabComponent } from './components/iaas-tab/iaas-tab';
+import { PaasTabComponent } from './components/paas-tab/paas-tab';
+import { SaasTabComponent } from './components/saas-tab/saas-tab';
+import { MonitorTabComponent } from './components/monitor-tab/monitor-tab';
+import { BillingTabComponent } from './components/billing-tab/billing-tab';
+import { ProfileTabComponent } from './components/profile-tab/profile-tab';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 
@@ -76,7 +76,9 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   /* ── VMs ──────────────────────────────────────────── */
   vms = signal<VM[]>([]);
 
-  monitorBars = signal<Record<string, number[]>>({});
+  monitorBars     = signal<Record<string, number[]>>({});
+  monitorBarTimes = signal<Record<string, string[]>>({});
+  lastRefresh     = signal<Date | null>(null);
 
   /* ── DEPLOY MODAL ─────────────────────────────────── */
   isDeployModalOpen = signal<boolean>(false);
@@ -106,6 +108,43 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   toastColor = signal<string>('var(--green)');
   isToastVisible = signal<boolean>(false);
 
+  /* ── CONFIRM TOAST ────────────────────────────────── */
+  isConfirmToastVisible = signal<boolean>(false);
+  confirmToastMsg = signal<string>('');
+  private vmIdToDelete: string | null = null;
+
+  showConfirmToast(vmId: string, vmName: string) {
+    this.vmIdToDelete = vmId;
+    this.confirmToastMsg.set(`Supprimer ${vmName} ?`);
+    this.isConfirmToastVisible.set(true);
+  }
+
+  cancelDelete() {
+    this.isConfirmToastVisible.set(false);
+    this.vmIdToDelete = null;
+  }
+
+  confirmDelete() {
+    const id = this.vmIdToDelete;
+    if (!id) return;
+    
+    this.isConfirmToastVisible.set(false);
+    this.vmIdToDelete = null;
+
+    const vm = this.vms().find(v => v.id === id);
+    if (!vm) return;
+
+    this.h.deleteVm(id).subscribe({
+      next: () => {
+        this.vms.update(list => list.filter(v => v.id !== id));
+        this.showToast(`${vm.name} supprimée`, 'var(--red)');
+      },
+      error: (err) => {
+        this.showToast(err?.error?.message ?? 'Suppression impossible', 'var(--red)');
+      },
+    });
+  }
+
   /* ── NAVIGATION ───────────────────────────────────── */
   switchTab(key: string) { this.activeTab.set(key); }
 
@@ -120,16 +159,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     const vm = this.vms()[vmIndex];
 
     if (action === 'delete') {
-      if (!confirm(`Supprimer ${vm.name} ?`)) return;
-      this.h.deleteVm(id).subscribe({
-        next: () => {
-          this.vms.update(list => list.filter(v => v.id !== id));
-          this.showToast(`${vm.name} supprimée`, 'var(--red)');
-        },
-        error: (err) => {
-          this.showToast(err?.error?.message ?? 'Suppression impossible', 'var(--red)');
-        },
-      });
+      this.showConfirmToast(id, vm.name);
       return;
     }
 
@@ -292,7 +322,30 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   /* ── HELPERS ──────────────────────────────────────── */
   private ensureMonitorBars(vmId: string) {
     if (this.monitorBars()[vmId]) return;
-    this.monitorBars.update(bars => ({ ...bars, [vmId]: this.h.createRandomBars() }));
+    const bars  = this.h.createRandomBars();
+    const times = this.h.createBarTimes(bars.length);
+    this.monitorBars.update(b => ({ ...b, [vmId]: bars }));
+    this.monitorBarTimes.update(t => ({ ...t, [vmId]: times }));
+  }
+
+  /** Fait glisser une nouvelle valeur + timestamp dans le graphique de chaque VM running */
+  private slideMonitorBars(vms: VM[]) {
+    const now     = new Date();
+    const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const MAX     = 20;
+
+    const newBars  = { ...this.monitorBars() };
+    const newTimes = { ...this.monitorBarTimes() };
+
+    for (const vm of vms) {
+      if (!newBars[vm.id]) continue;          // sera créé par ensureMonitorBars
+      const metric = vm.status === 'running' ? (vm.cpuUse ?? 0) : 0;
+      newBars[vm.id]  = [...newBars[vm.id].slice(-(MAX - 1)),  metric];
+      newTimes[vm.id] = [...(newTimes[vm.id] ?? []).slice(-(MAX - 1)), timeStr];
+    }
+
+    this.monitorBars.set(newBars);
+    this.monitorBarTimes.set(newTimes);
   }
 
   showToast(msg: string, color: string = 'var(--green)') {
@@ -326,6 +379,8 @@ export class PersonalDashboard implements OnInit, OnDestroy {
         const mapped = entities.map((vm) => this.mapVm(vm));
         this.vms.set(mapped);
         mapped.forEach((vm) => this.ensureMonitorBars(vm.id));
+        this.slideMonitorBars(mapped);
+        this.lastRefresh.set(new Date());
       },
       error: (err) => {
         console.error('Failed to load personal VMs', err);

@@ -131,8 +131,8 @@
     <div class="content">
 
       @if (activeTab() === 'overview') {
-      <app-overview-tab [vms]="vms()" (openDeploy)="handleOpenDeploy($event)"
-        (switchTab)="switchTab($event)" (vmAction)="handleVmAction($event)" />
+      <app-overview-tab [vms]="vms()" (openDeploy)="handleOpenDeploy($event)" (switchTab)="switchTab($event)"
+        (vmAction)="handleVmAction($event)" />
       }
 
       @if (activeTab() === 'iaas') {
@@ -148,7 +148,8 @@
       }
 
       @if (activeTab() === 'monitor') {
-      <app-monitor-tab [vms]="vms()" [monitorBars]="monitorBars()" />
+      <app-monitor-tab [vms]="vms()" [monitorBars]="monitorBars()" [monitorBarTimes]="monitorBarTimes()"
+        [lastRefresh]="lastRefresh()" />
       }
 
       @if (activeTab() === 'billing') {
@@ -348,7 +349,7 @@
   </div>
 </div>
 
-<!-- â•â• TOAST â•â• -->
+<!--  TOAST   -->
 <div class="toast" [class.show]="isToastVisible()">
   <div class="toast-ic" [style.background]="toastColor()">
     <svg viewBox="0 0 24 24">
@@ -361,6 +362,25 @@
     </svg>
   </div>
   <span>{{ toastMsg() }}</span>
+</div>
+
+<!-- ── CONFIRM TOAST ── -->
+<div class="modal-ov" [class.show]="isConfirmToastVisible()" style="z-index: 400;" (click)="cancelDelete()">
+  <div style="background: var(--text-1); color: #fff; padding: 24px 28px; border-radius: 24px; width: 400px; max-width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 24px; transition: all 0.3s cubic-bezier(0.22, 0.8, 0.36, 1); transform: scale(0.95); opacity: 0;" [style.transform]="isConfirmToastVisible() ? 'scale(1)' : 'scale(0.95)'" [style.opacity]="isConfirmToastVisible() ? '1' : '0'" (click)="$event.stopPropagation()">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div class="toast-ic" style="background: var(--red); width: 44px; height: 44px; flex-shrink: 0;">
+        <svg viewBox="0 0 24 24" style="width: 22px; height: 22px;">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </div>
+      <span style="font-weight: 500; font-size: 17px; line-height: 1.4;">{{ confirmToastMsg() }}</span>
+    </div>
+    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px;">
+      <button class="btn btn-ghost" style="padding: 9px 20px; font-size: 14px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 50px;" (click)="cancelDelete()">Annuler</button>
+      <button class="btn" style="padding: 9px 20px; font-size: 14px; background: var(--red); color: white; border: 1px solid var(--red); border-radius: 50px; cursor: pointer;" (click)="confirmDelete()">OK</button>
+    </div>
+  </div>
 </div>
 }
 @else{

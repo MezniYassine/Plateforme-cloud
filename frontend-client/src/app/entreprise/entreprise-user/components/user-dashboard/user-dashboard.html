@@ -129,13 +129,18 @@
                     @if (vm.status === 'running') { <button class="vm-btn stop" (click)="state.vmAction(vm.id, 'stop')">Arrêter</button> }
                     @if (vm.status === 'stopped') { <button class="vm-btn start" (click)="state.vmAction(vm.id, 'start')">Démarrer</button> }
                     <button class="vm-btn console" [routerLink]="['/vm-console']" [state]="{ id: vm.id, returnUrl: '/entreprise-user-dashboard' }">Console</button>
-                    <button class="vm-btn delete" (click)="state.deleteVm(vm.id)" style="margin-left:auto">Supprimer</button>
+                    <button class="vm-btn delete" (click)="state.deleteVm(vm.id, vm.name)" style="margin-left:auto; background: var(--red); color: white; border-color: var(--red);">Supprimer</button>
                 </div>
             </div>
             }
             @empty {
-            <div class="empty-mini">
-                Aucune VM — <span class="link-btn" (click)="state.setPage('new-request')">faire une demande</span>
+            <div class="empty-state" style="grid-column:1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; text-align: center; background: var(--bg-white); border: 1px dashed var(--border); border-radius: var(--r);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.6" stroke-linecap="round" width="48" height="48" style="opacity: 0.8;">
+                    <rect x="2" y="3" width="20" height="5" rx="2" />
+                    <rect x="2" y="11" width="20" height="5" rx="2" />
+                </svg>
+                <p style="color: var(--text-1); margin: 0; font-size: 17px; font-weight: 600; font-family: 'Syne', sans-serif;">Aucune VM assignée pour l'instant</p>
+                <button (click)="state.setPage('new-request')" style="background: var(--blue); color: white; margin-top: 4px; padding: 8px 20px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">Faire une demande de VM</button>
             </div>
             }
         </div>

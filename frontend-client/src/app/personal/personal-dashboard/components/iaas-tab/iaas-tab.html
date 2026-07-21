@@ -1,9 +1,9 @@
-<div class="page-header-row">
+Ôªø<div class="page-header-row">
   <div>
     <div class="page-h-title">Mes machines virtuelles</div>
-    <div class="page-h-sub">Instances IaaS dÈployÈes et assignÈes ‡ votre compte</div>
+    <div class="page-h-sub">Instances IaaS d√©ploy√©es et assign√©es √† votre compte</div>
   </div>
-  <button class="btn-sm primary" (click)="openDeploy.emit({ type: 'vm', name: '' })">+ Demander une VM</button>
+  <button class="btn-sm primary" (click)="openDeploy.emit({ type: 'vm', name: '' })">+ D√©ployer une VM</button>
 </div>
 
 <div class="vm-cards-grid">
@@ -14,9 +14,9 @@
         <div class="vfc-name">{{ v.name }}</div>
         <div class="vfc-os">{{ v.os }}</div>
       </div>
-      <span class="badge" [class]="v.status === 'running' ? 'approved' : v.status === 'provisioning' ? 'pending' : 'suspended'">
-        <div class="badge-dot"></div>{{ v.status === 'running' ? 'Running' : v.status === 'provisioning' ? 'Provisioning' : 'Stopped' }}
-      </span>
+      <div class="vfc-status" [class]="'status-' + v.status">
+        {{ v.status === 'running' ? 'Running' : v.status === 'provisioning' ? 'Provisioning' : 'Stopped' }}
+      </div>
     </div>
 
     <div class="vfc-specs-grid">
@@ -41,7 +41,7 @@
     @if (v.status === 'running') {
     <div class="vfc-usage">
       <div class="usage-row">
-        <span class="usage-label">CPU {{ v.cpuUse !== null ? v.cpuUse + '%' : 'ó' }}</span>
+        <span class="usage-label">CPU {{ v.cpuUse !== null ? v.cpuUse + '%' : '0%' }}</span>
         <div class="usage-bar">
           <div class="usage-fill" [style.width.%]="v.cpuUse ?? 0"
             [style.background]="v.cpuUse !== null && v.cpuUse > 80 ? 'var(--red)' : v.cpuUse !== null && v.cpuUse > 60 ? 'var(--amber)' : 'var(--blue)'">
@@ -49,7 +49,7 @@
         </div>
       </div>
       <div class="usage-row">
-        <span class="usage-label">RAM {{ v.ramUse !== null ? v.ramUse + '%' : 'ó' }}</span>
+        <span class="usage-label">RAM {{ v.ramUse !== null ? v.ramUse + '%' : '0%' }}</span>
         <div class="usage-bar">
           <div class="usage-fill" [style.width.%]="v.ramUse ?? 0"
             [style.background]="v.ramUse !== null && v.ramUse > 80 ? 'var(--red)' : v.ramUse !== null && v.ramUse > 60 ? 'var(--amber)' : 'var(--teal)'">
@@ -71,6 +71,16 @@
         <button class="action-btn delete" (click)="onVmAction(v.id,'delete')">Suppr.</button>
       </div>
     </div>
+  </div>
+  }
+  @empty {
+  <div class="empty-state" style="grid-column:1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; text-align: center; background: var(--bg-white); border: 1px dashed var(--border); border-radius: var(--r);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.6" stroke-linecap="round" width="48" height="48" style="opacity: 0.8;">
+          <rect x="2" y="3" width="20" height="5" rx="2" />
+          <rect x="2" y="11" width="20" height="5" rx="2" />
+      </svg>
+      <p style="color: var(--text-1); margin: 0; font-size: 17px; font-weight: 600; font-family: 'Syne', sans-serif;">Aucune VM assign√©e pour l'instant</p>
+      <button (click)="openDeploy.emit({ type: 'vm', name: '' })" style="background: var(--blue); color: white; margin-top: 4px; padding: 8px 20px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">Faire une demande de VM</button>
   </div>
   }
 </div>

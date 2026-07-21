@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap');
 
 *,
 *::before,
@@ -1801,3 +1801,108 @@ button {
     background: var(--border-l);
     color: var(--text-3)
 }
+
+/* Enhanced VM Card Styles to match mockup */
+.vm-full-card {
+  padding: 24px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+  transition: box-shadow .2s, transform .2s, border-color .2s;
+}
+
+.vm-full-card:hover {
+  border-color: #bfdbfe;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+  transform: translateY(-2px);
+}
+
+.vfc-header {
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.vfc-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.vfc-os {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.vfc-status {
+  font-size: 13px;
+  font-weight: 700;
+  padding-top: 2px;
+}
+.vfc-status.status-running { color: var(--green); }
+.vfc-status.status-provisioning { color: var(--text-primary); }
+.vfc-status.status-stopped { color: var(--text-muted); }
+
+.vfc-specs-grid {
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.vfc-spec {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.vspec-k {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.vspec-v {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+
+.vfc-footer {
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.action-btn {
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.action-btn.console {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #dbeafe;
+}
+.action-btn.console:hover { background: #dbeafe; }
+
+.action-btn.delete {
+  background: #fef2f2;
+  color: #ef4444;
+  border-color: #fecaca;
+}
+.action-btn.delete:hover { background: #fecaca; }
+
+.mono-tag {
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-family: 'DM Mono', monospace;
+}
+

@@ -1,4 +1,4 @@
-﻿@if(isBrowserAndReady){
+@if(isBrowserAndReady){
 
 <div class="app">
     <app-sidebar />
@@ -46,6 +46,25 @@
         </svg>
     </div>
     <span>{{ state.toastMsg() }}</span>
+</div>
+
+<!-- ── CONFIRM TOAST ── -->
+<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; z-index: 400; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); transition: all 0.25s;" [style.opacity]="state.isConfirmToastVisible() ? '1' : '0'" [style.pointer-events]="state.isConfirmToastVisible() ? 'auto' : 'none'" (click)="state.cancelDelete()">
+  <div style="background: var(--text-1); color: #fff; padding: 24px 28px; border-radius: 24px; width: 400px; max-width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 24px; transition: all 0.3s cubic-bezier(0.22, 0.8, 0.36, 1); transform: scale(0.95); opacity: 0;" [style.transform]="state.isConfirmToastVisible() ? 'scale(1)' : 'scale(0.95)'" [style.opacity]="state.isConfirmToastVisible() ? '1' : '0'" (click)="$event.stopPropagation()">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div class="toast-ic" style="background: var(--red); width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+        <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round;">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </div>
+      <span style="font-weight: 500; font-size: 17px; line-height: 1.4;">{{ state.confirmToastMsg() }}</span>
+    </div>
+    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px;">
+      <button class="btn btn-ghost" style="padding: 9px 20px; font-size: 14px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 50px;" (click)="state.cancelDelete()">Annuler</button>
+      <button class="btn" style="padding: 9px 20px; font-size: 14px; background: var(--red); color: white; border: 1px solid var(--red); border-radius: 50px; cursor: pointer;" (click)="state.confirmDelete()">OK</button>
+    </div>
+  </div>
 </div>
 }
 @else{

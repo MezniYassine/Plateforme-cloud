@@ -1,0 +1,105 @@
+<!-- En-tête avec timestamp de la dernière actualisation -->
+<div class="mon-header-row">
+  <div>
+    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Monitoring en temps réel</div>
+    <div style="font-size:12.5px;color:var(--text-3);margin-top:2px">Métriques CPU, RAM, réseau de vos instances</div>
+  </div>
+  <div class="mon-refresh-badge">
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+    <span>Actualisé à {{ formatRefresh(lastRefresh()) }}</span>
+  </div>
+</div>
+
+<div class="sc">
+  <div class="monitor-grid">
+    @for (v of vms(); track v.id) {
+    <div class="monitor-card" [class.mon-card-offline]="v.status !== 'running'">
+
+      <!-- En-tête de la carte -->
+      <div class="mon-head">
+        <div class="mon-name">{{v.name}}</div>
+        <span [class]="statusClass(v.status)">
+          <div class="badge-dot"></div>{{ statusLabel(v.status) }}
+        </span>
+      </div>
+
+      <!-- Graphique + axe du temps -->
+      @if (v.status === 'running') {
+      <div class="mon-chart-wrapper">
+
+        <!-- Barres verticales (structure originale, sans wrapper intermédiaire) -->
+        <div class="mon-chart">
+          @for (b of monitorBars()[v.id]; track $index) {
+          <div class="bar-m" [style.height.%]="b" [style.background]="h.metricColor(b)"></div>
+          }
+        </div>
+
+        <!-- Axe temporel : 5 ticks régulièrement espacés (en % de la largeur) -->
+        <div class="mon-time-axis">
+          @for (idx of tickIndices(v.id); track idx) {
+          <div class="mon-tick"
+               [style.left.%]="monitorBars()[v.id].length > 1
+                 ? (idx / (monitorBars()[v.id].length - 1)) * 100
+                 : 0">
+            <div class="mon-tick-line"></div>
+            <div class="mon-tick-label">{{ timeAt(v.id, idx) }}</div>
+          </div>
+          }
+        </div>
+
+      </div>
+
+      } @else {
+      <!-- Placeholder visuel quand la VM est hors ligne -->
+      <div class="mon-chart-wrapper">
+        <div class="mon-chart mon-chart-offline">
+          <div class="mon-offline-msg">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Machine {{ v.status === 'stopped' ? 'arrêtée' : 'en provisionnement' }} — pas de données
+          </div>
+        </div>
+        <div class="mon-time-axis mon-time-axis-empty"></div>
+      </div>
+      }
+
+      <!-- Métriques -->
+      <div class="mon-metrics">
+        <div class="mon-metric">
+          <div class="mon-m-label">CPU</div>
+          <div class="mon-m-val" [style.color]="v.status === 'running' ? h.metricColor(v.cpuUse) : 'var(--text-3)'">
+            {{ v.status === 'running' ? (v.cpuUse !== null ? v.cpuUse + '%' : '-') : 'N/A' }}
+          </div>
+        </div>
+        <div class="mon-metric">
+          <div class="mon-m-label">RAM</div>
+          <div class="mon-m-val" [style.color]="v.status === 'running' ? h.metricColor(v.ramUse) : 'var(--text-3)'">
+            {{ v.status === 'running' ? (v.ramUse !== null ? v.ramUse + '%' : '-') : 'N/A' }}
+          </div>
+        </div>
+        <div class="mon-metric">
+          <div class="mon-m-label">Internet</div>
+          <div class="mon-m-val"
+            [style.color]="v.status !== 'running' ? 'var(--text-3)' : v.internetConnected ? 'var(--green)' : 'var(--red)'">
+            {{ v.status !== 'running' ? 'N/A' : v.internetConnected ? 'Connecté' : 'Déconnecté' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Pied de carte : date de création -->
+      <div class="mon-card-footer">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Déployée le {{ v.createdAt ? (v.createdAt | date:'dd/MM/yyyy à HH:mm') : 'date inconnue' }}
+      </div>
+
+    </div>
+    }
+  </div>
+</div>

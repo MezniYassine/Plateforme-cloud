@@ -75,7 +75,7 @@ export class DashboardHelperService {
   userName = signal<string>('');
   actualUser = signal<EntrepriseUser | null>(null);
   companyName = signal<string>('');
-  
+
   mySpend = computed(() => {
     const vmsCost = this.myVMs().reduce((acc, vm) => acc + (vm.cost || 0), 0);
     const servicesCost = this.myServices().reduce((acc, s) => acc + (s.cost || 0), 0);
@@ -135,6 +135,40 @@ export class DashboardHelperService {
     this.toastColor.set(color);
     this.isToastVisible.set(true);
     setTimeout(() => this.isToastVisible.set(false), 3500);
+  }
+
+  // --- Confirm Toast ---
+  isConfirmToastVisible = signal<boolean>(false);
+  confirmToastMsg = signal<string>('');
+  private vmIdToDelete: string | null = null;
+
+  showConfirmToast(vmId: string, vmName: string) {
+    this.vmIdToDelete = vmId;
+    this.confirmToastMsg.set(`Supprimer ${vmName} ?`);
+    this.isConfirmToastVisible.set(true);
+  }
+
+  cancelDelete() {
+    this.isConfirmToastVisible.set(false);
+    this.vmIdToDelete = null;
+  }
+
+  confirmDelete() {
+    const id = this.vmIdToDelete;
+    if (!id) return;
+    
+    this.isConfirmToastVisible.set(false);
+    this.vmIdToDelete = null;
+
+    this.http.delete<any>(`${this.base}/esxi/my-vms/${id}`).subscribe({
+      next: (res) => {
+        this.myVMs.update(list => list.filter(v => v.id !== String(id)));
+        this.showToast(res?.message ?? 'VM supprimée', 'var(--red)');
+      },
+      error: (err) => {
+        this.showToast(err?.error?.message ?? 'Impossible de supprimer la VM', 'var(--red)');
+      }
+    });
   }
 
   getInitials(name: string): string {
@@ -323,10 +357,12 @@ export class DashboardHelperService {
       next: (data) => {
         const mapped: MyVM[] = (data || []).map((vm: any) => {
           const isRunning = ['running', 'started'].includes(String(vm.status || '').toLowerCase());
-          
+
           // Récupérer le prix de l'offre catalogue ou l'estimer dynamiquement selon la puissance de l'instance
           let cost = 0;
-          if (vm.catalogue && vm.catalogue.prix !== undefined) {
+          if (vm.prixMensuel !== undefined && vm.prixMensuel !== null) {
+            cost = Number(vm.prixMensuel);
+          } else if (vm.catalogue && vm.catalogue.prix !== undefined) {
             cost = Number(vm.catalogue.prix);
           } else {
             // Formule d'estimation réaliste si pas liée au catalogue : 10 DT de base + 5 DT/vCPU + 2.5 DT/GB RAM + 0.1 DT/GB SSD
@@ -403,17 +439,8 @@ export class DashboardHelperService {
     });
   }
 
-  deleteVm(id: string) {
-    if (!confirm('Confirmer la suppression de la VM ?')) return;
-    this.http.delete<any>(`${this.base}/esxi/my-vms/${id}`).subscribe({
-      next: (res) => {
-        this.myVMs.update(list => list.filter(v => v.id !== String(id)));
-        this.showToast(res?.message ?? 'VM supprimée', 'var(--red)');
-      },
-      error: (err) => {
-        this.showToast(err?.error?.message ?? 'Impossible de supprimer la VM', 'var(--red)');
-      }
-    });
+  deleteVm(id: string, name: string) {
+    this.showConfirmToast(id, name);
   }
 
   loadCatalog() {

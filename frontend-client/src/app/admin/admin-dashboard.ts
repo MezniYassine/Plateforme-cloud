@@ -1,20 +1,20 @@
-﻿import { Component, computed, signal, OnInit, OnDestroy, ViewEncapsulation, inject, PLATFORM_ID } from '@angular/core';
+import { Component, computed, signal, OnInit, OnDestroy, ViewEncapsulation, inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Tenant, Activity, Admin } from './dashboard-helper.service';
-import { DashboardOverviewComponent } from './pages/dashboard-overview/dashboard-overview';
-import { TenantsPageComponent } from './pages/tenants-page/tenants-page';
-import { EsxiPageComponent } from './pages/esxi-page/esxi-page';
-import { KubernetesPageComponent } from './pages/kubernetes-page/kubernetes-page';
-import { MonitoringPageComponent } from './pages/monitoring-page/monitoring-page';
-import { BillingPageComponent } from './pages/billing-page/billing-page';
-import { IamPageComponent } from './pages/iam-page/iam-page';
-import { CataloguePageComponent } from './pages/catalogue-page/catalogue-page';
-import { ProfilePageComponent } from './pages/profile-page/profile-page';
+import { DashboardOverviewComponent } from './components/dashboard-overview/dashboard-overview';
+import { TenantsPageComponent } from './components/tenants-page/tenants-page';
+import { EsxiPageComponent } from './components/esxi-page/esxi-page';
+import { KubernetesPageComponent } from './components/kubernetes-page/kubernetes-page';
+import { MonitoringPageComponent } from './components/monitoring-page/monitoring-page';
+import { BillingPageComponent } from './components/billing-page/billing-page';
+import { IamPageComponent } from './components/iam-page/iam-page';
+import { CataloguePageComponent } from './components/catalogue-page/catalogue-page';
+import { ProfilePageComponent } from './components/profile-page/profile-page';
 import { isPlatformBrowser } from '@angular/common';
-import { Sidebar } from './pages/sidebar/sidebar';
-import { Topbar } from './pages/topbar/topbar';
+import { Sidebar } from './components/sidebar/sidebar';
+import { Topbar } from './components/topbar/topbar';
 
 /* · COMPONENT · */
 @Component({

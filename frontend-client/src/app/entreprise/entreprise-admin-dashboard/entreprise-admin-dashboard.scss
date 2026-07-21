@@ -365,10 +365,17 @@ tbody td { padding:13px 20px; font-size:13.5px; color:var(--text-primary); verti
 .btn-modal.cancel:hover  { background:var(--bg-page); }
 
 /* ══ TOAST ══ */
-.toast { position:fixed; bottom:24px; right:24px; background:var(--text-primary); color:#fff; padding:11px 16px; border-radius:var(--radius); font-size:13px; font-weight:500; display:flex; align-items:center; gap:9px; box-shadow:var(--shadow-lg); transform:translateY(60px); opacity:0; transition:all .3s cubic-bezier(.22,.8,.36,1); z-index:300; }
+.toast { position:fixed; bottom:24px; right:24px; background:var(--text-primary); color:#fff; padding:11px 16px; border-radius:var(--radius); font-size:13px; font-weight:500; display:flex; align-items:center; gap:9px; box-shadow:var(--shadow-lg); transform:translateY(60px); opacity:0; transition:all .3s cubic-bezier(.22,.8,.36,1); z-index:300; max-width:380px; }
 .toast.show { transform:translateY(0); opacity:1; }
-.toast-icon { width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.toast-icon svg { width:10px; height:10px; stroke:#fff; fill:none; stroke-width:2.5; stroke-linecap:round; }
+/* Toast persistant : légère pulsation pour indiquer une activité en cours */
+.toast.toast-persistent { animation: toast-pulse 2.4s ease-in-out infinite; }
+@keyframes toast-pulse { 0%,100%{ box-shadow:var(--shadow-lg); } 50%{ box-shadow:0 8px 32px rgba(37,99,235,.35); } }
+.toast-icon { width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.toast-icon svg { width:11px; height:11px; stroke:#fff; fill:none; stroke-width:2.5; stroke-linecap:round; }
+/* Spinner rotatif pour l'icône du toast persistant */
+.toast-spinner { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
 
 ::-webkit-scrollbar { width:5px; height:5px; }
 ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }

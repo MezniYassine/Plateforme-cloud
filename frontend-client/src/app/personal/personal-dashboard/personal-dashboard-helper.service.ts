@@ -17,8 +17,9 @@ export interface Personal {
 export interface VM {
   id: string; name: string; os: string; cpu: number; ram: number;
   disk: number; cpuUse: number | null; ramUse: number | null;
+  internetConnected: boolean;
   status: 'running' | 'stopped' | 'provisioning'; ip: string; cost: number;
-  catalogName: string;
+  catalogName: string; createdAt: string | null;
 }
 
 export interface VmCatalogue {
@@ -43,6 +44,7 @@ export interface VmEntity {
   cpuUse?: number | null;
   ramUse?: number | null;
   os?: string | null;
+  prixMensuel?: number | string | null;
   catalogue?: VmCatalogue | null;
 }
 
@@ -145,7 +147,9 @@ export class PersonalDashboardHelperService {
 
     // Calculer le prix de l'offre catalogue ou l'estimer dynamiquement selon la puissance de l'instance
     let cost = 0;
-    if (entity.catalogue && entity.catalogue.prix !== undefined) {
+    if (entity.prixMensuel !== undefined && entity.prixMensuel !== null) {
+      cost = Number(entity.prixMensuel);
+    } else if (entity.catalogue && entity.catalogue.prix !== undefined) {
       cost = Number(entity.catalogue.prix);
     } else {
       cost = Number(this.getCatalogPriceForVm(entity));
@@ -160,7 +164,7 @@ export class PersonalDashboardHelperService {
     cost = Math.round(cost * 100) / 100;
     const cpuUsage = isRunning ? this.normalizePercent(entity.cpuUse) : 0;
     const ramUsage = isRunning ? this.normalizePercent(entity.ramUse) : 0;
-
+    const internetConnected = isRunning && !!entity.ipAddress && entity.ipAddress.includes('.');
     return {
       id: String(entity.id),
       name: entity.nomPersonnalise,
@@ -170,10 +174,12 @@ export class PersonalDashboardHelperService {
       disk: entity.stockageGB,
       cpuUse: cpuUsage,
       ramUse: ramUsage,
+      internetConnected: internetConnected,
       status: statusMap[entity.status] ?? 'provisioning',
       ip: entity.ipAddress ?? entity.vmReference ?? 'Provisioning',
       cost,
       catalogName: entity.catalogue?.nomService ?? this.getCatalogNameForVm(entity),
+      createdAt: entity.dateCreation ?? null,
     };
   }
 
@@ -220,7 +226,16 @@ export class PersonalDashboardHelperService {
   }
 
   createRandomBars(): number[] {
-    return Array.from({ length: 12 }, () => Math.floor(Math.random() * 85) + 10);
+    return Array.from({ length: 20 }, () => Math.floor(Math.random() * 85) + 10);
+  }
+
+  /** Génère count labels HH:MM en remontant dans le temps par intervalles de 4s */
+  createBarTimes(count = 20): string[] {
+    const now = new Date();
+    return Array.from({ length: count }, (_, i) => {
+      const d = new Date(now.getTime() - (count - 1 - i) * 4000);
+      return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    });
   }
 
   loadCatalog(onDone?: () => void) {
@@ -229,13 +244,13 @@ export class PersonalDashboardHelperService {
         const items: ServiceItem[] = (data || []).map((cat: any) => {
           const isVm = cat.type === 'vm' || cat.vcpu !== undefined || cat.ramMB !== undefined;
           const icon = isVm ? 'vm' : (cat.type || 'saas');
-          const specs = cat.specs 
+          const specs = cat.specs
             ? (typeof cat.specs === 'string' ? cat.specs.split('·').map((s: string) => s.trim()) : cat.specs)
             : [
-                `${cat.vcpu || 0} vCPU`,
-                `${cat.ramMB || 0} GB RAM`,
-                `${cat.stockageGB || 0} GB SSD`
-              ];
+              `${cat.vcpu || 0} vCPU`,
+              `${cat.ramMB || 0} GB RAM`,
+              `${cat.stockageGB || 0} GB SSD`
+            ];
 
           return {
             id: cat.id !== undefined ? Number(cat.id) : undefined,
@@ -287,6 +302,18 @@ export class PersonalDashboardHelperService {
         this.walletLoading.set(false);
         console.error('Erreur recharge wallet', err);
         alert(err?.error?.message ?? 'Impossible de recharger le wallet');
+      }
+    });
+  }
+
+  loadInvoices(onDone?: (invoices: Invoice[]) => void) {
+    this.http.get<Invoice[]>(`${this.base}/personal/billing`).subscribe({
+      next: (data) => {
+        onDone?.(data);
+      },
+      error: (err) => {
+        console.error('Failed to load invoices', err);
+        onDone?.([]);
       }
     });
   }

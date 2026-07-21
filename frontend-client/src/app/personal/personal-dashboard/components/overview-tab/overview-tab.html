@@ -1,4 +1,4 @@
-<div class="stat-row">
+﻿<div class="stat-row">
   <div class="stat-card">
     <div class="sc-top">
       <span class="sc-label">VMs actives</span>
@@ -23,7 +23,7 @@
       </div>
     </div>
     <div class="sc-val">2</div>
-    <div class="sc-sub">PostgreSQL · Redis</div>
+    <div class="sc-sub">PostgreSQL & Redis</div>
   </div>
   <div class="stat-card">
     <div class="sc-top">
@@ -103,12 +103,12 @@
           <div class="metric-row">
             <div class="metric-label">CPU</div>
             <div class="metric-bar"><div class="metric-fill" [style.width.%]="v.cpuUse ?? 0" [style.background]="h.metricColor(v.cpuUse)"></div></div>
-            <div class="metric-val">{{ v.cpuUse !== null ? v.cpuUse + '%' : '�' }}</div>
+            <div class="metric-val">{{ v.cpuUse !== null ? v.cpuUse + '%' : '—' }}</div>
           </div>
           <div class="metric-row">
             <div class="metric-label">RAM</div>
             <div class="metric-bar"><div class="metric-fill" [style.width.%]="v.ramUse ?? 0" [style.background]="h.metricColor(v.ramUse)"></div></div>
-            <div class="metric-val">{{ v.ramUse !== null ? v.ramUse + '%' : '�' }}</div>
+            <div class="metric-val">{{ v.ramUse !== null ? v.ramUse + '%' : '—' }}</div>
           </div>
         </div>
         }
@@ -120,6 +120,16 @@
         </div>
       </div>
       }
+    @empty {
+    <div class="empty-state" style="grid-column:1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; text-align: center; background: var(--bg-white); border: 1px dashed var(--border); border-radius: var(--r);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.6" stroke-linecap="round" width="48" height="48" style="opacity: 0.8;">
+            <rect x="2" y="3" width="20" height="5" rx="2" />
+            <rect x="2" y="11" width="20" height="5" rx="2" />
+        </svg>
+        <p style="color: var(--text-1); margin: 0; font-size: 17px; font-weight: 600; font-family: 'Syne', sans-serif;">Aucune VM assignée pour l'instant</p>
+        <button (click)="openDeploy.emit({ type: 'vm', name: '' })" style="background: var(--blue); color: white; margin-top: 4px; padding: 8px 20px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">Faire une demande de VM</button>
+    </div>
+    }
     </div>
   </div>
 
@@ -140,7 +150,7 @@
             </div>
             <div>
               <div style="font-size:13px;font-weight:600">PostgreSQL 16</div>
-              <div style="font-size:11px;color:var(--text-3)">db.prod-01 · 4GB RAM</div>
+              <div style="font-size:11px;color:var(--text-3)">db.prod-01 à 4GB RAM</div>
             </div>
           </div>
           <span class="badge running"><div class="badge-dot"></div>Running</span>
@@ -154,7 +164,7 @@
             </div>
             <div>
               <div style="font-size:13px;font-weight:600">Redis Cache</div>
-              <div style="font-size:11px;color:var(--text-3)">cache.dev-01 · 1GB</div>
+              <div style="font-size:11px;color:var(--text-3)">cache.dev-01 à 1GB</div>
             </div>
           </div>
           <span class="badge running"><div class="badge-dot"></div>Running</span>
@@ -181,3 +191,11 @@
     </div>
   </div>
 </div>
+
+
+
+
+
+
+
+

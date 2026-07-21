@@ -4,12 +4,12 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { DashboardOverview } from './dashboard-overview/dashboard-overview';
 import { Activity, Admin, DeployedResource, ResourceRequest, TeamMember, WalletTransaction } from './entreprise-helper.service';
-import { RequestsPageComponent } from './pages/requests-page/requests-page';
-import { TeamPageComponent } from './pages/team-page/team-page';
-import { ResourcesPageComponent } from './pages/resources-page/resources-page';
-import { BillingPageComponent } from './pages/billing-page/billing-page';
-import { WalletPageComponent } from './pages/wallet-page/wallet-page';
-import { ProfilePageComponent } from './pages/profile-page/profile-page';
+import { RequestsPageComponent } from './components/requests-page/requests-page';
+import { TeamPageComponent } from './components/team-page/team-page';
+import { ResourcesPageComponent } from './components/resources-page/resources-page';
+import { BillingPageComponent } from './components/billing-page/billing-page';
+
+import { ProfilePageComponent } from './components/profile-page/profile-page';
 import { isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DemandeService } from '../../services/demande.service';
@@ -17,7 +17,7 @@ import { DemandeService } from '../../services/demande.service';
 
 
 
-/* â”€â”€ COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── COMPONENT ──────────────────────────────────────────────────────────── */
 @Component({
   selector: 'app-enterprise-admin-dashboard',
   standalone: true,
@@ -27,7 +27,7 @@ import { DemandeService } from '../../services/demande.service';
     TeamPageComponent,
     ResourcesPageComponent,
     BillingPageComponent,
-    WalletPageComponent,
+
     ProfilePageComponent,
     ReactiveFormsModule
   ],
@@ -49,7 +49,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     team: 'Mon equipe',
     resources: 'Ressources deployees',
     billing: 'Budget & Facturation',
-    wallet: 'Portefeuille',
+
     profile: 'Mon profil',
   };
   pageTitle = computed(() => this.PAGE_TITLES[this.activePage()] ?? 'Dashboard');
@@ -102,13 +102,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     return f === 'all' ? this.deployedResources() : this.deployedResources().filter(r => r.type === f);
   });
 
-  /* BILLING */
-  budgetAlerts = signal([
-    { label: 'Alerte 80% budget', desc: 'Notification quand 80% est atteint', enabled: true },
-    { label: 'Alerte 100% budget', desc: 'Notification quand le budget est epuise', enabled: true },
-    { label: 'Rapport hebdomadaire', desc: 'Resume des depenses chaque lundi matin', enabled: false },
-    { label: 'Prevision depassement', desc: 'Alerte si la prevision depasse le budget', enabled: true },
-  ]);
+
 
   /* WALLET */
   walletTransactions = signal<WalletTransaction[]>([]);
@@ -122,12 +116,10 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     { label: 'Total recharge', val: `${this.formatMoney(this.totalRecharge())} ${this.walletDevise()}`, color: undefined },
   ]);
 
-  /* â”€â”€ ACTIVITIES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* ── ACTIVITIES ───────────────────────────────────────────────────────── */
   activities = signal<Activity[]>([]);
 
-
-
-  /* â”€â”€ MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* ── MODAL ──────────────────────────────────────────────────────────────── */
   showInviteModal = signal<boolean>(false);
   reviewAction = signal<'approve' | 'reject' | null>(null);
   reviewRequestId = signal<string | number | null>(null);
@@ -138,12 +130,14 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     return id == null ? null : this.resourceRequests().find(r => r.id === id) ?? null;
   });
 
-  /* â”€â”€ TOAST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* ── TOAST ──────────────────────────────────────────────────────────────── */
   toastMsg = signal<string>('');
   toastColor = signal<string>('var(--green)');
   isToastVisible = signal<boolean>(false);
+  /** true = toast persistant, ne disparaît pas automatiquement */
+  toastPersistent = signal<boolean>(false);
 
-  /* â”€â”€ CONSTRUCTOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* ── CONSTRUCTOR ─────────────────────────────────────────────────────────── */
   private demandeService = inject(DemandeService);
 
   constructor(private router: Router, private http: HttpClient, private fb: FormBuilder) { }
@@ -182,7 +176,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     }
   }
 
-  /* â”€â”€ API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* ── API ─────────────────────────────────────────────────────────────────── */
   loadData() {
     const url = `${environment.apiBaseUrl}/entreprise-admin/users`;
     this.http.get(url).subscribe({
@@ -229,6 +223,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
       error: (err) => console.error('Erreur chargement billing entreprise', err),
     });
   }
+
   /** Charger toutes les demandes de l'entreprise depuis l'API */
   loadAdminDemandes() {
     this.demandeService.getAdminDemandes().subscribe({
@@ -260,14 +255,13 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
   }
 
   inviterCollaborateur() {
-    if (this.inviteForm.invalid) return; // Sécurité supplémentaire
+    if (this.inviteForm.invalid) return;
 
-    // call api invite
     this.http.post(`${environment.apiBaseUrl}/entreprise-admin/inviter-collaborateur`, this.inviteForm.value).subscribe({
       next: (res: any) => {
         this.showToast(res.message, 'var(--green)');
         this.showInviteModal.set(false);
-        this.inviteForm.reset(); // Remet le formulaire à zéro pour la prochaine fois
+        this.inviteForm.reset();
       },
       error: (err) => {
         this.showToast(err.error.message, 'var(--red)');
@@ -333,31 +327,32 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     const id = req.id;
     const body = { commentaireAdmin };
 
-    this.showToast(`Déploiement de ${req.name} en cours... Veuillez patienter.`, 'var(--blue)');
-    
-    // Fermeture immédiate du modal
+    // 1. Fermeture IMMÉDIATE du modal — l'utilisateur peut continuer à naviguer
     this.reviewAction.set(null);
     this.reviewRequestId.set(null);
     this.reviewJustification.set('');
 
+    // 2. Toast persistant « Provisionnement en cours » — ne disparaît pas automatiquement
+    this.showToast(`⏳ Provisionnement de « ${req.name} » en cours...`, 'var(--blue)', 0);
+
+    // 3. Appel API en arrière-plan — le provisionnement VMware peut durer 30-60 s
     this.http.patch(`${environment.apiBaseUrl}/demande/${id}/approuver`, body).subscribe({
       next: (response: any) => {
         this.loadBilling();
-
         this.resourceRequests.update(list =>
           list.map(r => r.id === id ? { ...r, status: 'approved', commentaireAdmin } : r)
         );
         this.pushActivity('approve', req.name);
-        this.showToast(`${req.name} déployé avec succès sur VMware`, 'var(--green)');
+        // Remplace le toast persistant par un toast de succès (4 s)
+        this.showToast(`✅ ${req.name} déployé avec succès sur VMware`, 'var(--green)', 4000);
       },
       error: (err) => {
         console.error('Erreur de déploiement :', err);
-
         this.resourceRequests.update(list =>
           list.map(r => r.id === id ? { ...r, status: 'rejected', commentaireAdmin } : r)
         );
-
-        this.showToast(`Échec : ${err.error?.message || 'Erreur ESXi'}`, 'var(--red)');
+        // Remplace le toast persistant par un toast d'erreur (5 s)
+        this.showToast(`❌ Échec : ${err.error?.message || 'Erreur ESXi'}`, 'var(--red)', 5000);
       }
     });
   }
@@ -436,7 +431,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     }
   }
 
-  /* â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* ── HELPERS ─────────────────────────────────────────────────────────────── */
   setDate() {
     this.currentDate.set(new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
   }
@@ -455,6 +450,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
       minute: '2-digit',
     });
   }
+
   getInitials(name: string): string {
     return (name || '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   }
@@ -484,12 +480,35 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     this.activities.update(list => [{ type, ...entry, time: "À l'instant" }, ...list]);
   }
 
-  showToast(msg: string, color = 'var(--green)') {
+  private _toastTimer: any = null;
+
+  /**
+   * Affiche un toast.
+   * @param msg      Message à afficher
+   * @param color    Couleur CSS (variable ou valeur directe)
+   * @param duration Durée en ms avant disparition automatique.
+   *                 Passer 0 pour un toast persistant (restera jusqu'au prochain showToast()).
+   */
+  showToast(msg: string, color = 'var(--green)', duration = 3500) {
+    // Annule le timer précédent si un toast est déjà affiché
+    if (this._toastTimer) {
+      clearTimeout(this._toastTimer);
+      this._toastTimer = null;
+    }
     this.toastMsg.set(msg);
     this.toastColor.set(color);
+    this.toastPersistent.set(duration === 0);
     this.isToastVisible.set(true);
-    setTimeout(() => this.isToastVisible.set(false), 3500);
+
+    if (duration > 0) {
+      this._toastTimer = setTimeout(() => {
+        this.isToastVisible.set(false);
+        this.toastPersistent.set(false);
+        this._toastTimer = null;
+      }, duration);
+    }
   }
+
   loadCurrentAdmin() {
     const url = `${environment.apiBaseUrl.replace(/\/$/, '')}/entreprise-admin/me`;
     this.http.get<any>(url).subscribe({
@@ -498,19 +517,5 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
       },
       error: (err) => console.error('Failed to load current admin', err)
     });
-
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

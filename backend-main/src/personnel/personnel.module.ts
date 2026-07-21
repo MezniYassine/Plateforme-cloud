@@ -3,14 +3,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PersonnelController } from './personnel.controller';
 import { PersonnelService } from './personnel.service';
 import { Personal } from 'src/entities/personal.entity';
-
-
+import { Demande } from 'src/demande/entities/demande.entity';
+import { Wallet } from 'src/entities/wallet.entity';
+import { Transaction } from 'src/entities/transaction.entity';
 
 @Module({
-  // On importe l'entité pour que TypeORM puisse injecter le "clientRepo" dans ton AdminService
-  imports: [TypeOrmModule.forFeature([Personal])],
+  imports: [TypeOrmModule.forFeature([Personal, Demande, Wallet, Transaction])],
   controllers: [PersonnelController],
   providers: [PersonnelService],
-  exports: [PersonnelService], // Utile si d'autres modules ont besoin de l'AdminService plus tard
+  exports: [PersonnelService],
 })
 export class PersonnelModule { }

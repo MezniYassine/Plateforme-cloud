@@ -1,6 +1,5 @@
 import { Injectable } from "@angular/core";
 
-/* â”€â”€ INTERFACES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export interface ResourceRequest {
     id: string; name: string; type: 'vm' | 'db' | 'saas';
     user: string; specs: string; cost: number; date: string;

@@ -1,11 +1,5 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { TeamMember, WalletTransaction } from '../../entreprise-helper.service';
-
-interface BudgetAlert {
-  label: string;
-  desc: string;
-  enabled: boolean;
-}
 
 @Component({
   selector: 'ent-billing-page',
@@ -16,11 +10,10 @@ interface BudgetAlert {
 export class BillingPageComponent {
   monthlySpend = input.required<number>();
   monthlyBudget = input.required<number>();
-  forecast = input.required<number>();
   budgetUsedPct = input.required<number>();
   transactions = input.required<WalletTransaction[]>();
   teamSpend = input.required<Array<Pick<TeamMember, 'name' | 'spend' | 'color'>>>();
-  budgetAlerts = input.required<BudgetAlert[]>();
+  rechargeWallet = output<void>();
 
   getInitials(name: string): string {
     return (name || '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();

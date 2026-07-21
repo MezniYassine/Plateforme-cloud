@@ -160,7 +160,7 @@
                         </div>
                         <div class="breakdown-bar-wrap">
                             <div class="breakdown-bar">
-                                <div class="breakdown-fill" [style.width]="(m.spend/monthlyBudget()*100)+'%'"
+                                <div class="breakdown-fill" [style.width]="(monthlyBudget() ? (m.spend/monthlyBudget()*100) : 0)+'%'"
                                     [style.background]="m.color"></div>
                             </div>
                         </div>
