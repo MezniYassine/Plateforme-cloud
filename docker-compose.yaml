@@ -1,5 +1,8 @@
 version: '3.8'
+
 services:
+
+  # ── Base de données ──────────────────────────────────────────────────────────
   db:
     image: postgres:15
     container_name: dynamix_db
@@ -7,11 +10,70 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: dynamix_cloud
+      POSTGRES_DB: dynamix_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend NestJS ───────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend-main
+      dockerfile: Dockerfile
+    container_name: dynamix_backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      # Base de données
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      DB_NAME: dynamix_db
+      # JWT
+      JWT_SECRET: dynamix-dev-secret
+      # Mail
+      MAILTRAP_TOKEN: 35068f7da05362c3757e0c6709fad362
+      ADMIN_GLOBAL_EMAIL: mezniiyassine@gmail.com
+      MAILTRAP_SANDBOX_USER: ae3ffd0bd91f2b
+      MAILTRAP_SANDBOX_PASS: 5421d14b41efff
+      # Google OAuth
+      GOOGLE_CLIENT_ID: "156979858693-3herj7u0crj9krihk1f9ibjiqom1m3tj.apps.googleusercontent.com"
+      GOOGLE_CLIENT_SECRET: "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"
+      GOOGLE_CALLBACK_URL: "http://localhost:3000/auth/google/callback"
+      # Microsoft OAuth
+      MICROSOFT_CLIENT_ID: "f884feb2-5aa6-43c2-9339-038b3d93b34f"
+      MICROSOFT_CLIENT_SECRET: "OJl8Q~793MpsozVvUxi5kLM7nMNm1OHDA32_tba8"
+      MICROSOFT_CALLBACK_URL: "http://localhost:3000/auth/microsoft/callback"
+      # ESXi
+      ESXI_HOST: 192.168.8.132
+      ESXI_USERNAME: root
+      ESXI_PASSWORD: "Pqsszord123+"
+
+  # ── Frontend Angular SSR ─────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend-client
+      dockerfile: Dockerfile
+    container_name: dynamix_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "4000:4000"
+    environment:
+      # Le SSR Angular appelle le backend en interne via le nom du service Docker
+      API_BASE_URL: http://backend:3000
 
 volumes:
   postgres_data:

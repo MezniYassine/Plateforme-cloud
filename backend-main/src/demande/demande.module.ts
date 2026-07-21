@@ -8,10 +8,13 @@ import { Catalogue } from 'src/catalogue/entities/catalogue.entity';
 import { EsxiService } from 'src/esxi/esxi.service';
 import { MachineVirtuelle } from 'src/entities/machineVirtuelle.entity';
 import { HttpModule } from '@nestjs/axios';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Demande, Client, Catalogue, MachineVirtuelle]), HttpModule
+    TypeOrmModule.forFeature([Demande, Client, Catalogue, MachineVirtuelle]),
+    HttpModule,
+    MailModule,
   ],
   controllers: [DemandeController],
   providers: [DemandeService, EsxiService],

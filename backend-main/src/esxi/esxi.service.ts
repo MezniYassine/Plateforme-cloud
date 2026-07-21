@@ -82,7 +82,6 @@ export class EsxiService {
      */
     async getVms(): Promise<any[]> {
         try {
-            this.logger.log('Navigation dans le PropertyCollector via SOAP...');
 
             const propertyCollector =
                 this.vsphereClient.serviceContent.propertyCollector;
@@ -206,7 +205,7 @@ export class EsxiService {
 
                 const id = this.unwrapSoapValue(obj.obj?.value ?? obj.obj);
 
-                this.logger.debug(`VM [${name}] id=${id} state=${state} ip=${ipAddress ?? 'null (VMware Tools non prêts?)'}`);
+                // this.logger.debug(`VM [${name}] id=${id} state=${state} ip=${ipAddress ?? 'null (VMware Tools non prêts?)'}`);
 
                 return {
                     id,
@@ -217,7 +216,7 @@ export class EsxiService {
                 };
             });
 
-            this.logger.log(`✅ ${vms.length} VMs récupérées !`);
+            // this.logger.log(`✅ ${vms.length} VMs récupérées !`);
             return vms;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -226,16 +225,27 @@ export class EsxiService {
         }
     }
 
-    private runVsphereCommand(
+    private async runVsphereCommand(
         command: string,
         args: Record<string, unknown>,
+        retryCount = 0
     ): Promise<unknown> {
-        return new Promise((resolve, reject) => {
-            this.vsphereClient
-                .runCommand(command, args)
-                .once('result', resolve)
-                .once('error', reject);
-        });
+        try {
+            return await new Promise((resolve, reject) => {
+                this.vsphereClient
+                    .runCommand(command, args)
+                    .once('result', resolve)
+                    .once('error', reject);
+            });
+        } catch (error: any) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            if (retryCount === 0 && errorMsg.includes('NotAuthenticated')) {
+                this.logger.warn('Session ESXi expirée. Reconnexion automatique en cours...');
+                this.initializeVsphereClient();
+                return this.runVsphereCommand(command, args, retryCount + 1);
+            }
+            throw error;
+        }
     }
 
     private unwrapSoapValue(value: any): any {
@@ -733,10 +743,15 @@ export class EsxiService {
             return;
         }
 
+        // Attendre 3 s pour laisser ESXi finaliser l'enregistrement de la VM
+        // avant d'interroger ses périphériques (évite key=0 juste après le clonage)
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
         const vmRef = await this.findMoRefByName('VirtualMachine', vmName);
 
         if (!vmRef) {
-            throw new Error(`VM "${vmName}" introuvable pour redimensionner le stockage.`);
+            this.logger.warn(`VM "${vmName}" introuvable pour redimensionner le stockage — ignoré.`);
+            return;
         }
 
         const deviceChange = await this.buildStorageDeviceChange(vmRef, requestedStorageGB);
@@ -745,12 +760,18 @@ export class EsxiService {
             return;
         }
 
-        const reconfigResult: any = await this.runVsphereCommand('ReconfigVM_Task', {
-            _this: vmRef,
-            spec: { deviceChange },
-        });
-
-        await this.waitForTaskCompletion(reconfigResult?.returnval);
+        try {
+            const reconfigResult: any = await this.runVsphereCommand('ReconfigVM_Task', {
+                _this: vmRef,
+                spec: { deviceChange },
+            });
+            await this.waitForTaskCompletion(reconfigResult?.returnval);
+            this.logger.log(`✅ Stockage de "${vmName}" redimensionné à ${requestedStorageGB} GB.`);
+        } catch (error) {
+            // Ne pas bloquer tout le provisionnement si seul le resize échoue
+            const message = error instanceof Error ? error.message : String(error);
+            this.logger.warn(`⚠️ Redimensionnement du stockage de "${vmName}" échoué (${message}) — la VM est provisionnée mais avec le stockage du template.`);
+        }
     }
 
     private async buildStorageDeviceChange(vmRef: any, storageGB?: number): Promise<any[]> {
@@ -763,11 +784,15 @@ export class EsxiService {
         const disk = await this.getPrimaryVirtualDisk(vmRef);
 
         if (!disk) {
-            throw new Error("Impossible de trouver le disque virtuel à redimensionner.");
+            this.logger.warn('Aucun disque virtuel trouvé pour redimensionnement — ignoré.');
+            return [];
         }
 
         const currentCapacityKB = Number(this.unwrapSoapValue(disk.capacityInKB));
         const requestedCapacityKB = Math.round(requestedStorageGB * 1024 * 1024);
+
+        // Log le disque brut pour faciliter le debug futur
+        this.logger.debug(`Disque primaire trouvé: key=${JSON.stringify(disk.key)}, capacityInKB=${JSON.stringify(disk.capacityInKB)}, type=${disk.attributes?.['xsi:type'] ?? 'inconnu'}`);
 
         if (Number.isFinite(currentCapacityKB) && requestedCapacityKB <= currentCapacityKB) {
             this.logger.log(
@@ -777,18 +802,24 @@ export class EsxiService {
         }
 
         const updatedDisk = JSON.parse(JSON.stringify(disk));
-        const diskKey = Number(this.unwrapSoapValue(updatedDisk.key));
+        // Unwrap et forcer en entier — la clé SOAP peut arriver sous forme { $value: "2000" }
+        const diskKey = parseInt(String(this.unwrapSoapValue(updatedDisk.key)), 10);
 
         if (!Number.isFinite(diskKey) || diskKey <= 0) {
-            throw new Error("Impossible de redimensionner le disque: clé VMware du disque invalide.");
+            this.logger.warn(`Clé disque VMware invalide (${diskKey}) — redimensionnement du stockage ignoré pour éviter l'erreur "Invalid operation for device '0'"`);
+            return [];
         }
 
         updatedDisk.key = diskKey;
         updatedDisk.capacityInKB = requestedCapacityKB;
+        // S'assurer que le type xsi est correctement défini (obligatoire pour ReconfigVM_Task)
         updatedDisk.attributes = {
             ...(updatedDisk.attributes ?? {}),
             'xsi:type': 'VirtualDisk',
         };
+        // Supprimer les champs qui peuvent invalider la requête SOAP sur ESXi standalone
+        delete updatedDisk.shares;
+        delete updatedDisk.storageIOAllocation;
 
         this.logger.log(`Stockage demandé: ${requestedStorageGB} GB (${updatedDisk.capacityInKB} KB), disque VMware key=${diskKey}`);
 

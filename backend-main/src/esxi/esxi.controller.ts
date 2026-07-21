@@ -8,6 +8,7 @@ import { Client } from 'src/entities/client.entity';
 import { Catalogue } from 'src/catalogue/entities/catalogue.entity';
 import { Repository } from 'typeorm';
 import { WalletService } from 'src/wallet/wallet.service';
+import { MailService } from 'src/mail/mail.service';
 
 import { IsString, IsNumber, IsOptional } from 'class-validator';
 
@@ -44,6 +45,7 @@ export class EsxiController {
     @InjectRepository(Catalogue)
     private readonly catalogueRepo: Repository<Catalogue>,
     private readonly walletService: WalletService,
+    private readonly mailService: MailService,
   ) { }
 
   @Get('test-connection')
@@ -298,6 +300,7 @@ export class EsxiController {
     newVmRecord.os = this.getOsNameFromTemplate(dto.templateName);
     newVmRecord.client = client;
     newVmRecord.catalogue = catalogue;
+    newVmRecord.prixMensuel = prixMensuel;
 
     const savedVm = await this.vmRepo.save(newVmRecord);
 
@@ -338,6 +341,19 @@ export class EsxiController {
             console.error(`⚠️ Impossible de débiter le wallet pour VM #${savedVm.id}:`, walletErr.message);
           }
         }
+
+        // ── EMAIL : Notifier le personnel que sa VM est prête ─────────────────
+        const specs = catalogue
+          ? `${catalogue.vcpu} vCPU · ${catalogue.ramMB} GB RAM · ${catalogue.stockageGB} GB SSD`
+          : `${dto.vCPU} vCPU · ${dto.ramGB} GB RAM · ${dto.storageGB ?? 20} GB SSD`;
+        this.mailService.sendProvisionningSuccesPersonnel({
+          userEmail: client.email,
+          userPrenom: client.prenom,
+          userNom: client.nom,
+          nomInstance: dto.name,
+          specs,
+          esxiRef: taskId ?? esxiName,
+        });
       })
       .catch(async (err) => {
         // Supprimer immédiatement la VM orpheline en cas d'échec de provisionnement

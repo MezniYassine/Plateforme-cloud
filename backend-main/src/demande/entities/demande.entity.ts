@@ -40,8 +40,11 @@ export class Demande {
     versionPaas?: string;
 
 
-    @ManyToOne(() => Catalogue, { eager: true })
-    catalogue!: Catalogue;
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0.00 })
+    prixMensuel!: number;
+
+    @ManyToOne(() => Catalogue, { nullable: true, eager: true, onDelete: 'SET NULL' })
+    catalogue?: Catalogue | null;
 
     @ManyToOne(() => Client)
     client!: Client;

@@ -23,6 +23,8 @@ import { DemandeModule } from './demande/demande.module';
 import { Wallet } from './entities/wallet.entity';
 import { Transaction } from './entities/transaction.entity';
 import { WalletModule } from './wallet/wallet.module';
+import { MailModule } from './mail/mail.module';
+
 
 @Module({
   imports: [
@@ -67,6 +69,7 @@ import { WalletModule } from './wallet/wallet.module';
     CatalogueModule,
     DemandeModule,
     WalletModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

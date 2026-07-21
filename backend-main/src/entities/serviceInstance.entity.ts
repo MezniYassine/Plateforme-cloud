@@ -22,6 +22,9 @@ export abstract class ServiceInstance {
   @CreateDateColumn()
   dateCreation!: Date;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0.00 })
+  prixMensuel!: number;
+
   @Column({ type: 'timestamp', nullable: true })
   dateProchaineFacturation!: Date | null;
 

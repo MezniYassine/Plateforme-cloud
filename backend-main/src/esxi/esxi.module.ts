@@ -10,11 +10,15 @@ import { Catalogue } from 'src/catalogue/entities/catalogue.entity';
 import { Wallet } from 'src/entities/wallet.entity';
 import { Transaction } from 'src/entities/transaction.entity';
 import { WalletModule } from 'src/wallet/wallet.module';
-
-
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Personal, MachineVirtuelle, Client, Catalogue, Wallet, Transaction]), HttpModule, forwardRef(() => WalletModule)],
+  imports: [
+    TypeOrmModule.forFeature([Personal, MachineVirtuelle, Client, Catalogue, Wallet, Transaction]),
+    HttpModule,
+    forwardRef(() => WalletModule),
+    MailModule,
+  ],
   controllers: [EsxiController],
   providers: [EsxiService],
   exports: [EsxiService],

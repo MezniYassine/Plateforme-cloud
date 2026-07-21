@@ -1,4 +1,4 @@
-﻿import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -111,7 +111,7 @@ export class EntrepriseService {
         });
 
         if (!admin || !admin.entreprise) {
-            throw new NotFoundException("Cet administrateur n'est rattachÃ© Ã  aucune entreprise.");
+            throw new NotFoundException("Cet administrateur n'est rattaché à aucune entreprise.");
         }
 
         const entrepriseId = admin.entreprise.id;
@@ -131,10 +131,9 @@ export class EntrepriseService {
         // Pour chaque user, calculer les stats
         const result = await Promise.all(users.map(async (u, index) => {
             // Nombre de VMs = services de type MachineVirtuelle
-            const vmCount = (u.services || []).filter(s => s['type'] === 'MachineVirtuelle').length;
-            const totalServices = (u.services || []).length;
+            const vmCount = (u.services || []).filter(s => s instanceof MachineVirtuelle || s['type'] === 'MachineVirtuelle' || s.constructor.name === 'MachineVirtuelle').length;
+            const otherServicesCount = (u.services || []).length - vmCount;
 
-            // Consommation mensuelle = somme des prix des demandes approuvÃ©es ce mois
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -148,7 +147,7 @@ export class EntrepriseService {
 
             const monthlySpend = approvedDemandes
                 .filter(d => new Date(d.dateDemande) >= startOfMonth)
-                .reduce((sum, d) => sum + (d.catalogue ? Number(d.catalogue.prix) : 0), 0);
+                .reduce((sum, d) => sum + Number(d.prixMensuel || 0), 0);
 
             return {
                 id: String(u.id),
@@ -158,7 +157,7 @@ export class EntrepriseService {
                 active: u.status === AccountStatus.APPROVED,
                 status: u.status,
                 vms: vmCount,
-                services: totalServices,
+                services: otherServicesCount,
                 spend: Math.round(monthlySpend * 100) / 100,
             };
         }));
@@ -227,7 +226,7 @@ export class EntrepriseService {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const debitThisMonth = approvedDemandes
             .filter((demande) => new Date(demande.dateDemande) >= startOfMonth)
-            .reduce((sum, demande) => sum + (demande.catalogue ? Number(demande.catalogue.prix) : 0), 0);
+            .reduce((sum, demande) => sum + Number(demande.prixMensuel || 0), 0);
         const creditTotal = walletTransactions
             .filter((transaction) => transaction.type === 'CREDIT')
             .reduce((sum, transaction) => sum + Number(transaction.montant), 0);
@@ -238,7 +237,7 @@ export class EntrepriseService {
             .forEach((demande) => {
                 const userId = demande.client?.id;
                 if (!userId) return;
-                spendByMember.set(userId, (spendByMember.get(userId) ?? 0) + (demande.catalogue ? Number(demande.catalogue.prix) : 0));
+                spendByMember.set(userId, (spendByMember.get(userId) ?? 0) + Number(demande.prixMensuel || 0));
             });
 
         const COLORS = ['#1a56e8', '#7c3aed', '#0ea5e9', '#16a34a', '#d97706', '#dc2626', '#0891b2', '#9333ea'];
@@ -249,7 +248,7 @@ export class EntrepriseService {
             memberName: demande.client ? `${demande.client.prenom} ${demande.client.nom}` : 'Membre inconnu',
             date: demande.dateDemande,
             type: 'debit' as const,
-            amount: demande.catalogue ? Number(demande.catalogue.prix) : 0,
+            amount: Number(demande.prixMensuel || 0),
         }));
 
         const creditTransactions = walletTransactions
@@ -293,7 +292,7 @@ export class EntrepriseService {
         });
 
         if (!admin || !admin.entreprise) {
-            throw new NotFoundException("Cet administrateur n'est rattachÃ© Ã  aucune entreprise.");
+            throw new NotFoundException("Cet administrateur n'est rattaché à aucune entreprise.");
         }
 
         const entrepriseId = admin.entreprise.id;
@@ -326,7 +325,7 @@ export class EntrepriseService {
             try {
                 await this.vmRepo.delete(f.id);
             } catch (err) {
-                console.error(`Impossible de nettoyer la VM en Ã©chec #${f.id} :`, err.message);
+                console.error(`Impossible de nettoyer la VM en échec #${f.id} :`, err.message);
             }
         }
 
@@ -353,7 +352,7 @@ export class EntrepriseService {
                 specs: vm.catalogue
                     ? `${vm.catalogue.vcpu ?? vm.vCPU} vCPU - ${vm.catalogue.ramMB ?? vm.ramGB} GB RAM - ${vm.catalogue.stockageGB ?? vm.stockageGB} GB SSD`
                     : `${vm.vCPU} vCPU - ${vm.ramGB} GB RAM - ${vm.stockageGB} GB SSD`,
-                cost: vm.catalogue ? Number(vm.catalogue.prix) : 0,
+                cost: Number(vm.prixMensuel || 0),
                 status: synced.status,
                 statusLabel,
                 ip: vm.ipAddress || null,
@@ -440,9 +439,9 @@ export class EntrepriseService {
     private getStatusLabel(status: ServiceStatus): string {
         const labels: Record<string, string> = {
             RUNNING: 'Running',
-            STOPPED: 'ArrÃªtÃ©e',
+            STOPPED: 'Arrêtée',
             PROVISIONING: 'Provisionnement...',
-            FAILED: 'Ã‰chec',
+            FAILED: 'Échec',
             AWAITING_PAYMENT: 'En attente paiement',
         };
         return labels[status] ?? status;

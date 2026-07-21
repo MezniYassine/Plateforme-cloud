@@ -15,6 +15,8 @@ import { RoleClient } from 'src/enum/role-client.enum';
 import { ServiceStatus } from 'src/enum/service-status.enum';
 import { EsxiService } from 'src/esxi/esxi.service';
 import { MachineVirtuelle } from 'src/entities/machineVirtuelle.entity';
+import { Wallet } from 'src/entities/wallet.entity';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class DemandeService {
@@ -31,10 +33,13 @@ export class DemandeService {
     private readonly esxiService: EsxiService,
 
     @InjectRepository(MachineVirtuelle) private readonly vmRepo: Repository<MachineVirtuelle>,
+
+    private readonly mailService: MailService,
   ) { }
 
   /**
    * Soumission d'une demande par un utilisateur entreprise (ENTREPRISE_USER)
+   * → Envoi email à l'admin entreprise
    */
   async create(clientId: number, dto: CreateDemandeDto): Promise<Demande> {
     // Vérifier que le client existe et est un ENTREPRISE_USER
@@ -72,10 +77,37 @@ export class DemandeService {
       versionPaas: dto.versionPaas,
       status: DemandeStatus.EN_ATTENTE,
       catalogue,
+      prixMensuel: Number(catalogue.prix),
       client,
     });
 
-    return this.demandeRepository.save(demande);
+    const saved = await this.demandeRepository.save(demande);
+
+    // ── EMAIL : Notifier l'admin entreprise de la nouvelle demande ──────────
+    if (client.entreprise) {
+      const admin = await this.clientRepository.findOne({
+        where: {
+          entreprise: { id: client.entreprise.id },
+          role: RoleClient.ENTREPRISE_ADMIN,
+        },
+      });
+
+      if (admin) {
+        const specs = `${catalogue.vcpu} vCPU · ${catalogue.ramMB} GB RAM · ${catalogue.stockageGB} GB SSD`;
+        this.mailService.sendNouvelleDemandeAdmin({
+          adminEmail: admin.email,
+          adminPrenom: admin.prenom,
+          userPrenom: client.prenom,
+          userNom: client.nom,
+          nomInstance: dto.nomInstanceSouhaite,
+          justification: dto.justification,
+          specs,
+          demandeId: saved.id,
+        });
+      }
+    }
+
+    return saved;
   }
 
   /**
@@ -206,8 +238,10 @@ export class DemandeService {
 
     return this.demandeRepository.save(demande);
   }
+
   /**
    * 1. BOUTON APPROUVER : Gestion du déploiement d'infrastructure
+   * → Email succès ou échec vers l'utilisateur à la fin du provisionnement
    */
   async approuver(id: number, adminId: number, commentaireAdmin?: string): Promise<Demande> {
     const demande = await this.demandeRepository.findOne({
@@ -227,6 +261,20 @@ export class DemandeService {
       );
     }
 
+    // VÉRIFICATION DU SOLDE (Budget de l'entreprise)
+    const adminWallet = await this.demandeRepository.manager.findOne(Wallet, {
+      where: { user: { id: adminId } }
+    });
+
+    const solde = adminWallet ? Number(adminWallet.solde) : 0;
+    const prixMensuelDemande = Number(demande.prixMensuel || 0);
+
+    if (solde < prixMensuelDemande) {
+      throw new BadRequestException(
+        `Budget disponible insuffisant. Votre solde actuel est de ${solde} DT, ce qui ne couvre pas le coût de ${prixMensuelDemande} DT pour cette nouvelle machine.`
+      );
+    }
+
     // VÉRIFICATION DU NOM (Éviter les conflits pour ce client spécifique)
     const nomS = demande.nomInstanceSouhaite;
     const clientId = demande.client.id;
@@ -234,21 +282,25 @@ export class DemandeService {
       where: { nomPersonnalise: nomS, client: { id: clientId } }
     });
     if (existingDbVm) {
-      // Si la VM existante est une orpheline (provisionnement précédent échoué),
-      // on la supprime silencieusement pour autoriser la ré-approbation.
       const isOrphan = existingDbVm.status === ServiceStatus.FAILED ||
         existingDbVm.status === ServiceStatus.PROVISIONING;
       if (isOrphan) {
         await this.vmRepo.delete(existingDbVm.id);
       } else {
-        // La VM est bien active (RUNNING / STOPPED) → conflit réel, on bloque.
         throw new BadRequestException(
           `Impossible d'approuver : le client possède déjà une machine active nommée "${nomS}".`
         );
       }
     }
 
-    // Variable pour suivre la VM créée en DB, afin de pouvoir la supprimer en cas d'échec
+    // Infos réutilisées pour les emails
+    const userEmail = demande.client.email;
+    const userPrenom = demande.client.prenom;
+    const userNom = demande.client.nom;
+    const specs = demande.catalogue
+      ? `${demande.catalogue.vcpu} vCPU · ${demande.catalogue.ramMB} GB RAM · ${demande.catalogue.stockageGB} GB SSD`
+      : 'Spécifications non disponibles';
+
     let savedVm: MachineVirtuelle | null = null;
 
     try {
@@ -256,11 +308,12 @@ export class DemandeService {
       const nouvelleVM = this.vmRepo.create({
         nomPersonnalise: demande.nomInstanceSouhaite,
         status: ServiceStatus.PROVISIONING,
-        vCPU: demande.catalogue.vcpu,
-        ramGB: demande.catalogue.ramMB,
-        stockageGB: demande.catalogue.stockageGB,
+        vCPU: demande.catalogue?.vcpu || 0,
+        ramGB: demande.catalogue?.ramMB || 0,
+        stockageGB: demande.catalogue?.stockageGB || 0,
         os: demande.templateName,
         catalogue: demande.catalogue,
+        prixMensuel: Number(demande.prixMensuel),
         client: demande.client,
       });
       savedVm = await this.vmRepo.save(nouvelleVM);
@@ -272,9 +325,9 @@ export class DemandeService {
       const vmRefId = await this.esxiService.cloneAndReconfigure(
         demande.templateName,
         esxiName,
-        demande.catalogue.ramMB * 1024,
-        demande.catalogue.vcpu,
-        demande.catalogue.stockageGB,
+        (demande.catalogue?.ramMB || 0) * 1024,
+        demande.catalogue?.vcpu || 0,
+        demande.catalogue?.stockageGB || 0,
       );
 
       // 3. Mise à jour de la VM avec la référence
@@ -285,35 +338,44 @@ export class DemandeService {
       // C. Mise à jour de la demande
       demande.status = DemandeStatus.APPROUVEE;
       demande.commentaireAdmin = commentaireAdmin || "Demande acceptée et infrastructure déployée.";
+      const result = await this.demandeRepository.save(demande);
 
-      return await this.demandeRepository.save(demande);
+      // ── EMAIL SUCCÈS : notifier l'utilisateur que sa VM est prête ──────────
+      this.mailService.sendProvisionningSucces({
+        userEmail,
+        userPrenom,
+        userNom,
+        nomInstance: demande.nomInstanceSouhaite,
+        specs,
+        commentaireAdmin: demande.commentaireAdmin,
+      });
+
+      return result;
 
     } catch (error) {
-      // CORRECTION : Supprimer la VM orpheline créée en DB si le provisionnement ESXi a échoué.
-      // Sans cette suppression, l'utilisateur verrait une VM dans son tableau de bord
-      // même si sa demande a été rejetée suite à une erreur.
+      // Supprimer la VM orpheline créée en DB si le provisionnement ESXi a échoué
       if (savedVm && savedVm.id) {
         try {
           await this.vmRepo.delete(savedVm.id);
         } catch (deleteError) {
-          // Log silencieux — l'erreur principale reste prioritaire
           console.error(`[DemandeService] Impossible de supprimer la VM orpheline #${savedVm.id} :`, deleteError.message);
         }
       }
 
-      // En cas de panne de l'ESXi, la demande passe en échec automatiquement
-      demande.status = DemandeStatus.REJETEE;
-      demande.commentaireAdmin = `Échec de l'automatisation ESXi : ${error.message}`;
-      await this.demandeRepository.save(demande);
-      throw new BadRequestException(`Erreur critique lors du provisionnement : ${error.message}`);
+      // La demande reste en attente pour permettre à l'administrateur de réessayer
+      throw new BadRequestException(`Erreur technique lors du provisionnement ESXi (voir logs). La demande n'a pas été rejetée, vous pouvez réessayer.`);
     }
   }
 
   /**
    * 2. BOUTON REJETER : Annulation pure et simple de la requête
+   * → Email de refus vers l'utilisateur
    */
   async rejeter(id: number, adminId: number, commentaireAdmin: string): Promise<Demande> {
-    const demande = await this.demandeRepository.findOne({ where: { id } });
+    const demande = await this.demandeRepository.findOne({
+      where: { id },
+      relations: ['client'],
+    });
 
     if (!demande) throw new NotFoundException(`Demande ${id} introuvable.`);
     if (demande.status !== DemandeStatus.EN_ATTENTE) {
@@ -326,7 +388,17 @@ export class DemandeService {
 
     demande.status = DemandeStatus.REJETEE;
     demande.commentaireAdmin = commentaireAdmin;
+    const result = await this.demandeRepository.save(demande);
 
-    return await this.demandeRepository.save(demande);
+    // ── EMAIL REJET : notifier l'utilisateur que sa demande est refusée ──────
+    this.mailService.sendDemandeRejetee({
+      userEmail: demande.client.email,
+      userPrenom: demande.client.prenom,
+      nomInstance: demande.nomInstanceSouhaite,
+      motif: commentaireAdmin,
+    });
+
+    return result;
   }
 }
+

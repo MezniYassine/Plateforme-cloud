@@ -45,12 +45,12 @@ export class BillingScheduler {
 
     for (const vm of vmsActives) {
       try {
-        if (!vm.catalogue || !vm.client) {
-          this.logger.warn(`VM #${vm.id} sans catalogue ou client — ignorée`);
+        if (!vm.client) {
+          this.logger.warn(`VM #${vm.id} sans client — ignorée`);
           continue;
         }
 
-        const prix = Number(vm.catalogue.prix);
+        const prix = Number(vm.prixMensuel || 0);
         if (prix <= 0) continue;
 
         const clientId = vm.client.id;
@@ -76,7 +76,7 @@ export class BillingScheduler {
         await this.walletService.debiter(
           clientId,
           prix,
-          `Renouvellement mensuel VM: ${vm.nomPersonnalise} (${vm.catalogue.nomService})`,
+          `Renouvellement mensuel VM: ${vm.nomPersonnalise} (${vm.catalogue?.nomService || 'Offre catalogue'})`,
           vm.id,
         );
 
