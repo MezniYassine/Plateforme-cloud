@@ -8,10 +8,13 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
+import * as path from 'path';
 import { UsersService } from '../users/users.service';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 import { AccountStatus } from 'src/enum/account-status.enum';
+import { MFAStatus } from 'src/enum/mfa-status.enum';
 import { Repository } from 'typeorm';
 import { Admin } from 'src/entities/admin.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -182,7 +185,8 @@ export class AuthService {
     // --- SÉCURITÉ JWT ---
     const role = isGlobalAdmin ? 'GLOBAL_ADMIN' : user.role;
     const status = isGlobalAdmin ? 'APPROVED' : user.status;
-    const requiresMFA = isGlobalAdmin ? false : (user.mfaStatus === 'ACTIVE');
+    // Le MFA est requis pour TOUS les comptes (admin global inclus)
+    const requiresMFA = isGlobalAdmin ? true : (user.mfaStatus === 'ACTIVE');
 
     const payload = {
       sub: user.id,
@@ -193,6 +197,28 @@ export class AuthService {
     };
 
     const token = this.jwtService.sign(payload);
+
+    // Envoi automatique de l'OTP si MFA requis
+    if (requiresMFA) {
+      const otp = require('crypto').randomInt(100000, 999999).toString();
+      const expiry = new Date(Date.now() + 10 * 60 * 1000);
+      if (isGlobalAdmin) {
+        user.otpCode = otp;
+        user.otpExpiry = expiry;
+        await this.adminRepo.save(user);
+      } else {
+        user.otpCode = otp;
+        user.otpExpiry = expiry;
+        await this.clientRepo.save(user);
+      }
+      console.log(`🔑 [MFA OTP CODE] Code OTP généré pour ${user.email} : ${otp}`);
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: '🔐 Code de connexion sécurisé — Dynamix',
+        html: this.buildOtpEmail(user.prenom, otp),
+        attachments: [this.getLogoAttachment()],
+      }).catch(err => console.error('[Login MFA] Erreur envoi OTP Mailtrap:', err.message || err));
+    }
 
     return {
       requiresMFA,
@@ -208,13 +234,213 @@ export class AuthService {
     };
   }
 
-  // 4. Vérification MFA (Inchangé)
-  verifyMFA(code: string) {
-    if (!code || code.length !== 6) {
-      throw new BadRequestException('Invalid MFA code');
+  // ─── OTP MFA ──────────────────────────────────────────────────────────────
+
+  /** Génère et envoie un code OTP à l'email de l'utilisateur pour activer le MFA */
+  async sendMfaOtp(userId: number): Promise<{ ok: boolean; message: string }> {
+    const user = await this.clientRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Utilisateur introuvable');
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000); // expire dans 10 min
+
+    user.otpCode = otp;
+    user.otpExpiry = expiry;
+    await this.clientRepo.save(user);
+
+    console.log(`🔑 [PROFILE MFA OTP] Code OTP généré pour ${user.email} : ${otp}`);
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: '🔐 Votre code de vérification MFA — Dynamix',
+      html: this.buildOtpEmail(user.prenom, otp),
+      attachments: [this.getLogoAttachment()],
+    }).catch(err => console.error('[MFA] Erreur envoi OTP Mailtrap:', err.message || err));
+
+    return { ok: true, message: 'Code OTP envoyé par email.' };
+  }
+
+  /** Vérifie le code OTP et active le MFA si correct */
+  async verifyAndActivateMfa(userId: number, code: string): Promise<{ ok: boolean; message: string }> {
+    const user = await this.clientRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Utilisateur introuvable');
+
+    if (!user.otpCode || !user.otpExpiry) {
+      throw new BadRequestException('Aucun code OTP en attente. Veuillez en demander un nouveau.');
     }
-    const token = this.jwtService.sign({ mfaVerified: true });
+    if (new Date() > user.otpExpiry) {
+      throw new BadRequestException('Code OTP expiré. Veuillez en demander un nouveau.');
+    }
+    if (user.otpCode !== code.trim()) {
+      throw new UnauthorizedException('Code OTP incorrect.');
+    }
+
+    user.mfaStatus = MFAStatus.ACTIVE;
+    user.otpCode = null;
+    user.otpExpiry = null;
+    await this.clientRepo.save(user);
+
+    return { ok: true, message: 'MFA activé avec succès.' };
+  }
+
+  /** Envoie un OTP de connexion (renvoyer) - gère admin global ET clients */
+  async sendLoginMfaOtp(email: string): Promise<{ ok: boolean; message: string }> {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Cherche d'abord dans les admins globaux
+    const admin = await this.adminRepo.findOne({ where: { email: normalizedEmail } });
+    if (admin) {
+      const otp = crypto.randomInt(100000, 999999).toString();
+      const expiry = new Date(Date.now() + 10 * 60 * 1000);
+      admin.otpCode = otp;
+      admin.otpExpiry = expiry;
+      await this.adminRepo.save(admin);
+      console.log(`🔑 [RESEND ADMIN OTP] Code OTP pour ${admin.email} : ${otp}`);
+      await this.mailerService.sendMail({
+        to: admin.email,
+        subject: '🔐 Code de connexion sécurisé — Dynamix',
+        html: this.buildOtpEmail(admin.prenom, otp),
+        attachments: [this.getLogoAttachment()],
+      }).catch(err => console.error('[MFA Admin] Erreur envoi OTP Mailtrap:', err.message || err));
+      return { ok: true, message: 'Code OTP envoyé.' };
+    }
+
+    // Sinon cherche dans les clients
+    const user = await this.clientRepo.findOne({ where: { email: normalizedEmail } });
+    if (!user) return { ok: true, message: 'Code envoyé si le compte existe.' };
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000);
+    user.otpCode = otp;
+    user.otpExpiry = expiry;
+    await this.clientRepo.save(user);
+
+    console.log(`🔑 [RESEND LOGIN OTP] Code OTP pour ${user.email} : ${otp}`);
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: '🔐 Code de connexion sécurisé — Dynamix',
+      html: this.buildOtpEmail(user.prenom, otp),
+      attachments: [this.getLogoAttachment()],
+    }).catch(err => console.error('[MFA Login] Erreur envoi OTP Mailtrap:', err.message || err));
+
+    return { ok: true, message: 'Code OTP de connexion envoyé.' };
+  }
+
+
+  /** Vérifie le code OTP lors du login MFA et retourne le vrai JWT */
+  async verifyMFA(code: string, email?: string): Promise<{ token: string }> {
+    if (!email) throw new BadRequestException('Email requis.');
+    if (!code || code.length !== 6) throw new BadRequestException('Code OTP invalide.');
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Cherche d'abord dans les admins globaux
+    const admin = await this.adminRepo.findOne({ where: { email: normalizedEmail } });
+    if (admin) {
+      if (!admin.otpCode || !admin.otpExpiry) {
+        throw new BadRequestException('Aucun code OTP en attente.');
+      }
+      if (new Date() > admin.otpExpiry) {
+        throw new BadRequestException('Code OTP expiré.');
+      }
+      if (admin.otpCode !== code.trim()) {
+        throw new UnauthorizedException('Code OTP incorrect.');
+      }
+      admin.otpCode = null;
+      admin.otpExpiry = null;
+      await this.adminRepo.save(admin);
+
+      const payload = { sub: admin.id, email: admin.email, role: 'GLOBAL_ADMIN', status: 'APPROVED' };
+      return { token: this.jwtService.sign(payload) };
+    }
+
+    // Sinon cherche dans les clients
+    const user = await this.clientRepo.findOne({
+      where: { email: normalizedEmail },
+      relations: ['entreprise'],
+    });
+    if (!user) throw new UnauthorizedException('Utilisateur introuvable.');
+
+    if (!user.otpCode || !user.otpExpiry) {
+      throw new BadRequestException('Aucun code OTP en attente.');
+    }
+    if (new Date() > user.otpExpiry) {
+      throw new BadRequestException('Code OTP expiré.');
+    }
+    if (user.otpCode !== code.trim()) {
+      throw new UnauthorizedException('Code OTP incorrect.');
+    }
+
+    user.otpCode = null;
+    user.otpExpiry = null;
+    await this.clientRepo.save(user);
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      entrepriseId: user.entreprise ? user.entreprise.id : null,
+    };
+    const token = this.jwtService.sign(payload);
     return { token };
+  }
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+  private getLogoAttachment() {
+    return {
+      filename: 'logo.png',
+      path: path.join(__dirname, '..', 'assets', 'logo.png'),
+      cid: 'logo_dynamix',
+    };
+  }
+
+  private buildOtpEmail(prenom: string, otp: string): string {
+    return `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Code OTP</title></head>
+<body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:32px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);padding:32px 40px;text-align:center;">
+            <div style="font-size:42px;margin-bottom:10px;">🔐</div>
+            <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">Vérification en deux étapes</h1>
+            <p style="margin:8px 0 0;color:rgba(255,255,255,0.8);font-size:13px;">Dynamix Cloud · Sécurité</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#0f172a;">Bonjour <strong>${prenom}</strong>,</p>
+            <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.6;">
+              Voici votre code de vérification à usage unique. Il expire dans <strong>10 minutes</strong>.
+            </p>
+            <div style="text-align:center;margin:28px 0;">
+              <div style="display:inline-block;background:#eff6ff;border:2px dashed #2563eb;border-radius:14px;padding:18px 36px;">
+                <span style="font-size:36px;font-weight:800;letter-spacing:10px;color:#1d4ed8;font-family:monospace;">${otp}</span>
+              </div>
+            </div>
+            <p style="margin:0 0 16px;font-size:13px;color:#64748b;text-align:center;">
+              N'entrez ce code que sur le site officiel de Dynamix. Ne le partagez jamais.
+            </p>
+            <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
+            <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
+              Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:18px 40px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2025 Dynamix Cloud · Email automatique</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
   }
 
   async forgotPassword(email: string) {

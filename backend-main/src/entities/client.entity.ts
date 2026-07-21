@@ -43,6 +43,13 @@ export class Client {
   @Column({ type: 'enum', enum: MFAStatus, default: MFAStatus.DESACTIVE })
   mfaStatus!: MFAStatus;
 
+  // OTP pour la vérification MFA par email
+  @Column({ type: 'varchar', nullable: true })
+  otpCode!: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  otpExpiry!: Date | null;
+
   @CreateDateColumn()
   dateInscrit!: Date;
 

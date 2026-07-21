@@ -69,6 +69,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
   adminEmail = computed(() => this.actualAdmin()?.email ?? '');
   companyName = computed(() => this.actualAdmin()?.entreprise?.nomEntreprise ?? '');
   companyTaxId = computed(() => this.actualAdmin()?.entreprise?.identifiantFiscal ?? '');
+  adminMfaStatus = computed(() => (this.actualAdmin() as any)?.mfaStatus ?? 'DESACTIVE');
 
   /* WALLET & BUDGET */
   walletBalance = signal<number>(0);

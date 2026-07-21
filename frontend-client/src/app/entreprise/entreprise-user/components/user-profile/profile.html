@@ -1,4 +1,4 @@
-﻿<div style="max-width:540px">
+<div style="max-width:540px">
     <div class="section-card" style="margin-bottom:16px">
         <form [formGroup]="profileForm" (ngSubmit)="onUpdate()">
             <div class="card-header">
@@ -41,16 +41,73 @@
         </div>
         <div style="padding:14px 22px;display:flex;flex-direction:column;gap:10px">
 
-            <div
-                style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
-                <div>
-                    <div style="font-size:13.5px;font-weight:600">Authentification MFA</div>
-                    <div style="font-size:12px;color:var(--text-muted)">Protégez votre compte avec un code TOTP
+            <!-- === Section MFA === -->
+            <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
+
+                <!-- En-tête MFA -->
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px">
+                    <div>
+                        <div style="font-size:13.5px;font-weight:600">Authentification MFA</div>
+                        <div style="font-size:12px;color:var(--text-muted)">
+                            @if (mfaStatus === 'ACTIVE') {
+                                <span style="color:#16a34a;font-weight:600">● Activée</span> — Compte protégé par OTP email
+                            } @else {
+                                Protégez votre compte avec un code envoyé par email
+                            }
+                        </div>
                     </div>
+                    @if (mfaStatus !== 'ACTIVE' && mfaStep === 'idle') {
+                        <button class="btn-sm primary" type="button" (click)="activateMfa()" [disabled]="mfaLoading">
+                            {{ mfaLoading ? 'Envoi...' : 'Activer' }}
+                        </button>
+                    }
+                    @if (mfaStatus === 'ACTIVE') {
+                        <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:20px;padding:3px 10px">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            Activé
+                        </span>
+                    }
                 </div>
-                <button class="btn-sm primary" type="button">Activer</button>
+
+                <!-- Zone OTP -->
+                @if (mfaStep === 'otp-sent') {
+                <div style="border-top:1px solid var(--border);padding:14px;background:#f8fafc">
+                    <div style="font-size:13px;color:#475569;margin-bottom:10px">
+                        📧 Un code à <strong>6 chiffres</strong> a été envoyé à votre adresse email. Saisissez-le ci-dessous :
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <input
+                            type="text"
+                            maxlength="6"
+                            placeholder="000000"
+                            [(ngModel)]="otpCode"
+                            style="font-size:20px;font-weight:700;letter-spacing:6px;width:140px;text-align:center;padding:10px 12px;border:2px solid #2563eb;border-radius:8px;font-family:monospace;outline:none"
+                        >
+                        <button class="btn-sm primary" type="button" (click)="verifyOtp()" [disabled]="mfaLoading || otpCode.length < 6">
+                            {{ mfaLoading ? 'Vérification...' : 'Valider' }}
+                        </button>
+                        <button class="btn-sm" type="button" (click)="resendOtp()" [disabled]="mfaLoading">Renvoyer</button>
+                        <button class="btn-sm" type="button" (click)="cancelMfa()">Annuler</button>
+                    </div>
+                    @if (mfaError) {
+                        <div style="margin-top:10px;font-size:12px;color:#dc2626;display:flex;align-items:center;gap:6px">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            {{ mfaError }}
+                        </div>
+                    }
+                </div>
+                }
+
+                <!-- Succès -->
+                @if (mfaStep === 'success') {
+                <div style="border-top:1px solid #bbf7d0;padding:10px 14px;background:#f0fdf4;display:flex;align-items:center;gap:8px">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+                    <span style="font-size:13px;color:#16a34a;font-weight:600">MFA activé avec succès ! Votre compte est maintenant protégé.</span>
+                </div>
+                }
             </div>
 
+            <!-- Changer mot de passe -->
             <div
                 style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
                 <div>
@@ -66,4 +123,22 @@
 
         </div>
     </div>
+</div>
+
+<!-- ══ GLOBAL TOAST ══ -->
+<div class="global-toast" [class.show]="showToast" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
+  <div class="toast-icon">
+    @if (toastType === 'success') {
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    } @else {
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    }
+  </div>
+  <span>{{ toastMessage }}</span>
 </div>

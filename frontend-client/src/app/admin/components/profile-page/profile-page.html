@@ -1,4 +1,4 @@
-﻿<div style="max-width:640px">
+<div style="max-width:640px">
   <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()">
     <div class="section-card" style="margin-bottom:16px">
       <div class="card-header">
@@ -44,12 +44,17 @@
     <div style="padding:16px 22px;display:flex;flex-direction:column;gap:10px">
 
       <div
-        style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
+        style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#f0fdf4">
         <div>
           <div style="font-size:13.5px;font-weight:600">Authentification MFA</div>
-          <div style="font-size:12px;color:var(--text-muted)">TOTP actif - Google Authenticator</div>
+          <div style="font-size:12px;color:#16a34a;font-weight:500">
+            ● Toujours active — Un code OTP est envoyé par email à chaque connexion
+          </div>
         </div>
-        <button type="button" class="btn-sm">Reconfigurer</button>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#16a34a;background:#dcfce7;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          Activé
+        </span>
       </div>
 
       <div
@@ -73,5 +78,22 @@
     </div>
   </div>
 
+<!-- ══ GLOBAL TOAST ══ -->
+<div class="global-toast" [class.show]="showToast" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
+  <div class="toast-icon">
+    @if (toastType === 'success') {
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    } @else {
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    }
+  </div>
+  <span>{{ toastMessage }}</span>
+</div>
 
 </div>

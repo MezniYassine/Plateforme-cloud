@@ -22,4 +22,11 @@ export class Admin {
 
     @Column({ type: 'simple-array', nullable: true })
     providerIds?: string[];
+
+    // OTP pour la vérification MFA par email
+    @Column({ type: 'varchar', nullable: true })
+    otpCode!: string | null;
+
+    @Column({ type: 'timestamp', nullable: true })
+    otpExpiry!: Date | null;
 }

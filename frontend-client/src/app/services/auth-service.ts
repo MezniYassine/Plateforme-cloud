@@ -35,10 +35,36 @@ export class AuthService {
     });
   }
 
-  verifyMFA(code: string) {
-    return this.http.post<MfaResponse>(`${this.base}/auth/mfa/verify`, { code }, {
+  verifyMFA(code: string, email: string) {
+    return this.http.post<MfaResponse>(`${this.base}/auth/mfa/verify`, { code, email }, {
       headers: this.jsonHeaders,
     });
+  }
+
+  sendMfaOtp() {
+    const token = localStorage.getItem('access_token') ?? '';
+    return this.http.post<{ ok: boolean; message: string }>(
+      `${this.base}/auth/mfa/send-otp`,
+      {},
+      { headers: this.jsonHeaders.set('Authorization', `Bearer ${token}`) }
+    );
+  }
+
+  verifyAndActivateMfa(code: string) {
+    const token = localStorage.getItem('access_token') ?? '';
+    return this.http.post<{ ok: boolean; message: string }>(
+      `${this.base}/auth/mfa/verify-activate`,
+      { code },
+      { headers: this.jsonHeaders.set('Authorization', `Bearer ${token}`) }
+    );
+  }
+
+  sendLoginMfaOtp(email: string) {
+    return this.http.post<{ ok: boolean; message: string }>(
+      `${this.base}/auth/mfa/login-send-otp`,
+      { email },
+      { headers: this.jsonHeaders }
+    );
   }
 
   forgotPassword(email: string) {

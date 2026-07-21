@@ -1,20 +1,19 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ChangePasswordModalComponent } from '../../../common/change-password';
 import { environment } from '../../../../environments/environment';
 
 @Component({
-  selector: 'app-profile-page', // Assure-toi que le sélecteur correspond à ton routing
+  selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ChangePasswordModalComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ChangePasswordModalComponent],
   templateUrl: './profile-page.html',
 })
 export class ProfilePageComponent implements OnInit {
-  // On reçoit l'admin global depuis le composant parent ou le helper
   @Input() actualAdmin: any | null = null;
-  role = "Global_Admin";
+  role = 'Global_Admin';
   showPasswordModal = false;
   profileForm!: FormGroup;
 
@@ -22,7 +21,6 @@ export class ProfilePageComponent implements OnInit {
   private fb = inject(FormBuilder);
 
   ngOnInit() {
-    // Initialisation avec les données de actualAdmin
     this.profileForm = this.fb.group({
       prenom: [this.actualAdmin?.prenom || '', [Validators.required]],
       nom: [this.actualAdmin?.nom || '', [Validators.required]],
@@ -30,14 +28,27 @@ export class ProfilePageComponent implements OnInit {
     });
   }
 
+  toastMessage = '';
+  toastType: 'success' | 'error' = 'success';
+  showToast = false;
+
   onUpdateProfile() {
     if (this.profileForm.valid) {
       this.http.patch(`${environment.apiBaseUrl}/admin/update-profile`, this.profileForm.value)
         .subscribe({
-          next: () => alert('Profil Super Admin mis à jour !'),
-          error: (err) => alert(err.error.message || 'Erreur lors de la mise à jour')
+          next: () => this.showToastMessage('Profil Super Admin mis à jour avec succès', 'success'),
+          error: (err) => this.showToastMessage(err.error.message || 'Erreur lors de la mise à jour', 'error')
         });
     }
+  }
+
+  showToastMessage(msg: string, type: 'success' | 'error') {
+    this.toastMessage = msg;
+    this.toastType = type;
+    this.showToast = true;
+    setTimeout(() => {
+      this.showToast = false;
+    }, 4000);
   }
 
   getInitials(): string {

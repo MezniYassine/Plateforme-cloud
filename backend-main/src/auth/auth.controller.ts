@@ -8,11 +8,13 @@ import {
   Get,
   Req,
   Res,
+  Request,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import * as authService from './auth.service';
 import { GoogleAuthGuard } from './google-auth.guard';
 import { MicrosoftAuthGuard } from './microsoft-auth.guard';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -42,9 +44,31 @@ export class AuthController {
 
   @Post('mfa/verify')
   @HttpCode(HttpStatus.OK)
-  verifyMFA(@Body('code') code: string) {
-    console.log('MFA Code:', code);
-    return this.authService.verifyMFA(code);
+  verifyMFA(@Body('code') code: string, @Body('email') email: string) {
+    return this.authService.verifyMFA(code, email);
+  }
+
+  /** Envoi OTP pour activer le MFA depuis le profil (utilis. connecté) */
+  @UseGuards(JwtAuthGuard)
+  @Post('mfa/send-otp')
+  @HttpCode(HttpStatus.OK)
+  sendMfaOtp(@Request() req: any) {
+    return this.authService.sendMfaOtp(req.user.sub);
+  }
+
+  /** Vérification du code OTP et activation du MFA */
+  @UseGuards(JwtAuthGuard)
+  @Post('mfa/verify-activate')
+  @HttpCode(HttpStatus.OK)
+  verifyAndActivateMfa(@Request() req: any, @Body('code') code: string) {
+    return this.authService.verifyAndActivateMfa(req.user.sub, code);
+  }
+
+  /** Envoi OTP lors du login si mfaStatus === ACTIVE */
+  @Post('mfa/login-send-otp')
+  @HttpCode(HttpStatus.OK)
+  sendLoginMfaOtp(@Body('email') email: string) {
+    return this.authService.sendLoginMfaOtp(email);
   }
 
   @Post('forgot-password')

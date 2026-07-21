@@ -176,7 +176,7 @@
 
             @if (activePage() === 'profile') {
             <ent-profile-page [adminNom]="adminNom()" [adminPrenom]="adminPrenom()" [adminEmail]="adminEmail()" [companyName]="companyName()"
-                [taxId]="companyTaxId()" (profileUpdated)="loadCurrentAdmin()" />
+                [taxId]="companyTaxId()" [mfaStatusInput]="adminMfaStatus()" (profileUpdated)="loadCurrentAdmin()" />
             }
         </div><!-- /content -->
     </div><!-- /main -->

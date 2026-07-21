@@ -216,18 +216,26 @@
       </svg>
     </div>
     <h3 class="mfa-title">Vérification MFA</h3>
-    <p class="mfa-sub">Entrez le code à 6 chiffres envoyé à votre application d'authentification.</p>
+    <p class="mfa-sub">Un code à 6 chiffres a été envoyé à votre adresse e-mail. Vérifiez votre boîte de réception.</p>
 
     <div class="otp-row">
-      <input class="otp-input" type="text" maxlength="1" id="otp1">
-      <input class="otp-input" type="text" maxlength="1" id="otp2">
-      <input class="otp-input" type="text" maxlength="1" id="otp3">
-      <input class="otp-input" type="text" maxlength="1" id="otp4">
-      <input class="otp-input" type="text" maxlength="1" id="otp5">
-      <input class="otp-input" type="text" maxlength="1" id="otp6">
+      <input class="otp-input" type="text" maxlength="1" id="otp1" (input)="onOtpInput($event, 1)" (paste)="onOtpPaste($event)">
+      <input class="otp-input" type="text" maxlength="1" id="otp2" (input)="onOtpInput($event, 2)" (paste)="onOtpPaste($event)">
+      <input class="otp-input" type="text" maxlength="1" id="otp3" (input)="onOtpInput($event, 3)" (paste)="onOtpPaste($event)">
+      <input class="otp-input" type="text" maxlength="1" id="otp4" (input)="onOtpInput($event, 4)" (paste)="onOtpPaste($event)">
+      <input class="otp-input" type="text" maxlength="1" id="otp5" (input)="onOtpInput($event, 5)" (paste)="onOtpPaste($event)">
+      <input class="otp-input" type="text" maxlength="1" id="otp6" (input)="onOtpInput($event, 6)" (paste)="onOtpPaste($event)">
     </div>
 
-    <button class="btn-verify" (click)="submitMFA()">Vérifier et se connecter</button>
+    @if (mfaError) {
+      <div style="margin-bottom:14px;font-size:13px;color:#dc2626;font-weight:500;">
+        {{ mfaError }}
+      </div>
+    }
+
+    <button class="btn-verify" (click)="submitMFA()" [disabled]="mfaLoading">
+      {{ mfaLoading ? 'Vérification...' : 'Vérifier et se connecter' }}
+    </button>
     <p class="mfa-resend">Vous n'avez pas reçu le code ? <a (click)="resetMFA()">Renvoyer</a></p>
   </div>
 </div>

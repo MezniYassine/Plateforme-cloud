@@ -12,6 +12,8 @@ import { AuthService } from '../services/auth-service';
 })
 export class LoginComponent implements OnInit {
   pendingRole = '';
+  pendingEmail = '';
+  pendingStatus = '';
   showMFA = false;
   isLoading = false;
   forgotMode = false;
@@ -39,26 +41,32 @@ export class LoginComponent implements OnInit {
 
   onLogin() {
     this.isLoading = true;
+    this.mfaError = '';
     const val = this.loginForm.getRawValue();
     this.auth.login({ email: val.email || '', password: val.password || '' })
       .subscribe({
         next: (res) => {
+          this.isLoading = false;
           if (res.requiresMFA) {
             this.pendingRole = res.user.role;
+            this.pendingEmail = res.user.email || val.email || '';
+            this.pendingStatus = res.user.status;
             this.showMFA = true;
+            setTimeout(() => {
+              (document.getElementById('otp1') as HTMLInputElement)?.focus();
+            }, 100);
           } else {
             this.saveTokenAndRedirect(res.token, res.user.role, res.user.status);
           }
         },
-        error: () => {
+        error: (err) => {
           this.isLoading = false;
-          this.errorMsg = 'Incorrect Email or password .';
+          this.errorMsg = err?.error?.message || 'Incorrect Email or password .';
           setTimeout(() => {
             this.errorMsg = '';
           }, 4000);
         }
       });
-    console.log(this.loginForm.value);
   }
 
   openForgotPassword() {
@@ -100,9 +108,41 @@ export class LoginComponent implements OnInit {
     });
   }
 
+  mfaError = '';
+  mfaLoading = false;
+
+  onOtpInput(event: any, index: number) {
+    const input = event.target as HTMLInputElement;
+    if (input.value && index < 6) {
+      const nextInput = document.getElementById(`otp${index + 1}`) as HTMLInputElement;
+      if (nextInput) nextInput.focus();
+    }
+  }
+
+  onOtpPaste(event: ClipboardEvent) {
+    event.preventDefault();
+    const pastedData = event.clipboardData?.getData('text')?.trim() || '';
+    if (pastedData.length === 6 && /^\d+$/.test(pastedData)) {
+      for (let i = 0; i < 6; i++) {
+        const input = document.getElementById(`otp${i + 1}`) as HTMLInputElement;
+        if (input) input.value = pastedData[i];
+      }
+      (document.getElementById('otp6') as HTMLInputElement)?.focus();
+    }
+  }
+
   onVerifyMFA(code: string) {
-    this.auth.verifyMFA(code).subscribe({
-      next: (res) => this.saveTokenAndRedirect(res.token, this.pendingRole),
+    this.mfaLoading = true;
+    this.mfaError = '';
+    this.auth.verifyMFA(code, this.pendingEmail).subscribe({
+      next: (res) => {
+        this.mfaLoading = false;
+        this.saveTokenAndRedirect(res.token, this.pendingRole, this.pendingStatus);
+      },
+      error: (err) => {
+        this.mfaLoading = false;
+        this.mfaError = err?.error?.message || 'Code OTP incorrect ou expiré.';
+      }
     });
   }
 
@@ -110,7 +150,11 @@ export class LoginComponent implements OnInit {
     const code = ['otp1', 'otp2', 'otp3', 'otp4', 'otp5', 'otp6']
       .map(id => (document.getElementById(id) as HTMLInputElement)?.value ?? '')
       .join('');
-    if (code.length === 6) this.onVerifyMFA(code);
+    if (code.length === 6) {
+      this.onVerifyMFA(code);
+    } else {
+      this.mfaError = 'Veuillez saisir les 6 chiffres du code.';
+    }
   }
 
   resetMFA() {
@@ -118,7 +162,14 @@ export class LoginComponent implements OnInit {
       const el = document.getElementById(id) as HTMLInputElement;
       if (el) el.value = '';
     });
+    this.mfaError = '';
     (document.getElementById('otp1') as HTMLInputElement)?.focus();
+    if (this.pendingEmail) {
+      this.auth.sendLoginMfaOtp(this.pendingEmail).subscribe({
+        next: () => alert('Un nouveau code OTP a été envoyé à votre adresse email.'),
+        error: (err) => this.mfaError = err?.error?.message || 'Erreur d\'envoi de l\'OTP.'
+      });
+    }
   }
 
   private saveTokenAndRedirect(token: string, role?: string, status?: string) {

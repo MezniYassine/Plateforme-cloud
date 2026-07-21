@@ -1,4 +1,4 @@
-﻿import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { FormBuilder, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../environments/environment';
@@ -34,7 +34,25 @@ import { HttpClient } from '@angular/common/http';
         <button type="button" class="btn-sm  btn " (click)="closeDialog.emit()">Annuler</button>
         <button type="submit" class="btn-sm primary btn btn-primary" [disabled]="pwForm.invalid">Vérifier et modifier</button>
       </div>
-    </form> 
+    </form>
+
+    <!-- ══ GLOBAL TOAST ══ -->
+    <div class="global-toast" [class.show]="showToast" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
+      <div class="toast-icon">
+        @if (toastType === 'success') {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        } @else {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        }
+      </div>
+      <span>{{ toastMessage }}</span>
+    </div>
   `,
   styles: [`
     .input{
@@ -63,6 +81,19 @@ export class ChangePasswordModalComponent {
     const confirmPassword = group.get('confirmPassword')?.value;
     return newPassword === confirmPassword ? null : { mismatch: true };
   }
+  toastMessage = '';
+  toastType: 'success' | 'error' = 'success';
+  showToast = false;
+
+  showToastMessage(msg: string, type: 'success' | 'error') {
+    this.toastMessage = msg;
+    this.toastType = type;
+    this.showToast = true;
+    setTimeout(() => {
+      this.showToast = false;
+    }, 4000);
+  }
+
   submit() {
     if (this.pwForm.valid) {
       const data = {
@@ -72,11 +103,11 @@ export class ChangePasswordModalComponent {
 
       this.updatePassword(data).subscribe({
         next: () => {
-          alert('Mot de passe mis à jour avec succès !');
-          this.closeDialog.emit();
+          this.showToastMessage('Mot de passe mis à jour avec succès !', 'success');
+          setTimeout(() => this.closeDialog.emit(), 2000); // Close after 2 seconds
         },
         error: (err) => {
-          alert(err.error.message || 'Erreur lors de la mise à jour');
+          this.showToastMessage(err.error.message || 'Erreur lors de la mise à jour', 'error');
         }
       });
     }
