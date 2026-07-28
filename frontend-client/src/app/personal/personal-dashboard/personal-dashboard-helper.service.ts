@@ -22,6 +22,31 @@ export interface VM {
   catalogName: string; createdAt: string | null;
 }
 
+export interface PaasInstance {
+  id: number;
+  nomPersonnalise: string;
+  prixMensuel: number | string;
+  status: string;
+  dateCreation: string;
+  typeSgbd: string;
+  dbUser?: string;
+  dbPassword?: string;
+  hostIp?: string;
+  port?: number;
+  connectionString?: string;
+  catalogue?: {
+    vcpu: number;
+    ramMB: number;
+    stockageGB: number;
+  };
+  metrics?: {
+    cpuUsage: string;
+    ramUsage: string;
+    ramPercentage: string;
+    usedStorageMb: number;
+  };
+}
+
 export interface VmCatalogue {
   id: number;
   nomService: string;
@@ -75,6 +100,7 @@ export interface ServiceItem {
   name: string; desc: string; icon: string; color: string; bg: string;
   price: string; specs: string[]; tag?: string; tagColor?: string;
   vcpu?: number; ramGB?: number; stockageGB?: number;
+  typeSgbd?: string;
 }
 
 export interface Invoice {
@@ -97,11 +123,22 @@ export class PersonalDashboardHelperService {
     return this.http.get<VmEntity[]>(`${this.base}/esxi/my-vms`);
   }
 
+  getMyPaas(clientId: number) {
+    return this.http.get<PaasInstance[]>(`${this.base}/paas/client/${clientId}`);
+  }
+
+  createPaas(payload: { nomPersonnalise: string; typeSgbd: string; clientId: number; catalogueId?: number }) {
+    return this.http.post(`${this.base}/paas/create`, payload);
+  }
+
+  deletePaas(id: number) {
+    return this.http.delete(`${this.base}/paas/${id}`);
+  }
+
   getVmTemplates() {
     return this.http.get<{ status: string; count: number; data: EsxiVm[] }>(`${this.base}/esxi/vms`);
   }
 
-  /* Catalog similar to entreprise */
   catalogTabs = signal([{ key: 'all', label: 'Tout' }, { key: 'vm', label: 'VM' }, { key: 'db', label: 'Bases' }, { key: 'saas', label: 'SaaS' }]);
   catalogFilter = signal<string>('all');
   catalogItems = signal<ServiceItem[]>([]);
@@ -242,15 +279,30 @@ export class PersonalDashboardHelperService {
     this.http.get<any[]>(`${this.base}/catalogue`).subscribe({
       next: (data) => {
         const items: ServiceItem[] = (data || []).map((cat: any) => {
-          const isVm = cat.type === 'vm' || cat.vcpu !== undefined || cat.ramMB !== undefined;
-          const icon = isVm ? 'vm' : (cat.type || 'saas');
-          const specs = cat.specs
+          const typeSrv = cat.typeService || (cat.type?.toUpperCase()) || 'SAAS';
+          const isVm = typeSrv === 'IAAS' || typeSrv === 'VM';
+          const isPaas = typeSrv === 'PAAS' || typeSrv === 'DB';
+
+          let icon = 'saas';
+          if (isVm) icon = 'vm';
+          else if (isPaas) {
+            const sgbd = (cat.typeSgbd || '').toLowerCase();
+            if (sgbd.includes('redis')) icon = 'redis';
+            else if (sgbd.includes('mongo')) icon = 'mongo';
+            else icon = 'db';
+          }
+
+          let specs = cat.specs
             ? (typeof cat.specs === 'string' ? cat.specs.split('·').map((s: string) => s.trim()) : cat.specs)
-            : [
+            : [];
+
+          if (specs.length === 0 && (isVm || cat.vcpu > 0 || cat.ramMB > 0 || cat.stockageGB > 0)) {
+            specs = [
               `${cat.vcpu || 0} vCPU`,
               `${cat.ramMB || 0} GB RAM`,
               `${cat.stockageGB || 0} GB SSD`
             ];
+          }
 
           return {
             id: cat.id !== undefined ? Number(cat.id) : undefined,
@@ -261,11 +313,12 @@ export class PersonalDashboardHelperService {
             bg: cat.bg || 'var(--blue-light)',
             price: String(cat.prix !== undefined ? cat.prix : (cat.price || '0.00')),
             specs: specs,
-            tag: cat.tag || (isVm ? 'IaaS' : undefined),
-            tagColor: cat.tagColor || (isVm ? 'var(--blue-l)' : undefined),
+            tag: cat.tag || (isVm ? 'IaaS' : (isPaas ? 'PaaS' : 'SaaS')),
+            tagColor: cat.tagColor || (isVm ? 'var(--blue-l)' : (isPaas ? 'var(--purple-l)' : 'var(--green-l)')),
             vcpu: Number(cat.vcpu ?? 0),
             ramGB: Number(cat.ramMB ?? 0),
             stockageGB: Number(cat.stockageGB ?? 0),
+            typeSgbd: cat.typeSgbd,
           };
         });
         this.catalogItems.set(items);
@@ -295,8 +348,7 @@ export class PersonalDashboardHelperService {
       next: (res) => {
         this.walletSolde.set(res.nouveauSolde);
         this.walletLoading.set(false);
-        // Toast is normally handled at component level or via a notification service
-        // For simplicity, we just log or alert if needed, or rely on UI updates
+        this.loadInvoices(); // Refresh transactions automatically
       },
       error: (err) => {
         this.walletLoading.set(false);
@@ -306,13 +358,17 @@ export class PersonalDashboardHelperService {
     });
   }
 
+  invoices = signal<Invoice[]>([]);
+
   loadInvoices(onDone?: (invoices: Invoice[]) => void) {
     this.http.get<Invoice[]>(`${this.base}/personal/billing`).subscribe({
       next: (data) => {
+        this.invoices.set(data);
         onDone?.(data);
       },
       error: (err) => {
         console.error('Failed to load invoices', err);
+        this.invoices.set([]);
         onDone?.([]);
       }
     });

@@ -109,7 +109,7 @@
                 </div>
                 <div class="req-info">
                     <div class="req-name">{{ r.name }}</div>
-                    <div class="req-meta">{{ r.user }} · {{ r.specs }} · {{ r.date }}</div>
+                    <div class="req-meta">{{ r.user }} @if(r.specs){ · {{ r.specs }} } · {{ r.date }}</div>
                 </div>
                 <div class="req-cost">{{ r.cost }} DT/mois</div>
                 @if (r.status === 'pending') {

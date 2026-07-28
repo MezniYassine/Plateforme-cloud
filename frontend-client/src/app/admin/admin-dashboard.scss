@@ -1,4 +1,4 @@
-﻿/* â”€â”€ FONTS â”€â”€ */
+/* â”€â”€ FONTS â”€â”€ */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 *,
@@ -1097,7 +1097,7 @@ tbody td {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .cat-icon svg {
@@ -1106,6 +1106,19 @@ tbody td {
   fill: none;
   stroke-width: 1.8;
   stroke-linecap: round;
+}
+
+.cat-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .cat-name {

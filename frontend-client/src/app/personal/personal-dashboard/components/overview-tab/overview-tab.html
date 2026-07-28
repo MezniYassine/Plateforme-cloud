@@ -1,4 +1,4 @@
-﻿<div class="stat-row">
+<div class="stat-row">
   <div class="stat-card">
     <div class="sc-top">
       <span class="sc-label">VMs actives</span>
@@ -14,7 +14,7 @@
   </div>
   <div class="stat-card">
     <div class="sc-top">
-      <span class="sc-label">Services PaaS</span>
+      <span class="sc-label">Services managés (PaaS)</span>
       <div class="sc-icon" style="background:var(--teal-l)">
         <svg viewBox="0 0 24 24" stroke="var(--teal)">
           <path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -22,12 +22,12 @@
         </svg>
       </div>
     </div>
-    <div class="sc-val">2</div>
-    <div class="sc-sub">PostgreSQL & Redis</div>
+    <div class="sc-val">{{ paasInstances().length }}</div>
+    <div class="sc-sub">Bases de données & outils</div>
   </div>
   <div class="stat-card">
     <div class="sc-top">
-      <span class="sc-label">Coût mensuel IaaS</span>
+      <span class="sc-label">Coût mensuel</span>
       <div class="sc-icon" style="background:var(--amber-l)">
         <svg viewBox="0 0 24 24" stroke="var(--amber)" fill="none" stroke-width="1.8" stroke-linecap="round">
           <line x1="12" y1="1" x2="12" y2="23" />
@@ -36,7 +36,7 @@
       </div>
     </div>
     <div class="sc-val">{{ totalSpend.toFixed(2) }}</div>
-    <div class="sc-sub">DT en cours</div>
+    <div class="sc-sub" style="font-size: 11px;">IaaS: {{ vmsSpend.toFixed(2) }} DT | PaaS: {{ paasSpend.toFixed(2) }} DT</div>
   </div>
   <div class="stat-card wallet-card">
     <div class="sc-top">
@@ -141,61 +141,29 @@
         <button class="btn btn-ghost" (click)="switchTab.emit('paas')">Voir tout</button>
       </div>
       <div style="padding:10px 12px 14px;display:flex;flex-direction:column;gap:8px">
+        @for (p of paasInstances(); track p.id) {
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm)">
           <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:30px;height:30px;background:var(--blue-l);border-radius:7px;display:flex;align-items:center;justify-content:center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round">
-                <ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-              </svg>
+            <div style="width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:#f5f3ff;">
+              @if (getIconForSgbd(p.typeSgbd) === 'db') {
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
+              } @else if (getIconForSgbd(p.typeSgbd) === 'redis') {
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
+              } @else if (getIconForSgbd(p.typeSgbd) === 'mongo') {
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><path d="M11 20c1.74 0 3-1.68 3-3.9 0-3.8-3-8.1-3-8.1s-3 4.3-3 8.1c0 2.22 1.26 3.9 3 3.9z" /><path d="M11 20c.4 1 .8 1.4 1 2M11 15v5"/></svg>
+              }
             </div>
             <div>
-              <div style="font-size:13px;font-weight:600">PostgreSQL 16</div>
-              <div style="font-size:11px;color:var(--text-3)">db.prod-01 à 4GB RAM</div>
+              <div style="font-size:13px;font-weight:600">{{ p.nomPersonnalise }}</div>
+              <div style="font-size:11px;color:var(--text-3)">{{ p.typeSgbd }} - {{ p.port }}</div>
             </div>
           </div>
-          <span class="badge running"><div class="badge-dot"></div>Running</span>
+          <span class="badge" [class]="p.status === 'RUNNING' ? 'running' : 'stopped'"><div class="badge-dot"></div>{{ p.status === 'RUNNING' ? 'Actif' : p.status }}</span>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm)">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:30px;height:30px;background:var(--red-l);border-radius:7px;display:flex;align-items:center;justify-content:center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-              </svg>
-            </div>
-            <div>
-              <div style="font-size:13px;font-weight:600">Redis Cache</div>
-              <div style="font-size:11px;color:var(--text-3)">cache.dev-01 à 1GB</div>
-            </div>
-          </div>
-          <span class="badge running"><div class="badge-dot"></div>Running</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Budget bar -->
-    <div class="sc">
-      <div class="sc-head"><div class="sc-title">Consommation & Solde</div></div>
-      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;justify-content:space-between;font-size:12.5px">
-          <span style="color:var(--text-2)">Coût mensuel VMs</span>
-          <span style="font-weight:600;color:var(--text-1)">{{ totalSpend.toFixed(2) }} DT</span>
-        </div>
-        <div style="height:8px;background:var(--bg-page);border-radius:4px;overflow:hidden;border:1px solid var(--border)">
-          <div [style.width.%]="totalSpend > 0 ? 100 : 0" style="height:100%;background:linear-gradient(90deg,var(--blue),#60a5fa);border-radius:4px"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-3)">
-          <span>Ressources actives</span>
-          <span style="color:var(--purple);font-weight:600">Dispo : {{ h.walletSolde().toFixed(2) }} {{ h.walletDevise() }}</span>
-        </div>
+        } @empty {
+          <div style="text-align: center; color: var(--text-3); font-size: 13px; padding: 20px 0;">Aucun service managé</div>
+        }
       </div>
     </div>
   </div>
 </div>
-
-
-
-
-
-
-
-

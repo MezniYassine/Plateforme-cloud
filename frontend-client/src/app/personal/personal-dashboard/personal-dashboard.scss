@@ -1,4 +1,4 @@
-﻿*,
+*,
 *::before,
 *::after {
     box-sizing: border-box;
@@ -1408,6 +1408,44 @@ body {
 .plan-grid::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: 2px
+}
+
+.sgbd-deploy-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.sgbd-deploy-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-white);
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-2);
+    font-family: inherit;
+    transition: border-color .18s, background .18s, box-shadow .18s, transform .15s;
+
+    &:hover {
+        border-color: var(--blue);
+        background: var(--blue-light, #eff6ff);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59,130,246,.12);
+    }
+
+    &.selected {
+        border-color: var(--blue);
+        background: var(--blue-light, #eff6ff);
+        color: var(--blue);
+        box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+    }
 }
 
 .plan-card {

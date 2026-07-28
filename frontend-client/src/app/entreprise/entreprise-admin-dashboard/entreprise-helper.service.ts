@@ -23,7 +23,7 @@ export interface TeamMember {
 export interface DeployedResource {
     id: string; name: string; type: 'vm' | 'db' | 'saas';
     owner: string; specs: string; cost: number;
-    ip?: string; url?: string; cpu?: number; ram?: number;
+    ip?: string; url?: string; cpu?: number; ram?: number; storage?: number;
     status?: string;
     statusLabel?: string;
     ownerColor?: string;

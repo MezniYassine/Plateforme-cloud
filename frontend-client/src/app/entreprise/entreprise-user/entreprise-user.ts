@@ -48,12 +48,14 @@ export class EntrepriseUserDashboard implements OnInit, OnDestroy {
     this.state.loadUserData();
     this.state.loadMyDemandes();
     this.state.loadMyVms();
+    this.state.loadMyServices();
     this.state.loadVmTemplates();
     this.state.loadCatalog();
 
     this.pollInterval = setInterval(() => {
       this.state.loadMyDemandes();
       this.state.loadMyVms();
+      this.state.loadMyServices();
     }, 4000);
   }
 

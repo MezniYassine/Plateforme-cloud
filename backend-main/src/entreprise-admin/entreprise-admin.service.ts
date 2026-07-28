@@ -13,6 +13,8 @@ import { EsxiService } from 'src/esxi/esxi.service';
 import { ServiceStatus } from 'src/enum/service-status.enum';
 import { Wallet } from 'src/entities/wallet.entity';
 import { Transaction } from 'src/entities/transaction.entity';
+import { ServicePaaS } from 'src/entities/servicePaaS.entity';
+import { PaasService } from 'src/paas/paas.service';
 
 export interface InviteDto {
     nom: string;
@@ -37,7 +39,10 @@ export class EntrepriseService {
         private readonly walletRepo: Repository<Wallet>,
         @InjectRepository(Transaction)
         private readonly transactionRepo: Repository<Transaction>,
+        @InjectRepository(ServicePaaS)
+        private readonly paasRepo: Repository<ServicePaaS>,
         private readonly esxiService: EsxiService,
+        private readonly paasService: PaasService,
     ) { }
 
 
@@ -361,7 +366,52 @@ export class EntrepriseService {
             };
         }));
 
-        return results;
+        const paasServices = await this.paasRepo.find({
+            where: { client: { id: In(memberIds) } },
+            relations: ['catalogue', 'client'],
+            order: { dateCreation: 'DESC' },
+        });
+
+        const activePaas = paasServices.filter(p => p.status !== ServiceStatus.FAILED);
+        const paasResults = await Promise.all(activePaas.map(async paas => {
+            const owner = paas.client ? `${paas.client.prenom} ${paas.client.nom}` : 'Inconnu';
+            let cpuUse: number | null = null;
+            let ramUse: number | null = null;
+            let storage: number | null = null;
+
+            if (paas.status === ServiceStatus.RUNNING) {
+                try {
+                    const metrics = await this.paasService.getContainerMetrics(paas.id);
+                    if (metrics) {
+                        cpuUse = parseFloat(metrics.cpuUsage) || 0;
+                        ramUse = parseFloat(metrics.ramPercentage) || 0;
+                        storage = metrics.usedStorageMb || 0;
+                    }
+                } catch (e) {
+                    console.error('Erreur recup metrics pour paas', paas.id, e);
+                }
+            }
+
+            return {
+                id: `paas-${paas.id}`,
+                name: paas.nomPersonnalise,
+                type: 'db' as const,
+                owner,
+                ownerColor: paas.client ? (memberColorMap.get(paas.client.id) ?? '#94a3b8') : '#94a3b8',
+                specs: paas.catalogue 
+                    ? `${paas.typeSgbd || 'DB'} · ${paas.catalogue.vcpu} vCPU - ${paas.catalogue.ramMB} GB RAM - ${paas.catalogue.stockageGB} GB SSD` 
+                    : (paas.typeSgbd || 'POSTGRESQL'),
+                cost: Number(paas.prixMensuel || 0),
+                status: paas.status,
+                statusLabel: this.getStatusLabel(paas.status),
+                ip: paas.hostIp ? `${paas.hostIp}:${paas.port}` : null,
+                cpu: cpuUse,
+                ram: ramUse,
+                storage: storage,
+            };
+        }));
+
+        return [...results, ...paasResults];
     }
 
     /**

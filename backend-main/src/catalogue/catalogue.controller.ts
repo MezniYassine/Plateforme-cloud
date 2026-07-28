@@ -1,15 +1,14 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { CatalogueService } from './catalogue.service';
-import { CreateCatalogueDto } from './dto/create-catalogue.dto';
-import { UpdateCatalogueDto } from './dto/update-catalogue.dto';
+import { Catalogue } from './entities/catalogue.entity';
 
 @Controller('catalogue')
 export class CatalogueController {
   constructor(private readonly catalogueService: CatalogueService) {}
 
   @Post()
-  create(@Body() createCatalogue: CreateCatalogueDto) {
-    return this.catalogueService.create(createCatalogue);
+  create(@Body() body: Partial<Catalogue>) {
+    return this.catalogueService.create(body);
   }
 
   @Get()
@@ -23,8 +22,8 @@ export class CatalogueController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateCatalogueDto) {
-    return this.catalogueService.update(+id, dto);
+  update(@Param('id') id: string, @Body() body: Partial<Catalogue>) {
+    return this.catalogueService.update(+id, body);
   }
 
   @Delete(':id')

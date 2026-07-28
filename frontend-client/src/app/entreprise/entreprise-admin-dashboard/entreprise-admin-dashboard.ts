@@ -211,8 +211,8 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
         const solde = Number(data.solde ?? 0);
         this.walletBalance.set(solde);
         this.walletDevise.set(data.devise ?? 'DT');
-        this.monthlyBudget.set(solde);
         this.monthlySpend.set(Number(data.depenseMois ?? 0));
+        this.monthlyBudget.set(solde + this.monthlySpend());
         this.totalRecharge.set(Number(data.totalRecharge ?? 0));
         this.billingTeamSpend.set(data.teamSpend ?? []);
         this.walletTransactions.set((data.transactions ?? []).map(t => ({
@@ -232,17 +232,29 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
         const statusMap: Record<string, 'pending' | 'approved' | 'rejected'> = {
           EN_ATTENTE: 'pending', APPROUVEE: 'approved', REJETEE: 'rejected',
         };
-        const mapped: ResourceRequest[] = demandes.map(d => {
+        const mapped: ResourceRequest[] = demandes.map((d: any) => {
           const cat = d.catalogue;
-          const specs = cat ? `${cat.vcpu} vCPU - ${cat.ramMB} GB RAM - ${cat.stockageGB} GB SSD` : '';
+          let specs = cat ? `${cat.vcpu} vCPU - ${cat.ramMB} GB RAM - ${cat.stockageGB} GB SSD` : '';
+
+          let reqType: 'vm' | 'db' | 'saas' = 'vm';
+          if (cat) {
+            if (cat.typeService === 'PAAS') {
+              reqType = 'db';
+              const sgbd = d.typeSgbd || cat.typeSgbd || 'DB';
+              specs = `${sgbd} · ${specs}`;
+            } else if (cat.typeService === 'SAAS') {
+              reqType = 'saas';
+            }
+          }
+
           const user = d.client ? `${d.client.prenom} ${d.client.nom}` : 'Inconnu';
           return {
             id: String(d.id),
             name: d.nomInstanceSouhaite,
-            type: 'vm' as 'vm' | 'db' | 'saas',
+            type: reqType,
             user,
             specs,
-            cost: cat ? Number(cat.prix) : 0,
+            cost: Number(d.prixMensuel || 0),
             date: new Date(d.dateDemande).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
             justification: d.justification,
             commentaireAdmin: d.commentaireAdmin,
@@ -352,7 +364,6 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
         this.resourceRequests.update(list =>
           list.map(r => r.id === id ? { ...r, status: 'rejected', commentaireAdmin } : r)
         );
-        // Remplace le toast persistant par un toast d'erreur (5 s)
         this.showToast(`❌ Échec : ${err.error?.message || 'Erreur ESXi'}`, 'var(--red)', 5000);
       }
     });

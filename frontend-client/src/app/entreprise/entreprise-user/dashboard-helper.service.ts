@@ -25,6 +25,17 @@ export interface MyService {
   id: string; name: string; type: 'db' | 'saas';
   url: string; specs: string; cost: number;
   bg: string; color: string;
+  status?: string;
+  connectionString?: string;
+  dbUser?: string;
+  dbPassword?: string;
+  dateCreation?: string;
+  metrics?: {
+    cpuUsage: string;
+    ramUsage: string;
+    ramPercentage: string;
+    usedStorageMb: number;
+  };
 }
 
 export interface CatalogItem {
@@ -98,6 +109,12 @@ export class DashboardHelperService {
     return f === 'all' ? this.myRequests() : this.myRequests().filter(r => r.status === f);
   });
 
+  myServicesFilter = signal<string>('all');
+  filteredMyServices = computed(() => {
+    const f = this.myServicesFilter();
+    return f === 'all' ? this.myServices() : this.myServices().filter(s => s.type === f);
+  });
+
   pendingOwnCount = computed(() => this.myRequests().filter(r => r.status === 'pending').length);
   runningVmCount = computed(() => this.myVMs().filter(v => v.status === 'running').length);
 
@@ -122,8 +139,9 @@ export class DashboardHelperService {
   justification = '';
   vmTemplates = signal<VmTemplate[]>([]);
   selectedTemplateName = signal<string>('');
+  selectedSgbd = signal<'POSTGRESQL' | 'MYSQL' | 'REDIS' | 'MONGODB'>('POSTGRESQL');
 
-  selectService(s: CatalogItem) { this.selectedService.set(s); }
+  selectService(s: CatalogItem) { this.selectedService.set(s); this.selectedSgbd.set('POSTGRESQL'); }
   updateTemplateName(val: string) { this.selectedTemplateName.set(val); }
 
   toastMsg = signal<string>('');
@@ -140,35 +158,57 @@ export class DashboardHelperService {
   // --- Confirm Toast ---
   isConfirmToastVisible = signal<boolean>(false);
   confirmToastMsg = signal<string>('');
-  private vmIdToDelete: string | null = null;
+  private itemToDelete: { type: 'vm' | 'paas', id: string | number } | null = null;
 
-  showConfirmToast(vmId: string, vmName: string) {
-    this.vmIdToDelete = vmId;
-    this.confirmToastMsg.set(`Supprimer ${vmName} ?`);
+  showConfirmToast(type: 'vm' | 'paas', id: string | number, name: string) {
+    this.itemToDelete = { type, id };
+    this.confirmToastMsg.set(`Supprimer ${name} ?`);
     this.isConfirmToastVisible.set(true);
   }
 
   cancelDelete() {
     this.isConfirmToastVisible.set(false);
-    this.vmIdToDelete = null;
+    this.itemToDelete = null;
   }
 
   confirmDelete() {
-    const id = this.vmIdToDelete;
-    if (!id) return;
+    const item = this.itemToDelete;
+    if (!item) return;
     
     this.isConfirmToastVisible.set(false);
-    this.vmIdToDelete = null;
+    this.itemToDelete = null;
 
-    this.http.delete<any>(`${this.base}/esxi/my-vms/${id}`).subscribe({
-      next: (res) => {
-        this.myVMs.update(list => list.filter(v => v.id !== String(id)));
-        this.showToast(res?.message ?? 'VM supprimée', 'var(--red)');
-      },
-      error: (err) => {
-        this.showToast(err?.error?.message ?? 'Impossible de supprimer la VM', 'var(--red)');
-      }
-    });
+    if (item.type === 'vm') {
+      const id = item.id as string;
+      this.http.delete<any>(`${this.base}/esxi/my-vms/${id}`).subscribe({
+        next: (res) => {
+          this.myVMs.update(list => list.filter(v => v.id !== id));
+          this.showToast(res?.message ?? 'VM supprimée', 'var(--red)');
+        },
+        error: (err) => {
+          this.showToast(err?.error?.message ?? 'Impossible de supprimer la VM', 'var(--red)');
+        }
+      });
+    } else if (item.type === 'paas') {
+      const id = item.id as number;
+      this.http.delete(`${this.base}/paas/${id}`).subscribe({
+        next: () => {
+          this.showToast('Service PaaS supprimé', 'var(--green)');
+          this.loadMyServices();
+        },
+        error: (err: any) => {
+          this.showToast(err?.error?.message ?? 'Erreur lors de la suppression', 'var(--red)');
+        }
+      });
+    }
+  }
+
+  deleteVm(id: string, name: string) {
+    this.showConfirmToast('vm', id, name);
+  }
+
+  deletePaas(id: string | number, name: string) {
+    this.showConfirmToast('paas', id, name);
   }
 
   getInitials(name: string): string {
@@ -214,6 +254,7 @@ export class DashboardHelperService {
       justification: this.justification.trim(),
       catalogueId: Number(svc.id),
       templateName: svc.type === 'vm' ? (this.selectedTemplateName() || undefined) : undefined,
+      typeSgbd: svc.type === 'db' ? this.selectedSgbd() : undefined,
     };
 
     this.demandeService.create(payload).subscribe({
@@ -223,6 +264,7 @@ export class DashboardHelperService {
         this.selectedService.set(null);
         this.instanceName = '';
         this.justification = '';
+        this.selectedSgbd.set('POSTGRESQL');
         this.setPage('my-requests');
         this.showToast('Demande soumise - en attente de validation', 'var(--blue)');
       },
@@ -248,13 +290,36 @@ export class DashboardHelperService {
       REJETEE: 'rejected',
     };
     const cat = d.catalogue;
-    const specs = cat ? cat.vcpu + ' vCPU - ' + cat.ramMB + ' GB RAM - ' + cat.stockageGB + ' GB SSD' : '';
+    
+    const typeMap: Record<string, 'vm' | 'db' | 'saas'> = {
+      'IAAS': 'vm',
+      'PAAS': 'db',
+      'SAAS': 'saas'
+    };
+    const mappedType = cat && cat.typeService ? (typeMap[cat.typeService] || 'vm') : 'vm';
+
+    let specs = '';
+    if (cat) {
+      if (mappedType === 'vm') {
+        specs = `${cat.vcpu} vCPU - ${cat.ramMB} GB RAM - ${cat.stockageGB} GB SSD`;
+      } else if (mappedType === 'db') {
+        const sgbd = (d as any).typeSgbd || cat.typeSgbd || 'DB';
+        specs = `${sgbd} · ${cat.vcpu} vCPU - ${cat.ramMB} GB RAM - ${cat.stockageGB} GB SSD`;
+      } else {
+        const parts = [];
+        if (cat.vcpu) parts.push(`${cat.vcpu} vCPU`);
+        if (cat.ramMB) parts.push(`${cat.ramMB} GB RAM`);
+        if (cat.stockageGB) parts.push(`${cat.stockageGB} GB SSD`);
+        specs = parts.join(' - ');
+      }
+    }
+
     return {
       id: String(d.id),
       name: d.nomInstanceSouhaite,
-      type: 'vm',
+      type: mappedType,
       specs,
-      cost: cat ? Number(cat.prix) : 0,
+      cost: Number((d as any).prixMensuel || 0),
       date: new Date(d.dateDemande).toLocaleDateString('fr-FR', {
         day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
       }),
@@ -409,6 +474,54 @@ export class DashboardHelperService {
 
     return Math.max(0, Math.min(100, Math.round(numeric)));
   }
+
+  loadMyServices() {
+    this.http.get<any[]>(`${this.base}/paas/mes-databases`).subscribe({
+      next: (data) => {
+        const existingServices = this.myServices();
+        const mapped: MyService[] = (data || []).map((db: any) => {
+          const isRedis = db.typeSgbd?.toLowerCase() === 'redis';
+          const isMongo = db.typeSgbd?.toLowerCase() === 'mongodb';
+          const existing = existingServices.find(s => s.id === String(db.id));
+          return {
+            id: String(db.id),
+            name: db.nomPersonnalise || db.name || ('db-' + db.id),
+            type: 'db',
+            url: db.containerIp ? `${db.containerIp}:${db.mappedPort}` : 'En cours...',
+            status: db.status === 'RUNNING' ? 'running' : 'stopped',
+            bg: isRedis ? 'var(--red-light, #fee2e2)' : (isMongo ? 'var(--green-light, #dcfce7)' : 'var(--orange-light, #ffedd5)'),
+            color: isRedis ? 'var(--red, #ef4444)' : (isMongo ? 'var(--green, #22c55e)' : 'var(--orange, #f97316)'),
+            specs: db.typeSgbd || 'POSTGRESQL',
+            cost: db.prixMensuel ? Number(db.prixMensuel) : (db.catalogue?.prix ? Number(db.catalogue.prix) : 0),
+            connectionString: db.connectionString,
+            dbUser: db.dbUser,
+            dbPassword: db.dbPassword,
+            dateCreation: db.dateCreation,
+            metrics: existing ? existing.metrics : undefined
+          };
+        });
+        this.myServices.set(mapped);
+        
+        // Fetch metrics for running databases
+        mapped.filter(s => s.status === 'running').forEach(s => {
+          this.loadServiceMetrics(s.id);
+        });
+      },
+      error: () => { }
+    });
+  }
+
+  loadServiceMetrics(serviceId: string) {
+    this.http.get<any>(`${this.base}/paas/${serviceId}/metrics`).subscribe({
+      next: (metrics) => {
+        this.myServices.update(services => 
+          services.map(s => s.id === serviceId ? { ...s, metrics } : s)
+        );
+      },
+      error: () => {}
+    });
+  }
+
   provisionVm(payload: { name: string; ramGB: number; vCPU: number; storageGB?: number; templateName?: string; catalogueId?: number }) {
     return this.http.post<any>(`${this.base}/esxi/provision`, payload);
   }
@@ -439,23 +552,35 @@ export class DashboardHelperService {
     });
   }
 
-  deleteVm(id: string, name: string) {
-    this.showConfirmToast(id, name);
-  }
+
 
   loadCatalog() {
     this.http.get<any[]>(`${this.base}/catalogue`).subscribe({
       next: (data) => {
+        const typeMap: Record<string, 'vm' | 'db' | 'saas'> = {
+          'IAAS': 'vm',
+          'PAAS': 'db',
+          'SAAS': 'saas'
+        };
         const items: CatalogItem[] = (data || []).map((cat: any) => {
-          const isVm = cat.type === 'vm' || cat.vcpu !== undefined || cat.ramMB !== undefined;
-          const type = isVm ? 'vm' : (cat.type || 'saas');
-          const specs = cat.specs
-            ? (typeof cat.specs === 'string' ? cat.specs.split('.').map((s: string) => s.trim()) : cat.specs)
-            : [
-              (cat.vcpu || 0) + ' vCPU',
-              (cat.ramMB || 0) + ' GB RAM',
-              (cat.stockageGB || 0) + ' GB SSD'
-            ];
+          const type = cat.typeService ? (typeMap[cat.typeService] || 'saas') : 'saas';
+          
+          let specs: string[] = [];
+          if (cat.specs) {
+            specs = typeof cat.specs === 'string' ? cat.specs.split('.').map((s: string) => s.trim()) : cat.specs;
+          } else {
+            if (type === 'vm') {
+              specs = [
+                (cat.vcpu || 0) + ' vCPU',
+                (cat.ramMB || 0) + ' GB RAM',
+                (cat.stockageGB || 0) + ' GB SSD'
+              ];
+            } else {
+              if (cat.vcpu) specs.push(cat.vcpu + ' vCPU');
+              if (cat.ramMB) specs.push(cat.ramMB + ' GB RAM');
+              if (cat.stockageGB) specs.push(cat.stockageGB + ' GB SSD');
+            }
+          }
           return {
             id: String(cat.id),
             name: cat.nomService || cat.name || 'Service sans nom',

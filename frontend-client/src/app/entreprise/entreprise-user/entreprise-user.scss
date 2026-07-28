@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap');
 
 *,
 *::before,
@@ -1904,5 +1904,41 @@ button {
   font-size: 11.5px;
   color: var(--text-secondary);
   font-family: 'DM Mono', monospace;
+}
+
+.sgbd-deploy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.sgbd-deploy-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 8px;
+  border: 1.5px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--bg-white);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  font-family: inherit;
+  transition: border-color .18s, background .18s, box-shadow .18s, transform .15s;
+
+  &:hover {
+    border-color: var(--blue);
+    background: var(--blue-light, #eff6ff);
+    transform: translateY(-2px);
+  }
+
+  &.selected {
+    border-color: var(--blue);
+    background: var(--blue-light, #eff6ff);
+    color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+  }
 }
 

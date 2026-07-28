@@ -24,6 +24,8 @@ import { Wallet } from './entities/wallet.entity';
 import { Transaction } from './entities/transaction.entity';
 import { WalletModule } from './wallet/wallet.module';
 import { MailModule } from './mail/mail.module';
+import { PaasModule } from './paas/paas.module';
+import { ServicePaaS } from './entities/servicePaaS.entity';
 
 
 @Module({
@@ -36,7 +38,7 @@ import { MailModule } from './mail/mail.module';
       username: process.env.DB_USERNAME ?? 'postgres',
       password: process.env.DB_PASSWORD ?? 'password',
       database: process.env.DB_NAME ?? 'dynamix_db',
-      entities: [Admin, Client, Entreprise, MachineVirtuelle, Personal, ServiceInstance, Catalogue, Wallet, Transaction],
+      entities: [Admin, Client, Entreprise, MachineVirtuelle, Personal, ServiceInstance, Catalogue, Wallet, Transaction, ServicePaaS],
       autoLoadEntities: true,
       synchronize: true, // disable in production
       logging: false,
@@ -70,6 +72,7 @@ import { MailModule } from './mail/mail.module';
     DemandeModule,
     WalletModule,
     MailModule,
+    PaasModule,
   ],
   controllers: [AppController],
   providers: [AppService],

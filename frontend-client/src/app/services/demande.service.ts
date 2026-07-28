@@ -20,6 +20,8 @@ export interface DemandeApiItem {
     ramMB: number;
     stockageGB: number;
     prix: number;
+    typeService?: string;
+    typeSgbd?: string;
   };
   client?: {
     id: number;

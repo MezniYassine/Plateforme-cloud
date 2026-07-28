@@ -10,12 +10,12 @@ import { PersonalDashboardHelperService } from '../../personal-dashboard-helper.
   templateUrl: './monitor-tab.html',
 })
 export class MonitorTabComponent {
-  vms             = input.required<VM[]>();
-  monitorBars     = input.required<Record<string, number[]>>();
+  vms = input.required<VM[]>();
+  monitorBars = input.required<Record<string, number[]>>();
   monitorBarTimes = input<Record<string, string[]>>({});
-  lastRefresh     = input<Date | null>(null);
+  lastRefresh = input<Date | null>(null);
 
-  constructor(public h: PersonalDashboardHelperService) {}
+  constructor(public h: PersonalDashboardHelperService) { }
 
   formatRefresh(d: Date | null): string {
     if (!d) return 'En attente…';
@@ -24,19 +24,20 @@ export class MonitorTabComponent {
 
   statusLabel(status: string): string {
     switch (status) {
-      case 'running':      return 'Running';
-      case 'stopped':      return 'Arrêtée';
+      case 'running': return 'Running';
+      case 'stopped': return 'Arrêtée';
       case 'provisioning': return 'En cours…';
-      default:             return status;
+      case 'pending': return 'En attente…';
+      default: return status;
     }
   }
 
   statusClass(status: string): string {
     switch (status) {
-      case 'running':      return 'badge running';
-      case 'stopped':      return 'badge stopped';
+      case 'running': return 'badge running';
+      case 'stopped': return 'badge stopped';
       case 'provisioning': return 'badge pending';
-      default:             return 'badge';
+      default: return 'badge';
     }
   }
 

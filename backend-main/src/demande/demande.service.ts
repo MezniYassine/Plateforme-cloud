@@ -17,6 +17,9 @@ import { EsxiService } from 'src/esxi/esxi.service';
 import { MachineVirtuelle } from 'src/entities/machineVirtuelle.entity';
 import { Wallet } from 'src/entities/wallet.entity';
 import { MailService } from 'src/mail/mail.service';
+import { PaasService } from 'src/paas/paas.service';
+import { WalletService } from 'src/wallet/wallet.service';
+import { TypeSgbd } from 'src/enum/type-sgbd.enum';
 
 @Injectable()
 export class DemandeService {
@@ -35,6 +38,8 @@ export class DemandeService {
     @InjectRepository(MachineVirtuelle) private readonly vmRepo: Repository<MachineVirtuelle>,
 
     private readonly mailService: MailService,
+    private readonly paasService: PaasService,
+    private readonly walletService: WalletService,
   ) { }
 
   /**
@@ -75,6 +80,7 @@ export class DemandeService {
       justification: dto.justification,
       templateName: dto.templateName,
       versionPaas: dto.versionPaas,
+      typeSgbd: dto.typeSgbd,
       status: DemandeStatus.EN_ATTENTE,
       catalogue,
       prixMensuel: Number(catalogue.prix),
@@ -93,7 +99,11 @@ export class DemandeService {
       });
 
       if (admin) {
-        const specs = `${catalogue.vcpu} vCPU · ${catalogue.ramMB} GB RAM · ${catalogue.stockageGB} GB SSD`;
+        let specs = `${catalogue.vcpu} vCPU · ${catalogue.ramMB} GB RAM · ${catalogue.stockageGB} GB SSD`;
+        if (catalogue.typeService === 'PAAS' && dto.typeSgbd) {
+          specs = `Base de données : ${dto.typeSgbd} · ` + specs;
+        }
+
         this.mailService.sendNouvelleDemandeAdmin({
           adminEmail: admin.email,
           adminPrenom: admin.prenom,
@@ -255,7 +265,7 @@ export class DemandeService {
     }
 
     // SÉCURITÉ : On valide que le template est bien renseigné pour le IaaS
-    if (!demande.templateName) {
+    if (demande.catalogue?.typeService === 'IAAS' && !demande.templateName) {
       throw new BadRequestException(
         "Impossible d'approuver : le nom du template OS est manquant pour cette demande IaaS.",
       );
@@ -297,43 +307,73 @@ export class DemandeService {
     const userEmail = demande.client.email;
     const userPrenom = demande.client.prenom;
     const userNom = demande.client.nom;
-    const specs = demande.catalogue
+    let specs = demande.catalogue
       ? `${demande.catalogue.vcpu} vCPU · ${demande.catalogue.ramMB} GB RAM · ${demande.catalogue.stockageGB} GB SSD`
       : 'Spécifications non disponibles';
+
+    if (demande.catalogue?.typeService === 'PAAS' && demande.typeSgbd) {
+      specs = `Base de données : ${demande.typeSgbd} · ` + specs;
+    }
 
     let savedVm: MachineVirtuelle | null = null;
 
     try {
-      // 1. Création de l'instance dans le système d'héritage (MachineVirtuelle)
-      const nouvelleVM = this.vmRepo.create({
-        nomPersonnalise: demande.nomInstanceSouhaite,
-        status: ServiceStatus.PROVISIONING,
-        vCPU: demande.catalogue?.vcpu || 0,
-        ramGB: demande.catalogue?.ramMB || 0,
-        stockageGB: demande.catalogue?.stockageGB || 0,
-        os: demande.templateName,
-        catalogue: demande.catalogue,
-        prixMensuel: Number(demande.prixMensuel),
-        client: demande.client,
-      });
-      savedVm = await this.vmRepo.save(nouvelleVM);
+      if (demande.catalogue?.typeService === 'PAAS') {
+        // --- LOGIQUE PAAS ---
+        await this.paasService.createDatabase({
+          nomPersonnalise: demande.nomInstanceSouhaite,
+          typeSgbd: (demande.typeSgbd as TypeSgbd) || (demande.catalogue.typeSgbd as TypeSgbd) || TypeSgbd.POSTGRESQL,
+          clientId: demande.client.id,
+          catalogueId: demande.catalogue.id,
+        }, adminId);
 
-      // Nom unique garanti pour l'ESXi (évite les conflits globaux)
-      const esxiName = `${demande.nomInstanceSouhaite}-${savedVm.id}`;
+      } else {
+        // --- LOGIQUE IAAS ---
+        // 1. Création de l'instance dans le système d'héritage (MachineVirtuelle)
+        const nouvelleVM = this.vmRepo.create({
+          nomPersonnalise: demande.nomInstanceSouhaite,
+          status: ServiceStatus.PROVISIONING,
+          vCPU: demande.catalogue?.vcpu || 0,
+          ramGB: demande.catalogue?.ramMB || 0,
+          stockageGB: demande.catalogue?.stockageGB || 0,
+          os: demande.templateName,
+          catalogue: demande.catalogue,
+          prixMensuel: Number(demande.prixMensuel),
+          client: demande.client,
+        });
+        savedVm = await this.vmRepo.save(nouvelleVM);
 
-      // 2. Clonage de la VM sur VMware ESXi via ton service SOAP
-      const vmRefId = await this.esxiService.cloneAndReconfigure(
-        demande.templateName,
-        esxiName,
-        (demande.catalogue?.ramMB || 0) * 1024,
-        demande.catalogue?.vcpu || 0,
-        demande.catalogue?.stockageGB || 0,
-      );
+        // Nom unique garanti pour l'ESXi (évite les conflits globaux)
+        const esxiName = `${demande.nomInstanceSouhaite}-${savedVm.id}`;
 
-      // 3. Mise à jour de la VM avec la référence
-      savedVm.status = ServiceStatus.RUNNING;
-      savedVm.vmReference = vmRefId;
-      await this.vmRepo.save(savedVm);
+        // 2. Clonage de la VM sur VMware ESXi via ton service SOAP
+        const vmRefId = await this.esxiService.cloneAndReconfigure(
+          demande.templateName!,
+          esxiName,
+          (demande.catalogue?.ramMB || 0) * 1024,
+          demande.catalogue?.vcpu || 0,
+          demande.catalogue?.stockageGB || 0,
+        );
+
+        // 3. Mise à jour de la VM avec la référence
+        savedVm.status = ServiceStatus.RUNNING;
+        savedVm.vmReference = vmRefId;
+        await this.vmRepo.save(savedVm);
+
+        // --- DÉBIT DU WALLET ---
+        if (prixMensuelDemande > 0) {
+          try {
+            await this.walletService.debiter(
+              adminId,
+              prixMensuelDemande,
+              `Déploiement d'un service IaaS (Machine Virtuelle)`,
+              savedVm.id
+            );
+          } catch (walletErr) {
+            console.error(`⚠️ Impossible de débiter le wallet pour IaaS #${savedVm.id}:`, walletErr.message);
+          }
+        }
+      }
 
       // C. Mise à jour de la demande
       demande.status = DemandeStatus.APPROUVEE;
@@ -363,7 +403,9 @@ export class DemandeService {
       }
 
       // La demande reste en attente pour permettre à l'administrateur de réessayer
-      throw new BadRequestException(`Erreur technique lors du provisionnement ESXi (voir logs). La demande n'a pas été rejetée, vous pouvez réessayer.`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`[DemandeService] Échec du provisionnement ESXi pour la demande #${id} :`, errorMessage);
+      throw new BadRequestException(`Échec du provisionnement. La demande n'a pas été rejetée, vous pouvez réessayer.`);
     }
   }
 

@@ -1,4 +1,4 @@
-﻿<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
   <div>
     <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Catalogue de services</div>
     <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px">Gérez les offres IaaS, PaaS et SaaS disponibles pour les clients</div>
@@ -21,30 +21,67 @@
   @for (s of filteredCatalogue(); track s.id) {
   <div class="catalogue-card">
     @if (s.popular) { <div class="cat-tag" style="background:var(--purple-light);color:var(--purple)">Populaire</div> }
-    <div class="cat-icon" [style.background]="s.bg">
-      <svg viewBox="0 0 24 24" [attr.stroke]="s.color" fill="none" stroke-width="1.8" stroke-linecap="round">
-        <ellipse cx="12" cy="5" rx="9" ry="3" />
-        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-      </svg>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px">
+      <!-- Icône dynamique selon le type -->
+      @if (s.typeService === 'IAAS') {
+        <div class="cat-icon" style="background:#eff6ff">
+          <svg viewBox="0 0 24 24" stroke="#3b82f6" fill="none" stroke-width="1.8" stroke-linecap="round">
+            <rect x="2" y="3" width="20" height="5" rx="1"/>
+            <rect x="2" y="10" width="20" height="5" rx="1"/>
+            <rect x="2" y="17" width="20" height="5" rx="1"/>
+            <circle cx="18" cy="5.5" r="0.8" fill="#3b82f6"/>
+            <circle cx="18" cy="12.5" r="0.8" fill="#3b82f6"/>
+          </svg>
+        </div>
+        <span class="cat-type-badge" style="background:#eff6ff;color:#3b82f6">🖥️ IaaS</span>
+      } @else if (s.typeService === 'PAAS') {
+        <div class="cat-icon" style="background:#f5f3ff">
+          <svg viewBox="0 0 24 24" stroke="#6366f1" fill="none" stroke-width="1.8" stroke-linecap="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+        </div>
+        <span class="cat-type-badge" style="background:#f5f3ff;color:#6366f1">🗄️ PaaS</span>
+      } @else {
+        <div class="cat-icon" style="background:#f0fdf4">
+          <svg viewBox="0 0 24 24" stroke="#22c55e" fill="none" stroke-width="1.8" stroke-linecap="round">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+          </svg>
+        </div>
+        <span class="cat-type-badge" style="background:#f0fdf4;color:#22c55e">☁️ SaaS</span>
+      }
     </div>
-    <div class="cat-name">{{ s.name || s.nomService }}</div>
+    <div class="cat-name">{{ s.nomService }}</div>
     <div class="cat-desc">{{ s.description }}</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-      <div class="cat-price">{{ s.price || s.prix }} DT<span>/mois</span></div>
-      <span class="badge" [class]="(s.active || s.isActive)?'approved':'suspended'">
-        <div class="badge-dot"></div>{{ (s.active || s.isActive) ? 'Actif' : 'Inactif' }}
+      <div class="cat-price">{{ s.prix }} DT<span>/mois</span></div>
+      <span class="badge" [class]="s.isActive ? 'approved' : 'suspended'">
+        <div class="badge-dot"></div>{{ s.isActive ? 'Actif' : 'Inactif' }}
       </span>
     </div>
+    @if (s.typeService === 'PAAS') {
+    <div style="font-size:12px;color:var(--text-muted);margin-top:8px;display:flex;flex-direction:column;gap:5px">
+      <span style="display:inline-flex;align-items:center;gap:5px;background:#f5f3ff;color:#6366f1;border-radius:20px;padding:3px 10px;font-weight:600;font-size:11.5px;">
+        🗄️ {{ s.typeSgbd || 'Base de données' }}
+      </span>
+      @if ((s.vcpu ?? 0) > 0) {
+      <span style="font-size:11.5px;color:var(--text-secondary)">
+        {{ s.vcpu }} vCPU · {{ s.ramMB }} GB RAM · {{ s.stockageGB }} GB SSD
+      </span>
+      }
+    </div>
+    } @else if (s.typeService === 'IAAS') {
     <div style="font-size:12px;color:var(--text-muted);margin-top:8px">
       {{ s.vcpu }} vCPU · {{ s.ramMB }} GB RAM · {{ s.stockageGB }} GB SSD
     </div>
+    }
     <div style="display:flex;gap:6px;margin-top:12px">
       <button class="btn-sm" style="flex:1" (click)="openEditModal(s)">Modifier</button>
-      <button class="action-btn" [class]="(s.active || s.isActive)?'suspend':'approve'" (click)="toggleService(s)">
-        {{ (s.active || s.isActive) ? 'Désactiver' : 'Activer' }}
+      <button class="action-btn" [class]="s.isActive ? 'suspend' : 'approve'" (click)="toggleService(s)">
+        {{ s.isActive ? 'Désactiver' : 'Activer' }}
       </button>
-      <button class="action-btn delete" (click)="deleteService(s.id)" title="Supprimer">
+      <button class="action-btn delete" (click)="deleteService(s)" title="Supprimer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="3 6 5 6 21 6"></polyline>
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -91,9 +128,9 @@
         <div class="form-group">
           <label class="form-label">Type</label>
           <select class="form-input" [value]="formType()" (change)="onTypeChange($any($event).target.value)">
-            <option value="vm">IaaS - Infrastructure</option>
-            <option value="db">PaaS - Plateforme</option>
-            <option value="saas">SaaS - Logiciel</option>
+            <option value="IAAS">IaaS - Infrastructure</option>
+            <option value="PAAS">PaaS - Plateforme</option>
+            <option value="SAAS">SaaS - Logiciel</option>
           </select>
         </div>
         <div class="form-group">
@@ -104,6 +141,8 @@
           </div>
         </div>
       </div>
+      <!-- Spécifications IaaS (VM) -->
+      @if (formType() === 'IAAS') {
       <div class="specs-section">
         <div class="specs-label">Spécifications techniques</div>
         <div class="form-grid-3">
@@ -121,6 +160,28 @@
           </div>
         </div>
       </div>
+      }
+
+      <!-- Spécifications PaaS (Base de données) -->
+      @if (formType() === 'PAAS') {
+      <div class="specs-section paas-specs">
+        <div class="specs-label">Ressources allouées au conteneur</div>
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label class="form-label">CPU (vCPU)</label>
+            <input class="form-input" type="number" [value]="formCpu()" (input)="onCpuChange($any($event).target.value)" placeholder="2" min="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">RAM (GB)</label>
+            <input class="form-input" type="number" [value]="formRam()" (input)="onRamChange($any($event).target.value)" placeholder="4" min="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stockage (GB)</label>
+            <input class="form-input" type="number" [value]="formStorage()" (input)="onStorageChange($any($event).target.value)" placeholder="20" min="5" />
+          </div>
+        </div>
+      </div>
+      }
     </div>
 
     <div class="modal-footer">
@@ -137,6 +198,25 @@
 @if (isToastVisible()) {
 <div class="toast" [style.background]="toastColor()">{{ toastMsg() }}</div>
 }
+
+<!-- Confirm Toast -->
+<div class="modal-ov" [class.show]="isConfirmToastVisible()" style="z-index: 9999;" (click)="cancelDelete()">
+  <div style="background: #ffffff; color: #0f172a; padding: 24px 28px; border-radius: 24px; width: 400px; max-width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 24px; transition: all 0.3s cubic-bezier(0.22, 0.8, 0.36, 1); transform: scale(0.95); opacity: 0;" [style.transform]="isConfirmToastVisible() ? 'scale(1)' : 'scale(0.95)'" [style.opacity]="isConfirmToastVisible() ? '1' : '0'" (click)="$event.stopPropagation()">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div class="toast-ic" style="background: var(--red-light); color: var(--red); width: 44px; height: 44px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; border-radius: 12px;">
+        <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; stroke: currentColor; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </div>
+      <span style="font-weight: 500; font-size: 16px; line-height: 1.4; color: #0f172a;">{{ confirmToastMsg() }}</span>
+    </div>
+    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px;">
+      <button class="btn-cancel" style="padding: 9px 20px; font-size: 14px; border-radius: 50px;" (click)="cancelDelete()">Annuler</button>
+      <button class="btn-save" style="padding: 9px 20px; font-size: 14px; background: var(--red); color: white; border: none; border-radius: 50px; cursor: pointer; display:flex; align-items:center; justify-content:center;" (click)="confirmDelete()">Supprimer</button>
+    </div>
+  </div>
+</div>
 
 <style>
   .modal-overlay {
@@ -266,11 +346,92 @@
   .action-btn.delete { background: var(--red-light); color: var(--red); width: 36px; padding: 0; }
   .action-btn.delete svg { width: 16px; height: 16px; }
 
+  /* SGBD Selector (PaaS) */
+  .sgbd-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .sgbd-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 10px 12px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.18s, background 0.18s, box-shadow 0.18s, transform 0.15s;
+    position: relative;
+    user-select: none;
+  }
+  .sgbd-card:hover {
+    border-color: #a5b4fc;
+    background: #f5f3ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99,102,241,0.1);
+  }
+  .sgbd-card.selected {
+    border-color: #6366f1;
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15), 0 4px 12px rgba(99,102,241,0.12);
+  }
+  .sgbd-icon {
+    width: 52px; height: 52px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: #fff;
+    padding: 4px;
+    transition: transform 0.15s;
+  }
+  .sgbd-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .sgbd-card:hover .sgbd-icon { transform: scale(1.08); }
+  .sgbd-card.selected .sgbd-icon { background: #f5f3ff; }
+  .sgbd-name {
+    font-size: 12.5px; font-weight: 600; color: #475569;
+    text-align: center;
+  }
+  .sgbd-card.selected .sgbd-name { color: #4f46e5; }
+  .sgbd-check {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #6366f1;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .sgbd-check svg { width: 10px; height: 10px; stroke: #fff; }
+  .sgbd-card.selected .sgbd-check { opacity: 1; }
+
   .toast {
     position: fixed; bottom: 24px; right: 24px;
     padding: 12px 22px; border-radius: 8px; color: white;
     font-size: 13.5px; font-weight: 500;
     box-shadow: 0 8px 24px rgba(0,0,0,0.15);
     z-index: 99999;
+  }
+
+  .modal-ov {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .modal-ov.show {
+    opacity: 1;
+    pointer-events: auto;
   }
 </style>

@@ -236,7 +236,7 @@ export class MailService {
         <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2025 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -301,7 +301,7 @@ export class MailService {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2025 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -353,7 +353,7 @@ export class MailService {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2025 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -404,7 +404,7 @@ export class MailService {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2025 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -484,7 +484,7 @@ export class MailService {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2025 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>

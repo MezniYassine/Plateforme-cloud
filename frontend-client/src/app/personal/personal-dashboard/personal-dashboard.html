@@ -38,6 +38,7 @@
           <path d="M2 12l10 5 10-5" />
         </svg>
         Services PaaS
+        <span class="nav-pill">{{ paasInstances().length }}</span>
       </div>
       <div class="nav-item" [class.active]="activeTab() === 'saas'" (click)="switchTab('saas')">
         <svg viewBox="0 0 24 24">
@@ -131,7 +132,7 @@
     <div class="content">
 
       @if (activeTab() === 'overview') {
-      <app-overview-tab [vms]="vms()" (openDeploy)="handleOpenDeploy($event)" (switchTab)="switchTab($event)"
+      <app-overview-tab [vms]="vms()" [paasInstances]="paasInstances()" (openDeploy)="handleOpenDeploy($event)" (switchTab)="switchTab($event)"
         (vmAction)="handleVmAction($event)" />
       }
 
@@ -140,7 +141,7 @@
       }
 
       @if (activeTab() === 'paas') {
-      <app-paas-tab (openDeploy)="handleOpenDeploy($event)" />
+      <app-paas-tab [paasInstances]="paasInstances()" (openDeploy)="handleOpenDeploy($event)" (deletePaas)="deletePaas($event)" />
       }
 
       @if (activeTab() === 'saas') {
@@ -272,40 +273,108 @@
       }
       }
 
-      } @else {
+      } @else if (deployType() === 'paas') {
+      <!-- ── STEPPER PAAS ── -->
+      <div class="wizard-stepper">
+        <div class="wz-step" [class.active]="deployStep() >= 1" [class.done]="deployStep() > 1">
+          <div class="wz-num">
+            @if(deployStep() > 1){
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            } @else { 1 }
+          </div>
+          <div class="wz-label">Configuration</div>
+        </div>
+        <div class="wz-line" [class.done]="deployStep() > 1"></div>
+        <div class="wz-step" [class.active]="deployStep() >= 2">
+          <div class="wz-num">2</div>
+          <div class="wz-label">Plan PaaS</div>
+        </div>
+      </div>
+
+      @if (deployStep() === 1) {
       <div class="field">
         <div class="field-label">Nom de l'instance</div>
-        <input type="text" placeholder="ex: inst-01">
+        <input type="text" placeholder="ex: db-prod-01" [value]="deployVmName()"
+          (input)="updateDeployName($any($event.target).value)">
       </div>
       <div class="field">
-        <div class="field-label">Service</div>
-        <select>
-          <option>{{deployName()}}</option>
-        </select>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <div class="field-label">Plan mémoire</div>
-          <select>
-            <option>2 GB RAM</option>
-            <option selected>4 GB RAM</option>
-            <option>8 GB RAM</option>
-          </select>
-        </div>
-        <div class="field">
-          <div class="field-label">Stockage</div>
-          <select>
-            <option>20 GB</option>
-            <option selected>50 GB</option>
-            <option>100 GB</option>
-          </select>
+        <div class="field-label">Type de base de données</div>
+        <div class="sgbd-deploy-grid">
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'POSTGRESQL'" (click)="selectedSgbd.set('POSTGRESQL')">
+            <img src="assets/PostgreSQL Logo.png" alt="PostgreSQL" style="width:32px;height:32px;object-fit:contain;" />
+            <span>PostgreSQL</span>
+          </button>
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'MYSQL'" (click)="selectedSgbd.set('MYSQL')">
+            <img src="assets/MySQL Logo.png" alt="MySQL" style="width:32px;height:32px;object-fit:contain;" />
+            <span>MySQL</span>
+          </button>
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'REDIS'" (click)="selectedSgbd.set('REDIS')">
+            <img src="assets/Redis logo.png" alt="Redis" style="width:32px;height:32px;object-fit:contain;" />
+            <span>Redis</span>
+          </button>
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'MONGODB'" (click)="selectedSgbd.set('MONGODB')">
+            <img src="assets/MongoDB Logo.png" alt="MongoDB" style="width:32px;height:32px;object-fit:contain;" />
+            <span>MongoDB</span>
+          </button>
         </div>
       </div>
+      }
+
+      @if (deployStep() === 2) {
+      @if (paasPlans().length === 0) {
+      <div class="empty-plans">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        Aucun plan PaaS disponible dans le catalogue
+      </div>
+      } @else {
+      <div class="plan-grid">
+        @for (plan of paasPlans(); track plan.name) {
+        <div class="plan-card" [class.selected]="selectedPlan()?.name === plan.name" (click)="selectPlan(plan)">
+          <div class="plan-card-top">
+            <div class="plan-icon" [style.background]="plan.bg">
+              @if (plan.icon === 'db' || plan.name.toLowerCase().includes('sql')) {
+                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
+              } @else if (plan.icon === 'redis' || plan.name.toLowerCase().includes('redis')) {
+                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18"><circle cx="12" cy="12" r="10" /></svg>
+              }
+            </div>
+            @if (plan.tag) {
+            <span class="plan-tag" [style.background]="plan.tagColor ?? 'var(--blue-l)'" [style.color]="plan.color">{{ plan.tag }}</span>
+            }
+            @if (selectedPlan()?.name === plan.name) {
+            <div class="plan-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            }
+          </div>
+          <div class="plan-name">{{ plan.name }}</div>
+          <div class="plan-desc">{{ plan.desc }}</div>
+          <div class="plan-specs">
+            @for (spec of plan.specs; track spec) {
+            <span class="plan-spec-chip">{{ spec }}</span>
+            }
+          </div>
+          <div class="plan-price">{{ plan.price }} <span>DT/mois</span></div>
+        </div>
+        }
+      </div>
+      }
+      }
       }
     </div>
 
     <div class="modal-foot">
-      @if (deployType() === 'vm' && deployStep() === 1) {
+      @if ((deployType() === 'vm' || deployType() === 'paas') && deployStep() === 1) {
       <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
       <button class="btn btn-primary" style="margin-left:auto" (click)="goToStep2()">
         Suivant
@@ -314,7 +383,7 @@
           <polyline points="12 5 19 12 12 19" />
         </svg>
       </button>
-      } @else if (deployType() === 'vm' && deployStep() === 2) {
+      } @else if ((deployType() === 'vm' || deployType() === 'paas') && deployStep() === 2) {
       <button class="btn btn-ghost" (click)="goToStep1()">
         <svg viewBox="0 0 24 24">
           <line x1="19" y1="12" x2="5" y2="12" />

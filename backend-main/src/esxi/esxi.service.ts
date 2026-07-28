@@ -17,6 +17,7 @@ export interface VmSshSummaryMetrics {
 export class EsxiService {
     private readonly logger = new Logger(EsxiService.name);
     private vsphereClient: any;
+    private clientReadyPromise: Promise<void> | null = null;
 
     constructor(
         private readonly httpService: HttpService,
@@ -32,6 +33,21 @@ export class EsxiService {
 
         // Créer le client - la connexion se fera au premier appel
         this.vsphereClient = new VsphereClient(host, username, password, false);
+
+        this.clientReadyPromise = new Promise((resolve, reject) => {
+            this.vsphereClient.once('ready', resolve);
+            this.vsphereClient.once('error', (err: any) => {
+                this.clientReadyPromise = null; // Reset to allow retry on next request
+                reject(err);
+            });
+        });
+    }
+
+    private async ensureClientReady(): Promise<void> {
+        if (!this.clientReadyPromise) {
+            this.initializeVsphereClient();
+        }
+        await this.clientReadyPromise;
     }
 
     private get host(): string {
@@ -82,7 +98,7 @@ export class EsxiService {
      */
     async getVms(): Promise<any[]> {
         try {
-
+            await this.ensureClientReady();
             const propertyCollector =
                 this.vsphereClient.serviceContent.propertyCollector;
             const rootFolder = this.vsphereClient.serviceContent.rootFolder;
@@ -216,7 +232,6 @@ export class EsxiService {
                 };
             });
 
-            // this.logger.log(`✅ ${vms.length} VMs récupérées !`);
             return vms;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -230,6 +245,7 @@ export class EsxiService {
         args: Record<string, unknown>,
         retryCount = 0
     ): Promise<unknown> {
+        await this.ensureClientReady();
         try {
             return await new Promise((resolve, reject) => {
                 this.vsphereClient
@@ -466,6 +482,7 @@ export class EsxiService {
 
     async getHostStats(): Promise<any> {
         try {
+            await this.ensureClientReady();
             const serviceContent = this.vsphereClient.serviceContent;
 
             // 1. Création d'une vue pour cibler le HostSystem (le serveur physique)
@@ -649,6 +666,7 @@ export class EsxiService {
     }
 
     private async getVmFolder(vmRef: any): Promise<any> {
+        await this.ensureClientReady();
         const serviceContent = this.vsphereClient.serviceContent;
         const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
             _this: serviceContent.propertyCollector,
@@ -833,6 +851,7 @@ export class EsxiService {
     }
 
     private async getPrimaryVirtualDisk(vmRef: any): Promise<any | null> {
+        await this.ensureClientReady();
         const serviceContent = this.vsphereClient.serviceContent;
         const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
             _this: serviceContent.propertyCollector,
@@ -866,6 +885,7 @@ export class EsxiService {
     }
 
     private async getVmPathName(vmRef: any): Promise<string> {
+        await this.ensureClientReady();
         const serviceContent = this.vsphereClient.serviceContent;
         const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
             _this: serviceContent.propertyCollector,
@@ -960,6 +980,7 @@ export class EsxiService {
     }
 
     private async getTaskInfo(taskRef: any): Promise<any> {
+        await this.ensureClientReady();
         const serviceContent = this.vsphereClient.serviceContent;
         const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
             _this: serviceContent.propertyCollector,
@@ -1052,6 +1073,7 @@ export class EsxiService {
      * Récupère le premier objet d'un type donné (utile pour le Datastore ou Pool par défaut)
      */
     private async getFirstMoRef(type: 'Datastore' | 'ResourcePool' | 'Datacenter' | 'HostSystem'): Promise<any> {
+        await this.ensureClientReady();
         const serviceContent = this.vsphereClient.serviceContent;
 
         // Utilisation simplifiée pour ton lab (récupère le premier trouvé)

@@ -1,4 +1,4 @@
-﻿<div class="request-layout">
+<div class="request-layout">
 
     <!-- Catalogue panel -->
     <div class="catalog-panel">
@@ -103,6 +103,30 @@
                           <option [value]="template.name" [selected]="template.name === state.selectedTemplateName()">{{ template.label }}</option>
                         }
                     </select>
+                </div>
+                }
+
+                @if (svc.type === 'db') {
+                <div class="profile-field">
+                    <label>Type de base de données</label>
+                    <div class="sgbd-deploy-grid" style="margin-top:6px">
+                        <button class="sgbd-deploy-btn" [class.selected]="state.selectedSgbd() === 'POSTGRESQL'" (click)="state.selectedSgbd.set('POSTGRESQL')">
+                            <img src="assets/PostgreSQL Logo.png" alt="PostgreSQL" style="width:28px;height:28px;object-fit:contain;" />
+                            <span>PostgreSQL</span>
+                        </button>
+                        <button class="sgbd-deploy-btn" [class.selected]="state.selectedSgbd() === 'MYSQL'" (click)="state.selectedSgbd.set('MYSQL')">
+                            <img src="assets/MySQL Logo.png" alt="MySQL" style="width:28px;height:28px;object-fit:contain;" />
+                            <span>MySQL</span>
+                        </button>
+                        <button class="sgbd-deploy-btn" [class.selected]="state.selectedSgbd() === 'REDIS'" (click)="state.selectedSgbd.set('REDIS')">
+                            <img src="assets/Redis logo.png" alt="Redis" style="width:28px;height:28px;object-fit:contain;" />
+                            <span>Redis</span>
+                        </button>
+                        <button class="sgbd-deploy-btn" [class.selected]="state.selectedSgbd() === 'MONGODB'" (click)="state.selectedSgbd.set('MONGODB')">
+                            <img src="assets/MongoDB Logo.png" alt="MongoDB" style="width:28px;height:28px;object-fit:contain;" />
+                            <span>MongoDB</span>
+                        </button>
+                    </div>
                 </div>
                 }
 

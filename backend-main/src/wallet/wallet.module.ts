@@ -8,11 +8,12 @@ import { Wallet } from 'src/entities/wallet.entity';
 import { Transaction } from 'src/entities/transaction.entity';
 import { Client } from 'src/entities/client.entity';
 import { MachineVirtuelle } from 'src/entities/machineVirtuelle.entity';
+import { ServicePaaS } from 'src/entities/servicePaaS.entity';
 import { EsxiModule } from 'src/esxi/esxi.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Wallet, Transaction, Client, MachineVirtuelle]),
+    TypeOrmModule.forFeature([Wallet, Transaction, Client, MachineVirtuelle, ServicePaaS]),
     ScheduleModule.forRoot(),
     forwardRef(() => EsxiModule),
   ],

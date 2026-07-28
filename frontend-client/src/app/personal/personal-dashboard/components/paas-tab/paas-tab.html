@@ -1,32 +1,117 @@
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+<div class="page-header-row">
   <div>
-    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Services managés (PaaS)</div>
-    <div style="font-size:12.5px;color:var(--text-3);margin-top:2px">Déployez en un clic</div>
+    <div class="page-h-title">Services managés (PaaS)</div>
+    <div class="page-h-sub">Instances de bases de données et services déployés</div>
   </div>
+  <button class="btn-sm primary" (click)="openDeploy.emit({ type: 'paas', name: '' })">+ Déployer un service PaaS</button>
 </div>
 
-<div class="sc">
-  <div class="catalog-grid">
-    @for (s of paasServices(); track $index) {
-    <div class="catalog-card">
-      <div class="cat-icon" [style.background]="s.bg" [style.stroke]="s.color">
-        @if (s.icon==='db') {
-          <svg viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
-        } @else if (s.icon==='redis') {
-          <svg viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
-        } @else if (s.icon==='mongo') {
-          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C8 7 6 10 6 14a6 6 0 0 0 12 0c0-4-2-7-6-12z" /></svg>
-        } @else if (s.icon==='queue') {
-          <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
-        } @else if (s.icon==='search') {
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-        }
+<div class="vm-cards-grid">
+  @for (p of paasInstances(); track p.id) {
+  <div class="vm-full-card">
+    <div class="vfc-header">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="cat-icon" style="width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #f5f3ff;">
+          @if (getIconForSgbd(p.typeSgbd) === 'db') {
+            <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
+          } @else if (getIconForSgbd(p.typeSgbd) === 'redis') {
+            <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
+          } @else if (getIconForSgbd(p.typeSgbd) === 'mongo') {
+            <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><path d="M11 20c1.74 0 3-1.68 3-3.9 0-3.8-3-8.1-3-8.1s-3 4.3-3 8.1c0 2.22 1.26 3.9 3 3.9z" /><path d="M11 20c.4 1 .8 1.4 1 2M11 15v5"/></svg>
+          }
+        </div>
+        <div>
+          <div class="vfc-name">{{ p.nomPersonnalise }}</div>
+          <div class="vfc-os">{{ p.typeSgbd }}</div>
+        </div>
       </div>
-      <div class="cat-name">{{s.name}}</div>
-      <div class="cat-desc">{{s.desc}}</div>
-      <div class="cat-price">{{s.price}} DT<span>/mois</span></div>
-      <div class="cat-specs">@for (sp of s.specs; track $index) { <span class="cat-spec">{{sp}}</span> }</div>
+      <div class="vfc-status" [class]="p.status === 'RUNNING' ? 'status-running' : 'status-provisioning'">
+        {{ p.status === 'RUNNING' ? 'Actif' : p.status }}
+      </div>
     </div>
+
+    <div class="vfc-specs-grid">
+      <div class="vfc-spec">
+        <div class="vspec-k">vCPU</div>
+        <div class="vspec-v">{{ p.catalogue?.vcpu || 0 }}</div>
+      </div>
+      <div class="vfc-spec">
+        <div class="vspec-k">RAM</div>
+        <div class="vspec-v">{{ p.catalogue?.ramMB || 0 }} GB</div>
+      </div>
+      <div class="vfc-spec">
+        <div class="vspec-k">Disque</div>
+        <div class="vspec-v">{{ p.catalogue?.stockageGB || 0 }} GB</div>
+      </div>
+      <div class="vfc-spec">
+        <div class="vspec-k">IP & Port</div>
+        <div class="vspec-v">{{ p.hostIp ? p.hostIp + ':' + p.port : 'Non assigné' }}</div>
+      </div>
+    </div>
+
+    <div class="vfc-specs-grid" style="grid-template-columns: 1fr; margin-top: 10px;">
+      <div class="vfc-spec">
+        <div class="vspec-k">Connection String</div>
+        <div class="vspec-v" style="font-family: monospace; font-size: 11px; word-break: break-all;">
+          {{ p.connectionString || 'Non disponible' }}
+        </div>
+      </div>
+    </div>
+    
+    <div class="vfc-specs-grid" style="margin-top: 10px;">
+      <div class="vfc-spec">
+        <div class="vspec-k">Utilisateur</div>
+        <div class="vspec-v" style="font-family: monospace;">{{ p.dbUser || '-' }}</div>
+      </div>
+      <div class="vfc-spec">
+        <div class="vspec-k">Mot de passe</div>
+        <div class="vspec-v" style="font-family: monospace;">{{ p.dbPassword || '-' }}</div>
+      </div>
+    </div>
+
+    <div class="vfc-specs-grid" style="margin-top: 10px;">
+      <div class="vfc-spec">
+        <div class="vspec-k">Déployé le</div>
+        <div class="vspec-v" style="font-family: monospace;">{{ (p.dateCreation | date:'dd/MM/yyyy HH:mm') || '-' }}</div>
+      </div>
+    </div>
+
+    @if (p.metrics) {
+    <div class="vfc-specs-grid" style="margin-top: 10px; grid-template-columns: repeat(3, 1fr);">
+      <div class="vfc-spec">
+        <div class="vspec-k">CPU</div>
+        <div class="vspec-v" style="color: var(--blue);">{{ p.metrics.cpuUsage }}</div>
+      </div>
+      <div class="vfc-spec">
+        <div class="vspec-k">RAM</div>
+        <div class="vspec-v" style="color: var(--blue);">{{ p.metrics.ramPercentage }}</div>
+      </div>
+      <div class="vfc-spec">
+        <div class="vspec-k">Stockage</div>
+        <div class="vspec-v" style="color: var(--blue);">{{ p.metrics.usedStorageMb }} Mo</div>
+      </div>
+    </div>
+    } @else if (p.status === 'RUNNING') {
+    <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">Chargement des métriques...</div>
     }
+
+    <div class="vfc-footer">
+      <span class="mono-tag">{{ p.prixMensuel }} DT/mois</span>
+      <div style="display:flex;gap:6px">
+        <button class="action-btn delete" (click)="deletePaas.emit(p.id)">Suppr.</button>
+      </div>
+    </div>
   </div>
+  }
+  @empty {
+  <div class="empty-state" style="grid-column:1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; text-align: center; background: var(--bg-white); border: 1px dashed var(--border); border-radius: var(--r);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.6" stroke-linecap="round" width="48" height="48" style="opacity: 0.8;">
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+      </svg>
+      <p style="color: var(--text-1); margin: 0; font-size: 17px; font-weight: 600; font-family: 'Syne', sans-serif;">Aucun service PaaS déployé</p>
+      <button (click)="openDeploy.emit({ type: 'paas', name: '' })" style="background: var(--blue); color: white; margin-top: 4px; padding: 8px 20px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">Déployer mon premier service</button>
+  </div>
+  }
 </div>

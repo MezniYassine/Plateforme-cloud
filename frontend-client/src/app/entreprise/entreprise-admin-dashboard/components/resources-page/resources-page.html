@@ -1,112 +1,115 @@
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-                <div>
-                    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Ressources de
-                        l'organisation</div>
-                    <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px">Toutes les instances déployées
-                        par votre équipe</div>
-                </div>
-                <div class="filter-tabs">
-                    <button class="filter-tab" [class.active]="resFilter()==='all'"
-                        (click)="filterChange.emit('all')">Tout</button>
-                    <button class="filter-tab" [class.active]="resFilter()==='vm'"
-                        (click)="filterChange.emit('vm')">VMs</button>
-                    <button class="filter-tab" [class.active]="resFilter()==='db'" (click)="filterChange.emit('db')">Bases
-                        de données</button>
-                    <button class="filter-tab" [class.active]="resFilter()==='saas'"
-                        (click)="filterChange.emit('saas')">SaaS</button>
-                </div>
-            </div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+    <div>
+        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Ressources de
+            l'organisation</div>
+        <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px">Toutes les instances déployées
+            par votre équipe</div>
+    </div>
+    <div class="filter-tabs">
+        <button class="filter-tab" [class.active]="resFilter()==='all'" (click)="filterChange.emit('all')">Tout</button>
+        <button class="filter-tab" [class.active]="resFilter()==='vm'" (click)="filterChange.emit('vm')">VMs</button>
+        <button class="filter-tab" [class.active]="resFilter()==='db'" (click)="filterChange.emit('db')">Bases
+            de données</button>
+        <button class="filter-tab" [class.active]="resFilter()==='saas'"
+            (click)="filterChange.emit('saas')">SaaS</button>
+    </div>
+</div>
 
-            <div class="section-card">
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Ressource</th>
-                                <th>Propriétaire</th>
-                                <th>Type</th>
-                                <th>Config.</th>
-                                <th>Adresse IP</th>
-                                <th>CPU</th>
-                                <th>RAM</th>
-                                <th>Coût/mois</th>
-                                <th>Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (r of filteredResources(); track r.id) {
-                            <tr>
-                                <td>
-                                    <div style="display:flex;align-items:center;gap:10px">
-                                        <div class="res-icon" [style.background]="serviceColor(r.type).bg">
-                                            <svg viewBox="0 0 24 24" fill="none"
-                                                [attr.stroke]="serviceColor(r.type).color" stroke-width="1.8"
-                                                stroke-linecap="round" width="14" height="14">
-                                                @if (r.type === 'vm') {
-                                                <rect x="2" y="3" width="20" height="5" rx="2" />
-                                                <rect x="2" y="11" width="20" height="5" rx="2" /> }
-                                                @else if (r.type === 'db') {
-                                                <ellipse cx="12" cy="5" rx="9" ry="3" />
-                                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-                                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /> }
-                                                @else {
-                                                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" /> }
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <div style="font-weight:600;font-size:13.5px">{{ r.name }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="display:flex;align-items:center;gap:7px">
-                                        <div style="width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff"
-                                            [style.background]="memberColor(r.owner, r.ownerColor)">{{ getInitials(r.owner) }}</div>
-                                        <span style="font-size:13px">{{ r.owner }}</span>
-                                    </div>
-                                </td>
-                                <td><span class="type-badge" [attr.data-t]="r.type">{{ r.type.toUpperCase() }}</span>
-                                </td>
-                                <td style="font-size:12.5px;color:var(--text-secondary)">{{ r.specs }}</td>
-                                <td>
-                                    @if (r.ip) {
-                                    <span class="mono-tag">{{ r.ip }}</span>
-                                    } @else {
-                                    <span style="color:var(--text-muted);font-size:12px">—</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (r.cpu !== null && r.cpu !== undefined) {
-                                    <div style="display:flex;align-items:center;gap:6px">
-                                        <div class="mini-bar">
-                                            <div class="mini-fill" [style.width]="r.cpu+'%'"
-                                                [style.background]="r.cpu>80?'var(--red)':r.cpu>60?'var(--amber)':'var(--blue)'">
-                                            </div>
-                                        </div>
-                                        <span style="font-size:12px;font-weight:600">{{ r.cpu }}%</span>
-                                    </div>
-                                    } @else { <span style="color:var(--text-muted);font-size:12px">—</span> }
-                                </td>
-                                <td>
-                                    @if (r.ram !== null && r.ram !== undefined) {
-                                    <div style="display:flex;align-items:center;gap:6px">
-                                        <div class="mini-bar">
-                                            <div class="mini-fill" [style.width]="r.ram+'%'"
-                                                [style.background]="r.ram>80?'var(--red)':r.ram>60?'var(--amber)':'var(--teal)'">
-                                            </div>
-                                        </div>
-                                        <span style="font-size:12px;font-weight:600">{{ r.ram }}%</span>
-                                    </div>
-                                    } @else { <span style="color:var(--text-muted);font-size:12px">—</span> }
-                                </td>
-                                <td style="font-family:'DM Mono',monospace;font-weight:600;font-size:13px">{{ r.cost }}
-                                    DT</td>
-                                <td><span class="badge" [class]="statusClass(r.status)">
-                                        <div class="badge-dot"></div>{{ r.statusLabel || 'Running' }}
-                                    </span></td>
-                            </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+<div class="section-card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ressource</th>
+                    <th>Propriétaire</th>
+                    <th>Type</th>
+                    <th>Config.</th>
+                    <th>Adresse IP</th>
+                    <th>CPU</th>
+                    <th>RAM</th>
+                    <th>Stockage</th>
+                    <th>Coût/mois</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (r of filteredResources(); track r.id) {
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <div class="res-icon" [style.background]="serviceColor(r.type).bg">
+                                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="serviceColor(r.type).color"
+                                    stroke-width="1.8" stroke-linecap="round" width="14" height="14">
+                                    @if (r.type === 'vm') {
+                                    <rect x="2" y="3" width="20" height="5" rx="2" />
+                                    <rect x="2" y="11" width="20" height="5" rx="2" /> }
+                                    @else if (r.type === 'db') {
+                                    <ellipse cx="12" cy="5" rx="9" ry="3" />
+                                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /> }
+                                    @else {
+                                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" /> }
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="font-weight:600;font-size:13.5px">{{ r.name }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:7px">
+                            <div style="width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff"
+                                [style.background]="memberColor(r.owner, r.ownerColor)">{{ getInitials(r.owner) }}</div>
+                            <span style="font-size:13px">{{ r.owner }}</span>
+                        </div>
+                    </td>
+                    <td><span class="type-badge" [attr.data-t]="r.type">{{ r.type.toUpperCase() }}</span>
+                    </td>
+                    <td style="font-size:12.5px;color:var(--text-secondary)">{{ r.specs }}</td>
+                    <td>
+                        @if (r.ip) {
+                        <span class="mono-tag">{{ r.ip }}</span>
+                        } @else {
+                        <span style="color:var(--text-muted);font-size:12px">—</span>
+                        }
+                    </td>
+                    <td>
+                        @if (r.cpu !== null && r.cpu !== undefined) {
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <div class="mini-bar">
+                                <div class="mini-fill" [style.width]="r.cpu+'%'"
+                                    [style.background]="r.cpu>80?'var(--red)':r.cpu>60?'var(--amber)':'var(--blue)'">
+                                </div>
+                            </div>
+                            <span style="font-size:12px;font-weight:600">{{ r.cpu }}%</span>
+                        </div>
+                        } @else { <span style="color:var(--text-muted);font-size:12px">—</span> }
+                    </td>
+                    <td>
+                        @if (r.ram !== null && r.ram !== undefined) {
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <div class="mini-bar">
+                                <div class="mini-fill" [style.width]="r.ram+'%'"
+                                    [style.background]="r.ram>80?'var(--red)':r.ram>60?'var(--amber)':'var(--teal)'">
+                                </div>
+                            </div>
+                            <span style="font-size:12px;font-weight:600">{{ r.ram }}%</span>
+                        </div>
+                        } @else { <span style="color:var(--text-muted);font-size:12px">—</span> }
+                    </td>
+                    <td>
+                        @if (r.storage !== null && r.storage !== undefined) {
+                        <span style="font-size:12px;font-weight:600;color:var(--blue)">{{ r.storage }} Mo</span>
+                        } @else { <span style="color:var(--text-muted);font-size:12px">—</span> }
+                    </td>
+                    <td style="font-family:'DM Mono',monospace;font-weight:600;font-size:13px">{{ r.cost }}
+                        DT</td>
+                    <td><span class="badge" [class]="statusClass(r.status)">
+                            <div class="badge-dot"></div>{{ r.statusLabel || 'Running' }}
+                        </span></td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

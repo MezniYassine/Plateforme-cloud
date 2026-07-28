@@ -11,11 +11,11 @@ export class BillingTabComponent implements OnInit {
   h = inject(PersonalDashboardHelperService);
   openRecharge = output<void>();
 
-  invoices = signal<Invoice[]>([]);
+  get invoices() {
+    return this.h.invoices;
+  }
 
   ngOnInit() {
-    this.h.loadInvoices((data) => {
-      this.invoices.set(data);
-    });
+    this.h.loadInvoices();
   }
 }

@@ -333,7 +333,7 @@ export class EsxiController {
             await this.walletService.debiter(
               clientId,
               prixMensuel,
-              `Provisionnement VM: ${dto.name} (${catalogue?.nomService ?? 'Offre catalogue'}) — ${prixMensuel} DT/mois`,
+              `Déploiement d'une infrastructure IaaS (Machine Virtuelle)`,
               savedVm.id,
             );
             console.log(`💸 Débit de ${prixMensuel} DT pour VM "${dto.name}" (client #${clientId})`);

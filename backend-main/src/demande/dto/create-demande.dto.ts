@@ -20,4 +20,8 @@ export class CreateDemandeDto {
   @IsOptional()
   @IsString()
   versionPaas?: string;
+
+  @IsOptional()
+  @IsString()
+  typeSgbd?: string;
 }

@@ -1,4 +1,4 @@
-﻿            <div class="page-header-row">
+            <div class="page-header-row">
                 <div>
                     <div class="page-h-title">Mes services PaaS / SaaS</div>
                     <div class="page-h-sub">Bases de données et applications déployées sur votre compte</div>
@@ -6,41 +6,92 @@
                 <button class="btn-sm primary" (click)="state.setPage('new-request')">+ Demander un service</button>
             </div>
 
+            <div class="catalog-tabs-bar" style="margin-bottom: 20px;">
+                <button class="filter-tab" [class.active]="state.myServicesFilter() === 'all'" (click)="state.myServicesFilter.set('all')">Tout</button>
+                <button class="filter-tab" [class.active]="state.myServicesFilter() === 'db'" (click)="state.myServicesFilter.set('db')">PaaS - Bases de données</button>
+                <button class="filter-tab" [class.active]="state.myServicesFilter() === 'saas'" (click)="state.myServicesFilter.set('saas')">SaaS - Applications</button>
+            </div>
+
             <div class="svc-cards-grid">
-                @for (s of state.myServices(); track s.id) {
-                <div class="svc-full-card">
-                    <div class="svc-fc-header">
-                        <div class="svc-icon-lg" [style.background]="s.bg">
-                            <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="s.color" stroke-width="1.8"
-                                stroke-linecap="round" width="20" height="20">
-                                @if (s.type==='db') {
-                                <ellipse cx="12" cy="5" rx="9" ry="3" />
-                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /> }
-                                @else {
-                                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" /> }
-                            </svg>
-                        </div>
-                        <div style="flex:1;min-width:0">
-                            <div class="vfc-name">{{ s.name }}</div>
-                            <div class="vfc-os">{{ s.type === 'db' ? 'Base de données PaaS' : 'Application SaaS' }}
+                @for (s of state.filteredMyServices(); track s.id) {
+                <div class="vm-full-card">
+                    <div class="vfc-header">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="cat-icon"
+                                [style.background]="s.bg"
+                                style="width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="s.color" stroke-width="1.8" width="20" height="20">
+                                    @if (s.type==='db') {
+                                    <ellipse cx="12" cy="5" rx="9" ry="3" />
+                                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /> }
+                                    @else {
+                                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" /> }
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="vfc-name">{{ s.name }}</div>
+                                <div class="vfc-os">{{ s.specs }}</div>
                             </div>
                         </div>
-                        <span class="badge approved">
-                            <div class="badge-dot"></div>Running
-                        </span>
+                        <div class="vfc-status"
+                            [class]="s.status === 'running' ? 'status-running' : 'status-provisioning'">
+                            {{ s.status === 'running' ? 'Actif' : s.status }}
+                        </div>
                     </div>
-                    <div class="svc-fc-body">
-                        <div class="svc-detail"><span class="svc-dk">Endpoint</span><span class="mono-tag svc-dv">{{
-                                s.url }}</span></div>
-                        <div class="svc-detail"><span class="svc-dk">Configuration</span><span class="svc-dv">{{ s.specs
-                                }}</span></div>
-                        <div class="svc-detail"><span class="svc-dk">Coût mensuel</span><span class="svc-dv"
-                                style="font-weight:700;color:var(--blue)">{{ s.cost }} DT</span></div>
+
+                    <div class="vfc-specs-grid" style="grid-template-columns: 1fr;">
+                        <div class="vfc-spec">
+                            <div class="vspec-k">CONNECTION STRING</div>
+                            <div class="vspec-v"
+                                style="font-family: monospace; font-size: 11px; word-break: break-all;">
+                                {{ s.connectionString || 'Non disponible' }}
+                            </div>
+                        </div>
                     </div>
-                    <div class="svc-fc-footer">
-                        <button class="btn-sm">Documentation</button>
-                        <button class="btn-sm">Voir les logs</button>
+
+                    <div class="vfc-specs-grid" style="margin-top: 10px;">
+                        <div class="vfc-spec">
+                            <div class="vspec-k">UTILISATEUR</div>
+                            <div class="vspec-v" style="font-family: monospace;">{{ s.dbUser || '-' }}</div>
+                        </div>
+                        <div class="vfc-spec">
+                            <div class="vspec-k">MOT DE PASSE</div>
+                            <div class="vspec-v" style="font-family: monospace;">{{ s.dbPassword || '-' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="vfc-specs-grid" style="margin-top: 10px;">
+                        <div class="vfc-spec">
+                            <div class="vspec-k">DÉPLOYÉ LE</div>
+                            <div class="vspec-v" style="font-family: monospace;">{{ (s.dateCreation | date:'dd/MM/yyyy HH:mm') || '-' }}</div>
+                        </div>
+                    </div>
+
+                    @if (s.metrics) {
+                    <div class="vfc-specs-grid" style="margin-top: 10px; grid-template-columns: repeat(3, 1fr);">
+                        <div class="vfc-spec">
+                            <div class="vspec-k">CPU</div>
+                            <div class="vspec-v" style="color: var(--blue);">{{ s.metrics.cpuUsage }}</div>
+                        </div>
+                        <div class="vfc-spec">
+                            <div class="vspec-k">RAM</div>
+                            <div class="vspec-v" style="color: var(--blue);">{{ s.metrics.ramPercentage }}</div>
+                        </div>
+                        <div class="vfc-spec">
+                            <div class="vspec-k">STOCKAGE</div>
+                            <div class="vspec-v" style="color: var(--blue);">{{ s.metrics.usedStorageMb }} Mo</div>
+                        </div>
+                    </div>
+                    } @else if (s.status === 'running') {
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">Chargement des métriques...</div>
+                    }
+
+                    <div class="vfc-footer">
+                        <span class="mono-tag">{{ s.cost | number:'1.2-2' }} DT/mois</span>
+                        <div style="display:flex;gap:6px">
+                            <button class="action-btn delete" (click)="state.deletePaas(s.id, s.name)">Suppr.</button>
+                        </div>
                     </div>
                 </div>
                 }

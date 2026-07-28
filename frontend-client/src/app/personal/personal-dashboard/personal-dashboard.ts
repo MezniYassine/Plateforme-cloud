@@ -13,6 +13,7 @@ import { BillingTabComponent } from './components/billing-tab/billing-tab';
 import { ProfileTabComponent } from './components/profile-tab/profile-tab';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
+import { PaasInstance } from './personal-dashboard-helper.service';
 
 @Component({
   selector: 'app-personal-dashboard',
@@ -73,16 +74,17 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     monitor: 'Monitoring', billing: 'Facturation & Wallet', profile: 'Mon profil',
   };
 
-  /* ── VMs ──────────────────────────────────────────── */
+  /* ── VMs & PAAS ──────────────────────────────────────────── */
   vms = signal<VM[]>([]);
+  paasInstances = signal<PaasInstance[]>([]);
 
-  monitorBars     = signal<Record<string, number[]>>({});
+  monitorBars = signal<Record<string, number[]>>({});
   monitorBarTimes = signal<Record<string, string[]>>({});
-  lastRefresh     = signal<Date | null>(null);
+  lastRefresh = signal<Date | null>(null);
 
   /* ── DEPLOY MODAL ─────────────────────────────────── */
   isDeployModalOpen = signal<boolean>(false);
-  deployType = signal<'vm' | 'catalog'>('vm');
+  deployType = signal<'vm' | 'paas' | 'catalog'>('vm');
   deployName = signal<string>('');
   deployCpu = signal<number>(2);
   deployRam = signal<number>(4);
@@ -92,9 +94,14 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   selectedTemplateName = signal<string>('');
   deployStep = signal<1 | 2>(1);
   selectedPlan = signal<ServiceItem | null>(null);
+  selectedSgbd = signal<'POSTGRESQL' | 'MYSQL' | 'REDIS' | 'MONGODB'>('POSTGRESQL');
 
   vmPlans = computed(() =>
-    this.h.catalogItems().filter(item => item.icon === 'vm')
+    this.h.catalogItems().filter(item => item.icon === 'vm' || item.tag === 'IaaS' || item.tag === 'IAAS')
+  );
+
+  paasPlans = computed(() =>
+    this.h.catalogItems().filter(item => item.icon === 'db' || item.icon === 'redis' || item.icon === 'mongo' || item.icon === 'PAAS' || item.tag === 'PaaS' || item.tag === 'PAAS' || (item as any).typeService === 'PAAS')
   );
 
   costPreview = computed(() => {
@@ -111,38 +118,53 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   /* ── CONFIRM TOAST ────────────────────────────────── */
   isConfirmToastVisible = signal<boolean>(false);
   confirmToastMsg = signal<string>('');
-  private vmIdToDelete: string | null = null;
+  private itemToDelete: { type: 'vm' | 'paas', id: string | number } | null = null;
 
-  showConfirmToast(vmId: string, vmName: string) {
-    this.vmIdToDelete = vmId;
-    this.confirmToastMsg.set(`Supprimer ${vmName} ?`);
+  showConfirmToast(type: 'vm' | 'paas', id: string | number, name: string) {
+    this.itemToDelete = { type, id };
+    this.confirmToastMsg.set(`Supprimer ${name} ?`);
     this.isConfirmToastVisible.set(true);
   }
 
   cancelDelete() {
     this.isConfirmToastVisible.set(false);
-    this.vmIdToDelete = null;
+    this.itemToDelete = null;
   }
 
   confirmDelete() {
-    const id = this.vmIdToDelete;
-    if (!id) return;
-    
+    const item = this.itemToDelete;
+    if (!item) return;
+
     this.isConfirmToastVisible.set(false);
-    this.vmIdToDelete = null;
+    this.itemToDelete = null;
 
-    const vm = this.vms().find(v => v.id === id);
-    if (!vm) return;
+    if (item.type === 'vm') {
+      const vmId = item.id as string;
+      const vm = this.vms().find(v => v.id === vmId);
+      if (!vm) return;
 
-    this.h.deleteVm(id).subscribe({
-      next: () => {
-        this.vms.update(list => list.filter(v => v.id !== id));
-        this.showToast(`${vm.name} supprimée`, 'var(--red)');
-      },
-      error: (err) => {
-        this.showToast(err?.error?.message ?? 'Suppression impossible', 'var(--red)');
-      },
-    });
+      this.h.deleteVm(vmId).subscribe({
+        next: () => {
+          this.vms.update(list => list.filter(v => v.id !== vmId));
+          this.showToast(`${vm.name} supprimée`, 'var(--red)');
+        },
+        error: (err) => {
+          this.showToast(err?.error?.message ?? 'Suppression impossible', 'var(--red)');
+        },
+      });
+    } else if (item.type === 'paas') {
+      const paasId = item.id as number;
+      this.h.deletePaas(paasId).subscribe({
+        next: () => {
+          this.showToast('Service PaaS supprimé', 'var(--green)');
+          const clientId = this.actualPers()?.client?.id;
+          if (clientId) this.loadMyPaas(clientId);
+        },
+        error: (err) => {
+          this.showToast(err?.error?.message ?? 'Erreur lors de la suppression', 'var(--red)');
+        }
+      });
+    }
   }
 
   /* ── NAVIGATION ───────────────────────────────────── */
@@ -159,7 +181,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     const vm = this.vms()[vmIndex];
 
     if (action === 'delete') {
-      this.showConfirmToast(id, vm.name);
+      this.showConfirmToast('vm', id, vm.name);
       return;
     }
 
@@ -205,11 +227,11 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   }
 
   /* ── DEPLOY ───────────────────────────────────────── */
-  handleOpenDeploy(event: { type: 'vm' | 'catalog'; name: string }) {
+  handleOpenDeploy(event: { type: 'vm' | 'paas' | 'catalog'; name: string }) {
     this.openDeploy(event.type, event.name);
   }
 
-  openDeploy(type: 'vm' | 'catalog', name: string = '') {
+  openDeploy(type: 'vm' | 'paas' | 'catalog', name: string = '') {
     this.deployType.set(type);
     this.deployName.set(name);
     this.deployCpu.set(2);
@@ -218,6 +240,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     this.deployVmName.set('');
     this.deployStep.set(1);
     this.selectedPlan.set(null);
+    this.selectedSgbd.set('POSTGRESQL');
     if (!this.selectedTemplateName() && this.vmTemplates().length > 0) {
       this.selectedTemplateName.set(this.vmTemplates()[0].name);
     }
@@ -229,7 +252,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
       this.showToast("Veuillez saisir un nom d'instance", 'var(--red)');
       return;
     }
-    if (!this.selectedTemplateName() && this.vmTemplates().length > 0) {
+    if (this.deployType() === 'vm' && !this.selectedTemplateName() && this.vmTemplates().length > 0) {
       this.showToast('Veuillez sélectionner un système d\'exploitation', 'var(--red)');
       return;
     }
@@ -263,29 +286,22 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   }
 
   confirmDeploy() {
-    const isVm = this.deployType() === 'vm';
-    if (isVm) {
-      const name = this.deployVmName() || 'new-vm';
+    if (this.deployType() === 'vm') {
       const templateName = this.selectedTemplateName();
-
+      const selectedPlan = this.selectedPlan();
       if (!templateName) {
-        this.showToast('Aucun template ESXi disponible', 'var(--red)');
+        this.showToast('Veuillez sélectionner un OS', 'var(--red)');
         return;
       }
-
-      const selectedPlan = this.selectedPlan();
-
       if (!selectedPlan) {
         this.showToast('Veuillez sélectionner un plan IaaS', 'var(--red)');
         return;
       }
+      const name = this.deployVmName() || `vm-${Date.now().toString().slice(-4)}`;
 
-      if (!selectedPlan.id) {
-        this.showToast('Plan catalogue invalide', 'var(--red)');
-        return;
-      }
+      this.closeModal();
+      this.showToast(`${name} en cours de déploiement...`, 'var(--blue)');
 
-      this.isDeploying.set(true);
       this.h.createVm({
         name,
         ramGB: this.deployRam(),
@@ -295,22 +311,47 @@ export class PersonalDashboard implements OnInit, OnDestroy {
         catalogueId: selectedPlan.id,
       }).subscribe({
         next: (res) => {
-          this.closeModal();
-          this.isDeploying.set(false);
           this.vms.update(list => [this.mapVm(res.vm), ...list]);
-          this.showToast(`${name} en cours de déploiement...`, 'var(--blue)');
           this.startVmPolling();
         },
         error: (err) => {
-          this.isDeploying.set(false);
           this.showToast(err?.error?.message ?? 'Déploiement impossible', 'var(--red)');
         },
       });
       return;
 
-    } else {
+    } else if (this.deployType() === 'paas') {
+      const selectedPlan = this.selectedPlan();
+      if (!selectedPlan) {
+        this.showToast('Veuillez sélectionner un plan PaaS', 'var(--red)');
+        return;
+      }
+      const clientId = this.actualPers()?.client?.id;
+      if (!clientId) {
+        this.showToast('Erreur: Client non identifié', 'var(--red)');
+        return;
+      }
+
       this.closeModal();
-      this.showToast('Service déployé avec succès !', 'var(--green)');
+      this.showToast(`PaaS en cours de déploiement...`, 'var(--blue)');
+
+      this.h.createPaas({
+        nomPersonnalise: this.deployVmName(),
+        typeSgbd: this.selectedSgbd(),
+        clientId: clientId,
+        catalogueId: selectedPlan.id
+      }).subscribe({
+        next: () => {
+          this.showToast('Service PaaS déployé avec succès !', 'var(--green)');
+          this.h.loadWallet(); // Reload wallet to update balance
+          const clientId = this.actualPers()?.client?.id;
+          if (clientId) this.loadMyPaas(clientId);
+        },
+        error: (err) => {
+          this.isDeploying.set(false);
+          this.showToast(err?.error?.message ?? 'Déploiement impossible', 'var(--red)');
+        }
+      });
     }
   }
 
@@ -322,7 +363,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   /* ── HELPERS ──────────────────────────────────────── */
   private ensureMonitorBars(vmId: string) {
     if (this.monitorBars()[vmId]) return;
-    const bars  = this.h.createRandomBars();
+    const bars = this.h.createRandomBars();
     const times = this.h.createBarTimes(bars.length);
     this.monitorBars.update(b => ({ ...b, [vmId]: bars }));
     this.monitorBarTimes.update(t => ({ ...t, [vmId]: times }));
@@ -330,17 +371,17 @@ export class PersonalDashboard implements OnInit, OnDestroy {
 
   /** Fait glisser une nouvelle valeur + timestamp dans le graphique de chaque VM running */
   private slideMonitorBars(vms: VM[]) {
-    const now     = new Date();
+    const now = new Date();
     const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    const MAX     = 20;
+    const MAX = 20;
 
-    const newBars  = { ...this.monitorBars() };
+    const newBars = { ...this.monitorBars() };
     const newTimes = { ...this.monitorBarTimes() };
 
     for (const vm of vms) {
       if (!newBars[vm.id]) continue;          // sera créé par ensureMonitorBars
       const metric = vm.status === 'running' ? (vm.cpuUse ?? 0) : 0;
-      newBars[vm.id]  = [...newBars[vm.id].slice(-(MAX - 1)),  metric];
+      newBars[vm.id] = [...newBars[vm.id].slice(-(MAX - 1)), metric];
       newTimes[vm.id] = [...(newTimes[vm.id] ?? []).slice(-(MAX - 1)), timeStr];
     }
 
@@ -366,17 +407,73 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     this.http.get<any>(url).subscribe({
       next: (pers) => {
         this.actualPers.set(pers);
-        console.log(pers);
+        console.log('Current pers:', pers);
+        if (pers?.client?.id) {
+          this.loadMyPaas(pers.client.id);
+        }
       },
       error: (err) => console.error('Failed to load current Personal', err)
     });
-
   }
+
+  loadMyPaas(clientId: number) {
+    this.h.getMyPaas(clientId).subscribe({
+      next: (data) => {
+        const existing = this.paasInstances();
+        data = data.map((p: PaasInstance) => {
+          const prev = existing.find(e => e.id === p.id);
+          if (prev && prev.metrics) {
+            p.metrics = prev.metrics;
+          }
+          return p;
+        });
+        this.paasInstances.set(data);
+
+        // Fetch metrics for running databases
+        data.filter((p: PaasInstance) => p.status === 'RUNNING').forEach((p: PaasInstance) => {
+          this.loadPaasMetrics(p.id);
+        });
+      },
+      error: (err) => {
+        console.error('Failed to load PaaS instances', err);
+      }
+    });
+  }
+
+  loadPaasMetrics(serviceId: number) {
+    this.http.get<any>(`${environment.apiBaseUrl.replace(/\/$/, '')}/paas/${serviceId}/metrics`).subscribe({
+      next: (metrics) => {
+        this.paasInstances.update(instances =>
+          instances.map(p => p.id === serviceId ? { ...p, metrics } : p)
+        );
+      },
+      error: () => { }
+    });
+  }
+
+  deletePaas(id: number) {
+    const paas = this.paasInstances().find(p => p.id === id);
+    if (paas) {
+      this.showConfirmToast('paas', id, paas.nomPersonnalise);
+    }
+  }
+
+  private provisioningVms = new Set<string>();
 
   loadMyVms() {
     this.h.getMyVms().subscribe({
       next: (entities) => {
         const mapped = entities.map((vm) => this.mapVm(vm));
+        mapped.forEach(vm => {
+          if (vm.status === 'provisioning') {
+            this.provisioningVms.add(vm.id);
+          } else if (vm.status === 'running' && this.provisioningVms.has(vm.id)) {
+            this.provisioningVms.delete(vm.id);
+            this.showToast(`${vm.name} provisionnée avec succès !`, 'var(--green)');
+            this.h.loadWallet();
+          }
+        });
+
         this.vms.set(mapped);
         mapped.forEach((vm) => this.ensureMonitorBars(vm.id));
         this.slideMonitorBars(mapped);
@@ -419,7 +516,13 @@ export class PersonalDashboard implements OnInit, OnDestroy {
 
   private startVmPolling() {
     if (this.vmPoll) return;
-    this.vmPoll = setInterval(() => this.loadMyVms(), 4000);
+    this.vmPoll = setInterval(() => {
+      this.loadMyVms();
+      const clientId = this.actualPers()?.client?.id;
+      if (clientId) {
+        this.loadMyPaas(clientId);
+      }
+    }, 4000);
   }
 
   private stopVmPolling() {

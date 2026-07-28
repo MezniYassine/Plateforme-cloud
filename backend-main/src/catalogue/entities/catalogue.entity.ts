@@ -11,13 +11,13 @@ export class Catalogue {
   @Column('text', { nullable: true })
   description!: string;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'float', default: 0 })
   vcpu!: number;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'float', default: 0 })
   ramMB!: number;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'float', default: 0 })
   stockageGB!: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0.00 })
@@ -25,4 +25,10 @@ export class Catalogue {
 
   @Column({ default: true })
   isActive!: boolean;
+
+  @Column({ type: 'varchar', nullable: true })
+  typeSgbd!: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  typeService!: string;
 }
