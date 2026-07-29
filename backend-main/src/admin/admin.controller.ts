@@ -26,6 +26,11 @@ export class AdminController {
     async getGlobalBilling() {
         return this.adminService.getGlobalBilling();
     }
+
+    @Get('monitoring')
+    async getMonitoringData() {
+        return this.adminService.getMonitoringData();
+    }
     @Get('me')
     async getProfile(@Req() req) {
         const adminId = parseInt(req.user.sub, 10);

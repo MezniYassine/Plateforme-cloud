@@ -973,9 +973,11 @@ tbody td {
 
 .chart-bar-wrap {
   flex: 1;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   gap: 5px;
 }
 
@@ -985,6 +987,7 @@ tbody td {
   border-radius: 4px 4px 0 0;
   transition: height .6s ease;
   min-height: 4px;
+  flex-shrink: 0;
 }
 
 .chart-label {
@@ -1441,3 +1444,356 @@ tbody td {
   width: 15px;
   height: 15px;
 }
+
+/* ═══════════════════════════════════════════════
+   BILLING PAGE — Enhanced
+   ═══════════════════════════════════════════════ */
+
+.billing-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Toolbar (filter + search) ── */
+.billing-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-light);
+  flex-wrap: wrap;
+}
+
+.filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-page);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.filter-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all .18s;
+
+  &.active {
+    background: var(--bg-white);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+  }
+  &:hover:not(.active) {
+    background: rgba(0,0,0,.04);
+  }
+}
+
+.tab-count {
+  background: var(--border);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 20px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.type-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  &.ent { background: var(--blue); }
+  &.pers { background: var(--purple); }
+}
+
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.search-input {
+  padding: 6px 12px 6px 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--bg-white);
+  width: 220px;
+  transition: border-color .18s, box-shadow .18s;
+  outline: none;
+  &:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(26,86,232,.08);
+  }
+  &::placeholder { color: var(--text-muted); }
+}
+
+/* ── Billing Table ── */
+.billing-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead tr {
+    background: var(--bg-page);
+  }
+  th {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+    white-space: nowrap;
+  }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+  }
+}
+
+/* Invoice rows */
+.invoice-row {
+  cursor: pointer;
+  transition: background .15s;
+  &:hover { background: var(--bg-hover); }
+  &.expanded {
+    background: var(--bg-page);
+    td { border-bottom: none; }
+  }
+}
+
+/* Period cell */
+.period-cell {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Amount cell */
+.amount-cell {
+  font-family: 'DM Mono', monospace;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* Expand chevron */
+.expand-cell { text-align: center; }
+.expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-page);
+  color: var(--text-muted);
+  transition: transform .2s, background .15s;
+  &.open {
+    transform: rotate(180deg);
+    background: var(--blue-light);
+    color: var(--blue);
+  }
+}
+
+/* Type badge */
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.entreprise {
+    background: var(--blue-light);
+    color: var(--blue);
+  }
+  &.personnel {
+    background: var(--purple-light);
+    color: var(--purple);
+  }
+}
+
+/* Resources chips */
+.resources-cell {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.res-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  &.vm { background: var(--teal-light); color: var(--teal); }
+  &.svc { background: var(--amber-light); color: var(--amber); }
+}
+
+/* ── Transactions Accordion Panel ── */
+.transactions-row td {
+  padding: 0 !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.transactions-panel {
+  background: linear-gradient(135deg, #f8faff 0%, #f4f6fb 100%);
+  border-left: 3px solid var(--blue);
+  padding: 16px 20px;
+  animation: slideDown .2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.transactions-header {
+  margin-bottom: 12px;
+}
+.tx-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-muted);
+}
+
+.tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tx-item {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto auto auto;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  transition: box-shadow .15s;
+  &:hover { box-shadow: var(--shadow-sm); }
+}
+
+.tx-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  &.vm  { background: var(--teal-light); color: var(--teal); }
+  &.svc { background: var(--amber-light); color: var(--amber); }
+}
+
+.tx-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.tx-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.catalog-chip {
+  background: var(--blue-mid);
+  color: var(--blue);
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tx-type-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--border-light);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.tx-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Transaction status badges */
+.tx-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.tx-running { background: var(--green-light); color: var(--green); }
+  &.tx-stopped { background: #f1f5f9; color: #64748b; }
+  &.tx-pending { background: var(--amber-light); color: var(--amber); }
+  &.tx-failed  { background: var(--red-light); color: var(--red); }
+}
+
+.tx-price {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px;
+  color: var(--text-muted);
+  font-size: 14px;
+}

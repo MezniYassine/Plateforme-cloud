@@ -1,4 +1,4 @@
-﻿<aside class="sidebar">
+<aside class="sidebar">
     <div class="sidebar-logo">
         <div class="logo-icon">
             <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Logo">
@@ -50,14 +50,6 @@
             </svg>
             Serveurs ESXi
         </div>
-        <div class="nav-item" [class.active]="activePage==='kubernetes'" (click)="setPage('kubernetes')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
-            </svg>
-            Kubernetes
-        </div>
         <div class="nav-item" [class.active]="activePage==='monitoring'" (click)="setPage('monitoring')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -75,13 +67,7 @@
             </svg>
             Facturation
         </div>
-        <div class="nav-item" [class.active]="activePage==='iam'" (click)="setPage('iam')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            Sécurité &amp; IAM
-        </div>
+
         <div class="nav-item" [class.active]="activePage==='catalogue'" (click)="setPage('catalogue')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <circle cx="12" cy="12" r="3" />

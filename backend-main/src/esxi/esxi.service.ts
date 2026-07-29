@@ -572,6 +572,29 @@ export class EsxiService {
             const activeVmsCount = vms.filter(vm => vm.state === 'poweredOn').length;
             const totalVmsCount = vms.length;
 
+            // --- EXTRACTION DATASTORE ---
+            let storageUsagePercent = 0; // Default (will be updated dynamically below)
+            try {
+                const datastore = await this.getFirstMoRef('Datastore');
+                if (datastore) {
+                    const dsSpec = {
+                        propSet: [{ type: 'Datastore', all: false, pathSet: ['summary.capacity', 'summary.freeSpace'] }],
+                        objectSet: [{ obj: datastore }]
+                    };
+                    const dsResult: any = await this.runVsphereCommand('RetrievePropertiesEx', {
+                        _this: serviceContent.propertyCollector, specSet: [dsSpec], options: {}
+                    });
+                    const dsProps = dsResult?.returnval?.objects?.[0]?.propSet;
+                    const dsCapacity = Number(this.unwrapSoapValue(dsProps?.find((p: any) => p.name === 'summary.capacity')?.val));
+                    const dsFree = Number(this.unwrapSoapValue(dsProps?.find((p: any) => p.name === 'summary.freeSpace')?.val));
+                    if (dsCapacity > 0) {
+                        storageUsagePercent = Math.round(((dsCapacity - dsFree) / dsCapacity) * 100);
+                    }
+                }
+            } catch (dsErr) {
+                this.logger.warn(`Impossible de récupérer les stats Datastore: ${dsErr.message}`);
+            }
+
             // 4. Retour du format exact pour ton frontend Angular
             return {
                 hostname: "esxi-host-01",
@@ -580,6 +603,7 @@ export class EsxiService {
                 ramTotal: `${totalRamGb} GB`, // Affichera "8 GB"
                 cpuPercent: cpuUsagePercent,  // Pour ta barre d'avancement
                 ramPercent: ramUsagePercent,  // Pour ta barre d'avancement
+                storagePercent: storageUsagePercent, // NOUVEAU
                 vmsCount: activeVmsCount,
                 totalVmsCount,
                 status: 'Online'

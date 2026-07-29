@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 
 export interface Tenant {
   id: string; company: string; email: string;
@@ -7,6 +7,9 @@ export interface Tenant {
   status: 'pending' | 'approved' | 'rejected' | 'suspended';
   accountType: 'personnel' | 'entreprise';
   vms: number; tenantId: string;
+  mfaStatus?: string;
+  providers?: string[];
+  users?: Tenant[];
 }
 
 export interface Admin {

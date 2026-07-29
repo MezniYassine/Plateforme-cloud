@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NodeSSH } from 'node-ssh';
@@ -8,9 +8,12 @@ import { TypeSgbd } from 'src/enum/type-sgbd.enum';
 import { CreatePaasDto } from './dto/create-paas.dto';
 import { Catalogue } from 'src/catalogue/entities/catalogue.entity';
 import { WalletService } from 'src/wallet/wallet.service';
+import { EsxiService } from 'src/esxi/esxi.service';
 
 @Injectable()
-export class PaasService {
+export class PaasService implements OnModuleInit {
+    private readonly logger = new Logger(PaasService.name);
+
     private get hostIp(): string {
         return (process.env.PAAS_HOST_IP || '192.168.8.183').replace(/^"(.*)"$/, '$1').trim();
     }
@@ -27,7 +30,32 @@ export class PaasService {
         @InjectRepository(Catalogue)
         private readonly catalogueRepo: Repository<Catalogue>,
         private readonly walletService: WalletService,
+        private readonly esxiService: EsxiService,
     ) { }
+
+    async onModuleInit() {
+        this.logger.log('Vérification de l\'état de la machine DBaaS sur l\'ESXi...');
+        try {
+            const vms = await this.esxiService.getVms();
+            const paasVm = vms.find(vm =>
+                vm.name === 'DBAAS'
+            );
+
+            if (paasVm) {
+                if (paasVm.state !== 'poweredOn') {
+                    this.logger.log(`La machine DBaaS (${paasVm.name}) est éteinte. Démarrage en cours...`);
+                    await this.esxiService.powerControl(paasVm.id, 'start');
+                    this.logger.log(`Machine DBaaS (${paasVm.name}) démarrée avec succès.`);
+                } else {
+                    this.logger.log(`La machine DBaaS (${paasVm.name}) est déjà en cours d'exécution.`);
+                }
+            } else {
+                this.logger.warn(`Impossible de trouver la machine DBaaS nommée 'DBAAS' dans l'ESXi.`);
+            }
+        } catch (error) {
+            this.logger.error(`Erreur lors de la vérification de la machine DBaaS : ${error.message}`);
+        }
+    }
 
     async createDatabase(dto: CreatePaasDto, adminPayerId?: number): Promise<ServicePaaS> {
         if (!dto?.nomPersonnalise) {

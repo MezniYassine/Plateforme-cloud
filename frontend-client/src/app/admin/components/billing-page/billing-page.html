@@ -1,4 +1,5 @@
-﻿<div class="stats-row">
+<!-- ── STATS ROW ── -->
+<div class="stats-row">
   @for (s of billingStats(); track s.label) {
   <div class="stat-card">
     <div class="stat-header">
@@ -16,55 +17,167 @@
   }
 </div>
 
+<!-- ── MAIN GRID ── -->
 <div class="main-grid">
-  <div class="section-card">
+
+  <!-- ── LEFT: INVOICES TABLE ── -->
+  <div class="section-card billing-card">
+    <!-- Header -->
     <div class="card-header">
       <div>
         <div class="card-title">Factures clients</div>
-        <div class="card-sub">Facturation automatique pay-as-you-go</div>
+        <div class="card-sub">Facturation automatique — Entreprises &amp; Particuliers</div>
       </div>
-      <button class="btn-sm">Exporter</button>
+      <button class="btn-sm" (click)="exportCsv()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exporter CSV
+      </button>
     </div>
+
+    <!-- Filter Bar -->
+    <div class="billing-toolbar">
+      <div class="filter-tabs">
+        <button class="filter-tab" [class.active]="activeFilter() === 'all'" (click)="setFilter('all')">
+          Tous <span class="tab-count">{{ billingInvoices().length }}</span>
+        </button>
+        <button class="filter-tab" [class.active]="activeFilter() === 'entreprise'" (click)="setFilter('entreprise')">
+          <span class="type-dot ent"></span> Entreprise
+          <span class="tab-count">{{ enterpriseCount() }}</span>
+        </button>
+        <button class="filter-tab" [class.active]="activeFilter() === 'personnel'" (click)="setFilter('personnel')">
+          <span class="type-dot pers"></span> Particulier
+          <span class="tab-count">{{ personnelCount() }}</span>
+        </button>
+      </div>
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" type="text" placeholder="Rechercher un client, email…" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" />
+      </div>
+    </div>
+
+    <!-- Table -->
     <div class="table-wrap">
-      <table>
+      @if (filteredInvoices().length === 0) {
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" width="40" height="40"><path d="M9 14l-5-5 5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+          <p>Aucune facture trouvée</p>
+        </div>
+      }
+      @if (filteredInvoices().length > 0) {
+      <table class="billing-table">
         <thead>
           <tr>
-            <th>Client</th><th>Période</th><th>Ressources</th><th>Montant</th><th>Statut</th>
+            <th>Client</th>
+            <th>Type</th>
+            <th>Période</th>
+            <th>Ressources</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
-          @for (i of billingInvoices(); track i.id) {
-          <tr>
+          @for (inv of filteredInvoices(); track inv.id) {
+          <tr class="invoice-row" [class.expanded]="isExpanded(inv.id)" (click)="toggleRow(inv.id)">
             <td>
               <div class="cell-company">
-                <div class="company-avatar" [style.background]="h.colorFor(i.id)">{{ h.getInitials(i.client) }}</div>
+                <div class="company-avatar" [style.background]="h.colorFor(inv.id)">{{ h.getInitials(inv.client) }}</div>
                 <div>
-                  <div class="company-name">{{ i.client }}</div>
-                  <div class="company-email">{{ i.email }}</div>
+                  <div class="company-name">{{ inv.client }}</div>
+                  <div class="company-email">{{ inv.email }}</div>
                 </div>
               </div>
             </td>
-            <td style="font-size:13px">{{ i.period }}</td>
-            <td style="font-size:12.5px;color:var(--text-secondary)">{{ i.resources }}</td>
-            <td style="font-family:'DM Mono',monospace;font-weight:600;font-size:13px">{{ i.amount }}</td>
-            <td><span class="badge" [class]="i.paid?'approved':'pending'">
-              <div class="badge-dot"></div>{{ i.paid ? 'Payée' : 'En attente' }}
-            </span></td>
+            <td>
+              <span class="type-badge" [class]="inv.clientType">
+                {{ inv.clientType === 'entreprise' ? '🏢 Entreprise' : '👤 Particulier' }}
+              </span>
+            </td>
+            <td class="period-cell">{{ inv.period }}</td>
+            <td>
+              <div class="resources-cell">
+                @if (inv.vmCount > 0) {
+                  <span class="res-chip vm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    {{ inv.vmCount }} VM{{ inv.vmCount > 1 ? 's' : '' }}
+                  </span>
+                }
+                @if (inv.serviceCount > 0) {
+                  <span class="res-chip svc">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                    {{ inv.serviceCount }} Service{{ inv.serviceCount > 1 ? 's' : '' }}
+                  </span>
+                }
+              </div>
+            </td>
+            <td class="amount-cell">{{ inv.amount }}</td>
+            <td>
+              <span class="badge" [class]="inv.paid ? 'approved' : 'pending'">
+                <div class="badge-dot"></div>{{ inv.paid ? 'Payée' : 'En attente' }}
+              </span>
+            </td>
+            <td class="expand-cell">
+              <div class="expand-btn" [class.open]="isExpanded(inv.id)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </td>
           </tr>
+
+          <!-- ── EXPANDED TRANSACTIONS ── -->
+          @if (isExpanded(inv.id)) {
+          <tr class="transactions-row">
+            <td colspan="7">
+              <div class="transactions-panel">
+                <div class="transactions-header">
+                  <span class="tx-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Détail des transactions ({{ inv.transactions.length }})
+                  </span>
+                </div>
+                <div class="tx-list">
+                  @for (tx of inv.transactions; track $index) {
+                  <div class="tx-item">
+                    <div class="tx-icon" [class]="tx.typeService === 'IAAS' ? 'vm' : 'svc'">
+                      @if (tx.typeService === 'IAAS') {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                      } @else {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                      }
+                    </div>
+                    <div class="tx-info">
+                      <span class="tx-name">{{ tx.name }}</span>
+                      @if (tx.catalogName) {
+                        <span class="catalog-chip">{{ tx.catalogName }}</span>
+                      }
+                    </div>
+                    <div class="tx-type-label">{{ tx.typeService }}</div>
+                    <div class="tx-date">{{ formatDate(tx.date) }}</div>
+                    <span class="tx-status" [class]="statusClass(tx.status)">{{ statusLabel(tx.status) }}</span>
+                    <div class="tx-price">{{ tx.price.toFixed(2) }} DT</div>
+                  </div>
+                  }
+                </div>
+              </div>
+            </td>
+          </tr>
+          }
           }
         </tbody>
       </table>
+      }
     </div>
   </div>
 
+  <!-- ── RIGHT COLUMN ── -->
   <div class="right-col">
+    <!-- Revenue Chart -->
     <div class="section-card">
       <div class="card-header"><div class="card-title">Revenus mensuels</div></div>
       <div class="infra-list" style="padding:16px">
         <div class="chart-bars">
           @for (b of revenueChart(); track $index) {
           <div class="chart-bar-wrap">
-            <div class="chart-bar" [style.height]="b.pct+'%'" title="{{ b.val }} DT"></div>
+            <div class="chart-bar" [style.height.px]="b.pct" [title]="b.val + ' DT'"></div>
             <div class="chart-label">{{ b.label }}</div>
           </div>
           }
@@ -75,6 +188,8 @@
         </div>
       </div>
     </div>
+
+    <!-- Pricing Grid -->
     <div class="section-card">
       <div class="card-header">
         <div class="card-title">Grille tarifaire</div>
@@ -90,4 +205,5 @@
       </div>
     </div>
   </div>
+
 </div>

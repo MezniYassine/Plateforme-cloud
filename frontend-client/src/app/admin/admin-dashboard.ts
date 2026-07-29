@@ -6,10 +6,8 @@ import { Tenant, Activity, Admin } from './dashboard-helper.service';
 import { DashboardOverviewComponent } from './components/dashboard-overview/dashboard-overview';
 import { TenantsPageComponent } from './components/tenants-page/tenants-page';
 import { EsxiPageComponent } from './components/esxi-page/esxi-page';
-import { KubernetesPageComponent } from './components/kubernetes-page/kubernetes-page';
 import { MonitoringPageComponent } from './components/monitoring-page/monitoring-page';
 import { BillingPageComponent } from './components/billing-page/billing-page';
-import { IamPageComponent } from './components/iam-page/iam-page';
 import { CataloguePageComponent } from './components/catalogue-page/catalogue-page';
 import { ProfilePageComponent } from './components/profile-page/profile-page';
 import { isPlatformBrowser } from '@angular/common';
@@ -24,10 +22,8 @@ import { Topbar } from './components/topbar/topbar';
     DashboardOverviewComponent,
     TenantsPageComponent,
     EsxiPageComponent,
-    KubernetesPageComponent,
     MonitoringPageComponent,
     BillingPageComponent,
-    IamPageComponent,
     CataloguePageComponent,
     ProfilePageComponent,
     Sidebar,
@@ -51,10 +47,8 @@ export class AdminDashboard implements OnInit, OnDestroy {
     tenants: 'Locataires',
     inscriptions: 'Inscriptions',
     esxi: 'Serveurs ESXi',
-    kubernetes: 'Kubernetes',
     monitoring: 'Monitoring AIOps',
     billing: 'Facturation',
-    iam: 'Sécurité & IAM',
     catalogue: 'Catalogue',
     profile: 'Mon profil',
   };
@@ -75,10 +69,9 @@ export class AdminDashboard implements OnInit, OnDestroy {
 
   /* · INFRA METRICS · */
   infraMetrics = signal([
-    { label: 'CPU global (ESXi)', val: '72%', pct: 72, color: 'blue' },
-    { label: 'RAM globale', val: '58%', pct: 58, color: 'teal' },
-    { label: 'Stockage (SAN)', val: '41%', pct: 41, color: 'amber' },
-    { label: 'Pods Kubernetes', val: '124 / 200', pct: 62, color: 'blue' },
+    { label: 'CPU global (ESXi)', val: '0%', pct: 0, color: 'blue' },
+    { label: 'RAM globale', val: '0%', pct: 0, color: 'teal' },
+    { label: 'Stockage (SAN)', val: '0%', pct: 0, color: 'amber' },
   ]);
   activeVmCount = signal<number>(0);
 
@@ -125,6 +118,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
         this.infraMetrics.update(list => list.map(m => {
           if (m.label.includes('CPU')) { m.val = `${data.cpuPercent}%`; m.pct = Number(data.cpuPercent) ?? m.pct; }
           if (m.label.includes('RAM')) { m.val = `${data.ramPercent}%`; m.pct = Number(data.ramPercent) ?? m.pct; }
+          if (m.label.includes('Stockage')) { m.val = `${data.storagePercent}%`; m.pct = Number(data.storagePercent) ?? m.pct; }
           return m;
         }));
       },
@@ -141,20 +135,44 @@ export class AdminDashboard implements OnInit, OnDestroy {
         this.activeDevCount.set(clients.filter(c => c.role === 'ENTREPRISE_USER' || c.role === 'PERSONNEL').length);
 
         const relevant = clients.filter(c => c.role === 'ENTREPRISE_ADMIN' || c.role === 'PERSONNEL');
-        this.tenants.set(relevant.map(c => ({
-          id: `t${c.id}`,
-          company: c.entreprise?.nomEntreprise || (c.role === 'PERSONNEL' ? 'Particulier' : 'Inconnu'),
-          email: c.email,
-          firstName: c.prenom,
-          lastName: c.nom,
-          taxId: c.entreprise?.identifiantFiscal || '-',
-          createdAt: c.dateInscrit,
-          registered: c.dateInscrit,
-          status: this.mapClientStatus(c.status),
-          accountType: c.role === 'PERSONNEL' ? 'personnel' : 'entreprise',
-          vms: 0,
-          tenantId: `tenant-${c.id}`,
-        })));
+        this.tenants.set(relevant.map(c => {
+          const subUsers = c.role === 'ENTREPRISE_ADMIN' && c.entreprise
+            ? clients.filter(sub => sub.role === 'ENTREPRISE_USER' && sub.entreprise?.id === c.entreprise.id)
+            : [];
+
+          return {
+            id: `t${c.id}`,
+            company: c.entreprise?.nomEntreprise || (c.role === 'PERSONNEL' ? 'Particulier' : 'Inconnu'),
+            email: c.email,
+            firstName: c.prenom,
+            lastName: c.nom,
+            taxId: c.entreprise?.identifiantFiscal || '-',
+            createdAt: c.dateInscrit,
+            registered: c.dateInscrit,
+            status: this.mapClientStatus(c.status),
+            accountType: c.role === 'PERSONNEL' ? 'personnel' : 'entreprise',
+            vms: 0,
+            tenantId: `tenant-${c.id}`,
+            mfaStatus: c.mfaStatus || 'DESACTIVE',
+            providers: c.providers || [],
+            users: subUsers.map(sub => ({
+              id: `t${sub.id}`,
+              company: c.entreprise?.nomEntreprise || 'Inconnu',
+              email: sub.email,
+              firstName: sub.prenom,
+              lastName: sub.nom,
+              taxId: c.entreprise?.identifiantFiscal || '-',
+              createdAt: sub.dateInscrit,
+              registered: sub.dateInscrit,
+              status: this.mapClientStatus(sub.status),
+              accountType: 'personnel',
+              vms: 0,
+              tenantId: `tenant-${sub.id}`,
+              mfaStatus: sub.mfaStatus || 'DESACTIVE',
+              providers: sub.providers || [],
+            }))
+          };
+        }));
 
         const sorted = [...relevant].sort((a, b) => new Date(b.dateInscrit).getTime() - new Date(a.dateInscrit).getTime());
         this.activities.set(sorted.slice(0, 5).map(c => {

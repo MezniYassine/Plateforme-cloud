@@ -1,4 +1,4 @@
-﻿@if(isBrowserAndReady){
+@if(isBrowserAndReady){
 <div class="app">
 
   <!-- · SIDEBAR · -->
@@ -29,10 +29,6 @@
       <app-esxi-page />
       }
 
-      @if (activePage() === 'kubernetes') {
-      <app-kubernetes-page />
-      }
-
       @if (activePage() === 'monitoring') {
       <app-monitoring-page />
       }
@@ -41,9 +37,7 @@
       <app-billing-page (navigateTo)="setPage($event)" />
       }
 
-      @if (activePage() === 'iam') {
-      <app-iam-page />
-      }
+
 
       @if (activePage() === 'catalogue') {
       <app-catalogue-page />
