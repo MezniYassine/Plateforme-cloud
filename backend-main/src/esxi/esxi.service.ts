@@ -34,13 +34,17 @@ export class EsxiService {
         // Créer le client - la connexion se fera au premier appel
         this.vsphereClient = new VsphereClient(host, username, password, false);
 
-        this.clientReadyPromise = new Promise((resolve, reject) => {
+        this.clientReadyPromise = new Promise<void>((resolve, reject) => {
             this.vsphereClient.once('ready', resolve);
             this.vsphereClient.once('error', (err: any) => {
                 this.clientReadyPromise = null; // Reset to allow retry on next request
+                this.logger.error(`❌ Erreur : ${err.message}`);
                 reject(err);
             });
         });
+        
+        // Prevent UnhandledPromiseRejection if error occurs before anyone awaits
+        this.clientReadyPromise.catch(() => {});
     }
 
     private async ensureClientReady(): Promise<void> {
@@ -452,6 +456,48 @@ export class EsxiService {
 
         return Math.max(0, Math.min(100, value));
     }
+    async upgradeVm(vmId: string, vcpu: number, ramMB: number, storageGB: number): Promise<void> {
+        const target = await this.resolveVmTarget(vmId, vmId);
+        if (!target) {
+            throw new Error(`VM "${vmId}" introuvable sur l'ESXi pour la mise à niveau.`);
+        }
+
+        const wasOn = target.state === 'poweredOn';
+
+        if (wasOn) {
+            this.logger.log(`[Upgrade] Extinction de la VM ${target.name} pour mise à niveau...`);
+            const powerOffResult: any = await this.runVsphereCommand('PowerOffVM_Task', {
+                _this: target.ref,
+            });
+            await this.waitForTaskCompletion(powerOffResult?.returnval);
+        }
+
+        this.logger.log(`[Upgrade] Reconfiguration CPU/RAM de la VM ${target.name}...`);
+        const reconfigResult: any = await this.runVsphereCommand('ReconfigVM_Task', {
+            _this: target.ref,
+            spec: {
+                numCPUs: vcpu,
+                memoryMB: ramMB,
+            },
+        });
+        await this.waitForTaskCompletion(reconfigResult?.returnval);
+
+        if (storageGB > 0) {
+            this.logger.log(`[Upgrade] Redimensionnement du stockage de la VM ${target.name}...`);
+            await this.resizeVmStorageByName(target.name, storageGB);
+        }
+
+        if (wasOn) {
+            this.logger.log(`[Upgrade] Redémarrage de la VM ${target.name} après mise à niveau...`);
+            const powerOnResult: any = await this.runVsphereCommand('PowerOnVM_Task', {
+                _this: target.ref,
+            });
+            await this.waitForTaskCompletion(powerOnResult?.returnval);
+        }
+        
+        this.logger.log(`[Upgrade] Mise à niveau de la VM ${target.name} terminée avec succès.`);
+    }
+
     async deleteVm(vmReference?: string | null, vmName?: string): Promise<void> {
         const target = await this.resolveVmTarget(vmReference, vmName);
 
@@ -1096,37 +1142,47 @@ export class EsxiService {
     /**
      * Récupère le premier objet d'un type donné (utile pour le Datastore ou Pool par défaut)
      */
-    private async getFirstMoRef(type: 'Datastore' | 'ResourcePool' | 'Datacenter' | 'HostSystem'): Promise<any> {
+    private async getFirstMoRef(type: 'Datastore' | 'ResourcePool' | 'Datacenter' | 'HostSystem', retryCount = 0): Promise<any> {
         await this.ensureClientReady();
         const serviceContent = this.vsphereClient.serviceContent;
 
-        // Utilisation simplifiée pour ton lab (récupère le premier trouvé)
-        const containerView: any = await new Promise((resolve, reject) => {
-            this.vsphereClient.client.CreateContainerView({
-                _this: serviceContent.viewManager,
-                container: serviceContent.rootFolder,
-                type: [type],
-                recursive: true
-            }, (err, res) => err ? reject(err) : resolve(res.returnval));
-        });
+        try {
+            // Utilisation simplifiée pour ton lab (récupère le premier trouvé)
+            const containerView: any = await new Promise((resolve, reject) => {
+                this.vsphereClient.client.CreateContainerView({
+                    _this: serviceContent.viewManager,
+                    container: serviceContent.rootFolder,
+                    type: [type],
+                    recursive: true
+                }, (err, res) => err ? reject(err) : resolve(res.returnval));
+            });
 
-        const result: any = await new Promise((resolve, reject) => {
-            this.vsphereClient.client.RetrievePropertiesEx({
-                _this: serviceContent.propertyCollector,
-                specSet: [{
-                    propSet: [{ type: type, all: false, pathSet: ['name'] }],
-                    objectSet: [{
-                        obj: containerView, skip: true, selectSet: [{
-                            attributes: { 'xsi:type': 'TraversalSpec' },
-                            name: 'viewTraversalSpec', type: 'ContainerView', path: 'view', skip: false
+            const result: any = await new Promise((resolve, reject) => {
+                this.vsphereClient.client.RetrievePropertiesEx({
+                    _this: serviceContent.propertyCollector,
+                    specSet: [{
+                        propSet: [{ type: type, all: false, pathSet: ['name'] }],
+                        objectSet: [{
+                            obj: containerView, skip: true, selectSet: [{
+                                attributes: { 'xsi:type': 'TraversalSpec' },
+                                name: 'viewTraversalSpec', type: 'ContainerView', path: 'view', skip: false
+                            }]
                         }]
-                    }]
-                }],
-                options: {}
-            }, (err, res) => err ? reject(err) : resolve(res));
-        });
+                    }],
+                    options: {}
+                }, (err, res) => err ? reject(err) : resolve(res));
+            });
 
-        return result?.returnval?.objects[0]?.obj || null;
+            return result?.returnval?.objects[0]?.obj || null;
+        } catch (error: any) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            if (retryCount === 0 && errorMsg.includes('NotAuthenticated')) {
+                this.logger.warn('Session ESXi expirée. Reconnexion automatique en cours...');
+                this.initializeVsphereClient();
+                return this.getFirstMoRef(type, retryCount + 1);
+            }
+            throw error;
+        }
     }
 
     async obtenirTicketConsole(vmIdware: string) {

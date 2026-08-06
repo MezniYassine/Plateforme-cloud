@@ -14,10 +14,15 @@ export class IaasTabComponent {
 
   openDeploy = output<{ type: 'vm' | 'catalog'; name: string }>();
   vmAction = output<{ id: string; action: 'stop' | 'start' | 'delete' }>();
+  openUpgrade = output<VM>();
 
   constructor(public h: PersonalDashboardHelperService) { }
 
   onVmAction(id: string, action: 'stop' | 'start' | 'delete') {
     this.vmAction.emit({ id, action });
+  }
+
+  onUpgrade(vm: VM) {
+    this.openUpgrade.emit(vm);
   }
 }

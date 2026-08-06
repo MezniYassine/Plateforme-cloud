@@ -9,6 +9,7 @@ import { CreatePaasDto } from './dto/create-paas.dto';
 import { Catalogue } from 'src/catalogue/entities/catalogue.entity';
 import { WalletService } from 'src/wallet/wallet.service';
 import { EsxiService } from 'src/esxi/esxi.service';
+import { Demande, DemandeStatus } from 'src/demande/entities/demande.entity';
 
 @Injectable()
 export class PaasService implements OnModuleInit {
@@ -29,6 +30,8 @@ export class PaasService implements OnModuleInit {
         private readonly paasRepo: Repository<ServicePaaS>,
         @InjectRepository(Catalogue)
         private readonly catalogueRepo: Repository<Catalogue>,
+        @InjectRepository(Demande)
+        private readonly demandeRepo: Repository<Demande>,
         private readonly walletService: WalletService,
         private readonly esxiService: EsxiService,
     ) { }
@@ -38,19 +41,19 @@ export class PaasService implements OnModuleInit {
         try {
             const vms = await this.esxiService.getVms();
             const paasVm = vms.find(vm =>
-                vm.name === 'DBAAS'
+                vm.name === 'DBaaS'
             );
 
             if (paasVm) {
                 if (paasVm.state !== 'poweredOn') {
-                    this.logger.log(`La machine DBaaS (${paasVm.name}) est éteinte. Démarrage en cours...`);
+                    this.logger.warn('⚠️ La machine DBaaS est éteinte. Tentative de démarrage...');
                     await this.esxiService.powerControl(paasVm.id, 'start');
-                    this.logger.log(`Machine DBaaS (${paasVm.name}) démarrée avec succès.`);
+                    this.logger.log('✅ Ordre de démarrage envoyé pour la machine DBaaS.');
                 } else {
-                    this.logger.log(`La machine DBaaS (${paasVm.name}) est déjà en cours d'exécution.`);
+                    this.logger.log('✅ La machine DBaaS (DBaaS) est déjà en cours d\'exécution.');
                 }
             } else {
-                this.logger.warn(`Impossible de trouver la machine DBaaS nommée 'DBAAS' dans l'ESXi.`);
+                this.logger.warn('⚠️ Attention : Aucune machine nommée "DBaaS" n\'a été trouvée sur l\'ESXi.');
             }
         } catch (error) {
             this.logger.error(`Erreur lors de la vérification de la machine DBaaS : ${error.message}`);
@@ -124,6 +127,16 @@ export class PaasService implements OnModuleInit {
                 throw new InternalServerErrorException(`SGBD non pris en charge : ${dto.typeSgbd}`);
         }
 
+        // --- DÉBIT DU WALLET (AVANT DÉPLOIEMENT POUR ÉVITER LES CONDITIONS DE COURSE) ---
+        if (prixMensuel > 0) {
+            await this.walletService.debiter(
+                payerId,
+                prixMensuel,
+                `Déploiement d'un service PaaS (${dto.nomPersonnalise})`,
+                undefined,
+            );
+        }
+
         const ssh = new NodeSSH();
         try {
             // 3. Connexion SSH à la VM DBaaS
@@ -162,26 +175,25 @@ export class PaasService implements OnModuleInit {
                 dateProchaineFacturation: nextMonth,
             });
 
-            const savedPaas = await this.paasRepo.save(newPaas);
-
-            // --- DÉBIT DU WALLET ---
-            if (prixMensuel > 0) {
-                try {
-                    await this.walletService.debiter(
-                        payerId,
-                        prixMensuel,
-                        `Déploiement d'un service PaaS (Base de données)`,
-                        undefined,
-                    );
-                } catch (walletErr) {
-                    console.error(`⚠️ Impossible de débiter le wallet pour PaaS #${savedPaas.id}:`, walletErr.message);
-                }
-            }
-
-            return savedPaas;
+            return await this.paasRepo.save(newPaas);
 
         } catch (error) {
             ssh.dispose();
+            
+            // --- REMBOURSEMENT EN CAS D'ÉCHEC ---
+            if (prixMensuel > 0) {
+                try {
+                    await this.walletService.crediter(
+                        payerId,
+                        prixMensuel,
+                        `Remboursement suite à l'échec de déploiement PaaS (${dto.nomPersonnalise})`,
+                        undefined,
+                    );
+                } catch (refundErr) {
+                    this.logger.error(`⚠️ Impossible de rembourser le wallet pour le client #${payerId}: ${refundErr.message}`);
+                }
+            }
+
             throw new InternalServerErrorException(`Échec du déploiement DBaaS : ${error.message}`);
         }
     }
@@ -218,8 +230,8 @@ export class PaasService implements OnModuleInit {
                 readyTimeout: 30000,
             });
 
-            // Arrête et supprime le conteneur Docker
-            await ssh.execCommand(`docker stop ${containerName} && docker rm ${containerName}`);
+            // Arrête et supprime le conteneur Docker ET supprime le dossier de données localement
+            await ssh.execCommand(`docker stop ${containerName} && docker rm ${containerName} && echo ${this.sshPass} | sudo -S rm -rf /var/lib/dbaas/data/${containerName}`);
             ssh.dispose();
 
             // Supprime la ligne en base de données
@@ -230,6 +242,115 @@ export class PaasService implements OnModuleInit {
             ssh.dispose();
             throw new InternalServerErrorException(`Erreur lors de la suppression de la BDD : ${error.message}`);
         }
+    }
+
+    async upgradeContainer(id: number, catalogueId: number, clientId: number, debitClientId?: number): Promise<{ userPrenom: string; userNom: string; resourceName: string; oldPlan: string; newPlan: string; diffPrice: number }> {
+        const paasService = await this.paasRepo.findOne({ where: { id, client: { id: clientId } }, relations: ['client', 'catalogue'] });
+        if (!paasService) {
+            throw new NotFoundException(`Service PaaS introuvable pour ce client.`);
+        }
+
+        const newCatalogue = await this.catalogueRepo.findOne({ where: { id: catalogueId, isActive: true } });
+        if (!newCatalogue) {
+            throw new NotFoundException(`Nouvelle offre introuvable ou inactive.`);
+        }
+
+        const oldPrice = Number(paasService.prixMensuel) || 0;
+        const newPrice = Number(newCatalogue.prix) || 0;
+
+        if (newPrice <= oldPrice) {
+            throw new BadRequestException('La nouvelle offre doit avoir un prix supérieur à l\'offre actuelle.');
+        }
+
+        const diffPrice = newPrice - oldPrice;
+        const oldPlanName = paasService.catalogue?.nomService ?? `${paasService.typeSgbd}`;
+        const walletClientId = debitClientId ?? clientId;
+
+        try {
+            await this.walletService.debiter(
+                walletClientId,
+                diffPrice,
+                `Mise à niveau (Scale-up) de la base de données ${paasService.nomPersonnalise}${debitClientId && debitClientId !== clientId ? ` par ${paasService.client.prenom} ${paasService.client.nom}` : ''}`,
+                undefined,
+            );
+        } catch (walletErr) {
+            throw new BadRequestException(`Solde insuffisant pour la mise à niveau. Différence à payer: ${diffPrice.toFixed(3)} DT.`);
+        }
+
+        const cleanDbName = paasService.nomPersonnalise.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const containerName = `db_${cleanDbName}_${paasService.port}`;
+
+        const cpuOpt = newCatalogue.vcpu > 0 ? `--cpus="${newCatalogue.vcpu}"` : '';
+        const memoryInMb = Math.round(newCatalogue.ramMB * 1024);
+        const memOpt = newCatalogue.ramMB > 0 ? `--memory="${memoryInMb}m"` : '';
+        const storageOpt = newCatalogue.stockageGB > 0 ? `--storage-opt size=${newCatalogue.stockageGB}G` : '';
+        const resourceLimits = [cpuOpt, memOpt, storageOpt].filter(Boolean).join(' ');
+        const limitsStr = resourceLimits ? `${resourceLimits} ` : '';
+
+        let dockerCmd = '';
+        switch (paasService.typeSgbd) {
+            case TypeSgbd.POSTGRESQL:
+                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} -e POSTGRES_DB=${paasService.nomPersonnalise} -e POSTGRES_USER=${paasService.dbUser} -e POSTGRES_PASSWORD=${paasService.dbPassword} -v /var/lib/dbaas/data/${containerName}:/var/lib/postgresql/data -p ${paasService.port}:5432 --restart always postgres:15-alpine`;
+                break;
+            case TypeSgbd.MYSQL:
+                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} -e MYSQL_DATABASE=${paasService.nomPersonnalise} -e MYSQL_USER=${paasService.dbUser} -e MYSQL_PASSWORD=${paasService.dbPassword} -e MYSQL_ROOT_PASSWORD=${paasService.dbPassword}_root -v /var/lib/dbaas/data/${containerName}:/var/lib/mysql -p ${paasService.port}:3306 --restart always mysql:8.0`;
+                break;
+            case TypeSgbd.REDIS:
+                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} -v /var/lib/dbaas/data/${containerName}:/data -p ${paasService.port}:6379 --restart always redis:alpine redis-server --requirepass ${paasService.dbPassword} --appendonly yes`;
+                break;
+            case TypeSgbd.MONGODB:
+                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} -e MONGO_INITDB_ROOT_USERNAME=${paasService.dbUser} -e MONGO_INITDB_ROOT_PASSWORD=${paasService.dbPassword} -e MONGO_INITDB_DATABASE=${paasService.nomPersonnalise} -v /var/lib/dbaas/data/${containerName}:/data/db -p ${paasService.port}:27017 --restart always mongo:4.4`;
+                break;
+            default:
+                throw new InternalServerErrorException(`SGBD non pris en charge : ${paasService.typeSgbd}`);
+        }
+
+        const ssh = new NodeSSH();
+        try {
+            await ssh.connect({
+                host: this.hostIp,
+                username: this.sshUser,
+                password: this.sshPass,
+                readyTimeout: 30000,
+            });
+
+            await ssh.execCommand(`docker stop ${containerName} && docker rm ${containerName}`);
+            const result = await ssh.execCommand(dockerCmd);
+            ssh.dispose();
+
+            if (result.code !== 0) {
+                throw new Error(`Erreur lors du relancement Docker pour upgrade : ${result.stderr}`);
+            }
+        } catch (error) {
+            ssh.dispose();
+            throw new InternalServerErrorException(`Erreur lors de la mise à niveau Docker : ${error.message}`);
+        }
+
+        paasService.catalogue = newCatalogue;
+        paasService.prixMensuel = newPrice;
+        await this.paasRepo.save(paasService);
+
+        const demande = await this.demandeRepo.findOne({
+            where: {
+                nomInstanceSouhaite: paasService.nomPersonnalise,
+                client: { id: paasService.client.id },
+                status: DemandeStatus.APPROUVEE
+            }
+        });
+        if (demande) {
+            demande.catalogue = newCatalogue;
+            demande.prixMensuel = newPrice;
+            await this.demandeRepo.save(demande);
+        }
+
+        return {
+            userPrenom: paasService.client.prenom,
+            userNom: paasService.client.nom,
+            resourceName: paasService.nomPersonnalise,
+            oldPlan: oldPlanName,
+            newPlan: newCatalogue.nomService,
+            diffPrice,
+        };
     }
 
     async getContainerMetrics(id: number) {

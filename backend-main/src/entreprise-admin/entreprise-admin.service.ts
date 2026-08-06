@@ -229,7 +229,7 @@ export class EntrepriseService {
 
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const debitThisMonth = approvedDemandes
+        let debitThisMonth = approvedDemandes
             .filter((demande) => new Date(demande.dateDemande) >= startOfMonth)
             .reduce((sum, demande) => sum + Number(demande.prixMensuel || 0), 0);
         const creditTotal = walletTransactions
@@ -256,20 +256,35 @@ export class EntrepriseService {
             amount: Number(demande.prixMensuel || 0),
         }));
 
-        const creditTransactions = walletTransactions
-            .filter((transaction) => transaction.type === 'CREDIT')
-            .map((transaction) => ({
-                id: `wallet-${transaction.id}`,
-                desc: transaction.description,
-                memberName: transaction.wallet?.user
-                    ? `${transaction.wallet.user.prenom} ${transaction.wallet.user.nom}`
-                    : 'Entreprise',
-                date: transaction.dateTransaction,
-                type: 'credit' as const,
-                amount: Number(transaction.montant),
-            }));
+        const otherTransactions = walletTransactions
+            .filter((transaction) => transaction.type === 'CREDIT' || transaction.description.includes('Mise à niveau'))
+            .map((transaction) => {
+                let memberName = transaction.wallet?.user ? `${transaction.wallet.user.prenom} ${transaction.wallet.user.nom}` : 'Entreprise';
+                let desc = transaction.description;
 
-        const transactions = [...demandeTransactions, ...creditTransactions]
+                if (transaction.type === 'DEBIT' && desc.includes(' par ')) {
+                    const parts = desc.split(' par ');
+                    memberName = parts.pop() || memberName;
+                    desc = parts.join(' par ');
+                }
+
+                return {
+                    id: `wallet-${transaction.id}`,
+                    desc: desc,
+                    memberName: memberName,
+                    date: transaction.dateTransaction,
+                    type: transaction.type.toLowerCase() as 'credit' | 'debit',
+                    amount: Number(transaction.montant),
+                };
+            });
+
+        otherTransactions.forEach(t => {
+            if (t.type === 'debit' && new Date(t.date) >= startOfMonth) {
+                debitThisMonth += t.amount;
+            }
+        });
+
+        const transactions = [...demandeTransactions, ...otherTransactions]
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
             .slice(0, 100);
 
@@ -278,11 +293,22 @@ export class EntrepriseService {
             devise: adminWallet.devise,
             depenseMois: Math.round(debitThisMonth * 1000) / 1000,
             totalRecharge: Math.round(creditTotal * 1000) / 1000,
-            teamSpend: orgMembers.map((member, index) => ({
-                name: `${member.prenom} ${member.nom}`,
-                spend: Math.round((spendByMember.get(member.id) ?? 0) * 1000) / 1000,
-                color: COLORS[index % COLORS.length],
-            })),
+            teamSpend: orgMembers.map((member, index) => {
+                const memberName = `${member.prenom} ${member.nom}`;
+                let spend = Number(spendByMember.get(member.id) ?? 0);
+                
+                otherTransactions.forEach(t => {
+                    if (t.type === 'debit' && t.memberName === memberName && new Date(t.date) >= startOfMonth) {
+                        spend += t.amount;
+                    }
+                });
+
+                return {
+                    name: memberName,
+                    spend: Math.round(spend * 1000) / 1000,
+                    color: COLORS[index % COLORS.length],
+                };
+            }),
             transactions,
         };
     }
@@ -398,8 +424,8 @@ export class EntrepriseService {
                 type: 'db' as const,
                 owner,
                 ownerColor: paas.client ? (memberColorMap.get(paas.client.id) ?? '#94a3b8') : '#94a3b8',
-                specs: paas.catalogue 
-                    ? `${paas.typeSgbd || 'DB'} · ${paas.catalogue.vcpu} vCPU - ${paas.catalogue.ramMB} GB RAM - ${paas.catalogue.stockageGB} GB SSD` 
+                specs: paas.catalogue
+                    ? `${paas.typeSgbd || 'DB'} · ${paas.catalogue.vcpu} vCPU - ${paas.catalogue.ramMB} GB RAM - ${paas.catalogue.stockageGB} GB SSD`
                     : (paas.typeSgbd || 'POSTGRESQL'),
                 cost: Number(paas.prixMensuel || 0),
                 status: paas.status,

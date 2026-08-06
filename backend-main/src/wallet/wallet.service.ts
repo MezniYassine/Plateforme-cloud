@@ -126,6 +126,34 @@ export class WalletService {
   }
 
   /**
+   * Crédite le wallet (remboursement)
+   */
+  async crediter(
+    clientId: number,
+    montant: number,
+    description: string,
+    vmId?: number,
+  ): Promise<Wallet> {
+    if (montant <= 0) return this.getOrCreateWallet(clientId);
+
+    const wallet = await this.getOrCreateWallet(clientId);
+    wallet.solde = Number(wallet.solde) + montant;
+    await this.walletRepo.save(wallet);
+
+    const transaction = this.transactionRepo.create({
+      montant,
+      type: 'CREDIT',
+      description,
+      vmId: vmId ?? undefined,
+      wallet,
+    });
+    await this.transactionRepo.save(transaction);
+
+    this.logger.log(`💳 Crédit +${montant} DT pour client #${clientId}. Nouveau solde: ${wallet.solde} DT`);
+    return wallet;
+  }
+
+  /**
    * Vérifie si le client a assez de solde (sans débiter)
    */
   async checkSolde(clientId: number, montant: number): Promise<boolean> {

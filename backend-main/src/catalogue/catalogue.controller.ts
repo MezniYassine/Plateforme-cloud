@@ -16,6 +16,12 @@ export class CatalogueController {
     return this.catalogueService.findAll();
   }
 
+  @Get('upgrade/:type/:currentPrice')
+  getUpgrades(@Param('type') type: string, @Param('currentPrice') currentPrice: string) {
+    const price = Number(currentPrice);
+    return this.catalogueService.getUpgrades(type, price);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.catalogueService.findOne(+id);

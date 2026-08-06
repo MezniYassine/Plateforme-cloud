@@ -365,7 +365,7 @@ tbody td { padding:13px 20px; font-size:13.5px; color:var(--text-primary); verti
 .btn-modal.cancel:hover  { background:var(--bg-page); }
 
 /* ══ TOAST ══ */
-.toast { position:fixed; bottom:24px; right:24px; background:var(--text-primary); color:#fff; padding:11px 16px; border-radius:var(--radius); font-size:13px; font-weight:500; display:flex; align-items:center; gap:9px; box-shadow:var(--shadow-lg); transform:translateY(60px); opacity:0; transition:all .3s cubic-bezier(.22,.8,.36,1); z-index:300; max-width:380px; }
+.toast { position:fixed; bottom:24px; right:24px; background:#ffffff; color:#0f172a; padding:11px 16px; border-radius:var(--radius); font-size:13px; font-weight:500; display:flex; align-items:center; gap:9px; box-shadow:var(--shadow-lg); transform:translateY(60px); opacity:0; transition:all .3s cubic-bezier(.22,.8,.36,1); z-index:300; max-width:380px; }
 .toast.show { transform:translateY(0); opacity:1; }
 /* Toast persistant : légère pulsation pour indiquer une activité en cours */
 .toast.toast-persistent { animation: toast-pulse 2.4s ease-in-out infinite; }

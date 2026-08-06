@@ -241,9 +241,9 @@
 </div>
 
 <!-- ══ TOAST NOTIFICATION ══ -->
-@if (errorMsg) {
+@if (toastMsg()) {
 <div class="toast show" role="status" aria-live="polite">
-  <div class="toast-dot" style="background: #ef4444;"></div>
-  <span>{{ errorMsg }}</span>
+  <div class="toast-dot" [style.background]="toastMsg()?.color"></div>
+  <span>{{ toastMsg()?.text }}</span>
 </div>
 }

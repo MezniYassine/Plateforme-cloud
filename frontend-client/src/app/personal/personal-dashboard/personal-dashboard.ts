@@ -96,6 +96,13 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   selectedPlan = signal<ServiceItem | null>(null);
   selectedSgbd = signal<'POSTGRESQL' | 'MYSQL' | 'REDIS' | 'MONGODB'>('POSTGRESQL');
 
+  /* ── UPGRADE MODAL ─────────────────────────────────── */
+  isUpgradeModalOpen = signal<boolean>(false);
+  upgradeTarget = signal<{ type: 'vm' | 'paas', id: string | number, currentPrice: number, name: string } | null>(null);
+  upgradeCatalogues = signal<ServiceItem[]>([]);
+  selectedUpgrade = signal<ServiceItem | null>(null);
+  isUpgrading = signal<boolean>(false);
+
   vmPlans = computed(() =>
     this.h.catalogItems().filter(item => item.icon === 'vm' || item.tag === 'IaaS' || item.tag === 'IAAS')
   );
@@ -170,6 +177,77 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   /* ── NAVIGATION ───────────────────────────────────── */
   switchTab(key: string) { this.activeTab.set(key); }
 
+  /* ── UPGRADE LOGIC ────────────────────────────────── */
+  openUpgradeModal(target: any, type: 'vm' | 'paas') {
+    let currentPrice = 0;
+    let name = '';
+
+    if (type === 'vm') {
+      currentPrice = (target as VM).cost;
+      name = (target as VM).name;
+    } else {
+      currentPrice = parseFloat(target.prixMensuel || '0');
+      name = (target as PaasInstance).nomPersonnalise;
+    }
+
+    this.upgradeTarget.set({ type, id: target.id, currentPrice, name });
+
+    const typeService = type === 'vm' ? 'IAAS' : 'PAAS';
+    this.http.get<any[]>(`${environment.apiBaseUrl.replace(/\/$/, '')}/catalogue/upgrade/${typeService}/${currentPrice}`).subscribe({
+      next: (cats) => {
+        this.upgradeCatalogues.set(cats.map(cat => this.h.mapCatalogItem(cat)));
+        this.selectedUpgrade.set(null);
+        this.isUpgradeModalOpen.set(true);
+      },
+      error: () => this.showToast('Erreur de chargement des offres', 'var(--red)')
+    });
+  }
+
+  selectUpgrade(cat: ServiceItem) {
+    this.selectedUpgrade.set(cat);
+  }
+
+  getUpgradeDiff(): string {
+    const target = this.upgradeTarget();
+    const upgrade = this.selectedUpgrade();
+    if (!target || !upgrade) return '0.00';
+    return (parseFloat(upgrade.price || '0') - target.currentPrice).toFixed(2);
+  }
+
+  closeUpgrade() {
+    this.isUpgradeModalOpen.set(false);
+    this.upgradeTarget.set(null);
+  }
+
+  submitUpgrade() {
+    const target = this.upgradeTarget();
+    const upgrade = this.selectedUpgrade();
+    if (!target || !upgrade) return;
+
+    this.isUpgrading.set(true);
+    const url = target.type === 'vm'
+      ? `${environment.apiBaseUrl.replace(/\/$/, '')}/esxi/my-vms/${target.id}/upgrade`
+      : `${environment.apiBaseUrl.replace(/\/$/, '')}/paas/my-databases/${target.id}/upgrade`;
+
+    this.http.post(url, { catalogueId: upgrade.id }).subscribe({
+      next: () => {
+        this.isUpgrading.set(false);
+        this.closeUpgrade();
+        this.showToast('Mise à niveau réussie', 'var(--green)');
+        this.h.loadWallet();
+        if (target.type === 'vm') this.loadMyVms();
+        else {
+          const clientId = this.actualPers()?.client?.id;
+          if (clientId) this.loadMyPaas(clientId);
+        }
+      },
+      error: (err) => {
+        this.isUpgrading.set(false);
+        this.showToast(err?.error?.message ?? 'Échec de la mise à niveau', 'var(--red)');
+      }
+    });
+  }
+
   /* ── VM ACTIONS ───────────────────────────────────── */
   handleVmAction(event: { id: string; action: 'stop' | 'start' | 'delete' }) {
     this.vmAction(event.id, event.action);
@@ -234,9 +312,9 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   openDeploy(type: 'vm' | 'paas' | 'catalog', name: string = '') {
     this.deployType.set(type);
     this.deployName.set(name);
-    this.deployCpu.set(2);
-    this.deployRam.set(4);
-    this.deployDisk.set(50);
+    this.deployCpu.set(1);
+    this.deployRam.set(1);
+    this.deployDisk.set(10);
     this.deployVmName.set('');
     this.deployStep.set(1);
     this.selectedPlan.set(null);
@@ -265,15 +343,19 @@ export class PersonalDashboard implements OnInit, OnDestroy {
 
   selectPlan(plan: ServiceItem) {
     this.selectedPlan.set(plan);
+    if (plan.vcpu) this.deployCpu.set(plan.vcpu);
+    if (plan.ramGB) this.deployRam.set(plan.ramGB);
+    if (plan.stockageGB) this.deployDisk.set(plan.stockageGB);
+
     (plan.specs ?? []).forEach(spec => {
       const lower = spec.toLowerCase().trim();
-      const num = parseInt(lower.match(/\d+/)?.[0] ?? '0', 10);
+      const num = parseFloat(lower.match(/\d+(\.\d+)?/)?.[0] ?? '0');
       if (!num) return;
-      if (lower.includes('vcpu') || lower.includes('cpu')) {
+      if ((lower.includes('vcpu') || lower.includes('cpu')) && !plan.vcpu) {
         this.deployCpu.set(num);
-      } else if (lower.includes('ram')) {
+      } else if (lower.includes('ram') && !plan.ramGB) {
         this.deployRam.set(num);
-      } else if (lower.includes('gb') || lower.includes('ssd') || lower.includes('stockage')) {
+      } else if ((lower.includes('gb') || lower.includes('ssd') || lower.includes('stockage')) && !plan.stockageGB) {
         if (!lower.includes('ram')) this.deployDisk.set(num);
       }
     });
@@ -299,6 +381,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
       }
       const name = this.deployVmName() || `vm-${Date.now().toString().slice(-4)}`;
 
+      this.isDeploying.set(true);
       this.closeModal();
       this.showToast(`${name} en cours de déploiement...`, 'var(--blue)');
 
@@ -311,10 +394,12 @@ export class PersonalDashboard implements OnInit, OnDestroy {
         catalogueId: selectedPlan.id,
       }).subscribe({
         next: (res) => {
+          this.isDeploying.set(false);
           this.vms.update(list => [this.mapVm(res.vm), ...list]);
           this.startVmPolling();
         },
         error: (err) => {
+          this.isDeploying.set(false);
           this.showToast(err?.error?.message ?? 'Déploiement impossible', 'var(--red)');
         },
       });
@@ -332,6 +417,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
         return;
       }
 
+      this.isDeploying.set(true);
       this.closeModal();
       this.showToast(`PaaS en cours de déploiement...`, 'var(--blue)');
 
@@ -342,6 +428,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
         catalogueId: selectedPlan.id
       }).subscribe({
         next: () => {
+          this.isDeploying.set(false);
           this.showToast('Service PaaS déployé avec succès !', 'var(--green)');
           this.h.loadWallet(); // Reload wallet to update balance
           const clientId = this.actualPers()?.client?.id;

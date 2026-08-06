@@ -88,9 +88,9 @@ export class DashboardHelperService {
   companyName = signal<string>('');
 
   mySpend = computed(() => {
-    const vmsCost = this.myVMs().reduce((acc, vm) => acc + (vm.cost || 0), 0);
-    const servicesCost = this.myServices().reduce((acc, s) => acc + (s.cost || 0), 0);
-    return vmsCost + servicesCost;
+    return this.myRequests()
+      .filter(r => r.status === 'approved')
+      .reduce((acc, r) => acc + (r.cost || 0), 0);
   });
 
   // --- Wallet ---
@@ -155,6 +155,13 @@ export class DashboardHelperService {
     setTimeout(() => this.isToastVisible.set(false), 3500);
   }
 
+  // --- Upgrade ---
+  isUpgradeModalOpen = signal<boolean>(false);
+  upgradeCatalogues = signal<CatalogItem[]>([]);
+  selectedUpgrade = signal<CatalogItem | null>(null);
+  upgradeTarget = signal<{ type: 'vm' | 'paas', id: string, currentPrice: number, name: string } | null>(null);
+  isUpgrading = signal<boolean>(false);
+
   // --- Confirm Toast ---
   isConfirmToastVisible = signal<boolean>(false);
   confirmToastMsg = signal<string>('');
@@ -209,6 +216,66 @@ export class DashboardHelperService {
 
   deletePaas(id: string | number, name: string) {
     this.showConfirmToast('paas', id, name);
+  }
+
+  openUpgradeModal(type: 'vm' | 'paas', target: any) {
+    const currentPrice = parseFloat(target.cost || '0');
+    const name = target.name;
+
+    this.upgradeTarget.set({ type, id: target.id, currentPrice, name });
+
+    const typeService = type === 'vm' ? 'IAAS' : 'PAAS';
+    this.http.get<any[]>(`${this.base}/catalogue/upgrade/${typeService}/${currentPrice}`).subscribe({
+      next: (cats) => {
+        this.upgradeCatalogues.set(cats.map(cat => this.mapCatalogItem(cat)));
+        this.selectedUpgrade.set(null);
+        this.isUpgradeModalOpen.set(true);
+      },
+      error: () => this.showToast('Erreur de chargement des offres', 'var(--red)')
+    });
+  }
+
+  selectUpgrade(cat: CatalogItem) {
+    this.selectedUpgrade.set(cat);
+  }
+
+  getUpgradeDiff(): string {
+    const sel = this.selectedUpgrade();
+    const tgt = this.upgradeTarget();
+    if (!sel || !tgt) return '0.00';
+    return Math.max(0, sel.price - tgt.currentPrice).toFixed(2);
+  }
+
+  closeUpgrade() {
+    this.isUpgradeModalOpen.set(false);
+    this.selectedUpgrade.set(null);
+    this.upgradeTarget.set(null);
+  }
+
+  submitUpgrade() {
+    const sel = this.selectedUpgrade();
+    const tgt = this.upgradeTarget();
+    if (!sel || !tgt) return;
+
+    this.isUpgrading.set(true);
+    const endpoint = tgt.type === 'vm' 
+      ? `${this.base}/esxi/my-vms/${tgt.id}/upgrade`
+      : `${this.base}/paas/my-databases/${tgt.id}/upgrade`;
+
+    this.http.post(endpoint, { catalogueId: sel.id }).subscribe({
+      next: () => {
+        this.showToast('Mise à niveau réussie', 'var(--green)');
+        this.isUpgrading.set(false);
+        this.closeUpgrade();
+        if (tgt.type === 'vm') this.loadMyVms();
+        else this.loadMyServices();
+        this.loadWallet();
+      },
+      error: (err: any) => {
+        this.isUpgrading.set(false);
+        this.showToast(err?.error?.message || 'Erreur lors de la mise à niveau', 'var(--red)');
+      }
+    });
   }
 
   getInitials(name: string): string {
@@ -445,7 +512,7 @@ export class DashboardHelperService {
             id: String(vm.id),
             name: vm.nomPersonnalise || vm.name || ('vm-' + vm.id),
             os: vm.os || '',
-            ip: vm.ipAddress || vm.ip || '',
+            ip: ((vm.ipAddress || vm.ip || '').includes('.')) ? (vm.ipAddress || vm.ip) : 'Aucun IP',
             vcpu: vm.vCPU || vm.vcpu || 1,
             ram_gb: vm.ramGB || vm.ram_gb || 1,
             disk: vm.stockageGB || vm.disk || 20,
@@ -554,44 +621,46 @@ export class DashboardHelperService {
 
 
 
+  mapCatalogItem(cat: any): CatalogItem {
+    const typeMap: Record<string, 'vm' | 'db' | 'saas'> = {
+      'IAAS': 'vm',
+      'PAAS': 'db',
+      'SAAS': 'saas'
+    };
+    const type = cat.typeService ? (typeMap[cat.typeService] || 'saas') : 'saas';
+    
+    let specs: string[] = [];
+    if (cat.specs) {
+      specs = typeof cat.specs === 'string' ? cat.specs.split('.').map((s: string) => s.trim()) : cat.specs;
+    } else {
+      if (type === 'vm') {
+        specs = [
+          (cat.vcpu || 0) + ' vCPU',
+          (cat.ramMB || 0) + ' GB RAM',
+          (cat.stockageGB || 0) + ' GB SSD'
+        ];
+      } else {
+        if (cat.vcpu) specs.push(cat.vcpu + ' vCPU');
+        if (cat.ramMB) specs.push(cat.ramMB + ' GB RAM');
+        if (cat.stockageGB) specs.push(cat.stockageGB + ' GB SSD');
+      }
+    }
+    return {
+      id: String(cat.id),
+      name: cat.nomService || cat.name || 'Service sans nom',
+      desc: cat.description || cat.desc || '',
+      type: type as 'vm' | 'db' | 'saas',
+      price: Number(cat.prix !== undefined ? cat.prix : (cat.price || 0)),
+      specs,
+      bg: cat.bg || 'var(--blue-light)',
+      color: cat.color || 'var(--blue)',
+    };
+  }
+
   loadCatalog() {
     this.http.get<any[]>(`${this.base}/catalogue`).subscribe({
       next: (data) => {
-        const typeMap: Record<string, 'vm' | 'db' | 'saas'> = {
-          'IAAS': 'vm',
-          'PAAS': 'db',
-          'SAAS': 'saas'
-        };
-        const items: CatalogItem[] = (data || []).map((cat: any) => {
-          const type = cat.typeService ? (typeMap[cat.typeService] || 'saas') : 'saas';
-          
-          let specs: string[] = [];
-          if (cat.specs) {
-            specs = typeof cat.specs === 'string' ? cat.specs.split('.').map((s: string) => s.trim()) : cat.specs;
-          } else {
-            if (type === 'vm') {
-              specs = [
-                (cat.vcpu || 0) + ' vCPU',
-                (cat.ramMB || 0) + ' GB RAM',
-                (cat.stockageGB || 0) + ' GB SSD'
-              ];
-            } else {
-              if (cat.vcpu) specs.push(cat.vcpu + ' vCPU');
-              if (cat.ramMB) specs.push(cat.ramMB + ' GB RAM');
-              if (cat.stockageGB) specs.push(cat.stockageGB + ' GB SSD');
-            }
-          }
-          return {
-            id: String(cat.id),
-            name: cat.nomService || cat.name || 'Service sans nom',
-            desc: cat.description || cat.desc || '',
-            type: type as 'vm' | 'db' | 'saas',
-            price: Number(cat.prix !== undefined ? cat.prix : (cat.price || 0)),
-            specs,
-            bg: cat.bg || 'var(--blue-light)',
-            color: cat.color || 'var(--blue)',
-          };
-        });
+        const items: CatalogItem[] = (data || []).map((cat: any) => this.mapCatalogItem(cat));
         this.catalogItems.set(items);
       },
       error: (err) => {

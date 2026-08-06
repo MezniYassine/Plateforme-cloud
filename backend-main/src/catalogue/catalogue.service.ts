@@ -27,6 +27,20 @@ export class CatalogueService {
     return await this.catalogueRepo.find({ where: { isActive: true } });
   }
 
+  async getUpgrades(type: string, currentPrice: number): Promise<Catalogue[]> {
+    const { MoreThan } = await import('typeorm');
+    return await this.catalogueRepo.find({
+        where: {
+            isActive: true,
+            typeService: type,
+            prix: MoreThan(currentPrice)
+        },
+        order: {
+            prix: 'ASC'
+        }
+    });
+  }
+
   // --- READ (Un spécifiquement) ---
   async findOne(id: number): Promise<Catalogue> {
     const catalogue = await this.catalogueRepo.findOne({ where: { id } });

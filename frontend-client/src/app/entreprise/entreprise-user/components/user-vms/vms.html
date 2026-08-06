@@ -1,4 +1,4 @@
-﻿<div class="page-header-row">
+<div class="page-header-row">
     <div>
         <div class="page-h-title">Mes machines virtuelles</div>
         <div class="page-h-sub">Instances IaaS déployées et assignées à votre compte</div>
@@ -63,17 +63,24 @@
         </div>
         }
 
-        <div class="vfc-footer">
-            <span class="mono-tag">{{ vm.cost }} DT/mois</span>
-            <div style="display:flex;gap:6px">
+        <div class="vfc-footer" style="flex-direction: column; align-items: center; gap: 12px;">
+            <div style="display:flex; gap:4px; flex-wrap: nowrap; justify-content: center; width: 100%;">
                 @if (vm.status === 'running') { <button class="action-btn stop"
                     (click)="state.vmAction(vm.id,'stop')">Arrêter</button> }
                 @if (vm.status === 'stopped') { <button class="action-btn start"
                     (click)="state.vmAction(vm.id,'start')">Démarrer</button> }
+                <button class="action-btn upgrade" style="color: var(--blue);" (click)="state.openUpgradeModal('vm', vm)">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; vertical-align: text-bottom;">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                    Upgrade
+                </button>
                 <button class="action-btn console" [routerLink]="['/vm-console']"
                     [state]="{ id: vm.id, returnUrl: '/entreprise-user-dashboard' }">Console</button>
                 <button class="action-btn delete"  (click)="state.deleteVm(vm.id, vm.name)">Suppr.</button>
             </div>
+            <span class="mono-tag">{{ vm.cost }} DT/mois</span>
         </div>
     </div>
     }

@@ -12,6 +12,7 @@ export class PaasTabComponent {
   paasInstances = input<PaasInstance[]>([]);
   openDeploy = output<{ type: 'paas'; name: string }>();
   deletePaas = output<number>();
+  openUpgrade = output<PaasInstance>();
 
   getIconForSgbd(type: string): string {
     if (type === 'POSTGRESQL') return 'db';

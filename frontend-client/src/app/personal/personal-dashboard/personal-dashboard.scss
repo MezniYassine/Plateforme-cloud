@@ -1713,13 +1713,13 @@ body {
     color: var(--blue)
 }
 
-/* Ã¢â€¢ÂÃ¢â€¢Â TOAST Ã¢â€¢ÂÃ¢â€¢Â */
+/* Ã¢â€¢Â Ã¢â€¢Â  TOAST Ã¢â€¢Â Ã¢â€¢Â  */
 .toast {
     position: fixed;
     bottom: 24px;
     right: 24px;
-    background: var(--text-1);
-    color: #fff;
+    background: #ffffff;
+    color: #0f172a;
     padding: 11px 16px;
     border-radius: var(--r);
     font-size: 13px;
@@ -2061,10 +2061,11 @@ body {
   color: var(--text-2);
   padding: 3px 7px;
   border-radius: 5px;
+  white-space: nowrap;
 }
 
 .vm-cards-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 14px;
 }
 
@@ -2192,3 +2193,9 @@ body {
   }
 }
 
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}

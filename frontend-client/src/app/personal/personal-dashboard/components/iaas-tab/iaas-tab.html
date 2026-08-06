@@ -1,4 +1,4 @@
-﻿<div class="page-header-row">
+<div class="page-header-row">
   <div>
     <div class="page-h-title">Mes machines virtuelles</div>
     <div class="page-h-sub">Instances IaaS déployées et assignées à votre compte</div>
@@ -59,28 +59,40 @@
     </div>
     }
 
-    <div class="vfc-footer">
-      <span class="mono-tag">{{ v.cost }} DT/mois</span>
-      <div style="display:flex;gap:6px">
+    <div class="vfc-footer" style="flex-direction: column; align-items: center; gap: 12px;">
+      <div style="display:flex; gap:4px; flex-wrap: nowrap; justify-content: center; width: 100%;">
         @if (v.status === 'running') { <button class="action-btn stop"
           (click)="onVmAction(v.id,'stop')">Arrêter</button> }
         @if (v.status === 'stopped') { <button class="action-btn start"
           (click)="onVmAction(v.id,'start')">Démarrer</button> }
         <button class="action-btn console" [routerLink]="['/vm-console']"
           [state]="{ id: v.id, returnUrl: '/personal-dashboard' }">Console</button>
+        <button class="action-btn upgrade" style="color: var(--blue);" (click)="onUpgrade(v)">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
+            stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; vertical-align: text-bottom;">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+          Upgrade
+        </button>
         <button class="action-btn delete" (click)="onVmAction(v.id,'delete')">Suppr.</button>
       </div>
+      <span class="mono-tag">{{ v.cost }} DT/mois</span>
     </div>
   </div>
   }
   @empty {
-  <div class="empty-state" style="grid-column:1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; text-align: center; background: var(--bg-white); border: 1px dashed var(--border); border-radius: var(--r);">
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.6" stroke-linecap="round" width="48" height="48" style="opacity: 0.8;">
-          <rect x="2" y="3" width="20" height="5" rx="2" />
-          <rect x="2" y="11" width="20" height="5" rx="2" />
-      </svg>
-      <p style="color: var(--text-1); margin: 0; font-size: 17px; font-weight: 600; font-family: 'Syne', sans-serif;">Aucune VM assignée pour l'instant</p>
-      <button (click)="openDeploy.emit({ type: 'vm', name: '' })" style="background: var(--blue); color: white; margin-top: 4px; padding: 8px 20px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">Faire une demande de VM</button>
+  <div class="empty-state"
+    style="grid-column:1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; text-align: center; background: var(--bg-white); border: 1px dashed var(--border); border-radius: var(--r);">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.6" stroke-linecap="round" width="48"
+      height="48" style="opacity: 0.8;">
+      <rect x="2" y="3" width="20" height="5" rx="2" />
+      <rect x="2" y="11" width="20" height="5" rx="2" />
+    </svg>
+    <p style="color: var(--text-1); margin: 0; font-size: 17px; font-weight: 600; font-family: 'Syne', sans-serif;">
+      Aucune VM assignée pour l'instant</p>
+    <button (click)="openDeploy.emit({ type: 'vm', name: '' })"
+      style="background: var(--blue); color: white; margin-top: 4px; padding: 8px 20px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">Déployer
+      une VM</button>
   </div>
   }
 </div>

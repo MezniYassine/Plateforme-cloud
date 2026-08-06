@@ -35,6 +35,8 @@ export class CreateVmDto {
   catalogueId?: number;
 }
 
+import { Demande, DemandeStatus } from 'src/demande/entities/demande.entity';
+
 @Controller('esxi')
 export class EsxiController {
   constructor(private readonly esxiService: EsxiService,
@@ -44,6 +46,8 @@ export class EsxiController {
     private readonly clientRepo: Repository<Client>,
     @InjectRepository(Catalogue)
     private readonly catalogueRepo: Repository<Catalogue>,
+    @InjectRepository(Demande)
+    private readonly demandeRepo: Repository<Demande>,
     private readonly walletService: WalletService,
     private readonly mailService: MailService,
   ) { }
@@ -239,6 +243,125 @@ export class EsxiController {
     return {
       status: 'Success',
       message: `VM ${vm.nomPersonnalise} supprimée.`,
+      vmId: id,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('my-vms/:id/upgrade')
+  async upgradeMyVm(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('catalogueId', ParseIntPipe) catalogueId: number,
+    @Req() req: any,
+  ) {
+    const vm = await this.vmRepo.findOne({
+      where: { id, client: { id: req.user.sub } },
+      relations: ['client', 'catalogue', 'client.entreprise'],
+    });
+
+    if (!vm) {
+      throw new NotFoundException('VM introuvable pour ce client.');
+    }
+
+    const newCatalogue = await this.catalogueRepo.findOne({ where: { id: catalogueId, isActive: true } });
+    if (!newCatalogue) {
+      throw new NotFoundException('Nouvelle offre introuvable ou inactive.');
+    }
+
+    const oldPrice = Number(vm.prixMensuel) || 0;
+    const newPrice = Number(newCatalogue.prix) || 0;
+
+    if (newPrice <= oldPrice) {
+      throw new HttpException(
+        { status: 'Error', message: 'La nouvelle offre doit avoir un prix supérieur à l\'offre actuelle.' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const diffPrice = newPrice - oldPrice;
+    const oldPlanName = vm.catalogue?.nomService ?? `${vm.vCPU} vCPU / ${vm.ramGB} GB RAM`;
+
+    // Déterminer qui débiter : si ENTREPRISE_USER → débiter l'admin de l'entreprise
+    const isEntUser = req.user.role === 'ENTREPRISE_USER';
+    let debitClientId = req.user.sub;
+    let adminClient: any = null;
+
+    if (isEntUser && vm.client?.entreprise) {
+      // Trouver l'admin de la même entreprise
+      adminClient = await this.clientRepo.findOne({
+        where: { entreprise: { id: vm.client.entreprise.id }, role: 'ENTREPRISE_ADMIN' as any },
+      });
+      if (adminClient) {
+        debitClientId = adminClient.id;
+      }
+    }
+
+    // Débiter la différence
+    try {
+      await this.walletService.debiter(
+        debitClientId,
+        diffPrice,
+        `Mise à niveau (Scale-up) de la VM IaaS ${vm.nomPersonnalise}${isEntUser ? ` par ${vm.client.prenom} ${vm.client.nom}` : ''}`,
+        undefined,
+      );
+    } catch (walletErr) {
+      throw new HttpException(
+        { status: 'Error', message: `Solde insuffisant pour la mise à niveau. Différence à payer: ${diffPrice.toFixed(3)} DT.` },
+        HttpStatus.PAYMENT_REQUIRED,
+      );
+    }
+
+    const esxiRef = vm.vmReference || vm.nomPersonnalise;
+
+    try {
+      const ramInMb = Math.round(newCatalogue.ramMB * 1024);
+      await this.esxiService.upgradeVm(esxiRef, newCatalogue.vcpu, ramInMb, newCatalogue.stockageGB);
+    } catch (error) {
+      throw new HttpException(
+        { status: 'Error', message: `Échec de la mise à niveau sur l'infrastructure: ${error.message}` },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    // Mise à jour de la base de données
+    vm.catalogue = newCatalogue;
+    vm.prixMensuel = newPrice;
+    vm.vCPU = newCatalogue.vcpu;
+    vm.ramGB = newCatalogue.ramMB;
+    vm.stockageGB = newCatalogue.stockageGB;
+    await this.vmRepo.save(vm);
+
+    const demande = await this.demandeRepo.findOne({
+      where: {
+        nomInstanceSouhaite: vm.nomPersonnalise,
+        client: { id: vm.client.id },
+        status: DemandeStatus.APPROUVEE
+      }
+    });
+    if (demande) {
+      demande.catalogue = newCatalogue;
+      demande.prixMensuel = newPrice;
+      await this.demandeRepo.save(demande);
+    }
+
+    // Si ENTREPRISE_USER, envoyer une notification email à l'admin
+    if (isEntUser && adminClient) {
+      this.mailService.sendUpgradeNotificationAdmin({
+        adminEmail: adminClient.email,
+        adminPrenom: adminClient.prenom,
+        userPrenom: vm.client.prenom,
+        userNom: vm.client.nom,
+        resourceName: vm.nomPersonnalise,
+        resourceType: 'VM',
+        oldPlan: oldPlanName,
+        newPlan: newCatalogue.nomService,
+        diffPrice,
+      }).catch(() => {});
+    }
+
+    return {
+      status: 'Success',
+      message: `VM ${vm.nomPersonnalise} mise à niveau avec succès.`,
       vmId: id,
     };
   }

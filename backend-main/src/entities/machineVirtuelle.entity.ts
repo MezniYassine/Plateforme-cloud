@@ -4,13 +4,13 @@ import { ServiceInstance } from "./serviceInstance.entity";
 
 @ChildEntity()
 export class MachineVirtuelle extends ServiceInstance {
-  @Column()
+  @Column({ type: 'float' })
   vCPU!: number;
 
-  @Column()
+  @Column({ type: 'float' })
   ramGB!: number;
 
-  @Column()
+  @Column({ type: 'float' })
   stockageGB!: number;
 
   @Column({ nullable: true })

@@ -136,15 +136,23 @@
         (vmAction)="handleVmAction($event)" />
       }
 
-      @if (activeTab() === 'iaas') {
-      <app-iaas-tab [vms]="vms()" (openDeploy)="handleOpenDeploy($event)" (vmAction)="handleVmAction($event)" />
-      }
+        @if (activeTab() === 'iaas') {
+        <app-iaas-tab 
+          [vms]="vms()" 
+          (openDeploy)="handleOpenDeploy($event)" 
+          (vmAction)="handleVmAction($event)"
+          (openUpgrade)="openUpgradeModal($event, 'vm')">
+        </app-iaas-tab>
+        }
 
-      @if (activeTab() === 'paas') {
-      <app-paas-tab [paasInstances]="paasInstances()" (openDeploy)="handleOpenDeploy($event)" (deletePaas)="deletePaas($event)" />
-      }
-
-      @if (activeTab() === 'saas') {
+        @if (activeTab() === 'paas') {
+        <app-paas-tab 
+          [paasInstances]="paasInstances()" 
+          (openDeploy)="handleOpenDeploy($event)" 
+          (deletePaas)="deletePaas($event)"
+          (openUpgrade)="openUpgradeModal($event, 'paas')">
+        </app-paas-tab>
+        }@if (activeTab() === 'saas') {
       <app-saas-tab />
       }
 
@@ -418,6 +426,87 @@
   </div>
 </div>
 
+<!-- ── UPGRADE MODAL ── -->
+<div class="modal-ov" [class.show]="isUpgradeModalOpen()">
+  <div class="modal" style="width: 600px;">
+    <div class="modal-head">
+      <div class="modal-ic">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+      </div>
+      <div>
+        <div class="modal-title">Mise à niveau (Scale-up)</div>
+        <div class="modal-sub">Augmenter les ressources de {{ upgradeTarget()?.name }}</div>
+      </div>
+      <button class="modal-x" (click)="closeUpgrade()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+      </button>
+    </div>
+    
+    <div class="modal-body" style="padding: 24px; max-height: 400px; overflow-y: auto;">
+      <div class="input-lbl" style="margin-bottom: 12px; font-weight: 600;">Sélectionnez une offre supérieure</div>
+      
+      @if (upgradeCatalogues().length === 0) {
+        <div style="text-align: center; color: var(--text-3); font-size: 14px; padding: 20px 0;">
+          Aucune offre supérieure trouvée dans le catalogue.
+        </div>
+      } @else {
+        <div class="plans-grid">
+          @for (plan of upgradeCatalogues(); track plan.id) {
+          <div class="plan-card" [class.selected]="selectedUpgrade()?.id === plan.id" (click)="selectUpgrade(plan)">
+            <div class="plan-header">
+              <div class="plan-icon" [style.background]="plan.color + '20'">
+                @if (plan.icon === 'vm') {
+                  <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18"><rect x="2" y="3" width="20" height="18" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
+                }
+              </div>
+              @if (plan.tag) {
+                <span class="plan-tag" [style.background]="plan.tagColor ?? 'var(--blue-l)'" [style.color]="plan.color">{{ plan.tag }}</span>
+              }
+              @if (selectedUpgrade()?.id === plan.id) {
+                <div class="plan-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12" /></svg></div>
+              }
+            </div>
+            <div class="plan-name">{{ plan.name }}</div>
+            <div class="plan-desc">{{ plan.desc }}</div>
+            <div class="plan-specs">
+              @for (spec of plan.specs; track spec) {
+              <span class="plan-spec-chip">{{ spec }}</span>
+              }
+            </div>
+            <div class="plan-price">{{ plan.price }} <span>DT/mois</span></div>
+          </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="modal-foot">
+      @if (selectedUpgrade()) {
+        <div class="cost-preview" style="flex:1;margin-right:14px">
+          <span class="cost-label">Différence à payer</span>
+          <span class="cost-val" style="color: var(--amber);">
+            ~{{ getUpgradeDiff() }} DT
+          </span>
+        </div>
+      } @else {
+        <div style="flex:1"></div>
+      }
+      <button class="btn btn-ghost" (click)="closeUpgrade()">Annuler</button>
+      <button class="btn btn-primary" style="margin-left:8px" [disabled]="isUpgrading() || !selectedUpgrade()" (click)="submitUpgrade()">
+        @if (isUpgrading()) {
+          <svg class="spin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" stroke-dasharray="32" stroke-dashoffset="16" opacity="0.6"/></svg>
+          Mise à niveau...
+        } @else {
+          <svg viewBox="0 0 24 24" width="18" height="18"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          Mettre à niveau
+        }
+      </button>
+    </div>
+  </div>
+</div>
+
 <!--  TOAST   -->
 <div class="toast" [class.show]="isToastVisible()">
   <div class="toast-ic" [style.background]="toastColor()">
@@ -435,7 +524,7 @@
 
 <!-- ── CONFIRM TOAST ── -->
 <div class="modal-ov" [class.show]="isConfirmToastVisible()" style="z-index: 400;" (click)="cancelDelete()">
-  <div style="background: var(--text-1); color: #fff; padding: 24px 28px; border-radius: 24px; width: 400px; max-width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 24px; transition: all 0.3s cubic-bezier(0.22, 0.8, 0.36, 1); transform: scale(0.95); opacity: 0;" [style.transform]="isConfirmToastVisible() ? 'scale(1)' : 'scale(0.95)'" [style.opacity]="isConfirmToastVisible() ? '1' : '0'" (click)="$event.stopPropagation()">
+  <div style="background: #ffffff; color: #0f172a; padding: 24px 28px; border-radius: 24px; width: 400px; max-width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 24px; transition: all 0.3s cubic-bezier(0.22, 0.8, 0.36, 1); transform: scale(0.95); opacity: 0;" [style.transform]="isConfirmToastVisible() ? 'scale(1)' : 'scale(0.95)'" [style.opacity]="isConfirmToastVisible() ? '1' : '0'" (click)="$event.stopPropagation()">
     <div style="display: flex; align-items: center; gap: 18px;">
       <div class="toast-ic" style="background: var(--red); width: 44px; height: 44px; flex-shrink: 0;">
         <svg viewBox="0 0 24 24" style="width: 22px; height: 22px;">
@@ -443,10 +532,10 @@
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </div>
-      <span style="font-weight: 500; font-size: 17px; line-height: 1.4;">{{ confirmToastMsg() }}</span>
+      <span style="font-weight: 500; font-size: 17px; line-height: 1.4; color: #0f172a;">{{ confirmToastMsg() }}</span>
     </div>
     <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px;">
-      <button class="btn btn-ghost" style="padding: 9px 20px; font-size: 14px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 50px;" (click)="cancelDelete()">Annuler</button>
+      <button class="btn btn-ghost" style="padding: 9px 20px; font-size: 14px; background: #f1f5f9; color: #0f172a; border: 1px solid #e2e8f0; border-radius: 50px;" (click)="cancelDelete()">Annuler</button>
       <button class="btn" style="padding: 9px 20px; font-size: 14px; background: var(--red); color: white; border: 1px solid var(--red); border-radius: 50px; cursor: pointer;" (click)="confirmDelete()">OK</button>
     </div>
   </div>

@@ -20,11 +20,17 @@ export class LoginComponent implements OnInit {
   forgotLoading = false;
   forgotSent = false;
   errorMsg = '';
+  toastMsg = signal<{text: string, color: string} | null>(null);
   fb = inject(FormBuilder);
   auth = inject(AuthService);
   router = inject(Router);
   route = inject(ActivatedRoute);
   readonly showPassword = signal(false);
+
+  showToast(text: string, color: string = 'var(--blue)') {
+    this.toastMsg.set({ text, color });
+    setTimeout(() => this.toastMsg.set(null), 4000);
+  }
 
 
   loginForm = this.fb.group({
@@ -61,10 +67,7 @@ export class LoginComponent implements OnInit {
         },
         error: (err) => {
           this.isLoading = false;
-          this.errorMsg = err?.error?.message || 'Incorrect Email or password .';
-          setTimeout(() => {
-            this.errorMsg = '';
-          }, 4000);
+          this.showToast(err?.error?.message || 'Incorrect Email or password .', 'var(--red)');
         }
       });
   }
@@ -74,7 +77,7 @@ export class LoginComponent implements OnInit {
     this.forgotForm.patchValue({ email: currentEmail });
     this.forgotMode = true;
     this.forgotSent = false;
-    this.errorMsg = '';
+    this.toastMsg.set(null);
   }
 
   closeForgotPassword() {
@@ -90,7 +93,7 @@ export class LoginComponent implements OnInit {
     }
 
     this.forgotLoading = true;
-    this.errorMsg = '';
+    this.toastMsg.set(null);
 
     const email = this.forgotForm.getRawValue().email ?? '';
     this.auth.forgotPassword(email).subscribe({
@@ -100,10 +103,7 @@ export class LoginComponent implements OnInit {
       },
       error: () => {
         this.forgotLoading = false;
-        this.errorMsg = 'Unable to send reset email. Please try again.';
-        setTimeout(() => {
-          this.errorMsg = '';
-        }, 4000);
+        this.showToast('Unable to send reset email. Please try again.', 'var(--red)');
       },
     });
   }
@@ -166,8 +166,11 @@ export class LoginComponent implements OnInit {
     (document.getElementById('otp1') as HTMLInputElement)?.focus();
     if (this.pendingEmail) {
       this.auth.sendLoginMfaOtp(this.pendingEmail).subscribe({
-        next: () => alert('Un nouveau code OTP a été envoyé à votre adresse email.'),
-        error: (err) => this.mfaError = err?.error?.message || 'Erreur d\'envoi de l\'OTP.'
+        next: () => this.showToast('Un nouveau code OTP a été envoyé à votre adresse email.', 'var(--green)'),
+        error: (err) => {
+          this.mfaError = err?.error?.message || 'Erreur d\'envoi de l\'OTP.';
+          this.showToast(this.mfaError, 'var(--red)');
+        }
       });
     }
   }

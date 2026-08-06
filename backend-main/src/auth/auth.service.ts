@@ -433,7 +433,7 @@ export class AuthService {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:18px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2025 Dynamix Cloud · Email automatique</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Email automatique</p>
           </td>
         </tr>
       </table>

@@ -213,7 +213,7 @@ export class PersonalDashboardHelperService {
       ramUse: ramUsage,
       internetConnected: internetConnected,
       status: statusMap[entity.status] ?? 'provisioning',
-      ip: entity.ipAddress ?? entity.vmReference ?? 'Provisioning',
+      ip: (entity.ipAddress && entity.ipAddress.includes('.')) ? entity.ipAddress : 'Aucun IP',
       cost,
       catalogName: entity.catalogue?.nomService ?? this.getCatalogNameForVm(entity),
       createdAt: entity.dateCreation ?? null,
@@ -275,52 +275,54 @@ export class PersonalDashboardHelperService {
     });
   }
 
+  mapCatalogItem(cat: any): ServiceItem {
+    const typeSrv = cat.typeService || (cat.type?.toUpperCase()) || 'SAAS';
+    const isVm = typeSrv === 'IAAS' || typeSrv === 'VM';
+    const isPaas = typeSrv === 'PAAS' || typeSrv === 'DB';
+
+    let icon = 'saas';
+    if (isVm) icon = 'vm';
+    else if (isPaas) {
+      const sgbd = (cat.typeSgbd || '').toLowerCase();
+      if (sgbd.includes('redis')) icon = 'redis';
+      else if (sgbd.includes('mongo')) icon = 'mongo';
+      else icon = 'db';
+    }
+
+    let specs = cat.specs
+      ? (typeof cat.specs === 'string' ? cat.specs.split('·').map((s: string) => s.trim()) : cat.specs)
+      : [];
+
+    if (specs.length === 0 && (isVm || cat.vcpu > 0 || cat.ramMB > 0 || cat.stockageGB > 0)) {
+      specs = [
+        `${cat.vcpu || 0} vCPU`,
+        `${cat.ramMB || 0} GB RAM`,
+        `${cat.stockageGB || 0} GB SSD`
+      ];
+    }
+
+    return {
+      id: cat.id !== undefined ? Number(cat.id) : undefined,
+      name: cat.nomService || cat.name || 'Service sans nom',
+      desc: cat.description || cat.desc || '',
+      icon: icon,
+      color: cat.color || 'var(--blue)',
+      bg: cat.bg || 'var(--blue-light)',
+      price: String(cat.prix !== undefined ? cat.prix : (cat.price || '0.00')),
+      specs: specs,
+      tag: cat.tag || (isVm ? 'IaaS' : (isPaas ? 'PaaS' : 'SaaS')),
+      tagColor: cat.tagColor || (isVm ? 'var(--blue-l)' : (isPaas ? 'var(--purple-l)' : 'var(--green-l)')),
+      vcpu: Number(cat.vcpu ?? 0),
+      ramGB: Number(cat.ramMB ?? 0),
+      stockageGB: Number(cat.stockageGB ?? 0),
+      typeSgbd: cat.typeSgbd,
+    };
+  }
+
   loadCatalog(onDone?: () => void) {
     this.http.get<any[]>(`${this.base}/catalogue`).subscribe({
       next: (data) => {
-        const items: ServiceItem[] = (data || []).map((cat: any) => {
-          const typeSrv = cat.typeService || (cat.type?.toUpperCase()) || 'SAAS';
-          const isVm = typeSrv === 'IAAS' || typeSrv === 'VM';
-          const isPaas = typeSrv === 'PAAS' || typeSrv === 'DB';
-
-          let icon = 'saas';
-          if (isVm) icon = 'vm';
-          else if (isPaas) {
-            const sgbd = (cat.typeSgbd || '').toLowerCase();
-            if (sgbd.includes('redis')) icon = 'redis';
-            else if (sgbd.includes('mongo')) icon = 'mongo';
-            else icon = 'db';
-          }
-
-          let specs = cat.specs
-            ? (typeof cat.specs === 'string' ? cat.specs.split('·').map((s: string) => s.trim()) : cat.specs)
-            : [];
-
-          if (specs.length === 0 && (isVm || cat.vcpu > 0 || cat.ramMB > 0 || cat.stockageGB > 0)) {
-            specs = [
-              `${cat.vcpu || 0} vCPU`,
-              `${cat.ramMB || 0} GB RAM`,
-              `${cat.stockageGB || 0} GB SSD`
-            ];
-          }
-
-          return {
-            id: cat.id !== undefined ? Number(cat.id) : undefined,
-            name: cat.nomService || cat.name || 'Service sans nom',
-            desc: cat.description || cat.desc || '',
-            icon: icon,
-            color: cat.color || 'var(--blue)',
-            bg: cat.bg || 'var(--blue-light)',
-            price: String(cat.prix !== undefined ? cat.prix : (cat.price || '0.00')),
-            specs: specs,
-            tag: cat.tag || (isVm ? 'IaaS' : (isPaas ? 'PaaS' : 'SaaS')),
-            tagColor: cat.tagColor || (isVm ? 'var(--blue-l)' : (isPaas ? 'var(--purple-l)' : 'var(--green-l)')),
-            vcpu: Number(cat.vcpu ?? 0),
-            ramGB: Number(cat.ramMB ?? 0),
-            stockageGB: Number(cat.stockageGB ?? 0),
-            typeSgbd: cat.typeSgbd,
-          };
-        });
+        const items: ServiceItem[] = (data || []).map((cat: any) => this.mapCatalogItem(cat));
         this.catalogItems.set(items);
         onDone?.();
       },

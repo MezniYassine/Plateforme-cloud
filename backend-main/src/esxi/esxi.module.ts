@@ -12,9 +12,11 @@ import { Transaction } from 'src/entities/transaction.entity';
 import { WalletModule } from 'src/wallet/wallet.module';
 import { MailModule } from 'src/mail/mail.module';
 
+import { Demande } from 'src/demande/entities/demande.entity';
+
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Personal, MachineVirtuelle, Client, Catalogue, Wallet, Transaction]),
+    TypeOrmModule.forFeature([Personal, MachineVirtuelle, Client, Catalogue, Wallet, Transaction, Demande]),
     HttpModule,
     forwardRef(() => WalletModule),
     MailModule,
