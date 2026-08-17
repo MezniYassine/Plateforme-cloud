@@ -127,16 +127,6 @@ export class PaasService implements OnModuleInit {
                 throw new InternalServerErrorException(`SGBD non pris en charge : ${dto.typeSgbd}`);
         }
 
-        // --- DÉBIT DU WALLET (AVANT DÉPLOIEMENT POUR ÉVITER LES CONDITIONS DE COURSE) ---
-        if (prixMensuel > 0) {
-            await this.walletService.debiter(
-                payerId,
-                prixMensuel,
-                `Déploiement d'un service PaaS (${dto.nomPersonnalise})`,
-                undefined,
-            );
-        }
-
         const ssh = new NodeSSH();
         try {
             // 3. Connexion SSH à la VM DBaaS
@@ -153,6 +143,16 @@ export class PaasService implements OnModuleInit {
 
             if (result.code !== 0) {
                 throw new Error(`Erreur lors du lancement Docker : ${result.stderr}`);
+            }
+
+            // --- DÉBIT DU WALLET APRÈS DÉPLOIEMENT RÉUSSI ---
+            if (prixMensuel > 0) {
+                await this.walletService.debiter(
+                    payerId,
+                    prixMensuel,
+                    `Déploiement d'un service PaaS (${dto.nomPersonnalise})`,
+                    undefined,
+                );
             }
 
             // 5. Sauvegarde de l'instance dans la base de données (avec les champs de ServiceInstance)
@@ -180,20 +180,6 @@ export class PaasService implements OnModuleInit {
         } catch (error) {
             ssh.dispose();
             
-            // --- REMBOURSEMENT EN CAS D'ÉCHEC ---
-            if (prixMensuel > 0) {
-                try {
-                    await this.walletService.crediter(
-                        payerId,
-                        prixMensuel,
-                        `Remboursement suite à l'échec de déploiement PaaS (${dto.nomPersonnalise})`,
-                        undefined,
-                    );
-                } catch (refundErr) {
-                    this.logger.error(`⚠️ Impossible de rembourser le wallet pour le client #${payerId}: ${refundErr.message}`);
-                }
-            }
-
             throw new InternalServerErrorException(`Échec du déploiement DBaaS : ${error.message}`);
         }
     }

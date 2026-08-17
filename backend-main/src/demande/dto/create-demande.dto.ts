@@ -24,4 +24,20 @@ export class CreateDemandeDto {
   @IsOptional()
   @IsString()
   typeSgbd?: string;
+
+  @IsOptional()
+  @IsString()
+  appType?: string;
+
+  @IsOptional()
+  @IsString()
+  adminEmail?: string;
+
+  @IsOptional()
+  @IsString()
+  adminPassword?: string;
+
+  @IsOptional()
+  @IsNumber()
+  linkedPaasId?: number;
 }

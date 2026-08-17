@@ -12,6 +12,7 @@ import { MailModule } from 'src/mail/mail.module';
 import { PaasModule } from 'src/paas/paas.module';
 
 import { WalletModule } from 'src/wallet/wallet.module';
+import { SaasModule } from 'src/saas/saas.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { WalletModule } from 'src/wallet/wallet.module';
     MailModule,
     PaasModule,
     WalletModule,
+    SaasModule,
   ],
   controllers: [DemandeController],
   providers: [DemandeService, EsxiService],

@@ -42,6 +42,18 @@ export class Demande {
     @Column({ type: 'varchar', nullable: true })
     typeSgbd?: string;
 
+    @Column({ type: 'varchar', nullable: true })
+    appType?: string;
+
+    @Column({ type: 'varchar', nullable: true })
+    adminEmail?: string;
+
+    @Column({ type: 'varchar', nullable: true })
+    adminPassword?: string;
+
+    @Column({ type: 'int', nullable: true })
+    linkedPaasId?: number;
+
     @Column({ type: 'decimal', precision: 10, scale: 2, default: 0.00 })
     prixMensuel!: number;
 

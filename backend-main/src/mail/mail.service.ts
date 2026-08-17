@@ -81,12 +81,15 @@ export class MailService {
     nomInstance: string;
     specs: string;
     commentaireAdmin: string;
+    typeService?: string;
   }): Promise<void> {
     try {
       const sig = await this.buildSignature();
+      const isPaas = params.typeService === 'PAAS';
+      const subjectType = isPaas ? 'base de données' : 'machine virtuelle';
       await this.mailer.sendMail({
         to: params.userEmail,
-        subject: `✅ Votre machine virtuelle « ${params.nomInstance} » est prête !`,
+        subject: `✅ Votre ${subjectType} « ${params.nomInstance} » est prête !`,
         html: this.buildSuccesHtml(params, sig),
         attachments: [this.getLogoAttachment()],
       });
@@ -170,6 +173,31 @@ export class MailService {
   }
 
   /**
+   * Email envoyé à l'utilisateur lorsque
+   * son application SaaS est prête.
+   */
+  async sendProvisionningSuccesSaas(params: {
+    userEmail: string;
+    userPrenom: string;
+    userNom: string;
+    nomInstance: string;
+    urlAcces: string;
+  }): Promise<void> {
+    try {
+      const sig = await this.buildSignature();
+      await this.mailer.sendMail({
+        to: params.userEmail,
+        subject: `🚀 Votre application SaaS « ${params.nomInstance} » est prête !`,
+        html: this.buildSuccesSaasHtml(params, sig),
+        attachments: [this.getLogoAttachment()],
+      });
+      this.logger.log(`[Mail] Provisionnement SaaS terminé → ${params.userEmail}`);
+    } catch (err) {
+      this.logger.error(`[Mail] Échec envoi succès SaaS: ${err.message}`);
+    }
+  }
+
+  /**
    * Email envoyé à l'admin entreprise lorsqu'un utilisateur effectue un scale-up.
    */
   async sendUpgradeNotificationAdmin(params: {
@@ -178,7 +206,7 @@ export class MailService {
     userPrenom: string;
     userNom: string;
     resourceName: string;
-    resourceType: 'VM' | 'PaaS';
+    resourceType: 'VM' | 'PaaS' | 'SaaS';
     oldPlan: string;
     newPlan: string;
     diffPrice: number;
@@ -280,11 +308,14 @@ export class MailService {
     nomInstance: string;
     specs: string;
     commentaireAdmin: string;
+    typeService?: string;
   }, signature: string): string {
+    const isPaas = p.typeService === 'PAAS';
+    const titleType = isPaas ? 'Base de données' : 'Machine virtuelle';
     return `
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VM déployée</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titleType} déployée</title></head>
 <body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:32px 0;">
     <tr><td align="center">
@@ -292,7 +323,7 @@ export class MailService {
         <tr>
           <td style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);padding:32px 40px;text-align:center;">
             <div style="font-size:48px;margin-bottom:12px;">✅</div>
-            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">Machine virtuelle déployée !</h1>
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">${titleType} déployée !</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Votre infrastructure est prête à l'emploi</p>
           </td>
         </tr>
@@ -300,7 +331,7 @@ export class MailService {
           <td style="padding:36px 40px;">
             <p style="margin:0 0 16px;font-size:16px;color:#0f172a;">Bonjour <strong>${p.userPrenom} ${p.userNom}</strong>,</p>
             <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.6;">
-              Bonne nouvelle ! Votre demande de ressource a été approuvée et votre machine virtuelle est maintenant opérationnelle.
+              Bonne nouvelle ! Votre demande de ressource a été approuvée et votre ${isPaas ? 'base de données' : 'machine virtuelle'} est maintenant opérationnelle.
             </p>
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;margin-bottom:24px;">
               <tr><td style="padding:20px 24px;">
@@ -322,7 +353,7 @@ export class MailService {
               </td></tr>
             </table>
             <p style="margin:0 0 24px;font-size:14px;color:#475569;">
-              Connectez-vous à votre tableau de bord pour accéder à votre machine virtuelle et commencer à travailler.
+              Connectez-vous à votre tableau de bord pour accéder à votre ${isPaas ? 'base de données' : 'machine virtuelle'} et commencer à travailler.
             </p>
             ${signature}
           </td>
@@ -522,17 +553,92 @@ export class MailService {
 </html>`;
   }
 
+  private buildSuccesSaasHtml(p: {
+    userPrenom: string;
+    userNom: string;
+    nomInstance: string;
+    urlAcces: string;
+  }, signature: string): string {
+    const now = new Date().toLocaleString('fr-FR', {
+      day: '2-digit', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+    return `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Application SaaS opérationnelle</title></head>
+<body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#0891b2 0%,#0e7490 100%);padding:32px 40px;text-align:center;">
+            <div style="font-size:48px;margin-bottom:12px;">🚀</div>
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">Application SaaS prête !</h1>
+            <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Votre application est déployée et opérationnelle</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="margin:0 0 16px;font-size:16px;color:#0f172a;">Bonjour <strong>${p.userPrenom} ${p.userNom}</strong>,</p>
+            <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.6;">
+              Excellente nouvelle ! Votre application SaaS <strong>${p.nomInstance}</strong> a été déployée avec succès.
+              Elle est maintenant active et vous pouvez y accéder immédiatement.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#ecfeff;border:1px solid #a5f3fc;border-radius:12px;margin-bottom:20px;">
+              <tr><td style="padding:20px 24px;">
+                <p style="margin:0 0 14px;font-size:12px;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:0.8px;">⚙️ Détails de votre application</p>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding:7px 0;font-size:13px;color:#64748b;width:160px;border-bottom:1px solid #cffafe;">Nom</td>
+                    <td style="padding:7px 0;font-size:13px;color:#0f172a;font-weight:700;border-bottom:1px solid #cffafe;">${p.nomInstance}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:7px 0;font-size:13px;color:#64748b;border-bottom:1px solid #cffafe;">URL d'accès</td>
+                    <td style="padding:7px 0;font-size:13px;color:#0f172a;font-weight:600;border-bottom:1px solid #cffafe;"><a href="${p.urlAcces}" style="color:#0284c7;">${p.urlAcces}</a></td>
+                  </tr>
+                  <tr>
+                    <td style="padding:7px 0;font-size:13px;color:#64748b;">Déployée le</td>
+                    <td style="padding:7px 0;font-size:13px;color:#0f172a;font-weight:600;">${now}</td>
+                  </tr>
+                </table>
+              </td></tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin-bottom:24px;">
+              <tr><td style="padding:14px 20px;text-align:center;">
+                <span style="display:inline-block;background:#16a34a;color:#fff;font-size:12px;font-weight:700;padding:4px 14px;border-radius:100px;letter-spacing:0.5px;">● RUNNING</span>
+                <span style="margin-left:10px;font-size:13px;color:#15803d;font-weight:500;">Application active</span>
+              </td></tr>
+            </table>
+            <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.6;">
+              Vous pouvez retrouver toutes les informations de connexion (mot de passe, base liée, etc.) directement depuis votre tableau de bord Dynamix.
+            </p>
+            ${signature}
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  }
+
   private buildUpgradeNotificationHtml(p: {
     adminPrenom: string;
     userPrenom: string;
     userNom: string;
     resourceName: string;
-    resourceType: 'VM' | 'PaaS';
+    resourceType: 'VM' | 'PaaS' | 'SaaS';
     oldPlan: string;
     newPlan: string;
     diffPrice: number;
   }, signature: string): string {
-    const typeLabel = p.resourceType === 'VM' ? 'Machine Virtuelle (IaaS)' : 'Base de données (PaaS)';
+    const typeLabel = p.resourceType === 'VM' ? 'Machine Virtuelle (IaaS)' : p.resourceType === 'SaaS' ? 'Application (SaaS)' : 'Base de données (PaaS)';
     return `
 <!DOCTYPE html>
 <html lang="fr">

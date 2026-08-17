@@ -26,6 +26,7 @@ import { WalletModule } from './wallet/wallet.module';
 import { MailModule } from './mail/mail.module';
 import { PaasModule } from './paas/paas.module';
 import { ServicePaaS } from './entities/servicePaaS.entity';
+import { SaasModule } from './saas/saas.module';
 
 
 @Module({
@@ -73,6 +74,7 @@ import { ServicePaaS } from './entities/servicePaaS.entity';
     WalletModule,
     MailModule,
     PaasModule,
+    SaasModule,
   ],
   controllers: [AppController],
   providers: [AppService],

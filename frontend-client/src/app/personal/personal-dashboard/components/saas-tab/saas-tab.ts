@@ -1,19 +1,43 @@
-import { Component, signal } from '@angular/core';
-import { ServiceItem } from '../../personal-dashboard-helper.service';
+import { Component, input, output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { SaasInstance } from '../../personal-dashboard-helper.service';
 
 @Component({
   selector: 'app-saas-tab',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './saas-tab.html',
 })
 export class SaasTabComponent {
-  saasServices = signal<ServiceItem[]>([
-    { name: 'Odoo ERP 17', desc: "Suite ERP complète : CRM, comptabilité, RH, inventaire, e-commerce.", icon: 'erp', color: 'var(--purple)', bg: 'var(--purple-l)', price: '35.00', specs: ['4 vCPU', '8 GB', '500 GB'], tag: 'Populaire', tagColor: 'var(--purple)' },
-    { name: 'Nextcloud', desc: 'Espace de travail collaboratif souverain : fichiers, agenda, visio.', icon: 'cloud', color: 'var(--blue)', bg: 'var(--blue-l)', price: '12.00', specs: ['2 vCPU', '4 GB', '200 GB'] },
-    { name: 'GitLab CE', desc: 'Plateforme DevOps complète : CI/CD, dépôts Git, registry Docker.', icon: 'git', color: '#e65c00', bg: '#fff3e0', price: '18.00', specs: ['4 vCPU', '8 GB', '100 GB'], tag: 'DevOps', tagColor: 'var(--amber)' },
-    { name: 'Mattermost', desc: 'Messagerie équipe sécurisée et souveraine, alternative à Slack.', icon: 'chat', color: 'var(--teal)', bg: 'var(--teal-l)', price: '8.00', specs: ['2 vCPU', '4 GB', '50 GB'] },
-    { name: 'Grafana Stack', desc: 'Monitoring et dashboards : Grafana + Prometheus + Loki.', icon: 'monitor', color: 'var(--amber)', bg: 'var(--amber-l)', price: '14.00', specs: ['2 vCPU', '4 GB', '100 GB'] },
-    { name: 'WordPress Pro', desc: 'CMS optimisé avec cache LiteSpeed, SSL, CDN intégré.', icon: 'web', color: 'var(--blue)', bg: 'var(--blue-l)', price: '6.00', specs: ['1 vCPU', '2 GB', '50 GB'] },
-  ]);
+  saasInstances = input<SaasInstance[]>([]);
+  openDeploy = output<{ type: 'saas'; name: string }>();
+  deleteSaas = output<number>();
+  openUpgrade = output<SaasInstance>();
+
+  getAppIcon(name: string): string {
+    const lower = name.toLowerCase();
+    if (lower.includes('phpmyadmin')) return 'phpmyadmin';
+    if (lower.includes('pgadmin')) return 'pgadmin';
+    if (lower.includes('wordpress')) return 'wordpress';
+    if (lower.includes('n8n')) return 'n8n';
+    return 'cloud';
+  }
+
+  getAppColor(name: string): string {
+    const lower = name.toLowerCase();
+    if (lower.includes('phpmyadmin')) return '#f89b24';
+    if (lower.includes('pgadmin')) return '#326690';
+    if (lower.includes('wordpress')) return '#21759b';
+    if (lower.includes('n8n')) return '#ea4b71';
+    return 'var(--blue)';
+  }
+
+  getAppBg(name: string): string {
+    const lower = name.toLowerCase();
+    if (lower.includes('phpmyadmin')) return '#fff8e1';
+    if (lower.includes('pgadmin')) return '#e8f4fd';
+    if (lower.includes('wordpress')) return '#e3f2fd';
+    if (lower.includes('n8n')) return '#fce4ec';
+    return 'var(--blue-l)';
+  }
 }

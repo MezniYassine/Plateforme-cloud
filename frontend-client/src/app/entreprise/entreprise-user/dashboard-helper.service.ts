@@ -135,11 +135,24 @@ export class DashboardHelperService {
   });
 
   selectedService = signal<CatalogItem | null>(null);
-  instanceName = '';
-  justification = '';
+  instanceName = signal<string>('');
+  justification = signal<string>('');
   vmTemplates = signal<VmTemplate[]>([]);
   selectedTemplateName = signal<string>('');
   selectedSgbd = signal<'POSTGRESQL' | 'MYSQL' | 'REDIS' | 'MONGODB'>('POSTGRESQL');
+
+  // --- SaaS-specific fields for entreprise requests ---
+  selectedSaasApp = signal<string>('');
+  saasAdminEmail = signal<string>('');
+  saasAdminPassword = signal<string>('');
+  saasLinkedPaasId = signal<number | null>(null);
+
+  readonly SAAS_APP_OPTIONS = [
+    { key: 'n8nio/n8n:latest', label: 'n8n', icon: '🔄', color: '#ea4b71', bg: '#fce4ec', desc: 'Automatisation de workflows' },
+    { key: 'wordpress:latest', label: 'WordPress', icon: '📝', color: '#21759b', bg: '#e3f2fd', desc: 'CMS pour créer des sites web et blogs' },
+    { key: 'phpmyadmin/phpmyadmin:latest', label: 'phpMyAdmin', icon: '🐬', color: '#f89b24', bg: '#fff8e1', desc: 'Interface web pour gérer MySQL' },
+    { key: 'dpage/pgadmin4:latest', label: 'pgAdmin', icon: '🐘', color: '#326690', bg: '#e8f4fd', desc: 'Interface web pour gérer PostgreSQL' },
+  ];
 
   selectService(s: CatalogItem) { this.selectedService.set(s); this.selectedSgbd.set('POSTGRESQL'); }
   updateTemplateName(val: string) { this.selectedTemplateName.set(val); }
@@ -147,6 +160,17 @@ export class DashboardHelperService {
   toastMsg = signal<string>('');
   toastColor = signal<string>('var(--green)');
   isToastVisible = signal<boolean>(false);
+
+  getCompatiblePaas(saasName: string): any[] {
+    const name = (saasName || '').toLowerCase();
+    const runningPaas = this.myServices().filter(s => s.type === 'db' && s.status === 'running');
+
+    if (name.includes('phpmyadmin')) return runningPaas.filter(s => s.specs.toUpperCase() === 'MYSQL');
+    if (name.includes('pgadmin')) return runningPaas.filter(s => s.specs.toUpperCase() === 'POSTGRESQL');
+    if (name.includes('mongo')) return runningPaas.filter(s => s.specs.toUpperCase() === 'MONGODB');
+    if (name.includes('redis')) return runningPaas.filter(s => s.specs.toUpperCase() === 'REDIS');
+    return [];
+  }
 
   showToast(msg: string, color = 'var(--green)') {
     this.toastMsg.set(msg);
@@ -165,9 +189,9 @@ export class DashboardHelperService {
   // --- Confirm Toast ---
   isConfirmToastVisible = signal<boolean>(false);
   confirmToastMsg = signal<string>('');
-  private itemToDelete: { type: 'vm' | 'paas', id: string | number } | null = null;
+  private itemToDelete: { type: 'vm' | 'paas' | 'saas', id: string | number } | null = null;
 
-  showConfirmToast(type: 'vm' | 'paas', id: string | number, name: string) {
+  showConfirmToast(type: 'vm' | 'paas' | 'saas', id: string | number, name: string) {
     this.itemToDelete = { type, id };
     this.confirmToastMsg.set(`Supprimer ${name} ?`);
     this.isConfirmToastVisible.set(true);
@@ -181,7 +205,7 @@ export class DashboardHelperService {
   confirmDelete() {
     const item = this.itemToDelete;
     if (!item) return;
-    
+
     this.isConfirmToastVisible.set(false);
     this.itemToDelete = null;
 
@@ -197,10 +221,21 @@ export class DashboardHelperService {
         }
       });
     } else if (item.type === 'paas') {
-      const id = item.id as number;
+      const id = Number(String(item.id).replace('db-', ''));
       this.http.delete(`${this.base}/paas/${id}`).subscribe({
         next: () => {
           this.showToast('Service PaaS supprimé', 'var(--green)');
+          this.loadMyServices();
+        },
+        error: (err: any) => {
+          this.showToast(err?.error?.message ?? 'Erreur lors de la suppression', 'var(--red)');
+        }
+      });
+    } else if (item.type === 'saas') {
+      const id = Number(String(item.id).replace('saas-', ''));
+      this.http.delete(`${this.base}/saas/${id}`).subscribe({
+        next: () => {
+          this.showToast('Application SaaS supprimée', 'var(--green)');
           this.loadMyServices();
         },
         error: (err: any) => {
@@ -216,6 +251,10 @@ export class DashboardHelperService {
 
   deletePaas(id: string | number, name: string) {
     this.showConfirmToast('paas', id, name);
+  }
+
+  deleteSaas(id: string | number, name: string) {
+    this.showConfirmToast('saas', id, name);
   }
 
   openUpgradeModal(type: 'vm' | 'paas', target: any) {
@@ -258,7 +297,7 @@ export class DashboardHelperService {
     if (!sel || !tgt) return;
 
     this.isUpgrading.set(true);
-    const endpoint = tgt.type === 'vm' 
+    const endpoint = tgt.type === 'vm'
       ? `${this.base}/esxi/my-vms/${tgt.id}/upgrade`
       : `${this.base}/paas/my-databases/${tgt.id}/upgrade`;
 
@@ -307,21 +346,71 @@ export class DashboardHelperService {
     const svc = this.selectedService();
     if (!svc) return;
 
-    if (!this.instanceName.trim()) {
+    const instanceName = this.instanceName().trim();
+    if (!instanceName) {
       this.showToast("Veuillez saisir un nom pour l'instance", 'var(--amber)');
       return;
     }
-    if (!this.justification.trim()) {
+
+    if (svc.type === 'saas') {
+      const nameExistsInServices = this.myServices().some(s => s.type === 'saas' && s.name.toLowerCase() === instanceName.toLowerCase());
+      const nameExistsInRequests = this.myRequests().some(r => r.type === 'saas' && r.name.toLowerCase() === instanceName.toLowerCase() && r.status !== 'rejected');
+      
+      if (nameExistsInServices || nameExistsInRequests) {
+        this.showToast("Ce nom d'application SaaS est déjà utilisé. Veuillez en choisir un autre.", 'var(--amber)');
+        return;
+      }
+    }
+
+    if (!this.justification().trim()) {
       this.showToast('Veuillez saisir une justification', 'var(--amber)');
       return;
     }
+    if (svc.type === 'saas') {
+      const svcNameLower = svc.name.toLowerCase();
+      const isPhpMyAdmin = svcNameLower.includes('phpmyadmin');
+      const isRedisCommander = svcNameLower.includes('redis');
+      const isMongoExpress = svcNameLower.includes('mongo');
+      const isWordPress = svcNameLower.includes('wordpress');
+      const isN8n = svcNameLower.includes('n8n');
+      const requiresLinkedPaas = isPhpMyAdmin || isRedisCommander || isMongoExpress;
 
-    const payload = {
-      nomInstanceSouhaite: this.instanceName.trim(),
-      justification: this.justification.trim(),
+      if (requiresLinkedPaas && !this.saasLinkedPaasId()) {
+        const appLabel = isPhpMyAdmin ? 'phpMyAdmin (MySQL)'
+          : isRedisCommander ? 'Redis Commander (Redis)'
+          : 'Mongo Express (MongoDB)';
+        this.showToast(`${appLabel} nécessite une base de données liée. Veuillez en sélectionner une.`, 'var(--amber)');
+        return;
+      }
+
+      // WordPress and n8n configure their own credentials via first-launch wizard → no email/password needed here
+      if (!isPhpMyAdmin && !isWordPress && !isN8n) {
+        const email = this.saasAdminEmail().trim();
+        if (!email) {
+          this.showToast("Veuillez saisir un email pour l'accès SaaS", 'var(--amber)');
+          return;
+        }
+        if (!email.includes('@') || !email.includes('.')) {
+          this.showToast("Veuillez saisir une adresse email valide (ex: admin@domaine.com)", 'var(--amber)');
+          return;
+        }
+        if (!this.saasAdminPassword().trim()) {
+          this.showToast("Veuillez saisir un mot de passe pour l'accès SaaS", 'var(--amber)');
+          return;
+        }
+      }
+    }
+
+    const payload: any = {
+      nomInstanceSouhaite: this.instanceName().trim(),
+      justification: this.justification().trim(),
       catalogueId: Number(svc.id),
       templateName: svc.type === 'vm' ? (this.selectedTemplateName() || undefined) : undefined,
       typeSgbd: svc.type === 'db' ? this.selectedSgbd() : undefined,
+      appType: svc.type === 'saas' ? this.selectedSaasApp() : undefined,
+      adminEmail: svc.type === 'saas' ? this.saasAdminEmail().trim() : undefined,
+      adminPassword: svc.type === 'saas' ? this.saasAdminPassword().trim() : undefined,
+      linkedPaasId: svc.type === 'saas' ? (this.saasLinkedPaasId() ?? undefined) : undefined,
     };
 
     this.demandeService.create(payload).subscribe({
@@ -329,9 +418,13 @@ export class DashboardHelperService {
         const newReq: MyRequest = this.mapApiDemande(demande);
         this.myRequests.update(list => [newReq, ...list]);
         this.selectedService.set(null);
-        this.instanceName = '';
-        this.justification = '';
+        this.instanceName.set('');
+        this.justification.set('');
         this.selectedSgbd.set('POSTGRESQL');
+        this.selectedSaasApp.set('');
+        this.saasAdminEmail.set('');
+        this.saasAdminPassword.set('');
+        this.saasLinkedPaasId.set(null);
         this.setPage('my-requests');
         this.showToast('Demande soumise - en attente de validation', 'var(--blue)');
       },
@@ -357,7 +450,7 @@ export class DashboardHelperService {
       REJETEE: 'rejected',
     };
     const cat = d.catalogue;
-    
+
     const typeMap: Record<string, 'vm' | 'db' | 'saas'> = {
       'IAAS': 'vm',
       'PAAS': 'db',
@@ -400,8 +493,8 @@ export class DashboardHelperService {
     const svc = this.catalogItems().find(c => c.type === r.type);
     if (svc) {
       this.selectedService.set(svc);
-      this.instanceName = r.name;
-      this.justification = r.justification;
+      this.instanceName.set(r.name);
+      this.justification.set(r.justification);
     }
     this.setPage('new-request');
   }
@@ -543,17 +636,20 @@ export class DashboardHelperService {
   }
 
   loadMyServices() {
-    this.http.get<any[]>(`${this.base}/paas/mes-databases`).subscribe({
+    const paas$ = this.http.get<any[]>(`${this.base}/paas/mes-databases`);
+    const saas$ = this.http.get<any[]>(`${this.base}/saas/mes-applications`);
+
+    paas$.subscribe({
       next: (data) => {
         const existingServices = this.myServices();
-        const mapped: MyService[] = (data || []).map((db: any) => {
+        const paasItems: MyService[] = (data || []).map((db: any) => {
           const isRedis = db.typeSgbd?.toLowerCase() === 'redis';
           const isMongo = db.typeSgbd?.toLowerCase() === 'mongodb';
-          const existing = existingServices.find(s => s.id === String(db.id));
+          const existing = existingServices.find(s => s.id === 'db-' + db.id);
           return {
-            id: String(db.id),
+            id: 'db-' + String(db.id),
             name: db.nomPersonnalise || db.name || ('db-' + db.id),
-            type: 'db',
+            type: 'db' as const,
             url: db.containerIp ? `${db.containerIp}:${db.mappedPort}` : 'En cours...',
             status: db.status === 'RUNNING' ? 'running' : 'stopped',
             bg: isRedis ? 'var(--red-light, #fee2e2)' : (isMongo ? 'var(--green-light, #dcfce7)' : 'var(--orange-light, #ffedd5)'),
@@ -567,11 +663,38 @@ export class DashboardHelperService {
             metrics: existing ? existing.metrics : undefined
           };
         });
-        this.myServices.set(mapped);
-        
-        // Fetch metrics for running databases
-        mapped.filter(s => s.status === 'running').forEach(s => {
-          this.loadServiceMetrics(s.id);
+
+        saas$.subscribe({
+          next: (saasData) => {
+            const saasItems: MyService[] = (saasData || []).map((app: any) => ({
+              id: 'saas-' + String(app.id),
+              name: app.nomPersonnalise || ('saas-' + app.id),
+              type: 'saas' as const,
+              url: app.connectionString || '',
+              status: app.status === 'RUNNING' ? 'running' : 'stopped',
+              bg: '#ecfeff',
+              color: '#0891b2',
+              specs: 'Application SaaS',
+              cost: app.prixMensuel ? Number(app.prixMensuel) : (app.catalogue?.prix ? Number(app.catalogue.prix) : 0),
+              connectionString: app.connectionString,
+              dbUser: app.ownerEmail,
+              dbPassword: app.ownerPassword,
+              dateCreation: app.dateCreation,
+            }));
+
+            this.myServices.set([...paasItems, ...saasItems]);
+
+            // Fetch metrics for running PaaS databases and SaaS apps
+            [...paasItems, ...saasItems].filter(s => s.status === 'running').forEach(s => {
+              this.loadServiceMetrics(s.id);
+            });
+          },
+          error: () => {
+            this.myServices.set(paasItems);
+            paasItems.filter(s => s.status === 'running').forEach(s => {
+              this.loadServiceMetrics(s.id);
+            });
+          }
         });
       },
       error: () => { }
@@ -579,13 +702,17 @@ export class DashboardHelperService {
   }
 
   loadServiceMetrics(serviceId: string) {
-    this.http.get<any>(`${this.base}/paas/${serviceId}/metrics`).subscribe({
+    const isSaas = serviceId.startsWith('saas-');
+    const endpoint = isSaas ? 'saas' : 'paas';
+    const numericId = serviceId.replace('saas-', '').replace('db-', '');
+
+    this.http.get<any>(`${this.base}/${endpoint}/${numericId}/metrics`).subscribe({
       next: (metrics) => {
-        this.myServices.update(services => 
+        this.myServices.update(services =>
           services.map(s => s.id === serviceId ? { ...s, metrics } : s)
         );
       },
-      error: () => {}
+      error: () => { }
     });
   }
 
@@ -628,7 +755,7 @@ export class DashboardHelperService {
       'SAAS': 'saas'
     };
     const type = cat.typeService ? (typeMap[cat.typeService] || 'saas') : 'saas';
-    
+
     let specs: string[] = [];
     if (cat.specs) {
       specs = typeof cat.specs === 'string' ? cat.specs.split('.').map((s: string) => s.trim()) : cat.specs;

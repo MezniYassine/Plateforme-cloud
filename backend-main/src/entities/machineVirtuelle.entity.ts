@@ -21,7 +21,4 @@ export class MachineVirtuelle extends ServiceInstance {
 
   @Column({ nullable: true })
   os!: string;
-
-  @ManyToOne(() => Catalogue, { nullable: true, eager: false, onDelete: 'SET NULL' })
-  catalogue?: Catalogue | null;
 }

@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, TableInheritance, CreateDateColumn } from 'typeorm';
 import { Client } from './client.entity'; // Assure-toi d'avoir cette entité
 import { ServiceStatus } from 'src/enum/service-status.enum';
+import { Catalogue } from 'src/catalogue/entities/catalogue.entity';
 
 
 @Entity()
@@ -28,6 +29,15 @@ export abstract class ServiceInstance {
   @Column({ type: 'timestamp', nullable: true })
   dateProchaineFacturation!: Date | null;
 
+  @Column({ type: 'int', nullable: true })
+  port?: number | null;
+
+  @Column({ type: 'text', nullable: true })
+  connectionString!: string;
+
   @ManyToOne(() => Client, (client) => client.services)
   client!: Client;
+
+  @ManyToOne(() => Catalogue, { nullable: true, eager: false, onDelete: 'SET NULL' })
+  catalogue?: Catalogue | null;
 }

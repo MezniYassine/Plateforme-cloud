@@ -47,6 +47,35 @@ export interface PaasInstance {
   };
 }
 
+export interface SaasInstance {
+  id: number;
+  nomPersonnalise: string;
+  prixMensuel: number | string;
+  status: string;
+  dateCreation: string;
+  port?: number;
+  connectionString?: string;
+  ownerEmail?: string;
+  ownerPassword?: string;
+  catalogue?: {
+    vcpu: number;
+    ramMB: number;
+    stockageGB: number;
+    nomService?: string;
+  };
+  linkedPaasService?: {
+    id: number;
+    nomPersonnalise: string;
+    typeSgbd: string;
+  };
+  metrics?: {
+    cpuUsage: string;
+    ramUsage: string;
+    ramPercentage: string;
+    usedStorageMb: number;
+  };
+}
+
 export interface VmCatalogue {
   id: number;
   nomService: string;
@@ -133,6 +162,30 @@ export class PersonalDashboardHelperService {
 
   deletePaas(id: number) {
     return this.http.delete(`${this.base}/paas/${id}`);
+  }
+
+  getMySaas(clientId: number) {
+    return this.http.get<SaasInstance[]>(`${this.base}/saas/client/${clientId}`);
+  }
+
+  createSaas(payload: {
+    nomPersonnalise: string;
+    appType: string;
+    clientId: number;
+    catalogueId?: number;
+    linkedPaasServiceId?: number;
+    adminEmail?: string;
+    adminPassword?: string;
+  }) {
+    return this.http.post(`${this.base}/saas/create`, payload);
+  }
+
+  deleteSaas(id: number) {
+    return this.http.delete(`${this.base}/saas/${id}`);
+  }
+
+  getSaasMetrics(id: number) {
+    return this.http.get<any>(`${this.base}/saas/${id}/metrics`);
   }
 
   getVmTemplates() {

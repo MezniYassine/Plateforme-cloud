@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, OnDestroy, OnInit, PLATFORM_ID, signal, ViewEncapsulation } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { Personal, VM, VmEntity, VmTemplate, ServiceItem } from './personal-dashboard-helper.service';
+import { Personal, VM, VmEntity, VmTemplate, ServiceItem, SaasInstance } from './personal-dashboard-helper.service';
 import { PersonalDashboardHelperService } from './personal-dashboard-helper.service';
 import { OverviewTabComponent } from './components/overview-tab/overview-tab';
 import { IaasTabComponent } from './components/iaas-tab/iaas-tab';
@@ -14,6 +14,7 @@ import { ProfileTabComponent } from './components/profile-tab/profile-tab';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { PaasInstance } from './personal-dashboard-helper.service';
+import { SaasAppType } from './saas-app-types';
 
 @Component({
   selector: 'app-personal-dashboard',
@@ -77,6 +78,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   /* ── VMs & PAAS ──────────────────────────────────────────── */
   vms = signal<VM[]>([]);
   paasInstances = signal<PaasInstance[]>([]);
+  saasInstances = signal<SaasInstance[]>([]);
 
   monitorBars = signal<Record<string, number[]>>({});
   monitorBarTimes = signal<Record<string, string[]>>({});
@@ -84,7 +86,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
 
   /* ── DEPLOY MODAL ─────────────────────────────────── */
   isDeployModalOpen = signal<boolean>(false);
-  deployType = signal<'vm' | 'paas' | 'catalog'>('vm');
+  deployType = signal<'vm' | 'paas' | 'saas' | 'catalog'>('vm');
   deployName = signal<string>('');
   deployCpu = signal<number>(2);
   deployRam = signal<number>(4);
@@ -95,10 +97,33 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   deployStep = signal<1 | 2>(1);
   selectedPlan = signal<ServiceItem | null>(null);
   selectedSgbd = signal<'POSTGRESQL' | 'MYSQL' | 'REDIS' | 'MONGODB'>('POSTGRESQL');
+  selectedSaasApp = signal<string>('wordpress:latest');
+  saasLinkedPaasId = signal<number | null>(null);
+  saasAdminEmail = signal<string>('');
+  saasAdminPassword = signal<string>('');
+
+  saasAppNameMapping: Record<string, string> = {
+    'wordpress:latest': 'WordPress',
+    'phpmyadmin/phpmyadmin:latest': 'phpMyAdmin',
+    'dpage/pgadmin4:latest': 'pgAdmin',
+    'n8nio/n8n:latest': 'n8n',
+    'mongo-express:latest': 'Mongo Express',
+    'rediscommander/redis-commander:latest': 'Redis Commander',
+  };
+
+  getCompatiblePaas(saasApp: string): PaasInstance[] {
+    const all = this.paasInstances();
+    if (saasApp === 'dpage/pgadmin4:latest') return all.filter(p => p.typeSgbd === 'POSTGRESQL');
+    if (saasApp === 'phpmyadmin/phpmyadmin:latest') return all.filter(p => p.typeSgbd === 'MYSQL');
+    if (saasApp === 'mongo-express:latest') return all.filter(p => p.typeSgbd === 'MONGODB');
+    if (saasApp === 'rediscommander/redis-commander:latest') return all.filter(p => p.typeSgbd === 'REDIS');
+    if (saasApp === 'wordpress:latest') return all.filter(p => p.typeSgbd === 'MYSQL');
+    return [];
+  }
 
   /* ── UPGRADE MODAL ─────────────────────────────────── */
   isUpgradeModalOpen = signal<boolean>(false);
-  upgradeTarget = signal<{ type: 'vm' | 'paas', id: string | number, currentPrice: number, name: string } | null>(null);
+  upgradeTarget = signal<{ type: 'vm' | 'paas' | 'saas', id: string | number, currentPrice: number, name: string } | null>(null);
   upgradeCatalogues = signal<ServiceItem[]>([]);
   selectedUpgrade = signal<ServiceItem | null>(null);
   isUpgrading = signal<boolean>(false);
@@ -111,7 +136,22 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     this.h.catalogItems().filter(item => item.icon === 'db' || item.icon === 'redis' || item.icon === 'mongo' || item.icon === 'PAAS' || item.tag === 'PaaS' || item.tag === 'PAAS' || (item as any).typeService === 'PAAS')
   );
 
+  saasPlans = computed(() => {
+    const all = this.h.catalogItems().filter(item => item.tag === 'SaaS' || item.tag === 'SAAS' || (item as any).typeService === 'SAAS');
+    if (this.deployType() === 'saas') {
+      const appName = this.saasAppNameMapping[this.selectedSaasApp()] || 'WordPress';
+      return all.filter(p => p.name.toLowerCase() === appName.toLowerCase());
+    }
+    return all;
+  });
+
   costPreview = computed(() => {
+    if (this.deployType() === 'saas') {
+      const appName = this.saasAppNameMapping[this.selectedSaasApp()] || 'WordPress';
+      const all = this.h.catalogItems().filter(item => item.tag === 'SaaS' || item.tag === 'SAAS' || (item as any).typeService === 'SAAS');
+      const matchingPlan = all.find(p => p.name.toLowerCase() === appName.toLowerCase());
+      if (matchingPlan) return parseFloat(matchingPlan.price || '0').toFixed(2);
+    }
     const plan = this.selectedPlan();
     if (plan) return parseFloat(plan.price || '0').toFixed(2);
     return '0.00';
@@ -125,9 +165,9 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   /* ── CONFIRM TOAST ────────────────────────────────── */
   isConfirmToastVisible = signal<boolean>(false);
   confirmToastMsg = signal<string>('');
-  private itemToDelete: { type: 'vm' | 'paas', id: string | number } | null = null;
+  private itemToDelete: { type: 'vm' | 'paas' | 'saas', id: string | number } | null = null;
 
-  showConfirmToast(type: 'vm' | 'paas', id: string | number, name: string) {
+  showConfirmToast(type: 'vm' | 'paas' | 'saas', id: string | number, name: string) {
     this.itemToDelete = { type, id };
     this.confirmToastMsg.set(`Supprimer ${name} ?`);
     this.isConfirmToastVisible.set(true);
@@ -171,6 +211,18 @@ export class PersonalDashboard implements OnInit, OnDestroy {
           this.showToast(err?.error?.message ?? 'Erreur lors de la suppression', 'var(--red)');
         }
       });
+    } else if (item.type === 'saas') {
+      const saasId = item.id as number;
+      this.h.deleteSaas(saasId).subscribe({
+        next: () => {
+          this.showToast('Application SaaS supprimée', 'var(--green)');
+          const clientId = this.actualPers()?.client?.id;
+          if (clientId) this.loadMySaas(clientId);
+        },
+        error: (err) => {
+          this.showToast(err?.error?.message ?? 'Erreur lors de la suppression', 'var(--red)');
+        }
+      });
     }
   }
 
@@ -178,7 +230,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   switchTab(key: string) { this.activeTab.set(key); }
 
   /* ── UPGRADE LOGIC ────────────────────────────────── */
-  openUpgradeModal(target: any, type: 'vm' | 'paas') {
+  openUpgradeModal(target: any, type: 'vm' | 'paas' | 'saas') {
     let currentPrice = 0;
     let name = '';
 
@@ -192,7 +244,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
 
     this.upgradeTarget.set({ type, id: target.id, currentPrice, name });
 
-    const typeService = type === 'vm' ? 'IAAS' : 'PAAS';
+    const typeService = type === 'vm' ? 'IAAS' : type === 'saas' ? 'SAAS' : 'PAAS';
     this.http.get<any[]>(`${environment.apiBaseUrl.replace(/\/$/, '')}/catalogue/upgrade/${typeService}/${currentPrice}`).subscribe({
       next: (cats) => {
         this.upgradeCatalogues.set(cats.map(cat => this.h.mapCatalogItem(cat)));
@@ -227,7 +279,9 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     this.isUpgrading.set(true);
     const url = target.type === 'vm'
       ? `${environment.apiBaseUrl.replace(/\/$/, '')}/esxi/my-vms/${target.id}/upgrade`
-      : `${environment.apiBaseUrl.replace(/\/$/, '')}/paas/my-databases/${target.id}/upgrade`;
+      : target.type === 'saas'
+        ? `${environment.apiBaseUrl.replace(/\/$/, '')}/saas/my-applications/${target.id}/upgrade`
+        : `${environment.apiBaseUrl.replace(/\/$/, '')}/paas/my-databases/${target.id}/upgrade`;
 
     this.http.post(url, { catalogueId: upgrade.id }).subscribe({
       next: () => {
@@ -236,7 +290,10 @@ export class PersonalDashboard implements OnInit, OnDestroy {
         this.showToast('Mise à niveau réussie', 'var(--green)');
         this.h.loadWallet();
         if (target.type === 'vm') this.loadMyVms();
-        else {
+        else if (target.type === 'saas') {
+          const clientId = this.actualPers()?.client?.id;
+          if (clientId) this.loadMySaas(clientId);
+        } else {
           const clientId = this.actualPers()?.client?.id;
           if (clientId) this.loadMyPaas(clientId);
         }
@@ -305,11 +362,11 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   }
 
   /* ── DEPLOY ───────────────────────────────────────── */
-  handleOpenDeploy(event: { type: 'vm' | 'paas' | 'catalog'; name: string }) {
+  handleOpenDeploy(event: { type: 'vm' | 'paas' | 'saas' | 'catalog'; name: string }) {
     this.openDeploy(event.type, event.name);
   }
 
-  openDeploy(type: 'vm' | 'paas' | 'catalog', name: string = '') {
+  openDeploy(type: 'vm' | 'paas' | 'saas' | 'catalog', name: string = '') {
     this.deployType.set(type);
     this.deployName.set(name);
     this.deployCpu.set(1);
@@ -319,6 +376,10 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     this.deployStep.set(1);
     this.selectedPlan.set(null);
     this.selectedSgbd.set('POSTGRESQL');
+    this.selectedSaasApp.set('WORDPRESS');
+    this.saasLinkedPaasId.set(null);
+    this.saasAdminEmail.set('');
+    this.saasAdminPassword.set('');
     if (!this.selectedTemplateName() && this.vmTemplates().length > 0) {
       this.selectedTemplateName.set(this.vmTemplates()[0].name);
     }
@@ -334,6 +395,16 @@ export class PersonalDashboard implements OnInit, OnDestroy {
       this.showToast('Veuillez sélectionner un système d\'exploitation', 'var(--red)');
       return;
     }
+
+    if (this.deployType() === 'saas') {
+      const saasApp = this.selectedSaasApp();
+      const appName = this.saasAppNameMapping[saasApp] || 'WordPress';
+      const matchingPlan = this.saasPlans().find(p => p.name.toLowerCase() === appName.toLowerCase());
+      if (matchingPlan) {
+        this.selectPlan(matchingPlan);
+      }
+    }
+
     this.deployStep.set(2);
   }
 
@@ -417,9 +488,15 @@ export class PersonalDashboard implements OnInit, OnDestroy {
         return;
       }
 
+      const restrictedNames = ['mysql', 'sys', 'information_schema', 'performance_schema', 'postgres'];
+      if (restrictedNames.includes(this.deployVmName().toLowerCase())) {
+        this.showToast(`Le nom '${this.deployVmName()}' est réservé par le système. Veuillez en choisir un autre.`, 'var(--red)');
+        return;
+      }
+
       this.isDeploying.set(true);
       this.closeModal();
-      this.showToast(`PaaS en cours de déploiement...`, 'var(--blue)');
+      this.showToast(`PaaS en cours de déploiement...`, 'var(--blue)', 0);
 
       this.h.createPaas({
         nomPersonnalise: this.deployVmName(),
@@ -433,6 +510,58 @@ export class PersonalDashboard implements OnInit, OnDestroy {
           this.h.loadWallet(); // Reload wallet to update balance
           const clientId = this.actualPers()?.client?.id;
           if (clientId) this.loadMyPaas(clientId);
+        },
+        error: (err) => {
+          this.isDeploying.set(false);
+          this.showToast(err?.error?.message ?? 'Déploiement impossible', 'var(--red)');
+        }
+      });
+    } else if (this.deployType() === 'saas') {
+      if (!this.deployVmName().trim()) {
+        this.showToast("Veuillez saisir le nom de l'application", 'var(--red)');
+        return;
+      }
+
+      if (this.selectedSaasApp() === 'dpage/pgadmin4:latest') {
+        const email = this.saasAdminEmail();
+        if (!email || !email.includes('@') || !email.includes('.')) {
+          this.showToast("pgAdmin exige une adresse email valide (ex: admin@domaine.com)", 'var(--red)');
+          return;
+        }
+      }
+
+      let selectedPlan = this.selectedPlan();
+      if (!selectedPlan) {
+        const saasApp = this.selectedSaasApp();
+        const appName = this.saasAppNameMapping[saasApp] || 'WordPress';
+        const all = this.h.catalogItems().filter(item => item.tag === 'SaaS' || item.tag === 'SAAS' || (item as any).typeService === 'SAAS');
+        selectedPlan = all.find(p => p.name.toLowerCase() === appName.toLowerCase()) || null;
+      }
+
+      const clientId = this.actualPers()?.client?.id;
+      if (!clientId) {
+        this.showToast('Erreur: Client non identifié', 'var(--red)');
+        return;
+      }
+
+      this.isDeploying.set(true);
+      this.closeModal();
+      this.showToast(`Application SaaS en cours de déploiement...`, 'var(--blue)', 0);
+
+      this.h.createSaas({
+        nomPersonnalise: this.deployVmName(),
+        appType: this.selectedSaasApp(),
+        clientId: clientId,
+        catalogueId: selectedPlan?.id,
+        linkedPaasServiceId: this.saasLinkedPaasId() ?? undefined,
+        adminEmail: this.saasAdminEmail() || undefined,
+        adminPassword: this.saasAdminPassword() || undefined,
+      }).subscribe({
+        next: () => {
+          this.isDeploying.set(false);
+          this.showToast('Application SaaS déployée avec succès !', 'var(--green)');
+          this.h.loadWallet();
+          if (clientId) this.loadMySaas(clientId);
         },
         error: (err) => {
           this.isDeploying.set(false);
@@ -476,11 +605,20 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     this.monitorBarTimes.set(newTimes);
   }
 
-  showToast(msg: string, color: string = 'var(--green)') {
+  private toastTimeout: any;
+
+  showToast(msg: string, color: string = 'var(--green)', duration: number = 3400) {
     this.toastMsg.set(msg);
     this.toastColor.set(color);
     this.isToastVisible.set(true);
-    setTimeout(() => this.isToastVisible.set(false), 3400);
+
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+    }
+
+    if (duration > 0) {
+      this.toastTimeout = setTimeout(() => this.isToastVisible.set(false), duration);
+    }
   }
 
   updateCpu(val: string) { this.deployCpu.set(parseInt(val, 10)); }
@@ -497,6 +635,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
         console.log('Current pers:', pers);
         if (pers?.client?.id) {
           this.loadMyPaas(pers.client.id);
+          this.loadMySaas(pers.client.id);
         }
       },
       error: (err) => console.error('Failed to load current Personal', err)
@@ -543,6 +682,47 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     if (paas) {
       this.showConfirmToast('paas', id, paas.nomPersonnalise);
     }
+  }
+
+  deleteSaas(id: number) {
+    const saas = this.saasInstances().find(s => s.id === id);
+    if (saas) {
+      this.showConfirmToast('saas', id, saas.nomPersonnalise);
+    }
+  }
+
+  loadMySaas(clientId: number) {
+    this.h.getMySaas(clientId).subscribe({
+      next: (data) => {
+        const existing = this.saasInstances();
+        data = data.map((s: SaasInstance) => {
+          const prev = existing.find(e => e.id === s.id);
+          if (prev && prev.metrics) {
+            s.metrics = prev.metrics;
+          }
+          return s;
+        });
+        this.saasInstances.set(data);
+
+        data.filter((s: SaasInstance) => s.status === 'RUNNING').forEach((s: SaasInstance) => {
+          this.loadSaasMetrics(s.id);
+        });
+      },
+      error: (err) => {
+        console.error('Failed to load SaaS instances', err);
+      }
+    });
+  }
+
+  loadSaasMetrics(serviceId: number) {
+    this.h.getSaasMetrics(serviceId).subscribe({
+      next: (metrics) => {
+        this.saasInstances.update(instances =>
+          instances.map(s => s.id === serviceId ? { ...s, metrics } : s)
+        );
+      },
+      error: () => { }
+    });
   }
 
   private provisioningVms = new Set<string>();
@@ -608,6 +788,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
       const clientId = this.actualPers()?.client?.id;
       if (clientId) {
         this.loadMyPaas(clientId);
+        this.loadMySaas(clientId);
       }
     }, 4000);
   }

@@ -31,7 +31,7 @@
                             </div>
                             <div>
                                 <div class="vfc-name">{{ s.name }}</div>
-                                <div class="vfc-os">{{ s.specs }}</div>
+                                <div class="vfc-os">{{ s.type === 'saas' ? 'Application SaaS' : s.specs }}</div>
                             </div>
                         </div>
                         <div class="vfc-status"
@@ -40,6 +40,51 @@
                         </div>
                     </div>
 
+                    @if (s.type === 'saas') {
+                    <!-- SaaS Card Content -->
+                    <div class="vfc-specs-grid" style="grid-template-columns: 1fr; margin-top: 10px;">
+                        <div class="vfc-spec">
+                            <div class="vspec-k">URL D'ACCÈS</div>
+                            <div class="vspec-v" style="font-family: monospace; font-size: 11px; word-break: break-all;">
+                                <a [href]="s.connectionString" target="_blank" style="color: var(--blue); text-decoration: none;">
+                                    {{ s.connectionString || 'En cours...' }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    @if (!s.name.toLowerCase().includes('wordpress') && !s.name.toLowerCase().includes('n8n') && !s.name.toLowerCase().includes('phpmyadmin')) {
+                    <div class="vfc-specs-grid" style="margin-top: 10px;">
+                        <div class="vfc-spec">
+                            <div class="vspec-k">EMAIL</div>
+                            <div class="vspec-v" style="font-family: monospace; font-size: 12px;">{{ s.dbUser || '-' }}</div>
+                        </div>
+                        <div class="vfc-spec">
+                            <div class="vspec-k">MOT DE PASSE</div>
+                            <div class="vspec-v" style="font-family: monospace;">{{ s.dbPassword || '-' }}</div>
+                        </div>
+                    </div>
+                    }
+                    <div class="vfc-specs-grid" style="grid-template-columns: 1fr; margin-top: 10px;">
+                        <div class="vfc-spec">
+                            <div class="vspec-k">DÉPLOYÉ LE</div>
+                            <div class="vspec-v" style="font-family: monospace;">{{ (s.dateCreation | date:'dd/MM/yyyy HH:mm') || '-' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="vfc-footer" style="flex-direction: column; align-items: center; gap: 12px;">
+                        <div style="display:flex; gap:8px; flex-wrap: nowrap; justify-content: center; width: 100%;">
+                            <a [href]="s.connectionString" target="_blank"
+                               style="display:inline-flex; align-items:center; gap:6px; padding: 6px 14px; font-size: 13px; font-weight: 600; border-radius: 8px; background: var(--blue-light, #eff6ff); color: var(--blue); text-decoration: none; border: 1px solid #bfdbfe;">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                Ouvrir
+                            </a>
+                            <button class="action-btn delete" (click)="state.deleteSaas(s.id, s.name)">Suppr.</button>
+                        </div>
+                        <span class="mono-tag">{{ s.cost | number:'1.2-2' }} DT/mois</span>
+                    </div>
+
+                    } @else {
+                    <!-- PaaS Card Content -->
                     <div class="vfc-specs-grid" style="grid-template-columns: 1fr;">
                         <div class="vfc-spec">
                             <div class="vspec-k">CONNECTION STRING</div>
@@ -100,6 +145,7 @@
                         </div>
                         <span class="mono-tag">{{ s.cost | number:'1.2-2' }} DT/mois</span>
                     </div>
+                    }
                 </div>
                 }
                 @empty {

@@ -44,7 +44,8 @@
         <svg viewBox="0 0 24 24">
           <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
         </svg>
-        Catalogue SaaS
+        Applications SaaS
+        <span class="nav-pill">{{ saasInstances().length }}</span>
       </div>
     </div>
 
@@ -132,28 +133,24 @@
     <div class="content">
 
       @if (activeTab() === 'overview') {
-      <app-overview-tab [vms]="vms()" [paasInstances]="paasInstances()" (openDeploy)="handleOpenDeploy($event)" (switchTab)="switchTab($event)"
-        (vmAction)="handleVmAction($event)" />
+      <app-overview-tab [vms]="vms()" [paasInstances]="paasInstances()" (openDeploy)="handleOpenDeploy($event)"
+        (switchTab)="switchTab($event)" (vmAction)="handleVmAction($event)" />
       }
 
-        @if (activeTab() === 'iaas') {
-        <app-iaas-tab 
-          [vms]="vms()" 
-          (openDeploy)="handleOpenDeploy($event)" 
-          (vmAction)="handleVmAction($event)"
-          (openUpgrade)="openUpgradeModal($event, 'vm')">
-        </app-iaas-tab>
-        }
+      @if (activeTab() === 'iaas') {
+      <app-iaas-tab [vms]="vms()" (openDeploy)="handleOpenDeploy($event)" (vmAction)="handleVmAction($event)"
+        (openUpgrade)="openUpgradeModal($event, 'vm')">
+      </app-iaas-tab>
+      }
 
-        @if (activeTab() === 'paas') {
-        <app-paas-tab 
-          [paasInstances]="paasInstances()" 
-          (openDeploy)="handleOpenDeploy($event)" 
-          (deletePaas)="deletePaas($event)"
-          (openUpgrade)="openUpgradeModal($event, 'paas')">
-        </app-paas-tab>
-        }@if (activeTab() === 'saas') {
-      <app-saas-tab />
+      @if (activeTab() === 'paas') {
+      <app-paas-tab [paasInstances]="paasInstances()" (openDeploy)="handleOpenDeploy($event)"
+        (deletePaas)="deletePaas($event)" (openUpgrade)="openUpgradeModal($event, 'paas')">
+      </app-paas-tab>
+      }@if (activeTab() === 'saas') {
+      <app-saas-tab [saasInstances]="saasInstances()" (openDeploy)="handleOpenDeploy($event)"
+        (deleteSaas)="deleteSaas($event)" (openUpgrade)="openUpgradeModal($event, 'saas')">
+      </app-saas-tab>
       }
 
       @if (activeTab() === 'monitor') {
@@ -178,9 +175,10 @@
   <div class="modal">
     <div class="modal-head">
       <div>
-        <div class="modal-title">{{ deployType() === 'vm' ? 'Déployer une VM' : 'Déployer ' + deployName() }}</div>
-        <div class="modal-sub">{{ deployType() === 'vm' ? 'Infrastructure as a Service — VMware ESXi' : 'Platform /
-          Software as a Service' }}</div>
+        <div class="modal-title">{{ deployType() === 'vm' ? 'Déployer une VM' : deployType() === 'saas' ? 'Déployer une
+          application SaaS' : 'Déployer ' + deployName() }}</div>
+        <div class="modal-sub">{{ deployType() === 'vm' ? 'Infrastructure as a Service — VMware ESXi' : deployType() ===
+          'saas' ? 'Software as a Service — Application clé en main' : 'Platform / Software as a Service' }}</div>
       </div>
       <button class="modal-x" (click)="closeModal()">
         <svg viewBox="0 0 24 24">
@@ -310,19 +308,23 @@
       <div class="field">
         <div class="field-label">Type de base de données</div>
         <div class="sgbd-deploy-grid">
-          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'POSTGRESQL'" (click)="selectedSgbd.set('POSTGRESQL')">
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'POSTGRESQL'"
+            (click)="selectedSgbd.set('POSTGRESQL')">
             <img src="assets/PostgreSQL Logo.png" alt="PostgreSQL" style="width:32px;height:32px;object-fit:contain;" />
             <span>PostgreSQL</span>
           </button>
-          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'MYSQL'" (click)="selectedSgbd.set('MYSQL')">
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'MYSQL'"
+            (click)="selectedSgbd.set('MYSQL')">
             <img src="assets/MySQL Logo.png" alt="MySQL" style="width:32px;height:32px;object-fit:contain;" />
             <span>MySQL</span>
           </button>
-          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'REDIS'" (click)="selectedSgbd.set('REDIS')">
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'REDIS'"
+            (click)="selectedSgbd.set('REDIS')">
             <img src="assets/Redis logo.png" alt="Redis" style="width:32px;height:32px;object-fit:contain;" />
             <span>Redis</span>
           </button>
-          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'MONGODB'" (click)="selectedSgbd.set('MONGODB')">
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSgbd() === 'MONGODB'"
+            (click)="selectedSgbd.set('MONGODB')">
             <img src="assets/MongoDB Logo.png" alt="MongoDB" style="width:32px;height:32px;object-fit:contain;" />
             <span>MongoDB</span>
           </button>
@@ -347,15 +349,25 @@
           <div class="plan-card-top">
             <div class="plan-icon" [style.background]="plan.bg">
               @if (plan.icon === 'db' || plan.name.toLowerCase().includes('sql')) {
-                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
+              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18">
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              </svg>
               } @else if (plan.icon === 'redis' || plan.name.toLowerCase().includes('redis')) {
-                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
+              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18">
+                <path
+                  d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+              </svg>
               } @else {
-                <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18"><circle cx="12" cy="12" r="10" /></svg>
+              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18">
+                <circle cx="12" cy="12" r="10" />
+              </svg>
               }
             </div>
             @if (plan.tag) {
-            <span class="plan-tag" [style.background]="plan.tagColor ?? 'var(--blue-l)'" [style.color]="plan.color">{{ plan.tag }}</span>
+            <span class="plan-tag" [style.background]="plan.tagColor ?? 'var(--blue-l)'" [style.color]="plan.color">{{
+              plan.tag }}</span>
             }
             @if (selectedPlan()?.name === plan.name) {
             <div class="plan-check">
@@ -378,6 +390,128 @@
       </div>
       }
       }
+
+      } @else if (deployType() === 'saas') {
+      <!-- ── CONFIGURATION SAAS (NO STEPPER) ── -->
+
+      @if (deployStep() === 1 || deployType() === 'saas') {
+      <div class="field">
+        <div class="field-label">Nom de l'application</div>
+        <input type="text" placeholder="ex: mon-wordpress" [value]="deployVmName()"
+          (input)="updateDeployName($any($event.target).value)">
+      </div>
+      <div class="field">
+        <div class="field-label">Type d'application</div>
+        <div class="sgbd-deploy-grid">
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSaasApp() === 'wordpress:latest'"
+            (click)="selectedSaasApp.set('wordpress:latest')">
+            <img src="assets/Wordpress logo.png" alt="WordPress" width="32" height="32" style="object-fit: contain;">
+            <span>WordPress</span>
+          </button>
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSaasApp() === 'phpmyadmin/phpmyadmin:latest'"
+            (click)="selectedSaasApp.set('phpmyadmin/phpmyadmin:latest')">
+            <img src="assets/MySQL Logo.png" alt="phpMyAdmin" width="32" height="32" style="object-fit: contain;">
+            <span>phpMyAdmin</span>
+          </button>
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSaasApp() === 'dpage/pgadmin4:latest'"
+            (click)="selectedSaasApp.set('dpage/pgadmin4:latest')">
+            <img src="assets/PostgreSQL Logo.png" alt="pgAdmin" width="32" height="32" style="object-fit: contain;">
+            <span>pgAdmin</span>
+          </button>
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSaasApp() === 'n8nio/n8n:latest'"
+            (click)="selectedSaasApp.set('n8nio/n8n:latest')">
+            <img src="assets/n8n_Logo.png" alt="n8n" width="32" height="32" style="object-fit: contain;">
+            <span>n8n</span>
+          </button>
+          <button class="sgbd-deploy-btn" [class.selected]="selectedSaasApp() === 'mongo-express:latest'"
+            (click)="selectedSaasApp.set('mongo-express:latest')">
+            <img src="assets/MongoDB Logo.png" alt="Mongo Express" width="32" height="32" style="object-fit: contain;">
+            <span>Mongo Express</span>
+          </button>
+          <button class="sgbd-deploy-btn"
+            [class.selected]="selectedSaasApp() === 'rediscommander/redis-commander:latest'"
+            (click)="selectedSaasApp.set('rediscommander/redis-commander:latest')">
+            <img src="assets/Redis logo.png" alt="Redis Commander" width="32" height="32" style="object-fit: contain;">
+            <span>Redis Commander</span>
+          </button>
+        </div>
+      </div>
+
+      @if (selectedSaasApp() === 'phpmyadmin/phpmyadmin:latest' ||
+      selectedSaasApp() === 'mongo-express:latest' || selectedSaasApp() === 'rediscommander/redis-commander:latest') {
+      <div class="field">
+        <div class="field-label">Base de données liée </div>
+        <select (change)="saasLinkedPaasId.set($any($event.target).value ? +$any($event.target).value : null)">
+          <option value="">Aucune (standalone)</option>
+          @for (p of getCompatiblePaas(selectedSaasApp()); track p.id) {
+          <option [value]="p.id">{{ p.nomPersonnalise }} ({{ p.typeSgbd }})</option>
+          }
+        </select>
+      </div>
+      }
+
+      @if (selectedSaasApp() === 'dpage/pgadmin4:latest' ||
+      selectedSaasApp() === 'mongo-express:latest' || selectedSaasApp() === 'rediscommander/redis-commander:latest') {
+      <div class="field">
+        <div class="field-label">Email admin / Nom d'utilisateur</div>
+        <input type="email" placeholder="admin@example.com ou admin" [value]="saasAdminEmail()"
+          (input)="saasAdminEmail.set($any($event.target).value)">
+      </div>
+      <div class="field">
+        <div class="field-label">Mot de passe admin</div>
+        <input type="password" placeholder="Mot de passe" [value]="saasAdminPassword()"
+          (input)="saasAdminPassword.set($any($event.target).value)">
+      </div>
+      }
+      }
+
+      @if (deployStep() === 2 && deployType() !== 'saas') {
+      @if (saasPlans().length === 0) {
+      <div class="empty-plans">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        Aucun plan SaaS disponible dans le catalogue
+      </div>
+      } @else {
+      <div class="plan-grid">
+        @for (plan of saasPlans(); track plan.name) {
+        <div class="plan-card" [class.selected]="selectedPlan()?.name === plan.name" (click)="selectPlan(plan)">
+          <div class="plan-card-top">
+            <div class="plan-icon" [style.background]="plan.bg">
+              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18">
+                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
+              </svg>
+            </div>
+            @if (plan.tag) {
+            <span class="plan-tag" [style.background]="plan.tagColor ?? 'var(--green-l)'" [style.color]="plan.color">{{
+              plan.tag }}</span>
+            }
+            @if (selectedPlan()?.name === plan.name) {
+            <div class="plan-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            }
+          </div>
+          <div class="plan-name">{{ plan.name }}</div>
+          <div class="plan-desc">{{ plan.desc }}</div>
+          @if (deployType() !== 'saas') {
+          <div class="plan-specs">
+            @for (spec of plan.specs; track spec) {
+            <span class="plan-spec-chip">{{ spec }}</span>
+            }
+          </div>
+          }
+          <div class="plan-price">{{ plan.price }} <span>DT/mois</span></div>
+        </div>
+        }
+      </div>
+      }
+      }
       }
     </div>
 
@@ -390,6 +524,18 @@
           <line x1="5" y1="12" x2="19" y2="12" />
           <polyline points="12 5 19 12 12 19" />
         </svg>
+      </button>
+      } @else if (deployType() === 'saas') {
+      <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
+      <div class="cost-preview" style="flex:1;margin:0 14px">
+        <span class="cost-label">Coût estimé</span>
+        <span class="cost-val">~{{costPreview()}} DT/mois</span>
+      </div>
+      <button class="btn btn-primary" [disabled]="isDeploying()" (click)="confirmDeploy()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+        Déployer
       </button>
       } @else if ((deployType() === 'vm' || deployType() === 'paas') && deployStep() === 2) {
       <button class="btn btn-ghost" (click)="goToStep1()">
@@ -431,76 +577,100 @@
   <div class="modal" style="width: 600px;">
     <div class="modal-head">
       <div class="modal-ic">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
       </div>
       <div>
         <div class="modal-title">Mise à niveau (Scale-up)</div>
         <div class="modal-sub">Augmenter les ressources de {{ upgradeTarget()?.name }}</div>
       </div>
       <button class="modal-x" (click)="closeUpgrade()">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
       </button>
     </div>
-    
+
     <div class="modal-body" style="padding: 24px; max-height: 400px; overflow-y: auto;">
       <div class="input-lbl" style="margin-bottom: 12px; font-weight: 600;">Sélectionnez une offre supérieure</div>
-      
+
       @if (upgradeCatalogues().length === 0) {
-        <div style="text-align: center; color: var(--text-3); font-size: 14px; padding: 20px 0;">
-          Aucune offre supérieure trouvée dans le catalogue.
-        </div>
+      <div style="text-align: center; color: var(--text-3); font-size: 14px; padding: 20px 0;">
+        Aucune offre supérieure trouvée dans le catalogue.
+      </div>
       } @else {
-        <div class="plans-grid">
-          @for (plan of upgradeCatalogues(); track plan.id) {
-          <div class="plan-card" [class.selected]="selectedUpgrade()?.id === plan.id" (click)="selectUpgrade(plan)">
-            <div class="plan-header">
-              <div class="plan-icon" [style.background]="plan.color + '20'">
-                @if (plan.icon === 'vm') {
-                  <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18"><rect x="2" y="3" width="20" height="18" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
-                } @else {
-                  <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
-                }
-              </div>
-              @if (plan.tag) {
-                <span class="plan-tag" [style.background]="plan.tagColor ?? 'var(--blue-l)'" [style.color]="plan.color">{{ plan.tag }}</span>
-              }
-              @if (selectedUpgrade()?.id === plan.id) {
-                <div class="plan-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12" /></svg></div>
-              }
-            </div>
-            <div class="plan-name">{{ plan.name }}</div>
-            <div class="plan-desc">{{ plan.desc }}</div>
-            <div class="plan-specs">
-              @for (spec of plan.specs; track spec) {
-              <span class="plan-spec-chip">{{ spec }}</span>
+      <div class="plans-grid">
+        @for (plan of upgradeCatalogues(); track plan.id) {
+        <div class="plan-card" [class.selected]="selectedUpgrade()?.id === plan.id" (click)="selectUpgrade(plan)">
+          <div class="plan-header">
+            <div class="plan-icon" [style.background]="plan.color + '20'">
+              @if (plan.icon === 'vm') {
+              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18">
+                <rect x="2" y="3" width="20" height="18" rx="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+              } @else {
+              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="plan.color" stroke-width="1.8" width="18" height="18">
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              </svg>
               }
             </div>
-            <div class="plan-price">{{ plan.price }} <span>DT/mois</span></div>
+            @if (plan.tag) {
+            <span class="plan-tag" [style.background]="plan.tagColor ?? 'var(--blue-l)'" [style.color]="plan.color">{{
+              plan.tag }}</span>
+            }
+            @if (selectedUpgrade()?.id === plan.id) {
+            <div class="plan-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+                stroke-linecap="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg></div>
+            }
           </div>
-          }
+          <div class="plan-name">{{ plan.name }}</div>
+          <div class="plan-desc">{{ plan.desc }}</div>
+          <div class="plan-specs">
+            @for (spec of plan.specs; track spec) {
+            <span class="plan-spec-chip">{{ spec }}</span>
+            }
+          </div>
+          <div class="plan-price">{{ plan.price }} <span>DT/mois</span></div>
         </div>
+        }
+      </div>
       }
     </div>
 
     <div class="modal-foot">
       @if (selectedUpgrade()) {
-        <div class="cost-preview" style="flex:1;margin-right:14px">
-          <span class="cost-label">Différence à payer</span>
-          <span class="cost-val" style="color: var(--amber);">
-            ~{{ getUpgradeDiff() }} DT
-          </span>
-        </div>
+      <div class="cost-preview" style="flex:1;margin-right:14px">
+        <span class="cost-label">Différence à payer</span>
+        <span class="cost-val" style="color: var(--amber);">
+          ~{{ getUpgradeDiff() }} DT
+        </span>
+      </div>
       } @else {
-        <div style="flex:1"></div>
+      <div style="flex:1"></div>
       }
       <button class="btn btn-ghost" (click)="closeUpgrade()">Annuler</button>
-      <button class="btn btn-primary" style="margin-left:8px" [disabled]="isUpgrading() || !selectedUpgrade()" (click)="submitUpgrade()">
+      <button class="btn btn-primary" style="margin-left:8px" [disabled]="isUpgrading() || !selectedUpgrade()"
+        (click)="submitUpgrade()">
         @if (isUpgrading()) {
-          <svg class="spin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" stroke-dasharray="32" stroke-dashoffset="16" opacity="0.6"/></svg>
-          Mise à niveau...
+        <svg class="spin" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" stroke-dasharray="32"
+            stroke-dashoffset="16" opacity="0.6" />
+        </svg>
+        Mise à niveau...
         } @else {
-          <svg viewBox="0 0 24 24" width="18" height="18"><polyline points="18 15 12 9 6 15"></polyline></svg>
-          Mettre à niveau
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+        Mettre à niveau
         }
       </button>
     </div>
@@ -524,7 +694,10 @@
 
 <!-- ── CONFIRM TOAST ── -->
 <div class="modal-ov" [class.show]="isConfirmToastVisible()" style="z-index: 400;" (click)="cancelDelete()">
-  <div style="background: #ffffff; color: #0f172a; padding: 24px 28px; border-radius: 24px; width: 400px; max-width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 24px; transition: all 0.3s cubic-bezier(0.22, 0.8, 0.36, 1); transform: scale(0.95); opacity: 0;" [style.transform]="isConfirmToastVisible() ? 'scale(1)' : 'scale(0.95)'" [style.opacity]="isConfirmToastVisible() ? '1' : '0'" (click)="$event.stopPropagation()">
+  <div
+    style="background: #ffffff; color: #0f172a; padding: 24px 28px; border-radius: 24px; width: 400px; max-width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 24px; transition: all 0.3s cubic-bezier(0.22, 0.8, 0.36, 1); transform: scale(0.95); opacity: 0;"
+    [style.transform]="isConfirmToastVisible() ? 'scale(1)' : 'scale(0.95)'"
+    [style.opacity]="isConfirmToastVisible() ? '1' : '0'" (click)="$event.stopPropagation()">
     <div style="display: flex; align-items: center; gap: 18px;">
       <div class="toast-ic" style="background: var(--red); width: 44px; height: 44px; flex-shrink: 0;">
         <svg viewBox="0 0 24 24" style="width: 22px; height: 22px;">
@@ -535,8 +708,12 @@
       <span style="font-weight: 500; font-size: 17px; line-height: 1.4; color: #0f172a;">{{ confirmToastMsg() }}</span>
     </div>
     <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px;">
-      <button class="btn btn-ghost" style="padding: 9px 20px; font-size: 14px; background: #f1f5f9; color: #0f172a; border: 1px solid #e2e8f0; border-radius: 50px;" (click)="cancelDelete()">Annuler</button>
-      <button class="btn" style="padding: 9px 20px; font-size: 14px; background: var(--red); color: white; border: 1px solid var(--red); border-radius: 50px; cursor: pointer;" (click)="confirmDelete()">OK</button>
+      <button class="btn btn-ghost"
+        style="padding: 9px 20px; font-size: 14px; background: #f1f5f9; color: #0f172a; border: 1px solid #e2e8f0; border-radius: 50px;"
+        (click)="cancelDelete()">Annuler</button>
+      <button class="btn"
+        style="padding: 9px 20px; font-size: 14px; background: var(--red); color: white; border: 1px solid var(--red); border-radius: 50px; cursor: pointer;"
+        (click)="confirmDelete()">OK</button>
     </div>
   </div>
 </div>

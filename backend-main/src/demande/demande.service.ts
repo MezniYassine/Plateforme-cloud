@@ -20,6 +20,8 @@ import { MailService } from 'src/mail/mail.service';
 import { PaasService } from 'src/paas/paas.service';
 import { WalletService } from 'src/wallet/wallet.service';
 import { TypeSgbd } from 'src/enum/type-sgbd.enum';
+import { SaasService } from 'src/saas/saas.service';
+import { SaasAppType } from 'src/enum/saas-app-type.enum';
 
 @Injectable()
 export class DemandeService {
@@ -40,6 +42,7 @@ export class DemandeService {
     private readonly mailService: MailService,
     private readonly paasService: PaasService,
     private readonly walletService: WalletService,
+    private readonly saasService: SaasService,
   ) { }
 
   /**
@@ -81,6 +84,10 @@ export class DemandeService {
       templateName: dto.templateName,
       versionPaas: dto.versionPaas,
       typeSgbd: dto.typeSgbd,
+      appType: dto.appType,
+      adminEmail: dto.adminEmail,
+      adminPassword: dto.adminPassword,
+      linkedPaasId: dto.linkedPaasId,
       status: DemandeStatus.EN_ATTENTE,
       catalogue,
       prixMensuel: Number(catalogue.prix),
@@ -318,7 +325,45 @@ export class DemandeService {
     let savedVm: MachineVirtuelle | null = null;
 
     try {
-      if (demande.catalogue?.typeService === 'PAAS') {
+      if (demande.catalogue?.typeService === 'SAAS') {
+        // --- LOGIQUE SAAS ---
+        // Le type d'app est TOUJOURS dérivé du catalogue pour éviter tout conflit
+        // entre l'app demandée et le tarif du catalogue
+        const nomService = (demande.catalogue.nomService || '').toLowerCase();
+        const appTypeMap: Record<string, SaasAppType> = {
+          'phpmyadmin': SaasAppType.PHPMYADMIN,
+          'pgadmin': SaasAppType.PGADMIN,
+          'wordpress': SaasAppType.WORDPRESS,
+          'n8n': SaasAppType.N8N,
+          'mongo express': SaasAppType.MONGO_EXPRESS,
+          'mongo-express': SaasAppType.MONGO_EXPRESS,
+          'mongoexpress': SaasAppType.MONGO_EXPRESS,
+          'redis commander': SaasAppType.REDIS_INSIGHT,
+          'redis-commander': SaasAppType.REDIS_INSIGHT,
+          'rediscommander': SaasAppType.REDIS_INSIGHT,
+          'redis insight': SaasAppType.REDIS_INSIGHT,
+        };
+        let resolvedAppType: SaasAppType | undefined;
+        for (const [key, val] of Object.entries(appTypeMap)) {
+          if (nomService.includes(key)) { resolvedAppType = val; break; }
+        }
+        if (!resolvedAppType) {
+          throw new BadRequestException(
+            `Impossible de déterminer le type d'application SaaS pour le catalogue "${demande.catalogue.nomService}". Vérifiez la configuration du catalogue.`
+          );
+        }
+
+        await this.saasService.create({
+          nomPersonnalise: demande.nomInstanceSouhaite,
+          appType: resolvedAppType,
+          adminEmail: demande.adminEmail,
+          adminPassword: demande.adminPassword,
+          catalogueId: demande.catalogue.id,
+          clientId: demande.client.id,
+          linkedPaasServiceId: demande.linkedPaasId ?? undefined,
+        }, adminId);
+
+      } else if (demande.catalogue?.typeService === 'PAAS') {
         // --- LOGIQUE PAAS ---
         await this.paasService.createDatabase({
           nomPersonnalise: demande.nomInstanceSouhaite,
@@ -380,15 +425,20 @@ export class DemandeService {
       demande.commentaireAdmin = commentaireAdmin || "Demande acceptée et infrastructure déployée.";
       const result = await this.demandeRepository.save(demande);
 
-      // ── EMAIL SUCCÈS : notifier l'utilisateur que sa VM est prête ──────────
-      this.mailService.sendProvisionningSucces({
-        userEmail,
-        userPrenom,
-        userNom,
-        nomInstance: demande.nomInstanceSouhaite,
-        specs,
-        commentaireAdmin: demande.commentaireAdmin,
-      });
+      // ── EMAIL SUCCÈS : notifier l'utilisateur que son service est prêt ──────
+      if (demande.catalogue?.typeService === 'SAAS') {
+        // L'email SaaS est déjà envoyé par saasService.create() via sendProvisionningSuccesSaas
+      } else {
+        this.mailService.sendProvisionningSucces({
+          userEmail,
+          userPrenom,
+          userNom,
+          nomInstance: demande.nomInstanceSouhaite,
+          specs,
+          commentaireAdmin: demande.commentaireAdmin,
+          typeService: demande.catalogue?.typeService,
+        });
+      }
 
       return result;
 

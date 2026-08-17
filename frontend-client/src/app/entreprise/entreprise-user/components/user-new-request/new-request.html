@@ -91,7 +91,9 @@
 
                 <div class="profile-field">
                     <label>Nom de l'instance</label>
-                    <input type="text" [placeholder]="'ex: '+svc.type+'-prod-01'" [(ngModel)]="state.instanceName">
+                    <input type="text" class="field-input" [placeholder]="'ex: '+svc.type+'-prod-01'"
+                        [value]="state.instanceName()"
+                        (input)="state.instanceName.set($any($event.target).value)">
                 </div>
 
                 @if (svc.type === 'vm') {
@@ -130,12 +132,91 @@
                 </div>
                 }
 
+                @if (svc.type === 'saas') {
+                <!-- App preview derived from catalogue (read-only) -->
+                <div class="profile-field">
+                    <label>Application sélectionnée</label>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-page, #f8fafc); border: 1px solid var(--border-light, #e2e8f0); border-radius: 10px; margin-top: 4px;">
+                        @if (svc.name.toLowerCase().includes('wordpress')) {
+                            <img src="assets/Wordpress logo.png" alt="WordPress" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
+                        } @else if (svc.name.toLowerCase().includes('phpmyadmin')) {
+                            <img src="assets/MySQL Logo.png" alt="phpMyAdmin" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
+                        } @else if (svc.name.toLowerCase().includes('pgadmin')) {
+                            <img src="assets/PostgreSQL Logo.png" alt="pgAdmin" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
+                        } @else if (svc.name.toLowerCase().includes('n8n')) {
+                            <img src="assets/n8n_Logo.png" alt="n8n" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
+                        } @else if (svc.name.toLowerCase().includes('mongo')) {
+                            <img src="assets/MongoDB Logo.png" alt="Mongo Express" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
+                        } @else if (svc.name.toLowerCase().includes('redis')) {
+                            <img src="assets/Redis logo.png" alt="Redis Commander" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
+                        } @else {
+                            <div style="width:32px; height:32px; border-radius:8px; background: var(--blue-light, #eff6ff); display:flex; align-items:center; justify-content:center;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" width="18" height="18"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+                            </div>
+                        }
+                        <div>
+                            <div style="font-size: 14px; font-weight: 700; color: var(--text-1);">{{ svc.name }}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">{{ svc.price }} DT/mois · Déployée automatiquement à validation</div>
+                        </div>
+                        <div style="margin-left: auto; background: #dcfce7; color: #16a34a; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">✓ Catalogue</div>
+                    </div>
+                </div>
+
+                @if (svc.name.toLowerCase().includes('phpmyadmin') ||
+                     svc.name.toLowerCase().includes('mongo') ||
+                     svc.name.toLowerCase().includes('redis')) {
+                @let dbTypeLabel = svc.name.toLowerCase().includes('phpmyadmin') ? 'MySQL'
+                  : svc.name.toLowerCase().includes('mongo') ? 'MongoDB'
+                  : 'Redis';
+                <div class="profile-field">
+                    <label>Base de données liée <span style="color:var(--red);font-weight:700">*</span>
+                      <span style="color:var(--text-muted);font-weight:400;font-size:11px"> — doit être de type {{ dbTypeLabel }}</span>
+                    </label>
+                    @if (state.getCompatiblePaas(svc.name).length === 0) {
+                      <div style="padding: 10px 14px; background: #fff8f0; border: 1px solid #fbbf24; border-radius: 10px; color: #92400e; font-size: 12.5px; margin-top: 4px;">
+                        ⚠️ Aucune base {{ dbTypeLabel }} active trouvée. Veuillez d'abord déployer une base de données {{ dbTypeLabel }}.
+                      </div>
+                    } @else {
+                    <select class="field-select" (change)="state.saasLinkedPaasId.set($any($event.target).value ? +$any($event.target).value : null)">
+                        <option value="">-- Sélectionner une base {{ dbTypeLabel }} --</option>
+                        @for (p of state.getCompatiblePaas(svc.name); track p.id) {
+                        <option [value]="p.id.replace('db-', '')">{{ p.name }} ({{ p.specs }})</option>
+                        }
+                    </select>
+                    }
+                </div>
+                }
+
+                @if (!svc.name.toLowerCase().includes('phpmyadmin')) {
+                  @if (svc.name.toLowerCase().includes('wordpress') || svc.name.toLowerCase().includes('n8n')) {
+                  <!-- WordPress and n8n configure their own credentials on first launch -->
+                  <div style="padding: 12px 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; color: #1e40af; font-size: 12.5px; margin-top: 4px; line-height: 1.6;">
+                    ℹ️ <strong>{{ svc.name }}</strong> : Les identifiants admin seront configurés directement lors du premier accès à l'URL (assistant d'installation). Aucune saisie d'email/mot de passe n'est nécessaire maintenant.
+                  </div>
+                  } @else {
+                <div class="profile-field">
+                    <label>Email admin / Nom d'utilisateur <span style="color:var(--text-muted);font-weight:400">(pour vous connecter)</span></label>
+                    <input type="email" placeholder="admin@monentreprise.com" 
+                        [value]="state.saasAdminEmail()"
+                        (input)="state.saasAdminEmail.set($any($event.target).value)">
+                </div>
+                <div class="profile-field">
+                    <label>Mot de passe admin</label>
+                    <input type="password" placeholder="Minimum 8 caractères" 
+                        [value]="state.saasAdminPassword()"
+                        (input)="state.saasAdminPassword.set($any($event.target).value)">
+                </div>
+                  }
+                }
+                }
+
                 <div class="profile-field">
                     <label>Justification <span style="color:var(--text-muted);font-weight:400">(visible par
                             l'Admin)</span></label>
                     <textarea class="field-textarea" rows="3"
                         placeholder="Expliquez pourquoi vous avez besoin de cette ressource."
-                        [(ngModel)]="state.justification"></textarea>
+                        [value]="state.justification()"
+                        (input)="state.justification.set($any($event.target).value)"></textarea>
                 </div>
 
                 <!-- Cost box -->
