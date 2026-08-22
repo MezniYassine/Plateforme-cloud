@@ -7,7 +7,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NodeSSH } from 'node-ssh';
+import { NodeSSH } from 'node-ssh'; // gardé pour compatibilité type si besoin
+import { withSsh } from '../common/ssh.util';
 import { ServiceSaaS } from 'src/entities/serviceSaaS.entity';
 import { ServicePaaS } from 'src/entities/servicePaaS.entity';
 import { ServiceStatus } from 'src/enum/service-status.enum';
@@ -205,22 +206,22 @@ export class SaasService {
                 throw new InternalServerErrorException(`Type d'application SaaS non pris en charge : ${dto.appType}`);
         }
 
-        const ssh = new NodeSSH();
+        const sshOptions = {
+            host: this.hostIp,
+            username: this.sshUser,
+            password: this.sshPass,
+            readyTimeout: 30000,
+        };
+
         try {
-            // --- Connexion SSH et déploiement ---
-            await ssh.connect({
-                host: this.hostIp,
-                username: this.sshUser,
-                password: this.sshPass,
-                readyTimeout: 30000,
+            await withSsh(sshOptions, async (ssh) => {
+                // --- Connexion SSH et déploiement ---
+                const result = await ssh.execCommand(dockerCmd);
+
+                if (result.code !== 0) {
+                    throw new Error(`Erreur lors du lancement Docker : ${result.stderr}`);
+                }
             });
-
-            const result = await ssh.execCommand(dockerCmd);
-            ssh.dispose();
-
-            if (result.code !== 0) {
-                throw new Error(`Erreur lors du lancement Docker : ${result.stderr}`);
-            }
 
             // --- DÉBIT DU WALLET APRÈS DÉPLOIEMENT RÉUSSI ---
             if (prixMensuel > 0) {
@@ -273,8 +274,6 @@ export class SaasService {
             return savedSaas;
 
         } catch (error) {
-            ssh.dispose();
-
             throw new InternalServerErrorException(`Échec du déploiement SaaS : ${error.message}`);
         }
     }
@@ -326,32 +325,31 @@ export class SaasService {
         const cleanName = saasService.nomPersonnalise.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const containerName = `saas_${cleanName}_${saasService.port}`;
 
-        const ssh = new NodeSSH();
-        try {
-            await ssh.connect({
-                host: this.hostIp,
-                username: this.sshUser,
-                password: this.sshPass,
-                readyTimeout: 30000,
-            });
+        const sshOptions = {
+            host: this.hostIp,
+            username: this.sshUser,
+            password: this.sshPass,
+            readyTimeout: 30000,
+        };
 
-            // Arrête et supprime le conteneur Docker + données
-            // On tente aussi de supprimer un éventuel conteneur DB standalone (WordPress)
-            const dbContainerName = `${containerName}_db`;
-            const networkName = `net_${containerName}`;
-            await ssh.execCommand(
-                `docker stop ${containerName} 2>/dev/null; docker rm ${containerName} 2>/dev/null; ` +
-                `docker stop ${dbContainerName} 2>/dev/null; docker rm ${dbContainerName} 2>/dev/null; ` +
-                `docker network rm ${networkName} 2>/dev/null; ` +
-                `echo ${this.sshPass} | sudo -S rm -rf /var/lib/saas/data/${containerName} /var/lib/saas/data/${dbContainerName}`,
-            );
-            ssh.dispose();
+        try {
+            await withSsh(sshOptions, async (ssh) => {
+                // Arrête et supprime le conteneur Docker + données
+                // On tente aussi de supprimer un éventuel conteneur DB standalone (WordPress)
+                const dbContainerName = `${containerName}_db`;
+                const networkName = `net_${containerName}`;
+                await ssh.execCommand(
+                    `docker stop ${containerName} 2>/dev/null; docker rm ${containerName} 2>/dev/null; ` +
+                    `docker stop ${dbContainerName} 2>/dev/null; docker rm ${dbContainerName} 2>/dev/null; ` +
+                    `docker network rm ${networkName} 2>/dev/null; ` +
+                    `echo ${this.sshPass} | sudo -S rm -rf /var/lib/saas/data/${containerName} /var/lib/saas/data/${dbContainerName}`,
+                );
+            });
 
             await this.saasRepo.remove(saasService);
 
             return { message: `Application SaaS ${saasService.nomPersonnalise} supprimée avec succès.` };
         } catch (error) {
-            ssh.dispose();
             throw new InternalServerErrorException(`Erreur lors de la suppression SaaS : ${error.message}`);
         }
     }
@@ -412,23 +410,21 @@ export class SaasService {
         const updateOpts = [cpuOpt, memOpt].filter(Boolean).join(' ');
 
         if (updateOpts) {
-            const ssh = new NodeSSH();
+            const sshOpts = {
+                host: this.hostIp,
+                username: this.sshUser,
+                password: this.sshPass,
+                readyTimeout: 30000,
+            };
             try {
-                await ssh.connect({
-                    host: this.hostIp,
-                    username: this.sshUser,
-                    password: this.sshPass,
-                    readyTimeout: 30000,
+                await withSsh(sshOpts, async (ssh) => {
+                    const result = await ssh.execCommand(`docker update ${updateOpts} ${containerName}`);
+
+                    if (result.code !== 0) {
+                        this.logger.warn(`Avertissement docker update: ${result.stderr}`);
+                    }
                 });
-
-                const result = await ssh.execCommand(`docker update ${updateOpts} ${containerName}`);
-                ssh.dispose();
-
-                if (result.code !== 0) {
-                    this.logger.warn(`Avertissement docker update: ${result.stderr}`);
-                }
             } catch (error) {
-                ssh.dispose();
                 throw new InternalServerErrorException(`Erreur lors de la mise à niveau Docker : ${error.message}`);
             }
         }
@@ -473,39 +469,37 @@ export class SaasService {
         const cleanName = saasService.nomPersonnalise.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const containerName = `saas_${cleanName}_${saasService.port}`;
 
-        const ssh = new NodeSSH();
+        const sshOptions = {
+            host: this.hostIp,
+            username: this.sshUser,
+            password: this.sshPass,
+            readyTimeout: 30000,
+        };
+
         try {
-            await ssh.connect({
-                host: this.hostIp,
-                username: this.sshUser,
-                password: this.sshPass,
-                readyTimeout: 30000,
+            return await withSsh(sshOptions, async (ssh) => {
+                const statsCmd = `docker stats ${containerName} --no-stream --format '{"cpu":"{{.CPUPerc}}","ramUsage":"{{.MemUsage}}","ramPerc":"{{.MemPerc}}"}'`;
+                const statsResult = await ssh.execCommand(statsCmd);
+
+                const diskCmd = `du -sm /var/lib/saas/data/${containerName} | awk '{print $1}'`;
+                const diskResult = await ssh.execCommand(diskCmd);
+
+                let stats: any = {};
+                try {
+                    stats = JSON.parse(statsResult.stdout.trim() || '{}');
+                } catch (e) { }
+
+                const storageMb = parseInt(diskResult.stdout.trim(), 10) || 0;
+
+                return {
+                    containerName,
+                    cpuUsage: stats.cpu || '0.00%',
+                    ramUsage: stats.ramUsage || '0B / 0B',
+                    ramPercentage: stats.ramPerc || '0.00%',
+                    usedStorageMb: storageMb,
+                };
             });
-
-            const statsCmd = `docker stats ${containerName} --no-stream --format '{"cpu":"{{.CPUPerc}}","ramUsage":"{{.MemUsage}}","ramPerc":"{{.MemPerc}}"}'`;
-            const statsResult = await ssh.execCommand(statsCmd);
-
-            const diskCmd = `du -sm /var/lib/saas/data/${containerName} | awk '{print $1}'`;
-            const diskResult = await ssh.execCommand(diskCmd);
-
-            ssh.dispose();
-
-            let stats: any = {};
-            try {
-                stats = JSON.parse(statsResult.stdout.trim() || '{}');
-            } catch (e) { }
-
-            const storageMb = parseInt(diskResult.stdout.trim(), 10) || 0;
-
-            return {
-                containerName,
-                cpuUsage: stats.cpu || '0.00%',
-                ramUsage: stats.ramUsage || '0B / 0B',
-                ramPercentage: stats.ramPerc || '0.00%',
-                usedStorageMb: storageMb,
-            };
         } catch (error) {
-            ssh.dispose();
             this.logger.error(`Erreur getContainerMetrics SaaS: ${error.message}`);
             return {
                 containerName,

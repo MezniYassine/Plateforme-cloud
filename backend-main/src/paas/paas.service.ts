@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NodeSSH } from 'node-ssh';
+import { withSsh } from '../common/ssh.util';
 import { ServicePaaS } from 'src/entities/servicePaaS.entity';
 import { ServiceStatus } from 'src/enum/service-status.enum';
 import { TypeSgbd } from 'src/enum/type-sgbd.enum';
@@ -127,23 +127,23 @@ export class PaasService implements OnModuleInit {
                 throw new InternalServerErrorException(`SGBD non pris en charge : ${dto.typeSgbd}`);
         }
 
-        const ssh = new NodeSSH();
+        const sshOptions = {
+            host: this.hostIp,
+            username: this.sshUser,
+            password: this.sshPass,
+            readyTimeout: 30000,
+        };
+
         try {
-            // 3. Connexion SSH à la VM DBaaS
-            await ssh.connect({
-                host: this.hostIp,
-                username: this.sshUser,
-                password: this.sshPass,
-                readyTimeout: 30000,
+            await withSsh(sshOptions, async (ssh) => {
+                // 3. Connexion SSH à la VM DBaaS
+                // 4. Lancement du conteneur Docker
+                const result = await ssh.execCommand(dockerCmd);
+
+                if (result.code !== 0) {
+                    throw new Error(`Erreur lors du lancement Docker : ${result.stderr}`);
+                }
             });
-
-            // 4. Lancement du conteneur Docker
-            const result = await ssh.execCommand(dockerCmd);
-            ssh.dispose();
-
-            if (result.code !== 0) {
-                throw new Error(`Erreur lors du lancement Docker : ${result.stderr}`);
-            }
 
             // --- DÉBIT DU WALLET APRÈS DÉPLOIEMENT RÉUSSI ---
             if (prixMensuel > 0) {
@@ -178,8 +178,6 @@ export class PaasService implements OnModuleInit {
             return await this.paasRepo.save(newPaas);
 
         } catch (error) {
-            ssh.dispose();
-            
             throw new InternalServerErrorException(`Échec du déploiement DBaaS : ${error.message}`);
         }
     }
@@ -207,25 +205,24 @@ export class PaasService implements OnModuleInit {
         const cleanDbName = paasService.nomPersonnalise.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const containerName = `db_${cleanDbName}_${paasService.port}`;
 
-        const ssh = new NodeSSH();
-        try {
-            await ssh.connect({
-                host: this.hostIp,
-                username: this.sshUser,
-                password: this.sshPass,
-                readyTimeout: 30000,
-            });
+        const sshOptions = {
+            host: this.hostIp,
+            username: this.sshUser,
+            password: this.sshPass,
+            readyTimeout: 30000,
+        };
 
-            // Arrête et supprime le conteneur Docker ET supprime le dossier de données localement
-            await ssh.execCommand(`docker stop ${containerName} && docker rm ${containerName} && echo ${this.sshPass} | sudo -S rm -rf /var/lib/dbaas/data/${containerName}`);
-            ssh.dispose();
+        try {
+            await withSsh(sshOptions, async (ssh) => {
+                // Arrête et supprime le conteneur Docker ET supprime le dossier de données localement
+                await ssh.execCommand(`docker stop ${containerName} && docker rm ${containerName} && echo ${this.sshPass} | sudo -S rm -rf /var/lib/dbaas/data/${containerName}`);
+            });
 
             // Supprime la ligne en base de données
             await this.paasRepo.remove(paasService);
 
             return { message: `Base de données ${paasService.nomPersonnalise} supprimée avec succès.` };
         } catch (error) {
-            ssh.dispose();
             throw new InternalServerErrorException(`Erreur lors de la suppression de la BDD : ${error.message}`);
         }
     }
@@ -291,24 +288,23 @@ export class PaasService implements OnModuleInit {
                 throw new InternalServerErrorException(`SGBD non pris en charge : ${paasService.typeSgbd}`);
         }
 
-        const ssh = new NodeSSH();
+        const sshOptions = {
+            host: this.hostIp,
+            username: this.sshUser,
+            password: this.sshPass,
+            readyTimeout: 30000,
+        };
+
         try {
-            await ssh.connect({
-                host: this.hostIp,
-                username: this.sshUser,
-                password: this.sshPass,
-                readyTimeout: 30000,
+            await withSsh(sshOptions, async (ssh) => {
+                await ssh.execCommand(`docker stop ${containerName} && docker rm ${containerName}`);
+                const result = await ssh.execCommand(dockerCmd);
+
+                if (result.code !== 0) {
+                    throw new Error(`Erreur lors du relancement Docker pour upgrade : ${result.stderr}`);
+                }
             });
-
-            await ssh.execCommand(`docker stop ${containerName} && docker rm ${containerName}`);
-            const result = await ssh.execCommand(dockerCmd);
-            ssh.dispose();
-
-            if (result.code !== 0) {
-                throw new Error(`Erreur lors du relancement Docker pour upgrade : ${result.stderr}`);
-            }
         } catch (error) {
-            ssh.dispose();
             throw new InternalServerErrorException(`Erreur lors de la mise à niveau Docker : ${error.message}`);
         }
 
@@ -347,41 +343,39 @@ export class PaasService implements OnModuleInit {
         const cleanDbName = paasService.nomPersonnalise.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const containerName = `db_${cleanDbName}_${paasService.port}`;
 
-        const ssh = new NodeSSH();
+        const sshOptions = {
+            host: this.hostIp,
+            username: this.sshUser,
+            password: this.sshPass,
+            readyTimeout: 30000,
+        };
+
         try {
-            await ssh.connect({
-                host: this.hostIp,
-                username: this.sshUser,
-                password: this.sshPass,
-                readyTimeout: 30000,
+            return await withSsh(sshOptions, async (ssh) => {
+                // 1. Commande pour le CPU/RAM
+                const statsCmd = `docker stats ${containerName} --no-stream --format '{"cpu":"{{.CPUPerc}}","ramUsage":"{{.MemUsage}}","ramPerc":"{{.MemPerc}}"}'`;
+                const statsResult = await ssh.execCommand(statsCmd);
+
+                // 2. Commande pour le Stockage sur disque
+                const diskCmd = `du -sm /var/lib/dbaas/data/${containerName} | awk '{print $1}'`;
+                const diskResult = await ssh.execCommand(diskCmd);
+
+                let stats: any = {};
+                try {
+                    stats = JSON.parse(statsResult.stdout.trim() || '{}');
+                } catch (e) { }
+
+                const storageMb = parseInt(diskResult.stdout.trim(), 10) || 0;
+
+                return {
+                    containerName,
+                    cpuUsage: stats.cpu || '0.00%',
+                    ramUsage: stats.ramUsage || '0B / 0B',
+                    ramPercentage: stats.ramPerc || '0.00%',
+                    usedStorageMb: storageMb,
+                };
             });
-
-            // 1. Commande pour le CPU/RAM
-            const statsCmd = `docker stats ${containerName} --no-stream --format '{"cpu":"{{.CPUPerc}}","ramUsage":"{{.MemUsage}}","ramPerc":"{{.MemPerc}}"}'`;
-            const statsResult = await ssh.execCommand(statsCmd);
-
-            // 2. Commande pour le Stockage sur disque
-            const diskCmd = `du -sm /var/lib/dbaas/data/${containerName} | awk '{print $1}'`;
-            const diskResult = await ssh.execCommand(diskCmd);
-
-            ssh.dispose();
-
-            let stats: any = {};
-            try {
-                stats = JSON.parse(statsResult.stdout.trim() || '{}');
-            } catch (e) { }
-
-            const storageMb = parseInt(diskResult.stdout.trim(), 10) || 0;
-
-            return {
-                containerName,
-                cpuUsage: stats.cpu || '0.00%',
-                ramUsage: stats.ramUsage || '0B / 0B',
-                ramPercentage: stats.ramPerc || '0.00%',
-                usedStorageMb: storageMb, // Taille actuelle consommée en Mo
-            };
         } catch (error) {
-            ssh.dispose();
             console.error(`Erreur getContainerMetrics: ${error.message}`);
             return {
                 containerName,

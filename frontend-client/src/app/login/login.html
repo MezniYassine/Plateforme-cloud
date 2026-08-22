@@ -219,12 +219,12 @@
     <p class="mfa-sub">Un code à 6 chiffres a été envoyé à votre adresse e-mail. Vérifiez votre boîte de réception.</p>
 
     <div class="otp-row">
-      <input class="otp-input" type="text" maxlength="1" id="otp1" (input)="onOtpInput($event, 1)" (paste)="onOtpPaste($event)">
-      <input class="otp-input" type="text" maxlength="1" id="otp2" (input)="onOtpInput($event, 2)" (paste)="onOtpPaste($event)">
-      <input class="otp-input" type="text" maxlength="1" id="otp3" (input)="onOtpInput($event, 3)" (paste)="onOtpPaste($event)">
-      <input class="otp-input" type="text" maxlength="1" id="otp4" (input)="onOtpInput($event, 4)" (paste)="onOtpPaste($event)">
-      <input class="otp-input" type="text" maxlength="1" id="otp5" (input)="onOtpInput($event, 5)" (paste)="onOtpPaste($event)">
-      <input class="otp-input" type="text" maxlength="1" id="otp6" (input)="onOtpInput($event, 6)" (paste)="onOtpPaste($event)">
+      <input class="otp-input" type="text" maxlength="1" id="otp1" (input)="onOtpInput($event, 1)" (paste)="onOtpPaste($event)" (keydown.enter)="submitMFA()">
+      <input class="otp-input" type="text" maxlength="1" id="otp2" (input)="onOtpInput($event, 2)" (paste)="onOtpPaste($event)" (keydown.enter)="submitMFA()">
+      <input class="otp-input" type="text" maxlength="1" id="otp3" (input)="onOtpInput($event, 3)" (paste)="onOtpPaste($event)" (keydown.enter)="submitMFA()">
+      <input class="otp-input" type="text" maxlength="1" id="otp4" (input)="onOtpInput($event, 4)" (paste)="onOtpPaste($event)" (keydown.enter)="submitMFA()">
+      <input class="otp-input" type="text" maxlength="1" id="otp5" (input)="onOtpInput($event, 5)" (paste)="onOtpPaste($event)" (keydown.enter)="submitMFA()">
+      <input class="otp-input" type="text" maxlength="1" id="otp6" (input)="onOtpInput($event, 6)" (paste)="onOtpPaste($event)" (keydown.enter)="submitMFA()">
     </div>
 
     @if (mfaError) {

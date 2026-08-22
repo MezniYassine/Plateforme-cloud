@@ -23,6 +23,15 @@ interface MonitorContainer {
   usedStorageMb?: number;
 }
 
+interface MonitorSaas {
+  id: number; name: string; appName: string;
+  owner: string; ownerEmail: string; url: string;
+  status: string; dateCreation: string; catalogueName: string | null;
+  // Live metrics (re-use container logic if available)
+  cpuUsage?: string; ramUsage?: string; ramPercentage?: string;
+  usedStorageMb?: number;
+}
+
 @Component({
   selector: 'app-monitoring-page',
   standalone: true,
@@ -34,10 +43,11 @@ export class MonitoringPageComponent implements OnInit, OnDestroy {
   public h = inject(DashboardHelperService);
   private pollInterval: any;
 
-  activeTab = signal<'iaas' | 'paas'>('iaas');
+  activeTab = signal<'iaas' | 'paas' | 'saas'>('iaas');
 
   vms = signal<MonitorVM[]>([]);
   containers = signal<MonitorContainer[]>([]);
+  saasApps = signal<MonitorSaas[]>([]);
 
   // KPI Stats (top cards)
   monitorStats = signal([
@@ -59,7 +69,7 @@ export class MonitoringPageComponent implements OnInit, OnDestroy {
     if (this.pollInterval) clearInterval(this.pollInterval);
   }
 
-  setTab(tab: 'iaas' | 'paas') {
+  setTab(tab: 'iaas' | 'paas' | 'saas') {
     this.activeTab.set(tab);
   }
 
@@ -73,44 +83,91 @@ export class MonitoringPageComponent implements OnInit, OnDestroy {
         const vmList: MonitorVM[] = data.vms || [];
         this.vms.set(vmList);
 
-        // Process Containers
-        const containerList: MonitorContainer[] = data.containers || [];
+        // Process Containers — conserver les métriques live déjà affichées
+        const prevContainers = this.containers();
+        const containerList: MonitorContainer[] = (data.containers || []).map((c: MonitorContainer) => {
+          const existing = prevContainers.find(p => p.id === c.id);
+          return existing ? {
+            ...c,
+            cpuUsage: existing.cpuUsage,
+            ramUsage: existing.ramUsage,
+            ramPercentage: existing.ramPercentage,
+            usedStorageMb: existing.usedStorageMb,
+          } : c;
+        });
         this.containers.set(containerList);
+
+        // Process SaaS — conserver les métriques live déjà affichées
+        const prevSaas = this.saasApps();
+        const saasList: MonitorSaas[] = (data.saasApps || []).map((s: MonitorSaas) => {
+          const existing = prevSaas.find(p => p.id === s.id);
+          return existing ? {
+            ...s,
+            cpuUsage: existing.cpuUsage,
+            ramUsage: existing.ramUsage,
+            ramPercentage: existing.ramPercentage,
+            usedStorageMb: existing.usedStorageMb,
+          } : s;
+        });
+        this.saasApps.set(saasList);
 
         // Fetch live ESXi metrics
         this.http.get<any>(`${baseUrl}/esxi/host-stats`).subscribe({
           next: (res) => {
             const hostData = res?.data ?? res;
             if (hostData) {
-              this.updateKPIs(vmList, containerList, hostData);
+              this.updateKPIs(vmList, containerList, saasList, hostData);
             }
           },
-          error: () => this.updateKPIs(vmList, containerList, null)
+          error: () => this.updateKPIs(vmList, containerList, saasList, null)
         });
 
-        // Fetch live container metrics for each running container
+        // Fetch live container metrics for each running container and SaaS
         const runningContainers = containerList.filter(c => c.status === 'RUNNING');
-        if (runningContainers.length > 0) {
-          const metricsRequests = runningContainers.map(c =>
-            this.http.get<any>(`${baseUrl}/paas/${c.id}/metrics`)
-          );
+        const runningSaas = saasList.filter(s => s.status === 'RUNNING');
+        
+        if (runningContainers.length > 0 || runningSaas.length > 0) {
+          const paasRequests = runningContainers.map(c => this.http.get<any>(`${baseUrl}/paas/${c.id}/metrics`));
+          const saasRequests = runningSaas.map(s => this.http.get<any>(`${baseUrl}/saas/${s.id}/metrics`));
 
-          forkJoin(metricsRequests).subscribe({
+          forkJoin([...paasRequests, ...saasRequests]).subscribe({
             next: (results) => {
-              const updated = [...containerList];
-              runningContainers.forEach((c, i) => {
-                const idx = updated.findIndex(u => u.id === c.id);
-                if (idx !== -1 && results[i]) {
-                  updated[idx] = {
-                    ...updated[idx],
-                    cpuUsage: results[i].cpuUsage || '0.00%',
-                    ramUsage: results[i].ramUsage || '0B / 0B',
-                    ramPercentage: results[i].ramPercentage || '0.00%',
-                    usedStorageMb: results[i].usedStorageMb || 0,
-                  };
-                }
+              // Mettre à jour uniquement les métriques sans toucher aux données de base
+              this.containers.update(current => {
+                const updated = [...current];
+                runningContainers.forEach((c, i) => {
+                  const idx = updated.findIndex(u => u.id === c.id);
+                  if (idx !== -1 && results[i]) {
+                    updated[idx] = {
+                      ...updated[idx],
+                      cpuUsage: results[i].cpuUsage || updated[idx].cpuUsage || '0.00%',
+                      ramUsage: results[i].ramUsage || updated[idx].ramUsage || '0B / 0B',
+                      ramPercentage: results[i].ramPercentage || updated[idx].ramPercentage || '0.00%',
+                      usedStorageMb: results[i].usedStorageMb ?? updated[idx].usedStorageMb ?? 0,
+                    };
+                  }
+                });
+                return updated;
               });
-              this.containers.set(updated);
+
+              const saasOffset = runningContainers.length;
+              this.saasApps.update(current => {
+                const updated = [...current];
+                runningSaas.forEach((s, i) => {
+                  const result = results[saasOffset + i];
+                  const idx = updated.findIndex(u => u.id === s.id);
+                  if (idx !== -1 && result) {
+                    updated[idx] = {
+                      ...updated[idx],
+                      cpuUsage: result.cpuUsage || updated[idx].cpuUsage || '0.00%',
+                      ramUsage: result.ramUsage || updated[idx].ramUsage || '0B / 0B',
+                      ramPercentage: result.ramPercentage || updated[idx].ramPercentage || '0.00%',
+                      usedStorageMb: result.usedStorageMb ?? updated[idx].usedStorageMb ?? 0,
+                    };
+                  }
+                });
+                return updated;
+              });
             },
             error: () => {} // silent fail — metrics are optional
           });
@@ -120,9 +177,13 @@ export class MonitoringPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  private updateKPIs(vms: MonitorVM[], containers: MonitorContainer[], hostData: any) {
+  private updateKPIs(vms: MonitorVM[], containers: MonitorContainer[], saasApps: MonitorSaas[], hostData: any) {
     const activeVms = vms.filter(v => v.status === 'RUNNING').length;
     const activeContainers = containers.filter(c => c.status === 'RUNNING').length;
+    const activeSaas = saasApps.filter(s => s.status === 'RUNNING').length;
+    const totalContainers = activeContainers + activeSaas;
+    const totalWorkloads = activeVms + totalContainers;
+
     const cpuPct = hostData?.cpuPercent ?? 0;
     const ramPct = hostData?.ramPercent ?? 0;
 
@@ -181,11 +242,12 @@ export class MonitoringPageComponent implements OnInit, OnDestroy {
     const warnCount = alerts.filter(a => a.type === 'warn').length;
 
     this.monitorStats.set([
-      {
-        label: 'Workloads actifs', valColor: '',
-        val: `${activeVms + activeContainers}`,
-        sub: `${activeVms} VM${activeVms > 1 ? 's' : ''} · ${activeContainers} Conteneur${activeContainers > 1 ? 's' : ''}`,
-        bg: 'var(--blue-light)', color: 'var(--blue)'
+      { 
+        label: 'Workloads actifs', 
+        val: `${totalWorkloads}`, 
+        sub: `${activeVms} VM · ${totalContainers} Conteneurs`, 
+        bg: 'var(--blue-light)', 
+        color: 'var(--blue)', valColor: '' 
       },
       {
         label: 'CPU global', valColor: cpuPct > 80 ? 'var(--red)' : '',

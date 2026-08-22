@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import * as https from 'https';
 import { Client as VsphereClient } from '@vates/node-vsphere-soap';
-import { NodeSSH } from 'node-ssh';
+import { withSsh } from '../common/ssh.util';
 
 export interface VmSshSummaryMetrics {
     cpuUse: number;
@@ -26,30 +26,44 @@ export class EsxiService {
         this.initializeVsphereClient();
     }
 
-    private initializeVsphereClient() {
+    private initializeVsphereClient(): Promise<void> {
         const host = this.configService.get<string>('ESXI_HOST')!;
         const username = this.configService.get<string>('ESXI_USERNAME')!;
         const password = this.configService.get<string>('ESXI_PASSWORD')!;
 
-        // Créer le client - la connexion se fera au premier appel
+        // Créer un nouveau client vSphere
         this.vsphereClient = new VsphereClient(host, username, password, false);
 
         this.clientReadyPromise = new Promise<void>((resolve, reject) => {
-            this.vsphereClient.once('ready', resolve);
+            // Timeout de sécurité : si ni 'ready' ni 'error' ne sont émis
+            // (cas d'un ETIMEDOUT silencieux), on rejette après 30s
+            const timeoutId = setTimeout(() => {
+                this.clientReadyPromise = null;
+                reject(new Error('Timeout de connexion ESXi dépassé (30s)'));
+            }, 30000);
+
+            this.vsphereClient.once('ready', () => {
+                clearTimeout(timeoutId);
+                this.logger.log('✅ Session ESXi établie (ou rétablie).');
+                resolve();
+            });
             this.vsphereClient.once('error', (err: any) => {
-                this.clientReadyPromise = null; // Reset to allow retry on next request
-                this.logger.error(`❌ Erreur : ${err.message}`);
+                clearTimeout(timeoutId);
+                this.logger.error(`❌ Erreur de connexion ESXi : ${err.message}`);
+                this.clientReadyPromise = null; // Permettre un nouvel essai
                 reject(err);
             });
         });
-        
-        // Prevent UnhandledPromiseRejection if error occurs before anyone awaits
+
+        // Éviter UnhandledPromiseRejection si personne n'attend encore
         this.clientReadyPromise.catch(() => {});
+
+        return this.clientReadyPromise;
     }
 
     private async ensureClientReady(): Promise<void> {
         if (!this.clientReadyPromise) {
-            this.initializeVsphereClient();
+            await this.initializeVsphereClient();
         }
         await this.clientReadyPromise;
     }
@@ -244,6 +258,18 @@ export class EsxiService {
         }
     }
 
+    private isNetworkError(errorMsg: string): boolean {
+        return (
+            errorMsg.includes('NotAuthenticated') ||
+            errorMsg.includes('ETIMEDOUT') ||
+            errorMsg.includes('ECONNRESET') ||
+            errorMsg.includes('ECONNREFUSED') ||
+            errorMsg.includes('EHOSTUNREACH') ||
+            errorMsg.includes('socket hang up') ||
+            errorMsg.includes('Timeout de connexion')
+        );
+    }
+
     private async runVsphereCommand(
         command: string,
         args: Record<string, unknown>,
@@ -259,9 +285,10 @@ export class EsxiService {
             });
         } catch (error: any) {
             const errorMsg = error instanceof Error ? error.message : String(error);
-            if (retryCount === 0 && errorMsg.includes('NotAuthenticated')) {
-                this.logger.warn('Session ESXi expirée. Reconnexion automatique en cours...');
-                this.initializeVsphereClient();
+            if (retryCount === 0 && this.isNetworkError(errorMsg)) {
+                this.logger.warn(`🔄 Erreur réseau ESXi (${errorMsg.split(':')[0]}). Reconnexion automatique...`);
+                this.clientReadyPromise = null;
+                await this.initializeVsphereClient();
                 return this.runVsphereCommand(command, args, retryCount + 1);
             }
             throw error;
@@ -378,35 +405,31 @@ export class EsxiService {
             return null;
         }
 
-        const ssh = new NodeSSH();
-
         try {
-            await ssh.connect({
-                host: this.sshHost,
-                username: this.sshUsername,
-                password: this.sshPassword,
-                port: this.sshPort,
-                readyTimeout: 10000,
-                tryKeyboard: true,
-                onKeyboardInteractive: (_name, _instructions, _lang, prompts, finish) => {
-                    finish(prompts.map(() => this.sshPassword));
+            return await withSsh(
+                {
+                    host: this.sshHost,
+                    username: this.sshUsername,
+                    password: this.sshPassword,
+                    port: this.sshPort,
+                    readyTimeout: 10000,
+                    tryKeyboard: true,
                 },
-            });
+                async (ssh) => {
+                    const result = await ssh.execCommand(`vim-cmd vmsvc/get.summary ${vmId}`);
 
-            const result = await ssh.execCommand(`vim-cmd vmsvc/get.summary ${vmId}`);
+                    if (result.code !== 0 || result.stderr) {
+                        this.logger.warn(`vim-cmd get.summary ${vmId} a echoue: ${result.stderr || `code ${result.code}`}`);
+                        return null;
+                    }
 
-            if (result.code !== 0 || result.stderr) {
-                this.logger.warn(`vim-cmd get.summary ${vmId} a echoue: ${result.stderr || `code ${result.code}`}`);
-                return null;
-            }
-
-            return this.parseVmSummaryMetrics(result.stdout);
+                    return this.parseVmSummaryMetrics(result.stdout);
+                },
+            );
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             this.logger.warn(`Impossible de recuperer les metriques SSH de la VM ${vmId}: ${message}`);
             return null;
-        } finally {
-            ssh.dispose();
         }
     }
 
@@ -526,26 +549,45 @@ export class EsxiService {
         await this.waitForTaskCompletion(destroyResult?.returnval);
     }
 
-    async getHostStats(): Promise<any> {
+    /**
+     * Wrapper pour CreateContainerView compatible avec le mécanisme de retry.
+     */
+    private async createContainerView(type: string[], retryCount = 0): Promise<any> {
+        await this.ensureClientReady();
+        const serviceContent = this.vsphereClient.serviceContent;
         try {
-            await this.ensureClientReady();
-            const serviceContent = this.vsphereClient.serviceContent;
-
-            // 1. Création d'une vue pour cibler le HostSystem (le serveur physique)
-            const containerView: any = await new Promise((resolve, reject) => {
+            return await new Promise<any>((resolve, reject) => {
                 this.vsphereClient.client.CreateContainerView(
                     {
                         _this: serviceContent.viewManager,
                         container: serviceContent.rootFolder,
-                        type: ['HostSystem'],
+                        type,
                         recursive: true,
                     },
-                    (err, res) => {
+                    (err: any, res: any) => {
                         if (err) return reject(err);
                         resolve(res.returnval);
                     },
                 );
             });
+        } catch (error: any) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            if (retryCount === 0 && this.isNetworkError(errorMsg)) {
+                this.logger.warn(`🔄 Erreur réseau ESXi (CreateContainerView: ${errorMsg.split(':')[0]}). Reconnexion automatique...`);
+                this.clientReadyPromise = null;
+                await this.initializeVsphereClient();
+                return this.createContainerView(type, retryCount + 1);
+            }
+            throw error;
+        }
+    }
+
+    async getHostStats(): Promise<any> {
+        try {
+            const serviceContent = this.vsphereClient.serviceContent;
+
+            // 1. Création d'une vue pour cibler le HostSystem (le serveur physique)
+            const containerView: any = await this.createContainerView(['HostSystem']);
 
             // 2. Définition des propriétés à extraire pour correspondre à ton tableau
             const spec = {

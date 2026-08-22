@@ -11,6 +11,7 @@ import { Entreprise } from 'src/entities/entreprise.entity';
 import { ServiceInstance } from 'src/entities/serviceInstance.entity';
 import { MachineVirtuelle } from 'src/entities/machineVirtuelle.entity';
 import { ServicePaaS } from 'src/entities/servicePaaS.entity';
+import { ServiceSaaS } from 'src/entities/serviceSaaS.entity';
 import bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -33,6 +34,8 @@ export class AdminService {
         private readonly vmRepo: Repository<MachineVirtuelle>,
         @InjectRepository(ServicePaaS)
         private readonly paasRepo: Repository<ServicePaaS>,
+        @InjectRepository(ServiceSaaS)
+        private readonly saasRepo: Repository<ServiceSaaS>,
     ) { }
 
     async updateStatus(id: number, status: AccountStatus): Promise<Client> {
@@ -387,18 +390,51 @@ export class AdminService {
             };
         });
 
-        // 3. Counts
+        // 3. Fetch all SaaS instances with client and catalogue info
+        const allSaas = await this.saasRepo.find({
+            relations: ['client', 'client.entreprise', 'catalogue'],
+            order: { dateCreation: 'DESC' },
+        });
+
+        const saasApps = allSaas.map(s => {
+            const client = s.client;
+            let owner = 'Inconnu';
+            if (client) {
+                if (client.entreprise) {
+                    owner = client.entreprise.nomEntreprise;
+                } else {
+                    owner = `${client.prenom} ${client.nom}`;
+                }
+            }
+            return {
+                id: s.id,
+                name: s.nomPersonnalise,
+                appName: s.catalogue?.nomService ?? 'Application SaaS',
+                owner,
+                ownerEmail: client?.email ?? '',
+                url: s.connectionString || '—',
+                status: s.status,
+                dateCreation: s.dateCreation,
+                catalogueName: s.catalogue?.nomService ?? null,
+            };
+        });
+
+        // 4. Counts
         const activeVms = vms.filter(v => v.status === 'RUNNING').length;
         const activeContainers = containers.filter(c => c.status === 'RUNNING').length;
+        const activeSaas = saasApps.filter(s => s.status === 'RUNNING').length;
 
         return {
             vms,
             containers,
+            saasApps,
             summary: {
                 totalVms: vms.length,
                 activeVms,
                 totalContainers: containers.length,
                 activeContainers,
+                totalSaas: saasApps.length,
+                activeSaas,
             },
         };
     }

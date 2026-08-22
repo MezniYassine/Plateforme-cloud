@@ -15,10 +15,12 @@ import { JwtModule } from '@nestjs/jwt';
 
 
 
+import { ServiceSaaS } from 'src/entities/serviceSaaS.entity';
+
 @Module({
 
   imports: [
-    TypeOrmModule.forFeature([Client, Admin, Demande, Entreprise, Catalogue, Wallet, ServiceInstance, MachineVirtuelle, ServicePaaS]),
+    TypeOrmModule.forFeature([Client, Admin, Demande, Entreprise, Catalogue, Wallet, ServiceInstance, MachineVirtuelle, ServicePaaS, ServiceSaaS]),
     JwtModule.register({
       secret: process.env.JWT_SECRET ?? 'dynamix-dev-secret',
       signOptions: { expiresIn: '24h' },
