@@ -707,4 +707,69 @@ export class MailService {
 </body>
 </html>`;
   }
+
+  /**
+   * Email envoyé depuis le formulaire de contact de la landing page.
+   */
+  async sendContactMessage(params: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }): Promise<void> {
+    try {
+      const admin = await this.adminRepo.findOne({ where: {} }).catch(() => null);
+      const adminEmail = admin?.email ?? 'contact@dynamix-services.com';
+      const signature = await this.buildSignature();
+
+      const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fa;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+        <tr>
+          <td style="background:#1e293b;padding:30px 40px;text-align:center;">
+            <h1 style="color:#ffffff;font-size:24px;margin:0;font-weight:600;">Nouveau Message de Contact</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px;">
+            <p style="font-size:16px;color:#334155;line-height:1.6;margin:0 0 24px;">Bonjour Administrateur,</p>
+            <p style="font-size:16px;color:#334155;line-height:1.6;margin:0 0 24px;">Un visiteur de Dynamix Cloud a soumis le formulaire de contact :</p>
+            <ul style="font-size:15px;color:#334155;line-height:1.8;background:#f8fafc;padding:20px 40px;border-radius:6px;margin-bottom:24px;">
+              <li><strong>Nom :</strong> ${params.name}</li>
+              <li><strong>Email :</strong> <a href="mailto:${params.email}">${params.email}</a></li>
+              <li><strong>Sujet :</strong> ${params.subject}</li>
+            </ul>
+            <h3 style="font-size:16px;color:#0f172a;margin:0 0 12px;">Message :</h3>
+            <p style="font-size:15px;color:#475569;line-height:1.6;background:#f1f5f9;padding:20px;border-left:4px solid #f97316;margin:0 0 32px;white-space:pre-wrap;">${params.message}</p>
+            ${signature}
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+      await this.mailer.sendMail({
+        to: adminEmail,
+        subject: `[Contact Dynamix] ${params.subject}`,
+        html: htmlContent,
+        attachments: [this.getLogoAttachment()],
+      });
+      this.logger.log(`Email de contact envoyé par ${params.email} à ${adminEmail}`);
+    } catch (error) {
+      this.logger.error('Erreur lors de l\'envoi de l\'email de contact', error);
+      throw error;
+    }
+  }
 }

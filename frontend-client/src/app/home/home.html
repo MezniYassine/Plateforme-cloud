@@ -1,58 +1,61 @@
+<!-- ════ GLOBAL CUBE BACKGROUND (fixed, covers full page) ════ -->
+<div class="cube-grid-bg" aria-hidden="true">
+  @for (tile of tiles; track $index) {
+  <div class="cube-tile" [class.cube-glow]="tile.glow" [class.cube-hover]="tile.hovered"
+    [style.animation-delay]="tile.delay + 's'" [style.animation-duration]="tile.dur + 's'">
+  </div>
+  }
+</div>
+
 <!-- ══ NAVBAR ══ -->
 <nav>
   <a class="nav-logo" href="#">
     <div class="nav-logo-icon">
-      <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Services" />
+      <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Cloud" />
     </div>
-    <span class="nav-logo-text">Dynamix Services</span>
+    <span class="nav-logo-text">Dynamix Cloud</span>
   </a>
 
   <ul class="nav-links">
-    <li><a href="#products">Products</a></li>
+    <li><a href="#">Accueil</a></li>
+    <li><a href="#products">Catalogue</a></li>
     <li><a href="#solutions">Solutions</a></li>
-    <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#docs">Documentation</a></li>
+    <li><a href="#contact">Contact</a></li>
   </ul>
 
   <div class="nav-actions">
-    <a routerLink="/signup" class="btn-ghost">Sign Up</a>
-    <a [routerLink]="['/login']" class="btn-primary">Sign In</a>
+    <a routerLink="/signup" class="btn-ghost">S'inscrire</a>
+    <a [routerLink]="['/login']" class="btn-primary">Se connecter</a>
   </div>
 </nav>
 
 <!-- ══ HERO ══ -->
-<section>
-  <div class="hero">
-    <!-- Left -->
-    <div class="hero-content">
-      <div class="hero-badge fade-up">
-        <div class="hero-badge-dot"></div>
-        Dynamix v1.0 is now live
-      </div>
+<section class="hero-section">
+  <div class="hero-content">
 
-      <h1 class="hero-title fade-up delay-1">
-        Sovereign Cloud<br>
-        Infrastructure <span class="accent-gradient">for<br>the Future.</span>
-      </h1>
+    <h1 class="hero-title fade-up delay-1">
+      Plateforme Cloud<br>
+      Souveraine<br>
+      <span class="accent-text">pour l'Avenir.</span>
+    </h1>
 
-      <p class="hero-subtitle fade-up delay-2">
-        Secure, scalable, and AI-ready cloud computing designed for enterprise data sovereignty. Build, deploy, and
-        scale with absolute control.
-      </p>
+    <p class="hero-subtitle fade-up delay-2">
+      L'infrastructure cloud souveraine conçue pour la performance et la sécurité. Déployez et gérez vos machines
+      virtuelles, bases de données et applications SaaS en quelques secondes.
+    </p>
 
-      <div class="hero-actions fade-up delay-3">
-        <a [routerLink]="['/signup']" [queryParams]="{type: 'personal'}" class="btn-hero-primary">
-          Sign up for a Personal Account
-        </a>
-
-        <!-- Bouton Contact Sales → Enterprise signup -->
-        <a [routerLink]="['/signup']" [queryParams]="{type: 'enterprise'}" class="btn-hero-outline">
-          Sign up as an enterprise
-        </a>
-      </div>
+    <div class="hero-actions fade-up delay-4">
+      <a [routerLink]="['/signup']" [queryParams]="{type: 'personal'}" class="btn-hero-primary">
+        Créer un compte personnel
+      </a>
+      <a [routerLink]="['/signup']" [queryParams]="{type: 'enterprise'}" class="btn-hero-outline">
+        Créer un compte entreprise
+      </a>
     </div>
 
-
+    <p class="hero-trust fade-up delay-5">
+      Propulsé par VMware ESXi &nbsp;·&nbsp; 99.9% Disponibilité &nbsp;·&nbsp; 100% Souveraineté des données
+    </p>
   </div>
 </section>
 
@@ -60,72 +63,110 @@
 <section class="core-section" id="products">
   <div class="section-inner">
     <div class="section-header">
-      <h2 class="section-title">Core Infrastructure</h2>
-      <p class="section-sub">A complete ecosystem of cloud services built for performance, security, and strict
-        compliance requirements.</p>
+      <h2 class="section-title">Infrastructure de Base</h2>
+      <p class="section-sub">Un écosystème complet de services cloud conçu pour la performance, la sécurité et des
+        exigences de conformité strictes.</p>
     </div>
 
     <div class="cards-grid">
       <!-- IaaS -->
-      <div class="infra-card">
+      <div class="infra-card" [class.active]="selectedService === 'iaas'" (click)="selectService('iaas')">
         <div class="card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
             <rect x="2" y="3" width="20" height="5" rx="2" />
             <rect x="2" y="11" width="20" height="5" rx="2" />
             <rect x="2" y="19" width="20" height="2" rx="1" />
-            <circle cx="18" cy="5.5" r="1" fill="var(--accent-2)" />
-            <circle cx="18" cy="13.5" r="1" fill="var(--accent-2)" />
+            <circle cx="18" cy="5.5" r="1" fill="currentColor" />
+            <circle cx="18" cy="13.5" r="1" fill="currentColor" />
           </svg>
         </div>
         <div class="card-title">IaaS</div>
-        <div class="card-desc">Infrastructure as a Service. Provision bare metal, virtual machines, and scalable
-          storage with sovereign guarantees.</div>
-        <a href="#" class="card-link">
-          Explore Infrastructure
+        <div class="card-desc">Déployez des machines virtuelles évolutives avec des ressources dédiées et un réseau
+          sécurisé.</div>
+        <div class="card-link">
+          Voir le catalogue
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
-        </a>
+        </div>
       </div>
 
       <!-- PaaS -->
-      <div class="infra-card">
+      <div class="infra-card" [class.active]="selectedService === 'paas'" (click)="selectService('paas')">
         <div class="card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
             <path d="M12 2L2 7l10 5 10-5-10-5z" />
             <path d="M2 17l10 5 10-5" />
             <path d="M2 12l10 5 10-5" />
           </svg>
         </div>
         <div class="card-title">PaaS</div>
-        <div class="card-desc">Platform as a Service. Managed Kubernetes, serverless environments, and AI-ready
-          pipelines out of the box.</div>
-        <a href="#" class="card-link">
-          Explore Platforms
+        <div class="card-desc">Services de base de données managés. Déployez MongoDB, PostgreSQL, MySQL et Redis
+          instantanément.</div>
+        <div class="card-link">
+          Voir le catalogue
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
-        </a>
+        </div>
       </div>
 
       <!-- SaaS -->
-      <div class="infra-card">
+      <div class="infra-card" [class.active]="selectedService === 'saas'" (click)="selectService('saas')">
         <div class="card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
             <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
           </svg>
         </div>
         <div class="card-title">SaaS</div>
-        <div class="card-desc">Software as a Service. Enterprise-grade sovereign workspace, data analytics tools, and
-          secure collaboration.</div>
-        <a href="#" class="card-link">
-          Explore Software
+        <div class="card-desc">Applications d'entreprise et outils de gestion. Déployez Wordpress, n8n, phpMyAdmin et
+          pgAdmin en un clic.</div>
+        <div class="card-link">
+          Voir le catalogue
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
-        </a>
+        </div>
       </div>
     </div>
+
+    <!-- CATALOG DISPLAY AREA -->
+    @if (selectedService) {
+    <div class="catalog-display fade-up" [class.show]="selectedService">
+      <div class="catalog-header">
+        <h3>{{ getSelectedServiceTitle() }} Catalog</h3>
+        <button class="btn-close" (click)="closeCatalog()">×</button>
+      </div>
+      <div class="catalog-grid">
+        @for (item of getSelectedCatalog(); track item.name) {
+        <div class="catalog-item">
+          <div class="catalog-item-icon">
+            @if (item.icon) {
+            <img [src]="item.icon" [alt]="item.name" />
+            } @else if (selectedService === 'paas') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8">
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+            </svg>
+            } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            }
+          </div>
+          <div class="catalog-item-info">
+            <h4>{{ item.name }}</h4>
+            <p>{{ item.desc }}</p>
+            <div class="catalog-item-price">{{ item.price }}</div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
   </div>
 </section>
 
@@ -135,19 +176,19 @@
     <div class="stats-grid">
       <div class="stat-item">
         <div class="stat-number">99.<span>9</span>%</div>
-        <div class="stat-label">Guaranteed SLA</div>
+        <div class="stat-label">Disponibilité Garantie</div>
       </div>
       <div class="stat-item">
         <div class="stat-number"><span>100</span>%</div>
-        <div class="stat-label">Local Data Sovereignty</div>
+        <div class="stat-label">Souveraineté des Données</div>
       </div>
       <div class="stat-item">
-        <div class="stat-number"><span>&lt;2</span>s</div>
-        <div class="stat-label">API Response Time</div>
+        <div class="stat-number"><span>&lt;2</span>min</div>
+        <div class="stat-label">Temps de Déploiement</div>
       </div>
       <div class="stat-item">
         <div class="stat-number"><span>24</span>/7</div>
-        <div class="stat-label">Expert Support</div>
+        <div class="stat-label">Support via Tickets</div>
       </div>
     </div>
   </div>
@@ -157,67 +198,116 @@
 <section id="solutions">
   <div class="section-inner">
     <div class="section-header">
-      <h2 class="section-title">Everything you need</h2>
-      <p class="section-sub">A comprehensive platform designed for SMBs and enterprises that want to maintain control.
-      </p>
+      <h2 class="section-title">Tout ce dont vous avez besoin</h2>
+      <p class="section-sub">Une plateforme complète conçue pour les PME et les entreprises qui souhaitent garder le
+        contrôle.</p>
     </div>
 
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
         </div>
         <div>
-          <div class="feature-title">Advanced IAM & RBAC</div>
-          <div class="feature-desc">Granular role-based access control to securely manage your enterprise team or
-            individual workspace.
-            Mandatory JWT + MFA authentication.</div>
+          <div class="feature-title">Gestion Utilisateurs &amp; Entreprises</div>
+          <div class="feature-desc">Créez un compte personnel ou gérez toute votre équipe avec un compte entreprise.
+            Suivi précis des demandes, des ressources et un accès dédié pour chacun.</div>
         </div>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round">
             <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
             <path d="M12 6v6l4 2" />
           </svg>
         </div>
         <div>
-          <div class="feature-title">Pay-as-you-go Billing</div>
-          <div class="feature-desc">Transparent pay-as-you-go model. Real-time estimates, budget alerts, and
-            complete invoice history.</div>
+          <div class="feature-title">Portefeuille Intégré</div>
+          <div class="feature-desc">Rechargez votre portefeuille et payez uniquement pour les ressources provisionnées.
+            Suivez votre solde et l'historique complet de vos factures en temps réel.</div>
         </div>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
           </svg>
         </div>
         <div>
-          <div class="feature-title">Monitoring & AIOps</div>
-          <div class="feature-desc">Real-time monitoring with predictive anomaly detection. Built-in AI assistant
-            for log analysis.</div>
+          <div class="feature-title">Supervision en Temps Réel</div>
+          <div class="feature-desc">Gardez un œil sur les performances de vos machines virtuelles et applications SaaS
+            grâce à des indicateurs graphiques fiables (CPU, RAM).</div>
         </div>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round">
             <circle cx="12" cy="12" r="3" />
             <path
               d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
           </svg>
         </div>
         <div>
-          <div class="feature-title">Self-service Console</div>
-          <div class="feature-desc">Instant provisioning of VMs, databases, and managed services from an
-            intuitive web portal.</div>
+          <div class="feature-title">Catalogue de Services Complet</div>
+          <div class="feature-desc">Déployez instantanément vos machines virtuelles (IaaS), bases de données (PaaS) et
+            applications managées (SaaS) depuis un portail web intuitif.</div>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CONTACT ══ -->
+<section id="contact" class="contact-section">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">Contactez l'Administrateur</h2>
+      <p class="section-sub">Une question spécifique ou un besoin particulier ? Envoyez-nous un message direct.</p>
+    </div>
+    
+    <div class="contact-container">
+      <form [formGroup]="contactForm" (ngSubmit)="submitContact()" class="contact-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contact-name">Nom complet</label>
+            <input id="contact-name" type="text" formControlName="name" placeholder="Votre nom" />
+          </div>
+          <div class="form-group">
+            <label for="contact-email">Email</label>
+            <input id="contact-email" type="email" formControlName="email" placeholder="adresse@email.com" />
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="contact-subject">Sujet</label>
+          <input id="contact-subject" type="text" formControlName="subject" placeholder="De quoi s'agit-il ?" />
+        </div>
+        
+        <div class="form-group">
+          <label for="contact-message">Message</label>
+          <textarea id="contact-message" formControlName="message" rows="5" placeholder="Votre message détaillé..."></textarea>
+        </div>
+        
+        <button type="submit" class="btn-hero-primary contact-submit" [disabled]="contactForm.invalid || contactStatus === 'loading'">
+          @if (contactStatus === 'loading') {
+            <span>Envoi en cours...</span>
+          } @else {
+            <span>Envoyer le message</span>
+          }
+        </button>
+        
+        @if (contactStatus === 'success') {
+          <div class="contact-alert success">Votre message a été envoyé avec succès !</div>
+        }
+        @if (contactStatus === 'error') {
+          <div class="contact-alert error">Une erreur est survenue lors de l'envoi. Veuillez réessayer.</div>
+        }
+      </form>
     </div>
   </div>
 </section>
@@ -226,11 +316,12 @@
 <section class="cta-section">
   <div class="section-inner">
     <div class="cta-box">
-      <h2 class="cta-title">Ready to deploy your sovereign cloud?</h2>
-      <p class="cta-sub">Join the companies that trust Dynamix for their critical infrastructure.</p>
+      <h2 class="cta-title">Prêt à transformer votre infrastructure cloud ?</h2>
+      <p class="cta-sub">Rejoignez Dynamix Cloud et déployez vos premières instances en quelques minutes.</p>
       <div class="cta-actions">
-        <a [routerLink]="['/signup']" [queryParams]="{type: 'enterprise'}" class="btn-hero-primary">Start for free</a>
-        <a href="#contact" class="btn-hero-outline">Talk to an expert</a>
+        <a [routerLink]="['/signup']" [queryParams]="{type: 'personal'}" class="btn-hero-primary">Démarrer
+          gratuitement</a>
+        <a href="#solutions" class="btn-hero-outline">Découvrir les fonctionnalités</a>
       </div>
     </div>
   </div>
@@ -240,16 +331,16 @@
 <footer>
   <a class="footer-logo" href="#">
     <div class="nav-logo-icon nav-logo-icon-sm">
-      <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Services" />
+      <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Cloud" />
     </div>
-    <span class="nav-logo-text" style="font-size:14px;">Dynamix Services</span>
+    <span class="nav-logo-text" style="font-size:14px;">Dynamix Cloud</span>
   </a>
 
-  <span class="footer-copy">© 2025–2026 Dynamix Services. All rights reserved.</span>
+  <span class="footer-copy">© 2025–2026 Dynamix Cloud. Tous droits réservés.</span>
 
   <div class="footer-links">
-    <a href="#">Privacy Policy</a>
-    <a href="#">Terms of Service</a>
-    <a href="#">Contact Us</a>
+    <a href="#">Politique de confidentialité</a>
+    <a href="#">Conditions d'utilisation</a>
+    <a href="#">Nous contacter</a>
   </div>
 </footer>

@@ -1,11 +1,22 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* ══ CUSTOM FONTS ══ */
+@font-face {
+  font-family: 'Neofolia';
+  src: url('/assets/fonts/neofolia.woff') format('woff');
+  font-weight: 400 900;
+  font-style:  normal;
+  font-display: swap;
+}
+
+/* Sk-Modernist is loaded via CDN in index.html */
 html,
 body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Sk Modernist', 'DM Sans', sans-serif;
   scroll-behavior: smooth;
   box-sizing: border-box;
 }
