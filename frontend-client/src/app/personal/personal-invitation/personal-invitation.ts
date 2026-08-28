@@ -41,27 +41,27 @@ export class PersonalInvitation {
   }
 
   get pageTitle() {
-    return this.isForgotPassword ? 'Reinitialisez votre mot de passe' : "Vous avez ete invite a rejoindre l'equipe !";
+    return this.isForgotPassword ? 'Réinitialisez votre mot de passe' : "Vous avez été invité à rejoindre l'équipe !";
   }
 
   get pageSubtitle() {
     return this.isForgotPassword
-      ? 'Choisissez un nouveau mot de passe pour recuperer votre acces.'
-      : 'Creez votre mot de passe pour activer votre acces a la plateforme.';
+      ? 'Choisissez un nouveau mot de passe pour récupérer votre accès.'
+      : 'Créez votre mot de passe pour activer votre accès à la plateforme.';
   }
 
   get sectionTitle() {
-    return this.isForgotPassword ? 'Nouveau mot de passe' : 'Creez votre mot de passe';
+    return this.isForgotPassword ? 'Définir un nouveau mot de passe' : 'Configuration du mot de passe';
   }
 
   get submitLabel() {
-    return this.isForgotPassword ? 'Reinitialiser mon mot de passe' : 'Activer mon compte';
+    return this.isForgotPassword ? 'Réinitialiser mon mot de passe' : 'Activer mon compte';
   }
 
   get expiryText() {
     return this.isForgotPassword
-      ? 'Ce lien de reinitialisation expire apres 30 minutes.'
-      : "Ce lien d'invitation expire apres 48h.";
+      ? 'Ce lien de réinitialisation expire après 30 minutes.'
+      : "Ce lien d'invitation expire après 48h.";
   }
 
   get rules() {
@@ -78,7 +78,7 @@ export class PersonalInvitation {
   }
 
   get passwordValid() {
-    return this.passwordScore >= 3;
+    return this.passwordScore >= 3 && this.rules.len;
   }
 
   get confirmValid() {
@@ -90,7 +90,7 @@ export class PersonalInvitation {
   }
 
   get strengthLabel() {
-    return ['', 'Faible', 'Moyen', 'Fort', 'Tres fort'][this.passwordScore] || '';
+    return ['', 'Faible', 'Moyen', 'Fort', 'Très fort'][this.passwordScore] || '';
   }
 
   submit() {

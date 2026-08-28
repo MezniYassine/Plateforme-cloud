@@ -13,11 +13,14 @@ export class Entreprise {
   @Column({ unique: true })
   identifiantFiscal!: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  tailleEntreprise?: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  telephone?: string | null;
+
   @CreateDateColumn()
   dateCreation!: Date;
-
-  @Column()
-  maxUtilisateurs!: number;
 
   @OneToMany(() => Client, (client) => client.entreprise)
   clients!: Client[];

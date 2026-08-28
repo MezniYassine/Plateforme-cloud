@@ -77,6 +77,15 @@ export class DemandeService {
       );
     }
 
+    const sanitizedNom = (dto.nomInstanceSouhaite || '').trim();
+    if (!sanitizedNom || sanitizedNom.length < 3 || sanitizedNom.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(sanitizedNom)) {
+      throw new BadRequestException("Le nom d'instance doit comporter entre 3 et 32 caractères alphanumériques (lettres, chiffres, tirets et underscores uniquement).");
+    }
+    if (sanitizedNom.toLowerCase().startsWith('template')) {
+      throw new BadRequestException("Le nom d'instance ne peut pas commencer par \"template\" (mot-clé réservé par le système).");
+    }
+    dto.nomInstanceSouhaite = sanitizedNom;
+
     // Créer la demande
     const demande = this.demandeRepository.create({
       nomInstanceSouhaite: dto.nomInstanceSouhaite,
@@ -95,6 +104,9 @@ export class DemandeService {
     });
 
     const saved = await this.demandeRepository.save(demande);
+    const dYear = new Date().getFullYear();
+    saved.referenceFacture = `FAC-${dYear}-${String(saved.id).padStart(5, '0')}`;
+    await this.demandeRepository.save(saved);
 
     // ── EMAIL : Notifier l'admin entreprise de la nouvelle demande ──────────
     if (client.entreprise) {
@@ -423,6 +435,10 @@ export class DemandeService {
       // C. Mise à jour de la demande
       demande.status = DemandeStatus.APPROUVEE;
       demande.commentaireAdmin = commentaireAdmin || "Demande acceptée et infrastructure déployée.";
+      if (!demande.referenceFacture) {
+        const dDate = new Date(demande.dateDemande || Date.now());
+        demande.referenceFacture = `FAC-${dDate.getFullYear()}-${String(demande.id).padStart(5, '0')}`;
+      }
       const result = await this.demandeRepository.save(demande);
 
       // ── EMAIL SUCCÈS : notifier l'utilisateur que son service est prêt ──────

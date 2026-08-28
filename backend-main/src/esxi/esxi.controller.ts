@@ -9,11 +9,14 @@ import { Catalogue } from 'src/catalogue/entities/catalogue.entity';
 import { Repository } from 'typeorm';
 import { WalletService } from 'src/wallet/wallet.service';
 import { MailService } from 'src/mail/mail.service';
+import { MetricsService } from 'src/metrics/metrics.service';
 
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Length, Matches } from 'class-validator';
 
 export class CreateVmDto {
   @IsString()
+  @Length(3, 32, { message: "Le nom d'instance doit contenir entre 3 et 32 caractères." })
+  @Matches(/^[a-zA-Z0-9_-]+$/, { message: "Le nom d'instance ne peut contenir que des lettres, des chiffres, des tirets (-) et des underscores (_)." })
   name!: string;
 
   @IsNumber()
@@ -50,6 +53,7 @@ export class EsxiController {
     private readonly demandeRepo: Repository<Demande>,
     private readonly walletService: WalletService,
     private readonly mailService: MailService,
+    private readonly metricsService: MetricsService,
   ) { }
 
   @Get('test-connection')
@@ -87,14 +91,32 @@ export class EsxiController {
     }
   }
 
+  @Get('templates')
+  async getTemplates() {
+    try {
+      const vms = await this.esxiService.getVms();
+      const templates = vms.filter(vm => vm.name && vm.name.toLowerCase().includes('template'));
+      return {
+        status: 'Success',
+        count: templates.length,
+        data: templates,
+      };
+    } catch (error) {
+      throw new HttpException({
+        status: 'Error',
+        message: 'Impossible de récupérer les templates ESXi',
+        details: error.message,
+      }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   // 🔍 Endpoint de debug temporaire — retourne les données SOAP brutes d'une VM spécifique
   @Get('vms-raw-debug/:vmId')
   async getRawVmDebug(@Param('vmId') vmId: string) {
     return this.esxiService.getRawGuestInfo(vmId);
   }
-  // Dans esxi.controller.ts
   @Post('power/:id')
-  async togglePower(@Param('id') id: string, @Body('action') action: 'start' | 'stop') {
+  async togglePower(@Param('id') id: string, @Body('action') action: 'start' | 'stop' | 'restart' | 'reboot' | 'suspend') {
     try {
       await this.esxiService.powerControl(id, action);
       return { status: 'Success', message: `VM ${action}ed successfully` };
@@ -106,18 +128,21 @@ export class EsxiController {
   @Get('host-stats')
   async getHostStats() {
     try {
-      const stats = await this.esxiService.getHostStats();
-      return { status: 'Success', data: stats };
+      return await this.esxiService.getHostStats();
     } catch (error) {
-      return { status: 'Error', message: error.message };
+      throw new HttpException(
+        { status: 'Error', message: error.message },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('my-vms')
   async getMyVms(@Req() req: any) {
+    const clientId = req.user.sub;
     const vms = await this.vmRepo.find({
-      where: { client: { id: req.user.sub } },
+      where: { client: { id: clientId } },
       relations: ['catalogue'],
       order: { dateCreation: 'DESC' },
     });
@@ -136,7 +161,6 @@ export class EsxiController {
     return Promise.all(activeVms.map((vm) => this.syncVmRuntimeStatus(vm)));
   }
 
-  // --- AJOUTE CETTE ROUTE POUR RÉCUPÉRER UNE SEULE VM ---
   @UseGuards(JwtAuthGuard)
   @Get('my-vms/:id')
   async getMyVmById(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
@@ -164,12 +188,12 @@ export class EsxiController {
   @Post('my-vms/:id/power')
   async powerMyVm(
     @Param('id', ParseIntPipe) id: number,
-    @Body('action') action: 'start' | 'stop',
+    @Body('action') action: 'start' | 'stop' | 'restart' | 'reboot' | 'suspend',
     @Req() req: any,
   ) {
-    if (!action || !['start', 'stop'].includes(action)) {
+    if (!action || !['start', 'stop', 'restart', 'reboot', 'suspend'].includes(action)) {
       throw new HttpException(
-        { status: 'Error', message: 'Action invalide. Utilisez "start" ou "stop".' },
+        { status: 'Error', message: 'Action invalide. Utilisez "start", "stop", "restart" ou "suspend".' },
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -199,15 +223,15 @@ export class EsxiController {
       );
     }
 
-    // Mise à jour du statut en base de données
-    const syncedVm = await this.syncVmRuntimeStatus(vm);
-    const newStatus = syncedVm.status;
+    const targetStatus = (action === 'start' || action === 'restart') ? ServiceStatus.RUNNING : ServiceStatus.STOPPED;
+    await this.vmRepo.update(vm.id, { status: targetStatus });
+    vm.status = targetStatus;
 
     return {
       status: 'Success',
-      message: `VM ${vm.nomPersonnalise} ${action === 'start' ? 'démarrée' : 'arrêtée'} avec succès.`,
+      message: `VM ${vm.nomPersonnalise} action ${action} exécutée avec succès.`,
       vmId: id,
-      newStatus,
+      newStatus: targetStatus,
     };
   }
 
@@ -404,7 +428,16 @@ export class EsxiController {
       }
     }
 
-    // 1. VÉRIFICATION DU NOM (Éviter les conflits pour ce client spécifique)
+    // 1. VÉRIFICATION DU NOM (Sécurité, limite de caractères et conflits)
+    const sanitizedName = (dto.name || '').trim();
+    if (!sanitizedName || sanitizedName.length < 3 || sanitizedName.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(sanitizedName)) {
+      throw new BadRequestException("Le nom d'instance doit comporter entre 3 et 32 caractères alphanumériques (a-z, 0-9, tirets et underscores uniquement).");
+    }
+    if (sanitizedName.toLowerCase().startsWith('template')) {
+      throw new BadRequestException("Le nom d'instance ne peut pas commencer par \"template\" (mot-clé réservé par le système).");
+    }
+    dto.name = sanitizedName;
+
     const existingDbVm = await this.vmRepo.findOne({ 
       where: { nomPersonnalise: dto.name, client: { id: clientId } } 
     });
@@ -496,7 +529,7 @@ export class EsxiController {
     };
   }
 
-  private async syncVmRuntimeStatus(vm: MachineVirtuelle): Promise<MachineVirtuelle> {
+  private async syncVmRuntimeStatus(vm: MachineVirtuelle, skipMetrics = false): Promise<MachineVirtuelle> {
     if (vm.status === ServiceStatus.FAILED) {
       return vm; // Ne pas essayer de synchroniser ou d'adopter une VM échouée
     }
@@ -516,13 +549,13 @@ export class EsxiController {
       if (!fallbackRuntime) {
         return vm;
       }
-      return this.applyRuntimeUpdates(vm, fallbackRuntime);
+      return this.applyRuntimeUpdates(vm, fallbackRuntime, skipMetrics);
     }
 
-    return this.applyRuntimeUpdates(vm, runtime);
+    return this.applyRuntimeUpdates(vm, runtime, skipMetrics);
   }
 
-  private async applyRuntimeUpdates(vm: MachineVirtuelle, runtime: any): Promise<MachineVirtuelle> {
+  private async applyRuntimeUpdates(vm: MachineVirtuelle, runtime: any, skipMetrics = false): Promise<MachineVirtuelle> {
     if (vm.status === ServiceStatus.AWAITING_PAYMENT) {
       // Ne pas écraser le statut "AWAITING_PAYMENT" lors de la synchronisation
       return vm;
@@ -550,14 +583,24 @@ export class EsxiController {
       await this.vmRepo.update(vm.id, updates);
     }
 
+    if (skipMetrics) {
+      return vm;
+    }
+
     const metrics = runtimeStatus === ServiceStatus.RUNNING
       ? await this.esxiService.getVmSummaryMetricsBySsh(runtime.id || vm.vmReference)
       : null;
 
-    (vm as any).cpuUse = runtimeStatus === ServiceStatus.RUNNING ? (metrics?.cpuUse ?? null) : null;
-    (vm as any).ramUse = runtimeStatus === ServiceStatus.RUNNING ? (metrics?.ramUse ?? null) : null;
+    const cpuVal = runtimeStatus === ServiceStatus.RUNNING ? (metrics?.cpuUse ?? null) : null;
+    const ramVal = runtimeStatus === ServiceStatus.RUNNING ? (metrics?.ramUse ?? null) : null;
+    (vm as any).cpuUse = cpuVal;
+    (vm as any).ramUse = ramVal;
     (vm as any).cpuUsageMhz = metrics?.cpuUsageMhz ?? null;
     (vm as any).ramUsageMb = metrics?.ramUsageMb ?? null;
+
+    if (runtimeStatus === ServiceStatus.RUNNING && cpuVal !== null && ramVal !== null) {
+      this.metricsService.recordMetric('IAAS', vm.id, cpuVal, ramVal, metrics?.ramUsageMb ?? undefined);
+    }
 
     return vm;
   }

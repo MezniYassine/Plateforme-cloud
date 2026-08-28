@@ -132,7 +132,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
     this.http.get<any[]>(url).subscribe({
       next: (clients) => {
         this.enterpriseCount.set(clients.filter(c => c.role === 'ENTREPRISE_ADMIN' && c.status === 'APPROVED').length);
-        this.activeDevCount.set(clients.filter(c => c.role === 'ENTREPRISE_USER' || c.role === 'PERSONNEL').length);
+        this.activeDevCount.set(clients.filter(c => c.role === 'PERSONNEL' && c.status === 'APPROVED').length);
 
         const relevant = clients.filter(c => c.role === 'ENTREPRISE_ADMIN' || c.role === 'PERSONNEL');
         this.tenants.set(relevant.map(c => {
@@ -140,9 +140,12 @@ export class AdminDashboard implements OnInit, OnDestroy {
             ? clients.filter(sub => sub.role === 'ENTREPRISE_USER' && sub.entreprise?.id === c.entreprise.id)
             : [];
 
+          const fullName = `${c.prenom || ''} ${c.nom || ''}`.trim();
+          const displayName = c.entreprise?.nomEntreprise || (fullName ? fullName : (c.role === 'PERSONNEL' ? 'Particulier' : 'Inconnu'));
+
           return {
             id: `t${c.id}`,
-            company: c.entreprise?.nomEntreprise || (c.role === 'PERSONNEL' ? 'Particulier' : 'Inconnu'),
+            company: displayName,
             email: c.email,
             firstName: c.prenom,
             lastName: c.nom,
@@ -155,9 +158,11 @@ export class AdminDashboard implements OnInit, OnDestroy {
             tenantId: `tenant-${c.id}`,
             mfaStatus: c.mfaStatus || 'DESACTIVE',
             providers: c.providers || [],
+            telephone: c.telephone || c.entreprise?.telephone || null,
+            tailleEntreprise: c.entreprise?.tailleEntreprise || null,
             users: subUsers.map(sub => ({
               id: `t${sub.id}`,
-              company: c.entreprise?.nomEntreprise || 'Inconnu',
+              company: `${sub.prenom || ''} ${sub.nom || ''}`.trim() || 'Utilisateur',
               email: sub.email,
               firstName: sub.prenom,
               lastName: sub.nom,
@@ -165,11 +170,13 @@ export class AdminDashboard implements OnInit, OnDestroy {
               createdAt: sub.dateInscrit,
               registered: sub.dateInscrit,
               status: this.mapClientStatus(sub.status),
-              accountType: 'personnel',
+              accountType: 'entreprise',
               vms: 0,
               tenantId: `tenant-${sub.id}`,
               mfaStatus: sub.mfaStatus || 'DESACTIVE',
               providers: sub.providers || [],
+              telephone: sub.telephone || null,
+              tailleEntreprise: null,
             }))
           };
         }));

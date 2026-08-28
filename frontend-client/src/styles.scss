@@ -1,3 +1,40 @@
+
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme((
+    color: (
+      primary: mat.$cyan-palette,
+      tertiary: mat.$orange-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+body {
+  // Default the application to a light color theme. This can be changed to
+  // `dark` to enable the dark color theme, or to `light dark` to defer to the
+  // user's system settings.
+  color-scheme: light;
+
+  // Set a default background, font and text colors for the application using
+  // Angular Material's system-level CSS variables. Learn more about these
+  // variables at https://material.angular.dev/guide/system-variables
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Reset the user agent margin.
+  margin: 0;
+  height: 100%;
+}
 /* You can add global styles to this file, and also import other style files */
 
 /* ══ CUSTOM FONTS ══ */
@@ -16,7 +53,7 @@ body {
   padding: 0;
   width: 100%;
   height: 100%;
-  font-family: 'Sk Modernist', 'DM Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   scroll-behavior: smooth;
   box-sizing: border-box;
 }
@@ -68,4 +105,119 @@ body {
 
 .global-toast.error .toast-icon {
   color: #ef4444; /* Red 500 */
+}
+
+/* ══════════════════════════════════════════════════════════
+   UNIFIED DYNAMIX BUTTON DESIGN SYSTEM (ORANGE / NOIR / GRIS)
+   ══════════════════════════════════════════════════════════ */
+:root {
+  --dyn-orange-grad: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  --dyn-orange-hover: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  --dyn-orange-shadow: 0 4px 14px rgba(240, 122, 31, 0.35);
+  
+  --dyn-dark: #0f172a;
+  --dyn-dark-hover: #1e293b;
+  
+  --dyn-gray-bg: #ffffff;
+  --dyn-gray-border: #e2e8f0;
+  --dyn-gray-text: #475569;
+}
+
+/* 1. BOUTONS PRIMAIRES (ORANGE DYNAMIX) */
+.btn-primary,
+.btn-submit,
+.btn-submit-action,
+.btn-approve-primary,
+.btn-deploy-new,
+.btn-create-vm,
+.btn-create-svc,
+.btn-new-req,
+.btn-submit-request,
+.btn-recharge,
+.btn-checkout,
+.btn-validate-otp,
+.btn-deploy-saas,
+.btn-deploy-paas,
+.wallet-recharge-btn,
+.btn-save-profile,
+.btn-activate-mfa,
+.btn-start-large,
+.btn-empty-deploy {
+  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 10px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(240, 122, 31, 0.32) !important;
+  transition: all 0.18s ease !important;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+    box-shadow: 0 5px 16px rgba(240, 122, 31, 0.45) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) !important;
+  }
+
+  &:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+}
+
+/* 2. BOUTONS SECONDAIRES / FONCÉS (NOIR / DARK SLATE) */
+.btn-dark,
+.btn-secondary,
+.btn-reject-dark,
+.btn-act-reject,
+.btn-ctrl-alt-del,
+.btn-restart {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 9px;
+  font-weight: 700;
+  transition: all 0.18s ease !important;
+
+  &:hover:not(:disabled) {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    transform: translateY(-1px) !important;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) !important;
+  }
+}
+
+/* 3. BOUTONS NEUTRES / CONTOUR (GRIS & BLANC AVEC SURVOL ORANGE) */
+.btn-ghost,
+.btn-outline,
+.btn-neutral,
+.btn-cancel,
+.btn-sec-action,
+.btn-ghost-sec,
+.btn-empty-reset,
+.btn-view-details {
+  background: #ffffff !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 9px;
+  font-weight: 600;
+  transition: all 0.18s ease !important;
+
+  &:hover:not(:disabled) {
+    background: #fff7ed !important;
+    color: #ea580c !important;
+    border-color: #fed7aa !important;
+    transform: translateY(-1px) !important;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) !important;
+  }
 }

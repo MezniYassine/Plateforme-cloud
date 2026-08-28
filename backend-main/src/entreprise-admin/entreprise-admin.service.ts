@@ -16,6 +16,8 @@ import { Transaction } from 'src/entities/transaction.entity';
 import { ServicePaaS } from 'src/entities/servicePaaS.entity';
 import { PaasService } from 'src/paas/paas.service';
 
+import { ServiceSaaS } from 'src/entities/serviceSaaS.entity';
+
 export interface InviteDto {
     nom: string;
     prenom: string;
@@ -41,6 +43,8 @@ export class EntrepriseService {
         private readonly transactionRepo: Repository<Transaction>,
         @InjectRepository(ServicePaaS)
         private readonly paasRepo: Repository<ServicePaaS>,
+        @InjectRepository(ServiceSaaS)
+        private readonly saasRepo: Repository<ServiceSaaS>,
         private readonly esxiService: EsxiService,
         private readonly paasService: PaasService,
     ) { }
@@ -157,7 +161,13 @@ export class EntrepriseService {
             return {
                 id: String(u.id),
                 name: `${u.prenom} ${u.nom}`,
+                prenom: u.prenom,
+                nom: u.nom,
                 email: u.email,
+                telephone: u.telephone || null,
+                mfaStatus: u.mfaStatus || 'DESACTIVE',
+                isEmailVerified: u.isEmailVerified,
+                dateInscrit: u.dateInscrit,
                 color: COLORS[index % COLORS.length],
                 active: u.status === AccountStatus.APPROVED,
                 status: u.status,
@@ -247,14 +257,37 @@ export class EntrepriseService {
 
         const COLORS = ['#1a56e8', '#7c3aed', '#0ea5e9', '#16a34a', '#d97706', '#dc2626', '#0891b2', '#9333ea'];
 
-        const demandeTransactions = approvedDemandes.map((demande) => ({
-            id: `demande-${demande.id}`,
-            desc: demande.nomInstanceSouhaite,
-            memberName: demande.client ? `${demande.client.prenom} ${demande.client.nom}` : 'Membre inconnu',
-            date: demande.dateDemande,
-            type: 'debit' as const,
-            amount: Number(demande.prixMensuel || 0),
-        }));
+        const demandeTransactions = approvedDemandes.map((demande) => {
+            const dDate = new Date(demande.dateDemande || Date.now());
+            const refFacture = demande.referenceFacture || `FAC-${dDate.getFullYear()}-${String(demande.id).padStart(5, '0')}`;
+            
+            // Sauvegarder la référence de facture en BD si manquante
+            if (!demande.referenceFacture) {
+                demande.referenceFacture = refFacture;
+                this.demandeRepository.update(demande.id, { referenceFacture: refFacture }).catch(() => {});
+            }
+
+            return {
+                id: `demande-${demande.id}`,
+                refFacture: refFacture,
+                desc: demande.nomInstanceSouhaite,
+                catalogName: demande.catalogue?.nomService || 'Plan Standard',
+                typeService: demande.catalogue?.typeService || 'IAAS',
+                catalogue: demande.catalogue ? {
+                    id: demande.catalogue.id,
+                    nomService: demande.catalogue.nomService,
+                    typeService: demande.catalogue.typeService,
+                    vcpu: demande.catalogue.vcpu,
+                    ramMB: demande.catalogue.ramMB,
+                    stockageGB: demande.catalogue.stockageGB,
+                    prix: Number(demande.catalogue.prix),
+                } : null,
+                memberName: demande.client ? `${demande.client.prenom} ${demande.client.nom}` : 'Membre inconnu',
+                date: dDate.toISOString(),
+                type: 'debit' as const,
+                amount: Number(demande.prixMensuel || 0),
+            };
+        });
 
         const otherTransactions = walletTransactions
             .filter((transaction) => transaction.type === 'CREDIT' || transaction.description.includes('Mise à niveau'))
@@ -268,11 +301,22 @@ export class EntrepriseService {
                     desc = parts.join(' par ');
                 }
 
+                if (transaction.type === 'CREDIT') {
+                    desc = `Recharge du portefeuille`;
+                }
+
+                const tDate = new Date(transaction.dateTransaction || Date.now());
+                const refFacture = transaction.reference || `FAC-${tDate.getFullYear()}-TR${String(transaction.id).padStart(4, '0')}`;
+
                 return {
                     id: `wallet-${transaction.id}`,
+                    refFacture: refFacture,
                     desc: desc,
+                    catalogName: transaction.type === 'CREDIT' ? 'Recharge Solde' : 'Mise à niveau',
+                    typeService: transaction.type === 'CREDIT' ? 'WALLET' : 'UPGRADE',
+                    catalogue: null,
                     memberName: memberName,
-                    date: transaction.dateTransaction,
+                    date: tDate.toISOString(),
                     type: transaction.type.toLowerCase() as 'credit' | 'debit',
                     amount: Number(transaction.montant),
                 };
@@ -288,12 +332,15 @@ export class EntrepriseService {
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
             .slice(0, 100);
 
+        // EXCLURE L'ADMIN ENTREPRISE de la liste de consommation par membre
+        const enterpriseUsersOnly = orgMembers.filter((m) => m.role === RoleClient.ENTREPRISE_USER);
+
         return {
             solde: Number(adminWallet.solde),
             devise: adminWallet.devise,
             depenseMois: Math.round(debitThisMonth * 1000) / 1000,
             totalRecharge: Math.round(creditTotal * 1000) / 1000,
-            teamSpend: orgMembers.map((member, index) => {
+            teamSpend: enterpriseUsersOnly.map((member, index) => {
                 const memberName = `${member.prenom} ${member.nom}`;
                 let spend = Number(spendByMember.get(member.id) ?? 0);
                 
@@ -365,7 +412,7 @@ export class EntrepriseService {
         const memberColorMap = new Map<number, string>();
         orgMembers.forEach((m, i) => memberColorMap.set(m.id, COLORS[i % COLORS.length]));
 
-        // Synchroniser chaque VM avec l'ESXi pour obtenir le statut temps rÃ©el + mÃ©triques
+        // Synchroniser chaque VM avec l'ESXi pour obtenir le statut temps réel + métriques
         const results = await Promise.all(activeVms.map(async (vm) => {
             const synced = await this.syncVmRuntimeStatus(vm);
             const owner = vm.client
@@ -373,6 +420,7 @@ export class EntrepriseService {
                 : 'Inconnu';
 
             const statusLabel = this.getStatusLabel(synced.status);
+            const isRunning = synced.status === ServiceStatus.RUNNING;
 
             return {
                 id: String(vm.id),
@@ -387,8 +435,9 @@ export class EntrepriseService {
                 status: synced.status,
                 statusLabel,
                 ip: vm.ipAddress || null,
-                cpu: (synced as any).cpuUse ?? null,
-                ram: (synced as any).ramUse ?? null,
+                cpu: isRunning ? ((synced as any).cpuUse ?? 0) : 0,
+                ram: isRunning ? ((synced as any).ramUse ?? 0) : 0,
+                storage: vm.stockageGB ?? (vm.catalogue?.stockageGB ?? null),
             };
         }));
 
@@ -404,8 +453,9 @@ export class EntrepriseService {
             let cpuUse: number | null = null;
             let ramUse: number | null = null;
             let storage: number | null = null;
+            const isPaasRunning = paas.status === ServiceStatus.RUNNING;
 
-            if (paas.status === ServiceStatus.RUNNING) {
+            if (isPaasRunning) {
                 try {
                     const metrics = await this.paasService.getContainerMetrics(paas.id);
                     if (metrics) {
@@ -431,13 +481,41 @@ export class EntrepriseService {
                 status: paas.status,
                 statusLabel: this.getStatusLabel(paas.status),
                 ip: paas.hostIp ? `${paas.hostIp}:${paas.port}` : null,
-                cpu: cpuUse,
-                ram: ramUse,
-                storage: storage,
+                cpu: isPaasRunning ? (cpuUse ?? 0) : 0,
+                ram: isPaasRunning ? (ramUse ?? 0) : 0,
+                storage: storage || (paas.catalogue?.stockageGB ? (paas.catalogue.stockageGB * 1024) : null),
             };
         }));
 
-        return [...results, ...paasResults];
+        const saasServices = await this.saasRepo.find({
+            where: { client: { id: In(memberIds) } },
+            relations: ['catalogue', 'client'],
+            order: { dateCreation: 'DESC' },
+        });
+
+        const activeSaas = saasServices.filter(s => s.status !== ServiceStatus.FAILED);
+        const saasResults = activeSaas.map(saas => {
+            const owner = saas.client ? `${saas.client.prenom} ${saas.client.nom}` : 'Inconnu';
+            return {
+                id: `saas-${saas.id}`,
+                name: saas.nomPersonnalise,
+                type: 'saas' as const,
+                owner,
+                ownerColor: saas.client ? (memberColorMap.get(saas.client.id) ?? '#94a3b8') : '#94a3b8',
+                specs: saas.catalogue
+                    ? `${saas.catalogue.nomService || 'SaaS'} · Managée`
+                    : 'Application SaaS Managée',
+                cost: Number(saas.prixMensuel || 0),
+                status: saas.status,
+                statusLabel: this.getStatusLabel(saas.status),
+                ip: saas.connectionString || (saas.port ? `Port ${saas.port}` : null),
+                cpu: null,
+                ram: null,
+                storage: null,
+            };
+        });
+
+        return [...results, ...paasResults, ...saasResults];
     }
 
     /**

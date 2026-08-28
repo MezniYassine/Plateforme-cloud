@@ -1,98 +1,352 @@
-<div class="page-header-row">
-  <div>
-    <div class="page-h-title">Mes machines virtuelles</div>
-    <div class="page-h-sub">Instances IaaS déployées et assignées à votre compte</div>
+<div class="iaas-container">
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       HEADER SECTION
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="page-header-row">
+    <div class="header-left">
+      <div class="title-with-badge">
+        <h2 class="page-h-title">Mes Machines Virtuelles</h2>
+        <span class="count-badge">{{ totalVms() }} {{ totalVms() > 1 ? 'instances' : 'instance' }}</span>
+      </div>
+      <p class="page-h-sub">Instances IaaS déployées sur VMware ESXi · Datacenter Dynamix</p>
+    </div>
+
+    <div class="header-right">
+      <button class="btn-deploy-vm" (click)="openDeploy.emit({ type: 'vm', name: '' })">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>Déployer une VM</span>
+      </button>
+    </div>
   </div>
-  <button class="btn-sm primary" (click)="openDeploy.emit({ type: 'vm', name: '' })">+ Déployer une VM</button>
-</div>
 
-<div class="vm-cards-grid">
-  @for (v of vms(); track v.id) {
-  <div class="vm-full-card">
-    <div class="vfc-header">
-      <div>
-        <div class="vfc-name">{{ v.name }}</div>
-        <div class="vfc-os">{{ v.os }}</div>
+  <!-- ═══════════════════════════════════════════════════════════════
+       QUICK KPI METRIC BAR
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="kpi-row">
+    <div class="kpi-card card-dark">
+      <div class="kpi-icon-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+          <line x1="6" y1="6" x2="6.01" y2="6"/>
+          <line x1="6" y1="18" x2="6.01" y2="18"/>
+        </svg>
       </div>
-      <div class="vfc-status" [class]="'status-' + v.status">
-        {{ v.status === 'running' ? 'Running' : v.status === 'provisioning' ? 'Provisioning' : 'Stopped' }}
+      <div class="kpi-info">
+        <span class="kpi-label">Machines Déployées</span>
+        <span class="kpi-value">{{ totalVms() }} <span class="kpi-unit">VMs</span></span>
       </div>
     </div>
 
-    <div class="vfc-specs-grid">
-      <div class="vfc-spec">
-        <div class="vspec-k">vCPU</div>
-        <div class="vspec-v">{{ v.cpu }}</div>
+    <div class="kpi-card card-orange">
+      <div class="kpi-icon-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
       </div>
-      <div class="vfc-spec">
-        <div class="vspec-k">RAM</div>
-        <div class="vspec-v">{{ v.ram }} GB</div>
-      </div>
-      <div class="vfc-spec">
-        <div class="vspec-k">Disque</div>
-        <div class="vspec-v">{{ v.disk }} GB</div>
-      </div>
-      <div class="vfc-spec">
-        <div class="vspec-k">IP</div>
-        <div class="vspec-v">{{ v.ip }}</div>
+      <div class="kpi-info">
+        <span class="kpi-label">VMs En Marche</span>
+        <span class="kpi-value">{{ runningCount() }} <span class="kpi-unit">/ {{ totalVms() }}</span></span>
       </div>
     </div>
 
-    @if (v.status === 'running') {
-    <div class="vfc-usage">
-      <div class="usage-row">
-        <span class="usage-label">CPU {{ v.cpuUse !== null ? v.cpuUse + '%' : '0%' }}</span>
-        <div class="usage-bar">
-          <div class="usage-fill" [style.width.%]="v.cpuUse ?? 0"
-            [style.background]="v.cpuUse !== null && v.cpuUse > 80 ? 'var(--red)' : v.cpuUse !== null && v.cpuUse > 60 ? 'var(--amber)' : 'var(--blue)'">
+    <div class="kpi-card card-slate">
+      <div class="kpi-icon-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="4" y="4" width="16" height="16" rx="2"/>
+          <rect x="9" y="9" width="6" height="6"/>
+          <line x1="9" y1="1" x2="9" y2="4"/>
+          <line x1="15" y1="1" x2="15" y2="4"/>
+          <line x1="9" y1="20" x2="9" y2="23"/>
+          <line x1="15" y1="20" x2="15" y2="23"/>
+          <line x1="20" y1="9" x2="23" y2="9"/>
+          <line x1="20" y1="14" x2="23" y2="14"/>
+          <line x1="1" y1="9" x2="4" y2="9"/>
+          <line x1="1" y1="14" x2="4" y2="14"/>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Ressources Allouées</span>
+        <span class="kpi-value">{{ totalCpu() }} <span class="kpi-unit">vCPU</span> · {{ totalRam() }} <span class="kpi-unit">Go RAM</span></span>
+      </div>
+    </div>
+
+    <div class="kpi-card card-orange-deep">
+      <div class="kpi-icon-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Coût IaaS Estimé</span>
+        <span class="kpi-value">{{ totalCost().toFixed(2) }} <span class="kpi-unit">DT/mois</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       FILTER & SEARCH TOOLBAR
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="toolbar-row">
+    <div class="filter-group">
+      <button class="filter-chip" [class.active]="statusFilter() === 'all'" (click)="setFilter('all')">
+        Toutes ({{ totalVms() }})
+      </button>
+      <button class="filter-chip" [class.active]="statusFilter() === 'running'" (click)="setFilter('running')">
+        <span class="dot-running"></span> En marche ({{ runningCount() }})
+      </button>
+      <button class="filter-chip" [class.active]="statusFilter() === 'stopped'" (click)="setFilter('stopped')">
+        <span class="dot-stopped"></span> Arrêtées ({{ stoppedCount() }})
+      </button>
+    </div>
+
+    <div class="search-box">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" placeholder="Rechercher par nom, IP, OS..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
+      @if (searchTerm()) {
+        <button class="clear-search" (click)="searchTerm.set('')">✕</button>
+      }
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       VM CARDS GRID
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="vm-grid">
+    @for (v of filteredVms(); track v.id) {
+    <div class="vm-card" [class.is-running]="v.status === 'running'" [class.is-stopped]="v.status === 'stopped'">
+      
+      <!-- Top Card Header -->
+      <div class="vm-card-head">
+        <div class="os-brand-box" [attr.data-os]="v.os.toLowerCase()">
+          <img [src]="getOsLogo(v.os)" [alt]="v.os || 'OS'" class="os-logo-img" />
+        </div>
+
+        <div class="vm-title-wrap">
+          <div class="vm-name-row">
+            <h3 class="vm-name" [title]="v.name">{{ v.name }}</h3>
+          </div>
+          <span class="vm-catalog-tag">{{ v.catalogName || v.os || 'VM Dynamix' }}</span>
+        </div>
+
+        <div class="vm-status-badge" [class]="'status-' + v.status">
+          <span class="status-indicator"></span>
+          <span>{{ v.status === 'running' ? 'En marche' : v.status === 'provisioning' ? 'En création' : 'Arrêtée' }}</span>
+        </div>
+      </div>
+
+      <!-- Network & IP Row -->
+      <div class="vm-network-row">
+        <div class="ip-chip" (click)="copyIp(v.ip, $event)" [title]="'Cliquer pour copier l\'adresse IP : ' + v.ip">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span class="ip-text">{{ v.ip || 'En attente IP...' }}</span>
+          @if (copiedIp() === v.ip) {
+            <span class="copied-badge">Copié !</span>
+          }
+        </div>
+
+        <div class="net-status-pill" [class.online]="v.internetConnected">
+          <span class="net-dot"></span>
+          <span>{{ v.internetConnected ? 'Internet Public' : 'Réseau Interne' }}</span>
+        </div>
+      </div>
+
+      <!-- Specs 4-Box Grid -->
+      <div class="vm-specs-grid">
+        <div class="spec-box">
+          <div class="spec-icon">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+              <rect x="9" y="9" width="6" height="6"/>
+            </svg>
+          </div>
+          <div class="spec-meta">
+            <span class="spec-label">Processeur</span>
+            <span class="spec-value">{{ v.cpu }} <span class="spec-unit">vCPU</span></span>
+          </div>
+        </div>
+
+        <div class="spec-box">
+          <div class="spec-icon">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <div class="spec-meta">
+            <span class="spec-label">Mémoire</span>
+            <span class="spec-value">{{ v.ram }} <span class="spec-unit">Go RAM</span></span>
+          </div>
+        </div>
+
+        <div class="spec-box">
+          <div class="spec-icon">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+          </div>
+          <div class="spec-meta">
+            <span class="spec-label">Disque SSD</span>
+            <span class="spec-value">{{ v.disk }} <span class="spec-unit">Go NVMe</span></span>
+          </div>
+        </div>
+
+        <div class="spec-box spec-cost">
+          <div class="spec-icon">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <div class="spec-meta">
+            <span class="spec-label">Tarif Mensuel</span>
+            <span class="spec-value cost-value">{{ v.cost }} <span class="spec-unit">DT/m</span></span>
           </div>
         </div>
       </div>
-      <div class="usage-row">
-        <span class="usage-label">RAM {{ v.ramUse !== null ? v.ramUse + '%' : '0%' }}</span>
-        <div class="usage-bar">
-          <div class="usage-fill" [style.width.%]="v.ramUse ?? 0"
-            [style.background]="v.ramUse !== null && v.ramUse > 80 ? 'var(--red)' : v.ramUse !== null && v.ramUse > 60 ? 'var(--amber)' : 'var(--teal)'">
+
+      <!-- Real-Time Resource Usage Gauges (Active when Running) -->
+      @if (v.status === 'running') {
+      <div class="vm-gauges-panel">
+        <div class="gauge-item">
+          <div class="gauge-head">
+            <span class="gauge-name">Charge CPU</span>
+            <span class="gauge-pct" [class.high]="(v.cpuUse ?? 0) > 80" [class.warn]="(v.cpuUse ?? 0) > 60 && (v.cpuUse ?? 0) <= 80">
+              {{ v.cpuUse !== null ? v.cpuUse + '%' : '0%' }}
+            </span>
+          </div>
+          <div class="gauge-track">
+            <div class="gauge-bar" [style.width.%]="v.cpuUse ?? 0"
+              [class.bar-high]="(v.cpuUse ?? 0) > 80"
+              [class.bar-warn]="(v.cpuUse ?? 0) > 60 && (v.cpuUse ?? 0) <= 80">
+            </div>
+          </div>
+        </div>
+
+        <div class="gauge-item">
+          <div class="gauge-head">
+            <span class="gauge-name">Usage RAM</span>
+            <span class="gauge-pct" [class.high]="(v.ramUse ?? 0) > 80" [class.warn]="(v.ramUse ?? 0) > 60 && (v.ramUse ?? 0) <= 80">
+              {{ v.ramUse !== null ? v.ramUse + '%' : '0%' }}
+            </span>
+          </div>
+          <div class="gauge-track">
+            <div class="gauge-bar bar-teal" [style.width.%]="v.ramUse ?? 0"
+              [class.bar-high]="(v.ramUse ?? 0) > 80"
+              [class.bar-warn]="(v.ramUse ?? 0) > 60 && (v.ramUse ?? 0) <= 80">
+            </div>
           </div>
         </div>
       </div>
+      }
+
+      <!-- Bottom Action Footer -->
+      <div class="vm-card-footer">
+        <div class="action-buttons-group">
+          
+          <!-- Start / Stop Action -->
+          @if (v.status === 'running') {
+            <button class="btn-action btn-stop" (click)="onVmAction(v.id, 'stop')" title="Éteindre la machine virtuelle">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <rect x="6" y="6" width="12" height="12" rx="2"/>
+              </svg>
+              <span>Arrêter</span>
+            </button>
+          } @else if (v.status === 'stopped') {
+            <button class="btn-action btn-start" (click)="onVmAction(v.id, 'start')" title="Démarrer la machine virtuelle">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span>Démarrer</span>
+            </button>
+          } @else {
+            <button class="btn-action btn-disabled" disabled>
+              <span class="mini-spinner"></span>
+              <span>En cours</span>
+            </button>
+          }
+
+          <!-- Web Console Access -->
+          <button class="btn-action btn-console" [routerLink]="['/vm-console']" [queryParams]="{ id: v.id, returnUrl: '/personal-dashboard' }" [state]="{ id: v.id, returnUrl: '/personal-dashboard' }" title="Accéder à la console web VNC">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="4 17 10 11 4 5"/>
+              <line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+            <span>Console</span>
+          </button>
+
+          <!-- Upgrade Button -->
+          <button class="btn-action btn-upgrade" (click)="onUpgrade(v)" title="Redimensionner les ressources (vCPU/RAM/Disque)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <polyline points="18 15 12 9 6 15"/>
+            </svg>
+            <span>Upgrade</span>
+          </button>
+
+          <!-- Delete Button -->
+          <button class="btn-action btn-delete" (click)="onVmAction(v.id, 'delete')" title="Supprimer définitivement l'instance">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    } @empty {
+    <!-- Empty State -->
+    <div class="empty-state-card">
+      <div class="empty-icon-wrap">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+          <line x1="6" y1="6" x2="6.01" y2="6"/>
+          <line x1="6" y1="18" x2="6.01" y2="18"/>
+        </svg>
+      </div>
+      <h3 class="empty-title">
+        @if (searchTerm() || statusFilter() !== 'all') {
+          Aucune machine virtuelle ne correspond à vos filtres
+        } @else {
+          Aucune machine virtuelle déployée pour l'instant
+        }
+      </h3>
+      <p class="empty-desc">
+        @if (searchTerm() || statusFilter() !== 'all') {
+          Essayez de modifier votre recherche ou réinitialisez les filtres pour afficher toutes vos instances.
+        } @else {
+          Lancez votre première instance VMware ESXi personnalisée avec processeur, mémoire et stockage NVMe en quelques clics.
+        }
+      </p>
+
+      @if (searchTerm() || statusFilter() !== 'all') {
+        <button class="btn-reset-filter" (click)="searchTerm.set(''); statusFilter.set('all')">
+          Réinitialiser les filtres
+        </button>
+      } @else {
+        <button class="btn-deploy-vm" (click)="openDeploy.emit({ type: 'vm', name: '' })">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          <span>Déployer ma première VM</span>
+        </button>
+      }
     </div>
     }
+  </div>
 
-    <div class="vfc-footer" style="flex-direction: column; align-items: center; gap: 12px;">
-      <div style="display:flex; gap:4px; flex-wrap: nowrap; justify-content: center; width: 100%;">
-        @if (v.status === 'running') { <button class="action-btn stop"
-          (click)="onVmAction(v.id,'stop')">Arrêter</button> }
-        @if (v.status === 'stopped') { <button class="action-btn start"
-          (click)="onVmAction(v.id,'start')">Démarrer</button> }
-        <button class="action-btn console" [routerLink]="['/vm-console']"
-          [state]="{ id: v.id, returnUrl: '/personal-dashboard' }">Console</button>
-        <button class="action-btn upgrade" style="color: var(--blue);" (click)="onUpgrade(v)">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
-            stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; vertical-align: text-bottom;">
-            <polyline points="18 15 12 9 6 15"></polyline>
-          </svg>
-          Upgrade
-        </button>
-        <button class="action-btn delete" (click)="onVmAction(v.id,'delete')">Suppr.</button>
-      </div>
-      <span class="mono-tag">{{ v.cost }} DT/mois</span>
-    </div>
-  </div>
-  }
-  @empty {
-  <div class="empty-state"
-    style="grid-column:1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; text-align: center; background: var(--bg-white); border: 1px dashed var(--border); border-radius: var(--r);">
-    <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.6" stroke-linecap="round" width="48"
-      height="48" style="opacity: 0.8;">
-      <rect x="2" y="3" width="20" height="5" rx="2" />
-      <rect x="2" y="11" width="20" height="5" rx="2" />
-    </svg>
-    <p style="color: var(--text-1); margin: 0; font-size: 17px; font-weight: 600; font-family: 'Syne', sans-serif;">
-      Aucune VM assignée pour l'instant</p>
-    <button (click)="openDeploy.emit({ type: 'vm', name: '' })"
-      style="background: var(--blue); color: white; margin-top: 4px; padding: 8px 20px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">Déployer
-      une VM</button>
-  </div>
-  }
 </div>

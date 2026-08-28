@@ -9,7 +9,8 @@ import { AuthService } from '../services/auth-service';
 const PATTERNS = {
   PASSWORD: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+=_\-])[A-Za-z\d@$!%*?&#+=_\-]{8,}$/,
   EMAIL: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-  TAX_ID: /^\d{7,8}[a-z]\/?[mpe]\/?[anpb]\/?\d{3}$/i
+  TAX_ID: /^\d{7,8}[a-z]\/?[mpe]\/?[anpb]\/?\d{3}$/i,
+  PHONE: /^[+]?[0-9\s.\-()]{8}$/
 };
 
 // --- Custom Validators ---
@@ -32,6 +33,9 @@ export class SignupComponent implements OnInit {
   readonly showPassword = signal(false);
   readonly showConfirmPassword = signal(false);
   readonly passwordFocused = signal(false);
+  focusedField = '';
+  cardTransform = 'rotateX(0deg) rotateY(0deg)';
+  tiles: { glow: boolean }[] = [];
 
   private toastHide = 0;
 
@@ -47,7 +51,8 @@ export class SignupComponent implements OnInit {
     this.enterpriseForm = this.fb.group({
       companyName: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(100)]],
       taxId: ['', [Validators.required, Validators.pattern(PATTERNS.TAX_ID)]],
-      // Champ 'createdAt' supprimé : la base de données s'en charge !
+      companySize: ['1-10', [Validators.required]],
+      phone: ['', [Validators.required, noWhitespaceValidator, Validators.pattern(PATTERNS.PHONE)]],
       firstName: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(50)]],
       lastName: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(50)]],
       email: ['', [Validators.required, Validators.pattern(PATTERNS.EMAIL), Validators.maxLength(100)]],
@@ -58,10 +63,11 @@ export class SignupComponent implements OnInit {
     this.personalForm = this.fb.group({
       firstName: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(50)]],
       lastName: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(50)]],
+      profession: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(255)]],
+      phone: ['', [Validators.required, noWhitespaceValidator, Validators.pattern(PATTERNS.PHONE)]],
       email: ['', [Validators.required, Validators.pattern(PATTERNS.EMAIL), Validators.maxLength(100)]],
       password: ['', [Validators.required, Validators.pattern(PATTERNS.PASSWORD), Validators.maxLength(128)]],
       confirmPass: ['', Validators.required],
-      profession: ['', [Validators.required, noWhitespaceValidator, Validators.maxLength(255)]],
     }, { validators: this.passwordMatchValidator });
   }
 
@@ -69,6 +75,29 @@ export class SignupComponent implements OnInit {
     this.route.queryParams.subscribe((p) => {
       this.activeTab.set(p['type'] === 'personal' ? 'personal' : 'enterprise');
     });
+
+    if (typeof window !== 'undefined') {
+      const cols = Math.ceil(window.innerWidth / 79) + 2;
+      const rows = Math.ceil(window.innerHeight / 79) + 2;
+      const total = cols * rows;
+      this.tiles = Array.from({ length: total }, () => ({
+        glow: Math.random() < 0.08
+      }));
+    }
+  }
+
+  onMouseMove(e: MouseEvent) {
+    const el = e.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    this.cardTransform = `rotateX(${-dy * 6}deg) rotateY(${dx * 6}deg)`;
+  }
+
+  onMouseLeave() {
+    this.cardTransform = 'rotateX(0deg) rotateY(0deg)';
   }
 
   private passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
@@ -137,19 +166,23 @@ export class SignupComponent implements OnInit {
     const c = this.enterpriseForm.controls;
     this.enterpriseForm.markAllAsTouched();
 
-    if (c['companyName'].invalid) return this.flashToast("Company name is required and must be valid.");
+    if (c['companyName'].invalid) return this.flashToast("Le nom de l'entreprise est requis.");
     if (c['taxId'].invalid) {
-      return this.flashToast(c['taxId'].hasError('pattern') ? 'Invalid Tax ID. Expected format: 1234567A/M/A/000' : 'Tax ID is required.');
+      return this.flashToast(c['taxId'].hasError('pattern') ? 'Identifiant fiscal invalide. Format: 1234567A/M/A/000' : "L'identifiant fiscal est requis.");
     }
-    if (c['firstName'].invalid) return this.flashToast("Administrator's first name is required.");
-    if (c['lastName'].invalid) return this.flashToast("Administrator's last name is required.");
-    if (c['email'].invalid) return this.flashToast("Email address is invalid or missing.");
-    if (c['password'].invalid) return this.flashToast('Password must contain 8+ characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character.', 8000);
-    if (c['confirmPass'].invalid || this.enterpriseForm.hasError('passwordMismatch')) return this.flashToast('Passwords do not match.');
+    if (c['companySize'].invalid) return this.flashToast("Veuillez sélectionner la taille de l'entreprise.");
+    if (c['phone'].invalid) {
+      return this.flashToast(c['phone'].hasError('pattern') ? 'Numéro de téléphone invalide (ex: +216 12 345 678).' : 'Le numéro de téléphone est requis.');
+    }
+    if (c['firstName'].invalid) return this.flashToast("Le prénom de l'administrateur est requis.");
+    if (c['lastName'].invalid) return this.flashToast("Le nom de l'administrateur est requis.");
+    if (c['email'].invalid) return this.flashToast("L'adresse e-mail est invalide ou manquante.");
+    if (c['password'].invalid) return this.flashToast('Le mot de passe doit contenir au moins 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.', 8000);
+    if (c['confirmPass'].invalid || this.enterpriseForm.hasError('passwordMismatch')) return this.flashToast('Les mots de passe ne correspondent pas.');
 
     if (this.submitting()) return;
     this.submitting.set(true);
-    this.toast.set('Sending registration...');
+    this.toast.set('Envoi de l\'inscription...');
 
     const { confirmPass, ...body } = this.enterpriseForm.value;
 
@@ -164,11 +197,11 @@ export class SignupComponent implements OnInit {
           console.error(err);
           if (err.status === 409) {
             const apiMsg = err.error?.message || '';
-            if (apiMsg.toLowerCase().includes('tax id')) this.flashToast('This Tax ID is already in use.', 8000);
-            else if (apiMsg.toLowerCase().includes('email')) this.flashToast('This email is already used by another account.', 8000);
-            else this.flashToast(apiMsg || 'This information is already in use.', 8000);
+            if (apiMsg.toLowerCase().includes('tax id')) this.flashToast('Cet identifiant fiscal est déjà utilisé.', 8000);
+            else if (apiMsg.toLowerCase().includes('email')) this.flashToast('Cet e-mail est déjà utilisé par un autre compte.', 8000);
+            else this.flashToast(apiMsg || 'Ces informations sont déjà utilisées.', 8000);
           } else {
-            this.flashToast('Registration failed. Please check the server connection.', 8000);
+            this.flashToast('Échec de l\'inscription. Veuillez vérifier la connexion au serveur.', 8000);
           }
         },
       });
@@ -181,16 +214,19 @@ export class SignupComponent implements OnInit {
     const c = this.personalForm.controls;
     this.personalForm.markAllAsTouched();
 
-    if (c['firstName'].invalid) return this.flashToast('Your first name is required and must be valid.');
-    if (c['lastName'].invalid) return this.flashToast('Your last name is required and must be valid.');
-    if (c['email'].invalid) return this.flashToast("Email address is invalid or missing.");
-    if (c['password'].invalid) return this.flashToast('Password must contain 8+ characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character.', 8000);
-    if (c['confirmPass'].invalid || this.personalForm.hasError('passwordMismatch')) return this.flashToast('Passwords do not match.');
-    if (c['profession'].invalid) return this.flashToast('Please provide your profession.');
+    if (c['firstName'].invalid) return this.flashToast('Le prénom est requis.');
+    if (c['lastName'].invalid) return this.flashToast('Le nom est requis.');
+    if (c['profession'].invalid) return this.flashToast('Veuillez renseigner votre profession.');
+    if (c['phone'].invalid) {
+      return this.flashToast(c['phone'].hasError('pattern') ? 'Numéro de téléphone invalide (ex: +216 12 345 678).' : 'Le numéro de téléphone est requis.');
+    }
+    if (c['email'].invalid) return this.flashToast("L'adresse e-mail est invalide ou manquante.");
+    if (c['password'].invalid) return this.flashToast('Le mot de passe doit contenir au moins 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.', 8000);
+    if (c['confirmPass'].invalid || this.personalForm.hasError('passwordMismatch')) return this.flashToast('Les mots de passe ne correspondent pas.');
 
     if (this.submitting()) return;
     this.submitting.set(true);
-    this.toast.set('Sending registration...');
+    this.toast.set('Envoi de l\'inscription...');
 
     const { confirmPass, ...body } = this.personalForm.value;
 
@@ -205,10 +241,10 @@ export class SignupComponent implements OnInit {
           console.error(err);
           if (err.status === 409) {
             const apiMsg = err.error?.message || '';
-            if (apiMsg.toLowerCase().includes('email')) this.flashToast('This email is already used by another account.', 8000);
-            else this.flashToast(apiMsg || 'This information is already in use.', 8000);
+            if (apiMsg.toLowerCase().includes('email')) this.flashToast('Cet e-mail est déjà utilisé par un autre compte.', 8000);
+            else this.flashToast(apiMsg || 'Ces informations sont déjà utilisées.', 8000);
           } else {
-            this.flashToast('Registration failed. Please check the server connection.', 8000);
+            this.flashToast('Échec de l\'inscription. Veuillez vérifier la connexion au serveur.', 8000);
           }
         },
       });

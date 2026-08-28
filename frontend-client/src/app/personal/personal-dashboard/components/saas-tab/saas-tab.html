@@ -1,145 +1,264 @@
-<div class="page-header-row">
-  <div>
-    <div class="page-h-title">Applications SaaS</div>
-    <div class="page-h-sub">Vos applications déployées et prêtes à l'emploi</div>
+<div class="saas-container">
+  <!-- ══════════════════ HEADER & TOOLBAR ══════════════════ -->
+  <div class="saas-header-toolbar">
+    <div class="header-titles">
+      <div class="page-title-row">
+        <h2 class="page-title">Applications & Solutions SaaS</h2>
+        <span class="count-pill">{{ filteredInstances().length }} / {{ saasInstances().length }}</span>
+      </div>
+      <p class="page-subtitle">Vos applications conteneurisées prêtes à l'emploi et hébergées sur Dynamix Cloud</p>
+    </div>
+
+    <div class="toolbar-actions">
+      <!-- Search Box -->
+      <div class="search-input-box">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          placeholder="Rechercher par nom, URL, email..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+        />
+        @if (searchTerm()) {
+          <button class="clear-search" (click)="searchTerm.set('')">✕</button>
+        }
+      </div>
+
+      <!-- Deploy SaaS Button -->
+      <button class="btn-deploy-saas" (click)="openDeploy.emit({ type: 'saas', name: '' })">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>Déployer une Application SaaS</span>
+      </button>
+    </div>
   </div>
-  <button class="btn-sm primary" (click)="openDeploy.emit({ type: 'saas', name: '' })">+ Déployer une app SaaS</button>
-</div>
 
-<div class="vm-cards-grid">
-  @for (s of saasInstances(); track s.id) {
-  <div class="vm-full-card">
-    <div class="vfc-header">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div class="cat-icon"
-          style="width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;"
-          [style.background]="getAppBg(s.nomPersonnalise)">
-          @if (getAppIcon(s.nomPersonnalise) === 'phpmyadmin') {
-          <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="getAppColor(s.nomPersonnalise)" stroke-width="1.8">
-            <rect x="2" y="3" width="20" height="14" rx="2" />
-            <line x1="8" y1="21" x2="16" y2="21" />
-            <line x1="12" y1="17" x2="12" y2="21" />
-          </svg>
-          } @else if (getAppIcon(s.nomPersonnalise) === 'pgadmin') {
-          <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="getAppColor(s.nomPersonnalise)" stroke-width="1.8">
-            <ellipse cx="12" cy="5" rx="9" ry="3" />
-            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-          </svg>
-          } @else if (getAppIcon(s.nomPersonnalise) === 'wordpress') {
-          <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="getAppColor(s.nomPersonnalise)" stroke-width="1.8">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="2" y1="12" x2="22" y2="12" />
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-          </svg>
-          } @else if (getAppIcon(s.nomPersonnalise) === 'n8n') {
-          <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="getAppColor(s.nomPersonnalise)" stroke-width="1.8">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
-          } @else {
-          <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="getAppColor(s.nomPersonnalise)" stroke-width="1.8">
-            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
-          </svg>
-          }
+  <!-- Filter Pills Bar -->
+  <div class="filter-pills-row">
+    <button class="filter-pill" [class.active]="selectedFilter() === 'ALL'" (click)="selectedFilter.set('ALL')">
+      <span>Toutes les applications</span>
+      <span class="pill-badge">{{ saasInstances().length }}</span>
+    </button>
+    <button class="filter-pill" [class.active]="selectedFilter() === 'WORDPRESS'" (click)="selectedFilter.set('WORDPRESS')">
+      <img src="assets/Wordpress logo.png" alt="WordPress" class="pill-logo">
+      <span>WordPress</span>
+    </button>
+    <button class="filter-pill" [class.active]="selectedFilter() === 'N8N'" (click)="selectedFilter.set('N8N')">
+      <img src="assets/n8n_Logo.png" alt="n8n" class="pill-logo">
+      <span>n8n Workflow</span>
+    </button>
+    <button class="filter-pill" [class.active]="selectedFilter() === 'PHPMYADMIN'" (click)="selectedFilter.set('PHPMYADMIN')">
+      <img src="assets/MySQL Logo.png" alt="phpMyAdmin" class="pill-logo">
+      <span>phpMyAdmin</span>
+    </button>
+    <button class="filter-pill" [class.active]="selectedFilter() === 'PGADMIN'" (click)="selectedFilter.set('PGADMIN')">
+      <img src="assets/PostgreSQL Logo.png" alt="pgAdmin" class="pill-logo">
+      <span>pgAdmin</span>
+    </button>
+  </div>
+
+  <!-- ══════════════════ SAAS CARDS GRID ══════════════════ -->
+  <div class="saas-cards-grid">
+    @for (s of filteredInstances(); track s.id) {
+    <div class="saas-card" [class]="getAppBrandClass(s)">
+      
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="app-identity">
+          <div class="app-logo-box">
+            <img [src]="getAppLogo(s)" [alt]="s.nomPersonnalise" class="app-logo-img">
+          </div>
+          <div class="app-info">
+            <h3 class="app-name">{{ s.nomPersonnalise }}</h3>
+            <div class="app-sub-row">
+              <span class="app-category-badge">{{ getAppCategory(s) }}</span>
+              <span class="app-dot-sep">·</span>
+              <span class="app-date">{{ (s.dateCreation | date:'dd MMM yyyy') || '-' }}</span>
+              @if (s.port) {
+                <span class="app-dot-sep">·</span>
+                <span class="app-port-tag monospace">Port {{ s.port }}</span>
+              }
+            </div>
+          </div>
         </div>
-        <div>
-          <div class="vfc-name">{{ s.nomPersonnalise }}</div>
-          <div class="vfc-os">Application SaaS</div>
+
+        <!-- Status Badge -->
+        <div class="status-badge" [class.status-running]="s.status === 'RUNNING'" [class.status-provisioning]="s.status !== 'RUNNING'">
+          <span class="pulse-dot"></span>
+          <span>{{ s.status === 'RUNNING' ? 'Actif' : s.status }}</span>
         </div>
       </div>
-      <div class="vfc-status" [class]="s.status === 'RUNNING' ? 'status-running' : 'status-provisioning'">
-        {{ s.status === 'RUNNING' ? 'Actif' : s.status }}
-      </div>
-    </div>
 
-
-
-    <div class="vfc-specs-grid" style="grid-template-columns: 1fr; margin-top: 10px;">
-      <div class="vfc-spec">
-        <div class="vspec-k">URL d'accès</div>
-        <div class="vspec-v" style="font-family: monospace; font-size: 11px; word-break: break-all;">
+      <!-- Access URL Box -->
+      <div class="access-url-box">
+        <div class="url-label-row">
+          <span class="url-title">URL d'accès public</span>
           @if (s.connectionString) {
-          <a [href]="s.connectionString" target="_blank" rel="noopener"
-            style="color: var(--blue); text-decoration: none;">{{ s.connectionString }}</a>
+            <button class="btn-copy-mini" (click)="copyText(s.connectionString, 'url-' + s.id, $event)">
+              @if (isCopied('url-' + s.id)) {
+                <span class="badge-copied-text">Copié !</span>
+              } @else {
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span>Copier</span>
+              }
+            </button>
+          }
+        </div>
+        <div class="url-value-row">
+          @if (s.connectionString) {
+            <a [href]="s.connectionString" target="_blank" rel="noopener noreferrer" class="app-direct-link" title="Ouvrir l'application dans un nouvel onglet">
+              <span class="url-text monospace">{{ s.connectionString }}</span>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </a>
           } @else {
-          Non disponible
+            <span class="url-pending">Génération du lien en cours...</span>
           }
         </div>
       </div>
-    </div>
 
-    @if (s.linkedPaasService) {
-    <div class="vfc-specs-grid" style="grid-template-columns: 1fr; margin-top: 10px;">
-      <div class="vfc-spec">
-        <div class="vspec-k">Base liée</div>
-        <div class="vspec-v" style="font-family: monospace;">{{ s.linkedPaasService.nomPersonnalise }} ({{
-          s.linkedPaasService.typeSgbd }})</div>
-      </div>
-    </div>
-    }
-
-    @if (s.ownerEmail && getAppIcon(s.nomPersonnalise) !== 'wordpress' && getAppIcon(s.nomPersonnalise) !== 'n8n') {
-    <div class="vfc-specs-grid" style="grid-template-columns: 1fr; margin-top: 10px;">
-      <div class="vfc-spec">
-        <div class="vspec-k">Email</div>
-        <div class="vspec-v" style="font-family: monospace;">{{ s.ownerEmail }}</div>
-      </div>
-    </div>
-    }
-
-    @if (s.ownerPassword && getAppIcon(s.nomPersonnalise) !== 'wordpress' && getAppIcon(s.nomPersonnalise) !== 'n8n') {
-    <div class="vfc-specs-grid" style="grid-template-columns: 1fr; margin-top: 10px;">
-      <div class="vfc-spec">
-        <div class="vspec-k">Mot de Passe</div>
-        <div class="vspec-v" style="font-family: monospace;">{{ s.ownerPassword }}</div>
-      </div>
-    </div>
-    }
-
-    <div class="vfc-specs-grid" style="grid-template-columns: 1fr; margin-top: 10px;">
-      <div class="vfc-spec">
-        <div class="vspec-k">Déployé le</div>
-        <div class="vspec-v" style="font-family: monospace;">{{ (s.dateCreation | date:'dd/MM/yyyy HH:mm') || '-' }}
+      <!-- Linked Database Pill (If Available) -->
+      @if (s.linkedPaasService) {
+      <div class="linked-db-banner">
+        <div class="linked-icon-wrap">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+        </div>
+        <div class="linked-db-text">
+          <span class="linked-label">Base de données liée :</span>
+          <span class="linked-name font-semibold">{{ s.linkedPaasService.nomPersonnalise }} ({{ s.linkedPaasService.typeSgbd }})</span>
         </div>
       </div>
-    </div>
+      }
 
-
-
-    <div class="vfc-footer" style="flex-direction: column; align-items: center; gap: 12px;">
-      <div style="display:flex; gap:4px; flex-wrap: nowrap; justify-content: center; width: 100%;">
-        @if (s.connectionString) {
-        <a [href]="s.connectionString" target="_blank" rel="noopener" class="action-btn"
-          style="color: var(--green); text-decoration: none;">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
-            stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; vertical-align: text-bottom;">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-          </svg>
-          Ouvrir
-        </a>
+      <!-- Admin Credentials Row (If Applicable) -->
+      @if (shouldShowCredentials(s)) {
+      <div class="credentials-row">
+        @if (s.ownerEmail) {
+        <div class="cred-cell">
+          <span class="cred-k">Email :</span>
+          <span class="cred-v monospace">{{ s.ownerEmail }}</span>
+          <button class="btn-copy-icon" (click)="copyText(s.ownerEmail, 'email-' + s.id, $event)" title="Copier l'email">
+            @if (isCopied('email-' + s.id)) {
+              <span class="badge-copied-text">✓</span>
+            } @else {
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            }
+          </button>
+        </div>
         }
 
-        <button class="action-btn delete" (click)="deleteSaas.emit(s.id)">Suppr.</button>
+        @if (s.ownerPassword) {
+        <div class="cred-cell">
+          <span class="cred-k">Mot de passe :</span>
+          <span class="cred-v monospace">
+            {{ isPasswordVisible(s.id) ? s.ownerPassword : '••••••••••••' }}
+          </span>
+          <button class="btn-toggle-eye" (click)="togglePassword(s.id)" [title]="isPasswordVisible(s.id) ? 'Masquer' : 'Afficher'">
+            @if (isPasswordVisible(s.id)) {
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            }
+          </button>
+          <button class="btn-copy-icon" (click)="copyText(s.ownerPassword, 'pass-' + s.id, $event)" title="Copier le mot de passe">
+            @if (isCopied('pass-' + s.id)) {
+              <span class="badge-copied-text">✓</span>
+            } @else {
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            }
+          </button>
+        </div>
+        }
       </div>
-      <span class="mono-tag">{{ s.prixMensuel }} DT/mois</span>
+      }
+
+      <!-- Card Footer Actions & Price -->
+      <div class="card-footer">
+        <div class="price-container">
+          <span class="price-tag">{{ s.prixMensuel }} DT<span class="price-sub">/mois</span></span>
+        </div>
+
+        <div class="footer-actions">
+          @if (s.connectionString) {
+            <a [href]="s.connectionString" target="_blank" rel="noopener noreferrer" class="btn-card-action btn-open" title="Ouvrir l'application web">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              <span>Ouvrir l'application</span>
+            </a>
+          }
+
+          <button class="btn-card-action btn-delete" (click)="deleteSaas.emit(s.id)" title="Supprimer l'application SaaS">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
     </div>
+    }
   </div>
-  }
-  @empty {
-  <div class="empty-state"
-    style="grid-column:1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; text-align: center; background: var(--bg-white); border: 1px dashed var(--border); border-radius: var(--r);">
-    <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.6" stroke-linecap="round" width="48"
-      height="48" style="opacity: 0.8;">
-      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
-    </svg>
-    <p style="color: var(--text-1); margin: 0; font-size: 17px; font-weight: 600; font-family: 'Syne', sans-serif;">
-      Aucune application SaaS déployée</p>
-    <p style="color: var(--text-3); margin: 0; font-size: 13px;">phpMyAdmin, pgAdmin, WordPress, n8n et plus encore</p>
-    <button (click)="openDeploy.emit({ type: 'saas', name: '' })"
-      style="background: var(--blue); color: white; margin-top: 4px; padding: 8px 20px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">Déployer
-      ma première application</button>
+
+  <!-- ══════════════════ EMPTY STATE ══════════════════ -->
+  @if (filteredInstances().length === 0) {
+  <div class="empty-state-card">
+    <div class="empty-icon-circle">
+      <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#F07A1F" stroke-width="1.8" stroke-linecap="round">
+        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/>
+      </svg>
+    </div>
+    <h3 class="empty-title">
+      {{ searchTerm() || selectedFilter() !== 'ALL' ? 'Aucun résultat trouvé' : 'Aucune application SaaS déployée' }}
+    </h3>
+    <p class="empty-desc">
+      {{ searchTerm() || selectedFilter() !== 'ALL' 
+         ? 'Aucune application ne correspond à vos critères de recherche. Essayez de réinitialiser vos filtres.' 
+         : 'Déployez en un clic vos applications WordPress, n8n, phpMyAdmin, pgAdmin et profitez d\'un hébergement clé en main.' }}
+    </p>
+    @if (searchTerm() || selectedFilter() !== 'ALL') {
+      <button class="btn-empty-reset" (click)="searchTerm.set(''); selectedFilter.set('ALL')">
+        Réinitialiser les filtres
+      </button>
+    } @else {
+      <button class="btn-empty-deploy" (click)="openDeploy.emit({ type: 'saas', name: '' })">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>Déployer ma première application SaaS</span>
+      </button>
+    }
   </div>
   }
 </div>

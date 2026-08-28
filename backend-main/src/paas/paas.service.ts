@@ -10,6 +10,7 @@ import { Catalogue } from 'src/catalogue/entities/catalogue.entity';
 import { WalletService } from 'src/wallet/wallet.service';
 import { EsxiService } from 'src/esxi/esxi.service';
 import { Demande, DemandeStatus } from 'src/demande/entities/demande.entity';
+import { MetricsService } from 'src/metrics/metrics.service';
 
 @Injectable()
 export class PaasService implements OnModuleInit {
@@ -34,6 +35,7 @@ export class PaasService implements OnModuleInit {
         private readonly demandeRepo: Repository<Demande>,
         private readonly walletService: WalletService,
         private readonly esxiService: EsxiService,
+        private readonly metricsService: MetricsService,
     ) { }
 
     async onModuleInit() {
@@ -61,9 +63,11 @@ export class PaasService implements OnModuleInit {
     }
 
     async createDatabase(dto: CreatePaasDto, adminPayerId?: number): Promise<ServicePaaS> {
-        if (!dto?.nomPersonnalise) {
-            throw new BadRequestException('Le champ nomPersonnalise est requis.');
+        const sanitizedName = (dto?.nomPersonnalise || '').trim();
+        if (!sanitizedName || sanitizedName.length < 3 || sanitizedName.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(sanitizedName)) {
+            throw new BadRequestException("Le nom d'instance doit comporter entre 3 et 32 caractères alphanumériques (a-z, 0-9, tirets et underscores uniquement).");
         }
+        dto.nomPersonnalise = sanitizedName;
 
         const catalogue = await this.catalogueRepo.findOne({ where: { id: dto.catalogueId, isActive: true } });
         if (!catalogue) {
@@ -347,7 +351,7 @@ export class PaasService implements OnModuleInit {
             host: this.hostIp,
             username: this.sshUser,
             password: this.sshPass,
-            readyTimeout: 30000,
+            readyTimeout: 3500,
         };
 
         try {
@@ -366,6 +370,9 @@ export class PaasService implements OnModuleInit {
                 } catch (e) { }
 
                 const storageMb = parseInt(diskResult.stdout.trim(), 10) || 0;
+                const cpuNum = parseFloat(String(stats.cpu || '0').replace('%', '')) || 0;
+                const ramNum = parseFloat(String(stats.ramPerc || '0').replace('%', '')) || 0;
+                this.metricsService.recordMetric('PAAS', id, cpuNum, ramNum, storageMb);
 
                 return {
                     containerName,

@@ -6,18 +6,30 @@ export interface ResourceRequest {
     justification: string;
     commentaireAdmin?: string;
     status: 'pending' | 'approved' | 'rejected';
+    isProvisioning?: boolean;
 }
 export interface Admin {
     id: string; email: string; nom: string; prenom: string;
+    telephone?: string | null;
+    mfaStatus?: string;
     entreprise?: {
         nomEntreprise: string;
         identifiantFiscal: string;
+        tailleEntreprise?: string | null;
+        telephone?: string | null;
     };
 }
 
 export interface TeamMember {
     id: string; name: string; email: string; color: string;
     active: boolean; vms: number; services: number; spend: number;
+    telephone?: string | null;
+    mfaStatus?: string;
+    isEmailVerified?: boolean;
+    dateInscrit?: string;
+    prenom?: string;
+    nom?: string;
+    status?: string;
 }
 
 export interface DeployedResource {
@@ -30,7 +42,24 @@ export interface DeployedResource {
 }
 
 export interface WalletTransaction {
-    id: string; desc: string; date: string; type: 'credit' | 'debit'; amount: number; memberName?: string;
+    id: string;
+    refFacture?: string;
+    desc: string;
+    date: string;
+    type: 'credit' | 'debit';
+    amount: number;
+    memberName?: string;
+    catalogName?: string;
+    typeService?: string;
+    catalogue?: {
+        id?: number;
+        nomService?: string;
+        typeService?: string;
+        vcpu?: number;
+        ramMB?: number;
+        stockageGB?: number;
+        prix?: number;
+    } | null;
 }
 
 export interface Activity { type: string; msg: string; time: string; color: string; bg: string; }

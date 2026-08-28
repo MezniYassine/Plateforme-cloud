@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ChangePasswordModalComponent } from '../../../../common/change-password';
@@ -12,10 +12,12 @@ import { AuthService } from '../../../../services/auth-service';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, ChangePasswordModalComponent],
   templateUrl: './profile-tab.html',
+  styleUrls: ['./profile-tab.scss']
 })
 export class ProfileTabComponent implements OnInit {
   showPasswordModal = false;
   profileForm!: FormGroup;
+  isSaving = signal<boolean>(false);
 
   // --- MFA OTP ---
   mfaStatus: 'ACTIVE' | 'DESACTIVE' = 'DESACTIVE';
@@ -32,13 +34,53 @@ export class ProfileTabComponent implements OnInit {
 
   ngOnInit() {
     this.profileForm = this.fb.group({
-      prenom: [this.actualPers?.client?.prenom || '', [Validators.required]],
-      nom: [this.actualPers?.client?.nom || '', [Validators.required]],
-      email: [this.actualPers?.client?.email || '', [Validators.required, Validators.email]],
-      profession: [this.actualPers?.profession || '']
+      prenom: [
+        this.actualPers?.client?.prenom || '',
+        [Validators.required, Validators.minLength(2), Validators.maxLength(50), Validators.pattern(/^[a-zA-ZÀ-ÿ\s\-']+$/)]
+      ],
+      nom: [
+        this.actualPers?.client?.nom || '',
+        [Validators.required, Validators.minLength(2), Validators.maxLength(50), Validators.pattern(/^[a-zA-ZÀ-ÿ\s\-']+$/)]
+      ],
+      email: [
+        this.actualPers?.client?.email || '',
+        [Validators.required, Validators.email, Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
+      ],
+      telephone: [
+        this.actualPers?.client?.telephone || '',
+        [Validators.pattern(/^[0-9\s\-]{8,15}$/)]
+      ],
+      profession: [
+        this.actualPers?.profession || '',
+        [Validators.maxLength(100)]
+      ]
     });
     // Récupérer le statut MFA actuel
     this.mfaStatus = (this.actualPers?.client as any)?.mfaStatus === 'ACTIVE' ? 'ACTIVE' : 'DESACTIVE';
+  }
+
+  isFieldInvalid(field: string): boolean {
+    const control = this.profileForm.get(field);
+    return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  getFieldError(field: string): string {
+    const control = this.profileForm.get(field);
+    if (!control || !control.errors || !(control.dirty || control.touched)) return '';
+    if (control.hasError('required')) return 'Ce champ est obligatoire.';
+    if (control.hasError('minlength')) return `Minimum ${control.errors['minlength'].requiredLength} caractères requis.`;
+    if (control.hasError('maxlength')) return `Maximum ${control.errors['maxlength'].requiredLength} caractères autorisés.`;
+    if (control.hasError('email') || (field === 'email' && control.hasError('pattern'))) return 'Format d\'adresse email invalide.';
+    if (field === 'telephone' && control.hasError('pattern')) return 'Numéro de téléphone invalide (ex: 20 000 000).';
+    if ((field === 'prenom' || field === 'nom') && control.hasError('pattern')) return 'Seules les lettres, espaces et tirets sont autorisés.';
+    return 'Valeur invalide.';
+  }
+
+  getInitials(): string {
+    const p = (this.profileForm?.get('prenom')?.value || this.actualPers?.client?.prenom || '').trim();
+    const n = (this.profileForm?.get('nom')?.value || this.actualPers?.client?.nom || '').trim();
+    if (!p && !n) return 'U';
+    return `${p.charAt(0)}${n.charAt(0)}`.toUpperCase();
   }
 
   /** Étape 1 : demander l'envoi du code OTP */
@@ -71,6 +113,7 @@ export class ProfileTabComponent implements OnInit {
         this.mfaStep = 'success';
         this.mfaLoading = false;
         this.otpCode = '';
+        this.showToastMessage('Double authentification (MFA) activée avec succès !', 'success');
       },
       error: (err) => {
         this.mfaError = err?.error?.message || 'Code incorrect ou expiré.';
@@ -106,10 +149,17 @@ export class ProfileTabComponent implements OnInit {
   }
 
   onUpdateProfile() {
-    if (this.profileForm.valid) {
+    if (this.profileForm.valid && !this.isSaving()) {
+      this.isSaving.set(true);
       this.updateProfile(this.profileForm.value).subscribe({
-        next: () => this.showToastMessage('Profil mis à jour avec succès !', 'success'),
-        error: (err) => this.showToastMessage(err.error.message || 'Erreur lors de la mise à jour', 'error')
+        next: () => {
+          this.isSaving.set(false);
+          this.showToastMessage('Profil mis à jour avec succès !', 'success');
+        },
+        error: (err) => {
+          this.isSaving.set(false);
+          this.showToastMessage(err?.error?.message || 'Erreur lors de la mise à jour', 'error');
+        }
       });
     }
   }

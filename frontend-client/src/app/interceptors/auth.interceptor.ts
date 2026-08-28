@@ -25,10 +25,19 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         catchError((error: HttpErrorResponse) => {
             // Si le serveur répond 401 (Non autorisé/Expiré)
             if (error.status === 401) {
-                if (isPlatformBrowser(platformId)) {
-                    localStorage.removeItem('access_token'); // On supprime le token mort
+                const isAuthEndpoint = req.url.includes('/auth/login') ||
+                                       req.url.includes('/auth/verify-mfa') ||
+                                       req.url.includes('/auth/forgot-password') ||
+                                       req.url.includes('/auth/setup-password') ||
+                                       req.url.includes('/auth/resend-mfa-otp');
+
+                // Si ce n'est pas un endpoint d'authentification (ex: token JWT de session expiré sur API protégée)
+                if (!isAuthEndpoint) {
+                    if (isPlatformBrowser(platformId)) {
+                        localStorage.removeItem('access_token'); // On supprime le token mort
+                    }
+                    router.navigate(['/login']); // On redirige vers la page de connexion
                 }
-                router.navigate(['/']); // On redirige vers l'accueil/login
             }
             return throwError(() => error);
         })

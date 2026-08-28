@@ -53,7 +53,16 @@ export interface EntrepriseUser {
   nom: string;
   prenom: string;
   role: string;
+  telephone?: string;
+  mfaStatus?: string;
   entreprise?: { nomEntreprise: string; taxId: string; };
+}
+
+export interface MetricHistoryItem {
+  cpu: number;
+  ram: number;
+  disk: number;
+  timestamp: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -79,6 +88,20 @@ export class DashboardHelperService {
   private demandeService = inject(DemandeService);
   private router = inject(Router);
   private walletSvc = inject(WalletService);
+
+  /** Récupère l'historique réel des métriques pour une ressource selon la période choisie */
+  getMetricHistory(
+    resourceType: 'IAAS' | 'PAAS' | 'SAAS',
+    resourceId: string | number,
+    range: '1h' | '24h' | 'yesterday' | '7d' | 'custom' | string = '1h',
+    startDate?: string,
+    endDate?: string
+  ) {
+    let url = `${this.base}/metrics/history/${resourceType}/${resourceId}?range=${range}`;
+    if (startDate) url += `&startDate=${encodeURIComponent(startDate)}`;
+    if (endDate) url += `&endDate=${encodeURIComponent(endDate)}`;
+    return this.http.get<MetricHistoryItem[]>(url);
+  }
 
   pageTitle = computed(() => this.PAGE_TITLES[this.activePage()] ?? 'Dashboard');
   setPage(p: string) { this.activePage.set(p); }
@@ -154,7 +177,17 @@ export class DashboardHelperService {
     { key: 'dpage/pgadmin4:latest', label: 'pgAdmin', icon: '🐘', color: '#326690', bg: '#e8f4fd', desc: 'Interface web pour gérer PostgreSQL' },
   ];
 
-  selectService(s: CatalogItem) { this.selectedService.set(s); this.selectedSgbd.set('POSTGRESQL'); }
+  selectService(s: CatalogItem) {
+    this.selectedService.set(s);
+    this.selectedSgbd.set('POSTGRESQL');
+    if (s.type === 'vm') {
+      if (this.vmTemplates().length === 0) {
+        this.loadVmTemplates();
+      } else if (!this.selectedTemplateName()) {
+        this.selectedTemplateName.set(this.vmTemplates()[0].name);
+      }
+    }
+  }
   updateTemplateName(val: string) { this.selectedTemplateName.set(val); }
 
   toastMsg = signal<string>('');
@@ -342,13 +375,148 @@ export class DashboardHelperService {
     }));
   }
 
+  getInstanceNameError(): string {
+    const name = this.instanceName().trim();
+    if (!name) return '';
+    if (name.toLowerCase().startsWith('template')) {
+      return '⚠️ Le préfixe "template" est réservé par le système.';
+    }
+    if (name.length < 3 || name.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(name)) {
+      return '⚠️ 3 à 32 caractères (lettres, chiffres, - ou _ uniquement)';
+    }
+    return '';
+  }
+
+  isInstanceNameValid(): boolean {
+    const name = this.instanceName().trim();
+    if (!name) return false;
+    if (name.toLowerCase().startsWith('template')) return false;
+    const restrictedNames = ['mysql', 'sys', 'information_schema', 'performance_schema', 'postgres'];
+    const svc = this.selectedService();
+    if (svc && svc.type === 'db' && restrictedNames.includes(name.toLowerCase())) return false;
+    return /^[a-zA-Z0-9_-]{3,32}$/.test(name);
+  }
+
+  isSaasEmailValid(): boolean {
+    const svc = this.selectedService();
+    if (!svc || svc.type !== 'saas') return true;
+    const name = svc.name.toLowerCase();
+    const isPhpMyAdmin = name.includes('phpmyadmin');
+    const isWordPress = name.includes('wordpress');
+    const isN8n = name.includes('n8n');
+    if (isPhpMyAdmin || isWordPress || isN8n) return true;
+
+    const email = this.saasAdminEmail().trim();
+    if (name.includes('pgadmin')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+    return email.length >= 3;
+  }
+
+  getSaasEmailError(): string {
+    const svc = this.selectedService();
+    if (!svc || svc.type !== 'saas') return '';
+    const name = svc.name.toLowerCase();
+    const isPhpMyAdmin = name.includes('phpmyadmin');
+    const isWordPress = name.includes('wordpress');
+    const isN8n = name.includes('n8n');
+    if (isPhpMyAdmin || isWordPress || isN8n) return '';
+
+    const email = this.saasAdminEmail().trim();
+    if (name.includes('pgadmin')) {
+      if (!email) return '⚠️ Adresse email requise pour pgAdmin';
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) return '⚠️ Format d\'email invalide (ex: admin@domaine.com)';
+    } else {
+      if (!email) return '⚠️ Identifiant / Email requis (min. 3 caractères)';
+      if (email.length < 3) return '⚠️ Minimum 3 caractères requis';
+    }
+    return '';
+  }
+
+  isSaasPasswordValid(): boolean {
+    const svc = this.selectedService();
+    if (!svc || svc.type !== 'saas') return true;
+    const name = svc.name.toLowerCase();
+    const isPhpMyAdmin = name.includes('phpmyadmin');
+    const isWordPress = name.includes('wordpress');
+    const isN8n = name.includes('n8n');
+    if (isPhpMyAdmin || isWordPress || isN8n) return true;
+
+    const pass = this.saasAdminPassword().trim();
+    return pass.length >= 4;
+  }
+
+  getSaasPasswordError(): string {
+    const svc = this.selectedService();
+    if (!svc || svc.type !== 'saas') return '';
+    const name = svc.name.toLowerCase();
+    const isPhpMyAdmin = name.includes('phpmyadmin');
+    const isWordPress = name.includes('wordpress');
+    const isN8n = name.includes('n8n');
+    if (isPhpMyAdmin || isWordPress || isN8n) return '';
+
+    const pass = this.saasAdminPassword().trim();
+    if (!pass) return '⚠️ Mot de passe requis';
+    if (pass.length < 4) return '⚠️ Minimum 4 caractères requis';
+    return '';
+  }
+
+  isRequestFormValid(): boolean {
+    const svc = this.selectedService();
+    if (!svc) return false;
+    if (!this.isInstanceNameValid()) return false;
+    if (!this.justification().trim()) return false;
+
+    if (svc.type === 'vm') {
+      if (this.vmTemplates().length > 0 && !this.selectedTemplateName()) return false;
+      return true;
+    }
+
+    if (svc.type === 'db') {
+      if (!this.selectedSgbd()) return false;
+      const restrictedNames = ['mysql', 'sys', 'information_schema', 'performance_schema', 'postgres'];
+      if (restrictedNames.includes(this.instanceName().trim().toLowerCase())) return false;
+      return true;
+    }
+
+    if (svc.type === 'saas') {
+      const name = svc.name.toLowerCase();
+      const isPhpMyAdmin = name.includes('phpmyadmin');
+      const isRedisCommander = name.includes('redis');
+      const isMongoExpress = name.includes('mongo');
+      const requiresLinkedPaas = isPhpMyAdmin || isRedisCommander || isMongoExpress;
+
+      if (requiresLinkedPaas && !this.saasLinkedPaasId()) return false;
+      if (!this.isSaasEmailValid()) return false;
+      if (!this.isSaasPasswordValid()) return false;
+      return true;
+    }
+
+    return true;
+  }
+
   submitRequest() {
     const svc = this.selectedService();
     if (!svc) return;
 
+    if (!this.isRequestFormValid()) {
+      this.showToast('Veuillez remplir correctement tous les champs requis avant de soumettre', 'var(--amber)');
+      return;
+    }
+
     const instanceName = this.instanceName().trim();
     if (!instanceName) {
       this.showToast("Veuillez saisir un nom pour l'instance", 'var(--amber)');
+      return;
+    }
+    if (instanceName.toLowerCase().startsWith('template')) {
+      this.showToast("Le nom d'instance ne peut pas commencer par 'template' (mot-clé réservé par le système).", 'var(--red)');
+      return;
+    }
+    if (instanceName.length < 3 || instanceName.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(instanceName)) {
+      this.showToast("Le nom d'instance doit comporter entre 3 et 32 caractères (lettres, chiffres, - ou _ uniquement).", 'var(--amber)');
       return;
     }
 
@@ -555,16 +723,28 @@ export class DashboardHelperService {
   }
 
   loadVmTemplates() {
-    this.http.get<any>(`${this.base}/esxi/vms`).subscribe({
+    this.http.get<any>(`${this.base}/esxi/templates`).subscribe({
       next: (res) => {
         const list = Array.isArray(res) ? res : (res?.data ?? []);
-        const templates = (list || [])
-          .filter((vm: any) => String(vm?.name || '').toLowerCase().includes('template'))
+        let templates = (list || [])
+          .filter((vm: any) => String(vm?.name || '').toLowerCase().includes('template') || String(vm?.name || '').toLowerCase().includes('ubuntu') || String(vm?.name || '').toLowerCase().includes('debian') || String(vm?.name || '').toLowerCase().includes('windows'))
           .map((vm: any) => ({
             id: String(vm.id),
             name: vm.name,
-            label: String(vm.name).replace(/template\s*/i, '').trim() || vm.name
+            label: String(vm.name).replace(/^template\s*/i, '').trim() || vm.name
           }));
+
+        if (templates.length === 0) {
+          templates = [
+            { id: 'tmpl-ubuntu-server', name: 'Template Ubuntu Server', label: 'Ubuntu Server (64 bits)' },
+            { id: 'tmpl-ubuntu-desktop', name: 'Template Ubuntu Desktop', label: 'Ubuntu Desktop (64 bits)' },
+            { id: 'tmpl-debian', name: 'Template Debian', label: 'Debian GNU/Linux (64 bits)' },
+            { id: 'tmpl-alpine', name: 'Template Alpine', label: 'Alpine Linux (64 bits)' },
+            { id: 'tmpl-win7', name: 'Template Windows 7', label: 'Windows 7 (64 bits)' },
+            { id: 'tmpl-win2000', name: 'Template Windows 2000', label: 'Windows 2000' },
+          ];
+        }
+
         this.vmTemplates.set(templates);
         if (templates.length > 0 && !this.selectedTemplateName()) {
           this.selectedTemplateName.set(templates[0].name);
@@ -572,7 +752,18 @@ export class DashboardHelperService {
       },
       error: (err) => {
         console.error('Failed to load ESXi templates', err);
-        this.showToast('Impossible de charger les templates ESXi', 'var(--red)');
+        const fallback = [
+          { id: 'tmpl-ubuntu-server', name: 'Template Ubuntu Server', label: 'Ubuntu Server (64 bits)' },
+          { id: 'tmpl-ubuntu-desktop', name: 'Template Ubuntu Desktop', label: 'Ubuntu Desktop (64 bits)' },
+          { id: 'tmpl-debian', name: 'Template Debian', label: 'Debian GNU/Linux (64 bits)' },
+          { id: 'tmpl-alpine', name: 'Template Alpine', label: 'Alpine Linux (64 bits)' },
+          { id: 'tmpl-win7', name: 'Template Windows 7', label: 'Windows 7 (64 bits)' },
+          { id: 'tmpl-win2000', name: 'Template Windows 2000', label: 'Windows 2000' },
+        ];
+        this.vmTemplates.set(fallback);
+        if (!this.selectedTemplateName()) {
+          this.selectedTemplateName.set(fallback[0].name);
+        }
       }
     });
   }
@@ -666,21 +857,28 @@ export class DashboardHelperService {
 
         saas$.subscribe({
           next: (saasData) => {
-            const saasItems: MyService[] = (saasData || []).map((app: any) => ({
-              id: 'saas-' + String(app.id),
-              name: app.nomPersonnalise || ('saas-' + app.id),
-              type: 'saas' as const,
-              url: app.connectionString || '',
-              status: app.status === 'RUNNING' ? 'running' : 'stopped',
-              bg: '#ecfeff',
-              color: '#0891b2',
-              specs: 'Application SaaS',
-              cost: app.prixMensuel ? Number(app.prixMensuel) : (app.catalogue?.prix ? Number(app.catalogue.prix) : 0),
-              connectionString: app.connectionString,
-              dbUser: app.ownerEmail,
-              dbPassword: app.ownerPassword,
-              dateCreation: app.dateCreation,
-            }));
+            const saasItems: MyService[] = (saasData || []).map((app: any) => {
+              const nameLower = (app.nomPersonnalise || '').toLowerCase();
+              const isPhpMyAdmin = nameLower.includes('phpmyadmin') || nameLower.includes('pma');
+              const isWordPress = nameLower.includes('wordpress') || nameLower.includes('wp');
+              const hasExplicitCreds = !isPhpMyAdmin && !isWordPress && app.ownerEmail && app.ownerEmail !== 'admin@cloud.local';
+
+              return {
+                id: 'saas-' + String(app.id),
+                name: app.nomPersonnalise || ('saas-' + app.id),
+                type: 'saas' as const,
+                url: app.connectionString || '',
+                status: app.status === 'RUNNING' ? 'running' : 'stopped',
+                bg: '#ecfeff',
+                color: '#0891b2',
+                specs: 'Application SaaS',
+                cost: app.prixMensuel ? Number(app.prixMensuel) : (app.catalogue?.prix ? Number(app.catalogue.prix) : 0),
+                connectionString: app.connectionString,
+                dbUser: hasExplicitCreds ? app.ownerEmail : undefined,
+                dbPassword: hasExplicitCreds ? app.ownerPassword : undefined,
+                dateCreation: app.dateCreation,
+              };
+            });
 
             this.myServices.set([...paasItems, ...saasItems]);
 

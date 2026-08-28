@@ -1,168 +1,215 @@
-<div class="invite-page">
-  <nav>
-    <a class="logo" routerLink="/">
-      <div class="logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
+<div class="invite-page-container">
+
+  <!-- Ambient Glows -->
+  <div class="ambient-glow glow-orange"></div>
+  <div class="ambient-glow glow-blue"></div>
+
+  <!-- ══════════════════ NAVBAR ══════════════════ -->
+  <header class="invite-navbar">
+    <a class="invite-logo" [routerLink]="['/']">
+      <div class="logo-icon-box">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F07A1F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="6 3 18 3 22 12 18 21 6 21 2 12" />
         </svg>
       </div>
-      <span class="logo-text">Dynamix Cloud</span>
+      <span class="logo-brand-text">Dynamix <span>Cloud</span></span>
     </a>
-  </nav>
+  </header>
 
-  <div class="page-body">
-    <div class="card" *ngIf="!success">
-      <div class="card-banner">
-        <div class="banner-company">
-          <svg viewBox="0 0 24 24">
+  <!-- ══════════════════ MAIN CONTENT ══════════════════ -->
+  <main class="invite-main-content">
+
+    @if (!success) {
+    <div class="invite-card">
+
+      <!-- Banner Header -->
+      <div class="card-header-banner">
+        <div class="company-badge">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="7" width="20" height="14" rx="2" />
             <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
           </svg>
-          Dynamix
+          <span>Dynamix Cloud</span>
         </div>
-        <div class="banner-title">{{ pageTitle }}</div>
-        <div class="banner-sub">
-          {{ pageSubtitle }}
-        </div>
+        <h1 class="banner-title">{{ pageTitle }}</h1>
+        <p class="banner-sub">{{ pageSubtitle }}</p>
       </div>
 
-      <form class="form-body" (ngSubmit)="submit()">
-        <div class="steps">
-          <div class="step-item done">
-            <div class="step-circle">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" width="11" height="11">
+      <!-- Form Body -->
+      <form class="invite-form-body" (ngSubmit)="submit()">
+
+        <!-- Stepper Indicator -->
+        <div class="form-stepper">
+          <div class="stepper-item step-done">
+            <div class="stepper-circle">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <span class="step-label">Invitation</span>
+            <span class="stepper-label">Invitation</span>
           </div>
-          <div class="step-item active">
-            <div class="step-circle">2</div>
-            <span class="step-label">Mot de passe</span>
+          <div class="stepper-line active"></div>
+          <div class="stepper-item step-active">
+            <div class="stepper-circle">2</div>
+            <span class="stepper-label">Sécurité</span>
           </div>
-          <div class="step-item">
-            <div class="step-circle">3</div>
-            <span class="step-label">Acces</span>
+          <div class="stepper-line"></div>
+          <div class="stepper-item">
+            <div class="stepper-circle">3</div>
+            <span class="stepper-label">Accès</span>
           </div>
         </div>
 
-        <div class="section-head">{{ sectionTitle }}</div>
+        @if (errorMessage) {
+          <div class="alert-error-box">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
 
-        <div class="alert error-alert" *ngIf="errorMessage">{{ errorMessage }}</div>
-
-        <div class="field">
-          <label class="field-label" for="password">Mot de passe</label>
-          <div class="field-wrap">
-            <div class="fi">
-              <svg viewBox="0 0 24 24">
-                <rect x="3" y="11" width="18" height="11" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            </div>
+        <!-- Password Field -->
+        <div class="form-group">
+          <label class="form-label" for="password">Nouveau mot de passe <span class="req-star">*</span></label>
+          <div class="input-icon-wrap" [class.is-valid]="passwordValid" [class.is-error]="password && !passwordValid">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2" class="field-icon">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
             <input
               id="password"
               name="password"
               [type]="showPassword ? 'text' : 'password'"
               [(ngModel)]="password"
-              placeholder="Creez un mot de passe securise"
+              placeholder="Créez un mot de passe robuste"
               autocomplete="new-password"
-              [class.valid]="passwordValid"
-              [class.error]="password && !passwordValid"
             />
-            <button class="pw-toggle" type="button" (click)="showPassword = !showPassword">
-              <svg viewBox="0 0 24 24" *ngIf="!showPassword">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              <svg viewBox="0 0 24 24" *ngIf="showPassword">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                <line x1="1" y1="1" x2="23" y2="23" />
-              </svg>
+            <button class="btn-toggle-eye" type="button" (click)="showPassword = !showPassword" [title]="showPassword ? 'Masquer' : 'Afficher'">
+              @if (!showPassword) {
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+              } @else {
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+              }
             </button>
           </div>
 
-          <div class="strength-wrap" *ngIf="password">
-            <div class="strength-bars">
-              <div class="sbar" [class.weak]="passwordScore >= 1 && passwordScore <= 1" [class.medium]="passwordScore >= 2" [class.strong]="passwordScore >= 3"></div>
-              <div class="sbar" [class.medium]="passwordScore >= 2" [class.strong]="passwordScore >= 3"></div>
-              <div class="sbar" [class.strong]="passwordScore >= 3"></div>
-              <div class="sbar" [class.strong]="passwordScore >= 4"></div>
+          <!-- Strength Meter -->
+          @if (password) {
+            <div class="strength-meter-wrap">
+              <div class="strength-bars">
+                <div class="sbar" [class.active-weak]="passwordScore >= 1" [class.active-med]="passwordScore >= 2" [class.active-str]="passwordScore >= 3"></div>
+                <div class="sbar" [class.active-med]="passwordScore >= 2" [class.active-str]="passwordScore >= 3"></div>
+                <div class="sbar" [class.active-str]="passwordScore >= 3"></div>
+                <div class="sbar" [class.active-str]="passwordScore >= 4"></div>
+              </div>
+              <span class="strength-text" [class.str-weak]="passwordScore <= 1" [class.str-med]="passwordScore === 2" [class.str-good]="passwordScore >= 3">
+                Force : <strong>{{ strengthLabel }}</strong>
+              </span>
             </div>
-            <div class="strength-label">{{ strengthLabel }}</div>
-          </div>
+          }
 
-          <div class="pw-rules">
-            <div class="pw-rule" [class.ok]="rules.len">Au moins 8 caracteres</div>
-            <div class="pw-rule" [class.ok]="rules.upper">Une lettre majuscule</div>
-            <div class="pw-rule" [class.ok]="rules.num">Un chiffre</div>
-            <div class="pw-rule" [class.ok]="rules.special">Un caractere special (!&#64;#$...)</div>
+          <!-- Security Requirements -->
+          <div class="security-rules-grid">
+            <div class="rule-chip" [class.is-ok]="rules.len">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>8+ caractères</span>
+            </div>
+            <div class="rule-chip" [class.is-ok]="rules.upper">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>1 Majuscule</span>
+            </div>
+            <div class="rule-chip" [class.is-ok]="rules.num">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>1 Chiffre</span>
+            </div>
+            <div class="rule-chip" [class.is-ok]="rules.special">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>1 Symbole (!@#...)</span>
+            </div>
           </div>
         </div>
 
-        <div class="field">
-          <label class="field-label" for="confirmPassword">Confirmer le mot de passe</label>
-          <div class="field-wrap">
-            <div class="fi">
-              <svg viewBox="0 0 24 24">
-                <rect x="3" y="11" width="18" height="11" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            </div>
+        <!-- Confirm Password Field -->
+        <div class="form-group">
+          <label class="form-label" for="confirmPassword">Confirmer le mot de passe <span class="req-star">*</span></label>
+          <div class="input-icon-wrap" [class.is-valid]="confirmValid" [class.is-error]="confirmPassword && !confirmValid">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2" class="field-icon">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
             <input
               id="confirmPassword"
               name="confirmPassword"
               [type]="showConfirmPassword ? 'text' : 'password'"
               [(ngModel)]="confirmPassword"
-              placeholder="Repetez votre mot de passe"
+              placeholder="Retapez votre mot de passe"
               autocomplete="new-password"
-              [class.valid]="confirmValid"
-              [class.error]="confirmPassword && !confirmValid"
             />
-            <button class="pw-toggle" type="button" (click)="showConfirmPassword = !showConfirmPassword">
-              <svg viewBox="0 0 24 24">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
+            <button class="btn-toggle-eye" type="button" (click)="showConfirmPassword = !showConfirmPassword" [title]="showConfirmPassword ? 'Masquer' : 'Afficher'">
+              @if (!showConfirmPassword) {
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+              } @else {
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+              }
             </button>
           </div>
-          <div class="field-error show" *ngIf="confirmPassword && !confirmValid">
-            Les mots de passe ne correspondent pas.
-          </div>
+          @if (confirmPassword && !confirmValid) {
+            <span class="field-error-text">Les mots de passe ne correspondent pas.</span>
+          }
         </div>
 
-        <div class="form-divider"></div>
-
-        <button class="btn-submit" type="submit" [disabled]="!canSubmit">
-          <svg viewBox="0 0 24 24" *ngIf="!loading">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            <path d="M9 12l2 2 4-4" />
-          </svg>
-          <span>{{ loading ? 'Traitement en cours...' : submitLabel }}</span>
+        <!-- Submit Button -->
+        <button class="btn-submit-action" type="submit" [disabled]="!canSubmit">
+          @if (loading) {
+            <span class="spinner-mini"></span>
+            <span>Traitement en cours...</span>
+          } @else {
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path d="M9 12l2 2 4-4" />
+            </svg>
+            <span>{{ submitLabel }}</span>
+          }
         </button>
 
-        <div class="expiry-notice">
-          {{ expiryText }}
+        <div class="expiry-footer-note">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>{{ expiryText }}</span>
         </div>
+
       </form>
     </div>
+    }
 
-    <div class="success-card show" *ngIf="success">
-      <div class="success-icon">
-        <svg viewBox="0 0 24 24">
+    <!-- Success Card Screen -->
+    @if (success) {
+    <div class="success-card-view">
+      <div class="success-icon-badge">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           <path d="M9 12l2 2 4-4" />
         </svg>
       </div>
-      <div class="success-title">{{ isForgotPassword ? 'Mot de passe reinitialise !' : 'Compte active avec succes !' }}</div>
-      <div class="success-sub">Votre mot de passe est configure. Redirection vers la connexion...</div>
-      <div class="redirect-bar">
-        <div class="redirect-fill"></div>
+      <h2 class="success-title">{{ isForgotPassword ? 'Mot de passe réinitialisé !' : 'Compte activé avec succès !' }}</h2>
+      <p class="success-subtitle">Votre mot de passe a été configuré. Vous allez être redirigé vers la page de connexion...</p>
+      
+      <div class="redirect-progress-bar">
+        <div class="redirect-fill-track"></div>
       </div>
-      <div class="redirect-label">Redirection en cours...</div>
+      <span class="redirect-label">Redirection automatique...</span>
     </div>
-  </div>
-</div>
+    }
 
+  </main>
+
+  <!-- ══════════════════ FOOTER ══════════════════ -->
+  <footer class="invite-footer">
+    <span>&copy; 2026 Dynamix Cloud. Plateforme d'infrastructure & services cloud.</span>
+  </footer>
+
+</div>

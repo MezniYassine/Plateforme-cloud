@@ -1,19 +1,21 @@
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { environment } from '../../environments/environment';
 
 export interface User {
-  nom: String,
-  prenom: String,
+  nom: string;
+  prenom: string;
+  email?: string;
   entreprise?: {
-    nomEntreprise: String,
-  }
+    nomEntreprise: string;
+  };
 }
 
 @Component({
   selector: 'app-suspended',
-  imports: [],
+  imports: [CommonModule, RouterLink],
   standalone: true,
   templateUrl: './suspanded.html',
   styleUrl: './suspanded.scss',
@@ -21,10 +23,13 @@ export interface User {
 export class Suspended implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
   actualUser = signal<User | null>(null);
-  ngOnInit() {
 
-    this.loadCurrentUser();
+  ngOnInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadCurrentUser();
+    }
   }
 
   logout() {

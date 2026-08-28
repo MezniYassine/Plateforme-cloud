@@ -9,6 +9,8 @@ export interface Tenant {
   vms: number; tenantId: string;
   mfaStatus?: string;
   providers?: string[];
+  telephone?: string | null;
+  tailleEntreprise?: string | null;
   users?: Tenant[];
 }
 

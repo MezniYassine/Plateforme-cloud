@@ -71,8 +71,12 @@
       <div class="detail-row"><span class="detail-key">Admin</span><span class="detail-val">{{ t.firstName }} {{
           t.lastName }}</span></div>
       <div class="detail-row"><span class="detail-key">Email</span><span class="detail-val">{{ t.email }}</span></div>
+      <div class="detail-row"><span class="detail-key">Téléphone</span><span class="detail-val mono">{{ t.telephone || '—' }}</span></div>
       <div class="detail-row"><span class="detail-key">Raison sociale</span><span class="detail-val">{{ t.company
           }}</span></div>
+      @if (t.accountType === 'entreprise') {
+      <div class="detail-row"><span class="detail-key">Taille entreprise</span><span class="detail-val">{{ t.tailleEntreprise || '—' }}</span></div>
+      }
       <div class="detail-row"><span class="detail-key">ID Fiscal</span><span class="detail-val mono">{{ t.taxId
           }}</span></div>
       <div class="detail-row"><span class="detail-key">Date création</span><span class="detail-val">{{

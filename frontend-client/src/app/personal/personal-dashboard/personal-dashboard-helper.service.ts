@@ -11,6 +11,7 @@ export interface Personal {
     nom: string;
     prenom: string;
     email: string;
+    telephone?: string;
   };
 }
 
@@ -74,6 +75,13 @@ export interface SaasInstance {
     ramPercentage: string;
     usedStorageMb: number;
   };
+}
+
+export interface MetricHistoryItem {
+  cpu: number;
+  ram: number;
+  disk: number;
+  timestamp: string;
 }
 
 export interface VmCatalogue {
@@ -189,7 +197,7 @@ export class PersonalDashboardHelperService {
   }
 
   getVmTemplates() {
-    return this.http.get<{ status: string; count: number; data: EsxiVm[] }>(`${this.base}/esxi/vms`);
+    return this.http.get<{ status: string; count: number; data: EsxiVm[] }>(`${this.base}/esxi/templates`);
   }
 
   catalogTabs = signal([{ key: 'all', label: 'Tout' }, { key: 'vm', label: 'VM' }, { key: 'db', label: 'Bases' }, { key: 'saas', label: 'SaaS' }]);
@@ -316,14 +324,30 @@ export class PersonalDashboardHelperService {
   }
 
   createRandomBars(): number[] {
-    return Array.from({ length: 20 }, () => Math.floor(Math.random() * 85) + 10);
+    return Array.from({ length: 20 }, () => 0);
   }
 
-  /** Génère count labels HH:MM en remontant dans le temps par intervalles de 4s */
+  /** Récupère l'historique réel des métriques pour une ressource selon la période choisie */
+  getMetricHistory(
+    resourceType: 'IAAS' | 'PAAS' | 'SAAS',
+    resourceId: string | number,
+    range: '1h' | '24h' | 'yesterday' | '7d' | 'custom' | string = '1h',
+    startDate?: string,
+    endDate?: string
+  ) {
+    let url = `${this.base}/metrics/history/${resourceType}/${resourceId}?range=${range}`;
+    if (startDate) url += `&startDate=${encodeURIComponent(startDate)}`;
+    if (endDate) url += `&endDate=${encodeURIComponent(endDate)}`;
+    return this.http.get<{ cpu: number; ram: number; disk: number; timestamp: string }[]>(url);
+  }
+
+  /** Génère count labels HH:MM répartis sur une échelle de 1 heure (60 minutes) */
   createBarTimes(count = 20): string[] {
     const now = new Date();
+    const totalDurationMs = 60 * 60 * 1000; // 1 heure = 3600000 ms
+    const stepMs = count > 1 ? totalDurationMs / (count - 1) : 0;
     return Array.from({ length: count }, (_, i) => {
-      const d = new Date(now.getTime() - (count - 1 - i) * 4000);
+      const d = new Date(now.getTime() - (count - 1 - i) * stepMs);
       return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     });
   }

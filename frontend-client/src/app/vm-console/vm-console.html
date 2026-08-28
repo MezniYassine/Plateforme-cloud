@@ -1,42 +1,233 @@
-<div class="console-wrapper">
-    <h2 class="console-title">Console Active : {{ vm?.nomPersonnalise || 'Chargement...' }}</h2>
+<div class="console-page" [class.is-fullscreen]="isFullscreen">
+  
+  <!-- ═══════════════════════════════════════════════════════════════
+       TOP CONSOLE NAVIGATION & CONTROLS BAR
+  ═══════════════════════════════════════════════════════════════ -->
+  <header class="console-header">
+    <div class="header-left">
+      <a class="btn-back" [routerLink]="returnUrl" title="Retourner au tableau de bord">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        <span>Retour</span>
+      </a>
+
+      <div class="vm-identity">
+        <div class="os-icon-box" [attr.data-os]="vm?.os?.toLowerCase()">
+          <img [src]="getOsLogo(vm?.os)" [alt]="vm?.os || 'OS'" class="os-logo" />
+        </div>
+        <div class="vm-text">
+          <div class="vm-title-row">
+            <h1 class="vm-name">{{ vm?.nomPersonnalise || 'Chargement de la VM...' }}</h1>
+            <div class="status-pill" [class.running]="vm?.status === 'RUNNING'" [class.stopped]="vm?.status === 'STOPPED'">
+              <span class="pulse-dot"></span>
+              <span>{{ vm?.status === 'RUNNING' ? 'En marche' : vm?.status === 'PROVISIONING' ? 'En cours...' : 'Arrêtée' }}</span>
+            </div>
+          </div>
+          <span class="vm-sub">{{ vm?.os || 'VMware ESXi' }} · Instance Cloud</span>
+        </div>
+      </div>
+    </div>
 
     @if (vm) {
-    <div class="vm-metadata-bar">
-        <div class="meta-item">
-            <span class="meta-label">Machine :</span>
-            <span class="meta-value">{{ vm.nomPersonnalise }}</span>
-        </div>
-        <div class="meta-item">
-            <span class="meta-label">OS :</span>
-            <span class="meta-value">{{ vm.os }}</span>
-        </div>
-        <div class="meta-item">
-            <span class="meta-label">Statut :</span>
-            <span class="status-badge" [class.running]="vm.status === 'RUNNING'">
-                <span class="dot"></span> {{ vm.status }}
-            </span>
-        </div>
+    <div class="header-specs">
+      <!-- IP Chip -->
+      <div class="spec-chip ip-chip" (click)="copyIp(vm.ip, $event)" [title]="'Cliquer pour copier l\'IP : ' + vm.ip">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        <span>{{ vm.ip || 'En attente IP' }}</span>
+        @if (copiedIp) {
+          <span class="badge-copied">Copié !</span>
+        }
+      </div>
+
+      <!-- Specs Pills -->
+      <div class="spec-chip">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="4" y="4" width="16" height="16" rx="2"/>
+          <rect x="9" y="9" width="6" height="6"/>
+        </svg>
+        <span>{{ vm.vCPU }} vCPU</span>
+      </div>
+
+      <div class="spec-chip">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        <span>{{ vm.ramGB }} Go RAM</span>
+      </div>
     </div>
     }
 
-    <div id="wmks-container"></div>
+    <!-- Top Action Buttons -->
+    <div class="header-actions">
+      @if (vm?.status === 'RUNNING') {
+        <button class="btn-ctrl-alt-del" (click)="sendCad()" title="Envoyer la combinaison Ctrl + Alt + Suppr à la machine">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="10" rx="2"/>
+            <circle cx="12" cy="5" r="2"/>
+            <path d="M12 7v4"/>
+          </svg>
+          <span>Ctrl + Alt + Suppr</span>
+        </button>
 
-    <div class="console-actions">
-        <div class="left-actions">
-            @if (vm?.status === 'RUNNING') {
-            <button class="btn btn-danger" (click)="changerStatut('stop')">
-                <i class="icon-power"></i> Forcer l'arrêt
-            </button>
-            } @else {
-            <button class="btn btn-success" (click)="changerStatut('start')">
-                <i class="icon-power"></i> Démarrer
-            </button>
-            }
-        </div>
+        <button class="btn-restart" [disabled]="isPowering" (click)="changerStatut('restart')" title="Redémarrer la machine virtuelle (Reset)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          <span>Redémarrer</span>
+        </button>
 
-        <div class="right-actions">
-            <button class="btn btn-primary" [routerLink]="returnUrl">← Retour</button>
-        </div>
+        <button class="btn-suspend" [disabled]="isPowering" (click)="changerStatut('suspend')" title="Mettre en pause / interrompre la machine (Suspend)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <rect x="6" y="4" width="3.5" height="16" rx="1"/>
+            <rect x="14.5" y="4" width="3.5" height="16" rx="1"/>
+          </svg>
+          <span>Interrompre</span>
+        </button>
+
+        <button class="btn-power btn-stop" [disabled]="isPowering" (click)="changerStatut('stop')" title="Éteindre la VM">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+            <line x1="12" y1="2" x2="12" y2="12"/>
+          </svg>
+          <span>{{ isPowering ? 'Arrêt...' : 'Éteindre' }}</span>
+        </button>
+      } @else if (vm) {
+        <button class="btn-power btn-start" [disabled]="isPowering" (click)="changerStatut('start')" title="Démarrer la VM">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+            <line x1="12" y1="2" x2="12" y2="12"/>
+          </svg>
+          <span>{{ isPowering ? 'Démarrage...' : 'Démarrer' }}</span>
+        </button>
+      }
+
+      <button class="btn-icon" (click)="reconnecterConsole()" title="Actualiser et reconnecter le flux vidéo">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="23 4 23 10 17 10"/>
+          <polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+      </button>
+
+      <button class="btn-icon" (click)="toggleFullscreen()" [title]="isFullscreen ? 'Quitter le plein écran' : 'Plein écran'">
+        @if (isFullscreen) {
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+          </svg>
+        } @else {
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          </svg>
+        }
+      </button>
     </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       MAIN CONSOLE VIEWPORT / SCREEN CONTAINER
+  ═══════════════════════════════════════════════════════════════ -->
+  <main class="console-main" id="wmks-frame-wrapper">
+    <div class="terminal-window">
+      
+      <!-- Terminal Header Bar -->
+      <div class="terminal-bar">
+        <div class="window-controls">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <div class="terminal-title">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#F07A1F" stroke-width="2">
+            <polyline points="4 17 10 11 4 5"/>
+            <line x1="12" y1="19" x2="20" y2="19"/>
+          </svg>
+          <span>VMware ESXi WebMKS · {{ vm?.nomPersonnalise || 'Session Console' }}</span>
+        </div>
+        <div class="terminal-right-badge">
+          @if (vm?.status === 'RUNNING') {
+            <span class="console-online-tag">● VNC Connecté</span>
+          } @else {
+            <span class="console-offline-tag">○ Hors Ligne</span>
+          }
+        </div>
+      </div>
+
+      <!-- Terminal Body / Canvas Holder -->
+      <div class="terminal-body">
+        
+        <!-- WebMKS VNC Output Container -->
+        <div id="wmks-container"></div>
+
+        <!-- Offline State View (when VM is stopped) -->
+        @if (vm && vm.status !== 'RUNNING' && !isLoading) {
+          <div class="console-offline-overlay">
+            <div class="offline-card">
+              <div class="offline-icon-circle">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round">
+                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+                  <line x1="12" y1="2" x2="12" y2="12"/>
+                </svg>
+              </div>
+              <h2 class="offline-title">La machine virtuelle est arrêtée</h2>
+              <p class="offline-desc">
+                La console interactive WebMKS VNC nécessite que la machine virtuelle soit sous tension.
+              </p>
+              <button class="btn-start-large" [disabled]="isPowering" (click)="changerStatut('start')">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span>{{ isPowering ? 'Démarrage en cours...' : 'Démarrer la machine virtuelle' }}</span>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Loading State View (Initial Data Fetch Only) -->
+        @if (isLoading) {
+          <div class="console-loading-overlay">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Chargement de la console...</div>
+          </div>
+        }
+
+        <!-- Error State View -->
+        @if (consoleError) {
+          <div class="console-error-overlay">
+            <div class="error-icon">⚠️</div>
+            <div class="error-title">Erreur de console</div>
+            <p class="error-desc">{{ consoleError }}</p>
+            <a class="btn-back-error" [routerLink]="returnUrl">Retourner au tableau de bord</a>
+          </div>
+        }
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       FOOTER HINTS & STATUS BAR
+  ═══════════════════════════════════════════════════════════════ -->
+  <footer class="console-footer">
+    <div class="hint-block">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#94a3b8" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+      <span>Cliquez dans le cadre noir pour capturer clavier et souris. Cliquez en dehors pour libérer le curseur.</span>
+    </div>
+
+    <div class="footer-brand">
+      <span>Dynamix Cloud Console · VMware vSphere Hypervisor</span>
+    </div>
+  </footer>
+
 </div>

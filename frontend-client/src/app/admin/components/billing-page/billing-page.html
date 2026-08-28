@@ -1,99 +1,148 @@
-<!-- ── STATS ROW ── -->
-<div class="stats-row">
-  @for (s of billingStats(); track s.label) {
-  <div class="stat-card">
-    <div class="stat-header">
-      <span class="stat-label">{{ s.label }}</span>
-      <div class="stat-icon" [style.background]="s.bg">
-        <svg viewBox="0 0 24 24" [attr.stroke]="s.color" fill="none" stroke-width="1.8" stroke-linecap="round">
-          <line x1="12" y1="1" x2="12" y2="23" />
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+<div class="billing-container">
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       TOP 4 METRICS CARDS (ORANGE & ANTHRACITE DYNAMIX PALETTE)
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="stats-row">
+    @for (card of billingStats(); track $index) {
+    <div class="metric-card" [class]="card.cardClass">
+      <div class="metric-icon-wrap" [class]="card.icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          @if (card.icon === 'money') {
+            <circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8"/>
+          } @else if (card.icon === 'invoice') {
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          } @else if (card.icon === 'users') {
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          } @else {
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          }
         </svg>
       </div>
+      <div>
+        <div class="metric-number">{{ card.val }}</div>
+        <div class="metric-label">{{ card.label }}</div>
+        <div class="metric-sub">{{ card.sub }}</div>
+      </div>
     </div>
-    <div class="stat-value">{{ s.val }}</div>
-    <div class="stat-footer"><span class="stat-period">{{ s.sub }}</span></div>
+    }
   </div>
-  }
-</div>
 
-<!-- ── MAIN GRID ── -->
-<div class="main-grid">
-
-  <!-- ── LEFT: INVOICES TABLE ── -->
-  <div class="section-card billing-card">
-    <!-- Header -->
+  <!-- ═══════════════════════════════════════════════════════════════
+       INVOICES TABLE (FULL WIDTH)
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="section-card">
     <div class="card-header">
       <div>
-        <div class="card-title">Factures clients</div>
-        <div class="card-sub">Facturation automatique — Entreprises &amp; Particuliers</div>
+        <div class="card-title">Factures & Consommations Clients</div>
+        <div class="card-sub">Suivi de la facturation mensuelle — Entreprises et Particuliers</div>
       </div>
-      <button class="btn-sm" (click)="exportCsv()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exporter CSV
-      </button>
+      <div class="header-actions">
+        <button class="btn-export-excel" (click)="exportExcel()" title="Exporter sous format Excel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="13" height="13">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Exporter Excel
+        </button>
+        <button class="btn-export" (click)="exportCsv()" title="Exporter sous format CSV">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Exporter CSV
+        </button>
+      </div>
     </div>
 
-    <!-- Filter Bar -->
+    <!-- Filter Toolbar -->
     <div class="billing-toolbar">
       <div class="filter-tabs">
         <button class="filter-tab" [class.active]="activeFilter() === 'all'" (click)="setFilter('all')">
           Tous <span class="tab-count">{{ billingInvoices().length }}</span>
         </button>
         <button class="filter-tab" [class.active]="activeFilter() === 'entreprise'" (click)="setFilter('entreprise')">
-          <span class="type-dot ent"></span> Entreprise
-          <span class="tab-count">{{ enterpriseCount() }}</span>
+          🏢 Entreprise <span class="tab-count">{{ enterpriseCount() }}</span>
         </button>
         <button class="filter-tab" [class.active]="activeFilter() === 'personnel'" (click)="setFilter('personnel')">
-          <span class="type-dot pers"></span> Particulier
-          <span class="tab-count">{{ personnelCount() }}</span>
+          👤 Particulier <span class="tab-count">{{ personnelCount() }}</span>
         </button>
       </div>
+
       <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
         <input class="search-input" type="text" placeholder="Rechercher un client, email…" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" />
       </div>
     </div>
 
-    <!-- Table -->
+    <!-- Invoices Data Table -->
     <div class="table-wrap">
       @if (filteredInvoices().length === 0) {
-        <div class="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" width="40" height="40"><path d="M9 14l-5-5 5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
-          <p>Aucune facture trouvée</p>
+        <div style="text-align: center; padding: 40px; color: #94a3b8;">
+          <p>Aucune facture trouvée correspondant aux critères de recherche.</p>
         </div>
-      }
-      @if (filteredInvoices().length > 0) {
+      } @else {
       <table class="billing-table">
         <thead>
           <tr>
-            <th>Client</th>
+            <th>Client / Compte</th>
             <th>Type</th>
+            <th>Réf. Facture</th>
             <th>Période</th>
             <th>Ressources</th>
             <th>Montant</th>
             <th>Statut</th>
-            <th></th>
+            <th style="width: 40px;"></th>
           </tr>
         </thead>
         <tbody>
           @for (inv of filteredInvoices(); track inv.id) {
           <tr class="invoice-row" [class.expanded]="isExpanded(inv.id)" (click)="toggleRow(inv.id)">
+            <!-- Account & Shiny Avatar -->
             <td>
               <div class="cell-company">
-                <div class="company-avatar" [style.background]="h.colorFor(inv.id)">{{ h.getInitials(inv.client) }}</div>
+                <div class="shiny-avatar" [class.ent-avatar]="inv.clientType === 'entreprise'" [class.pers-avatar]="inv.clientType === 'personnel'">
+                  @if (inv.clientType === 'entreprise') {
+                    <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                      <path d="M9 22v-4h6v4"/>
+                    </svg>
+                  } @else {
+                    <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  }
+                  <span class="avatar-initials">{{ h.getInitials(inv.client) }}</span>
+                </div>
                 <div>
                   <div class="company-name">{{ inv.client }}</div>
                   <div class="company-email">{{ inv.email }}</div>
                 </div>
               </div>
             </td>
+
+            <!-- Type -->
             <td>
               <span class="type-badge" [class]="inv.clientType">
-                {{ inv.clientType === 'entreprise' ? '🏢 Entreprise' : '👤 Particulier' }}
+                {{ inv.clientType === 'entreprise' ? 'Entreprise' : 'Particulier' }}
               </span>
             </td>
+
+            <!-- Réf. Facture -->
+            <td class="ref-cell">
+              <span class="ref-badge">{{ inv.ref || '—' }}</span>
+            </td>
+
+            <!-- Period -->
             <td class="period-cell">{{ inv.period }}</td>
+
+            <!-- Resources -->
             <td>
               <div class="resources-cell">
                 @if (inv.vmCount > 0) {
@@ -110,28 +159,39 @@
                 }
               </div>
             </td>
+
+            <!-- Amount -->
             <td class="amount-cell">{{ inv.amount }}</td>
+
+            <!-- Paid Status -->
             <td>
               <span class="badge" [class]="inv.paid ? 'approved' : 'pending'">
-                <div class="badge-dot"></div>{{ inv.paid ? 'Payée' : 'En attente' }}
+                <span class="badge-dot"></span>
+                {{ inv.paid ? 'Payée' : 'En attente' }}
               </span>
             </td>
-            <td class="expand-cell">
+
+            <!-- Expand chevron -->
+            <td>
               <div class="expand-btn" [class.open]="isExpanded(inv.id)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
               </div>
             </td>
           </tr>
 
-          <!-- ── EXPANDED TRANSACTIONS ── -->
+          <!-- ── EXPANDED TRANSACTIONS DRAWER ── -->
           @if (isExpanded(inv.id)) {
           <tr class="transactions-row">
-            <td colspan="7">
+            <td colspan="8">
               <div class="transactions-panel">
                 <div class="transactions-header">
                   <span class="tx-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    Détail des transactions ({{ inv.transactions.length }})
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    Détail des transactions réelles ({{ inv.transactions.length }})
                   </span>
                 </div>
                 <div class="tx-list">
@@ -139,11 +199,14 @@
                   <div class="tx-item">
                     <div class="tx-icon" [class]="tx.typeService === 'IAAS' ? 'vm' : 'svc'">
                       @if (tx.typeService === 'IAAS') {
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                       } @else {
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
                       }
                     </div>
+                    @if (tx.ref) {
+                      <span class="ref-badge">{{ tx.ref }}</span>
+                    }
                     <div class="tx-info">
                       <span class="tx-name">{{ tx.name }}</span>
                       @if (tx.catalogName) {
@@ -165,44 +228,6 @@
         </tbody>
       </table>
       }
-    </div>
-  </div>
-
-  <!-- ── RIGHT COLUMN ── -->
-  <div class="right-col">
-    <!-- Revenue Chart -->
-    <div class="section-card">
-      <div class="card-header"><div class="card-title">Revenus mensuels</div></div>
-      <div class="infra-list" style="padding:16px">
-        <div class="chart-bars">
-          @for (b of revenueChart(); track $index) {
-          <div class="chart-bar-wrap">
-            <div class="chart-bar" [style.height.px]="b.pct" [title]="b.val + ' DT'"></div>
-            <div class="chart-label">{{ b.label }}</div>
-          </div>
-          }
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-light)">
-          <span style="font-size:12.5px;color:var(--text-muted)">{{ currentMonthTotal().label }}</span>
-          <span style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green)">{{ currentMonthTotal().val }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Pricing Grid -->
-    <div class="section-card">
-      <div class="card-header">
-        <div class="card-title">Grille tarifaire</div>
-        <button class="btn-sm primary" (click)="navigateTo.emit('catalogue')">Modifier</button>
-      </div>
-      <div class="infra-list" style="padding:14px 16px">
-        @for (r of pricingRules(); track r.label) {
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-light)">
-          <span style="font-size:13px;color:var(--text-secondary)">{{ r.label }}</span>
-          <span class="mono-tag">{{ r.price }}</span>
-        </div>
-        }
-      </div>
     </div>
   </div>
 

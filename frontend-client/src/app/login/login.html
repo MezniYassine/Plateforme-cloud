@@ -1,223 +1,210 @@
-<div class="page">
+<!-- ══ WRAPPER ══ -->
+<div class="login-page" (mousemove)="onMouseMove($event)" (mouseleave)="onMouseLeave()">
 
-  <!-- ══ LEFT PANEL ══ -->
-  <div class="left-panel">
-    <a class="logo" [routerLink]="['']">
-      <div class="logo-icon">
-        <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Cloud" />
+  <!-- ══ CUBE GRID BACKGROUND (mirrors home page) ══ -->
+  <div class="cube-grid-bg">
+    @for (tile of tiles; track $index) {
+      <div class="cube-tile" [class.cube-glow]="tile.glow"
+           [style.animation-duration]="(4 + ($index % 7) * 0.7) + 's'"
+           [style.animation-delay]="($index % 13) * 0.3 + 's'">
       </div>
-      <span class="logo-text">Dynamix Cloud</span>
-    </a>
-
-    <div class="left-content">
-      <h2 class="left-headline">
-        Bienvenue<br>sur votre <span class="hl-teal">cloud<br>souverain.</span>
-      </h2>
-      <p class="left-sub">
-        Votre infrastructure. Vos données. Vos règles. Connectez-vous pour gérer vos ressources cloud en toute liberté.
-      </p>
-
-      <div class="feature-list">
-        <div class="feature-item">
-          <div class="feature-check" style="background:rgba(26,86,232,0.15);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <span class="feature-text"><strong>JWT + MFA</strong> — authentification à double facteur sécurisée</span>
-        </div>
-        <div class="feature-item">
-          <div class="feature-check" style="background:rgba(0,212,255,0.1);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <span class="feature-text"><strong>RBAC</strong> — accès adapté à votre rôle exact</span>
-        </div>
-
-        <div class="feature-item">
-          <div class="feature-check" style="background:rgba(0,212,255,0.1);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <span class="feature-text"><strong>Données souveraines</strong> — hébergées localement</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="stats-row">
-      <div class="stat">
-        <span class="stat-val">99.<span>9</span>%</span>
-        <span class="stat-lbl">SLA de disponibilité</span>
-      </div>
-      <div class="stat">
-        <span class="stat-val"><span>100</span>%</span>
-        <span class="stat-lbl">Souveraineté</span>
-      </div>
-      <div class="stat">
-        <span class="stat-val"><span>24</span>/7</span>
-        <span class="stat-lbl">Support expert</span>
-      </div>
-    </div>
+    }
   </div>
 
-  <!-- ══ RIGHT PANEL ══ -->
-  <div class="right-panel">
-    <div class="form-card">
-      <h1 class="form-title">Connexion</h1>
-      <p class="form-subtitle">Connectez-vous à votre espace Dynamix</p>
+  <!-- ══ GLASS CARD ══ -->
+  <div class="card-perspective">
+    <div class="card-tilt" [style.transform]="cardTransform">
 
-      <!-- ══ UNIFIED LOGIN ══ -->
-      <div class="form-panel active">
-        <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
-          <div class="fields-grid">
-            <div class="field-group">
-              <label class="field-label">Adresse e-mail</label>
-              <div class="field-wrap">
-                <div class="fi">
-                  <svg viewBox="0 0 24 24">
-                    <rect x="2" y="4" width="20" height="16" rx="2" />
-                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                  </svg>
-                </div>
-                <input type="email" formControlName="email" placeholder="email@example.com" autocomplete="email">
-              </div>
+      <!-- Traveling light beams -->
+      <div class="beams">
+        <div class="beam beam-top"></div>
+        <div class="beam beam-right"></div>
+        <div class="beam beam-bottom"></div>
+        <div class="beam beam-left"></div>
+        <div class="corner c1"></div>
+        <div class="corner c2"></div>
+        <div class="corner c3"></div>
+        <div class="corner c4"></div>
+      </div>
+
+      <!-- Glass card body -->
+      <div class="card-body">
+        <div class="card-grid-pattern"></div>
+
+        <!-- ── Logo & Header ── -->
+        <div class="card-header">
+          <a class="card-logo-link" [routerLink]="['']">
+            <div class="card-logo-icon">
+              <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Cloud" />
             </div>
+          </a>
+          <h1 class="card-title">Bienvenue</h1>
+          <p class="card-sub">Connectez-vous à votre espace Dynamix Cloud</p>
+        </div>
 
-            <div class="field-group">
-              <label class="field-label">Mot de passe</label>
-              <div class="field-wrap">
-                <div class="fi">
-                  <svg viewBox="0 0 24 24">
-                    <rect x="3" y="11" width="18" height="11" rx="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                </div>
-                <input [type]="showPassword() ? 'text' : 'password'" formControlName="password"
-                  placeholder="············" autocomplete="current-password">
-                <button type="button" class="field-visibility-btn" (click)="togglePassword()"
-                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+        <!-- ── Login Form ── -->
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="card-form">
 
-                  @if (showPassword()) {
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          @if (errorMsg) {
+            <div class="login-error-alert">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span>{{ errorMsg }}</span>
+            </div>
+          }
+
+          <!-- Email -->
+          <div class="field-group" [class.focused]="focusedField === 'email'">
+            <div class="field-wrap">
+              <div class="fi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                </svg>
+              </div>
+              <input
+                type="email"
+                formControlName="email"
+                placeholder="Adresse e-mail"
+                autocomplete="email"
+                (focus)="focusedField='email'"
+                (blur)="focusedField=''"
+              />
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="field-group" [class.focused]="focusedField === 'password'">
+            <div class="field-wrap">
+              <div class="fi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
+              <input
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="Mot de passe"
+                autocomplete="current-password"
+                (focus)="focusedField='password'"
+                (blur)="focusedField=''"
+              />
+              <button type="button" class="toggle-pw" (click)="togglePassword()" [attr.aria-label]="showPassword() ? 'Masquer' : 'Afficher'">
+                @if (showPassword()) {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
-                  } @else {
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
                   </svg>
-                  }
-                </button>
-              </div>
-            </div>
-
-            <div class="row-options">
-              <button type="button" class="forgot-link" (click)="openForgotPassword()">Mot de passe oublié ?</button>
+                }
+              </button>
             </div>
           </div>
 
-          <button type="submit" class="btn-submit btn-enterprise" [class.loading]="isLoading"
-            [disabled]="isLoading || loginForm.invalid">
+          <!-- Forgot password -->
+          <div class="row-opts">
+            <button type="button" class="forgot-link" (click)="openForgotPassword()">Mot de passe oublié ?</button>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="btn-submit" [class.loading]="isLoading" [disabled]="isLoading || loginForm.invalid">
+            <div class="btn-shimmer"></div>
             <div class="spinner"></div>
-            <span class="btn-label">Se connecter</span>
+            <span class="btn-label">
+              Se connecter
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-arrow">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
+            </span>
           </button>
 
-          <div class="divider">
-            <span>ou</span>
-          </div>
+          <!-- Divider -->
+          <div class="divider"><span>ou</span></div>
 
-          <button type="button" class="btn-submit btn-google" (click)="loginWithGoogle()">
-            <svg class="google-icon" viewBox="0 0 24 24">
-              <path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                fill="#4285F4" />
-              <path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853" />
-              <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                fill="#FBBC05" />
-              <path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                fill="#EA4335" />
+          <!-- Google -->
+          <button type="button" class="btn-social" (click)="loginWithGoogle()">
+            <svg class="social-icon" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            <span class="btn-label">Continuer avec Google</span>
+            <span>Continuer avec Google</span>
           </button>
 
-          <button type="button" class="btn-submit btn-microsoft" (click)="loginWithMicrosoft()">
-            <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M11.4 2H2v9.4h9.4V2z" fill="#f25022" />
-              <path d="M22 2h-9.4v9.4H22V2z" fill="#7fba00" />
-              <path d="M11.4 12.6H2V22h9.4v-9.4z" fill="#00a4ef" />
-              <path d="M22 12.6h-9.4V22H22v-9.4z" fill="#ffb900" />
+          <!-- Microsoft -->
+          <button type="button" class="btn-social" (click)="loginWithMicrosoft()">
+            <svg class="social-icon" viewBox="0 0 24 24">
+              <path d="M11.4 2H2v9.4h9.4V2z" fill="#f25022"/>
+              <path d="M22 2h-9.4v9.4H22V2z" fill="#7fba00"/>
+              <path d="M11.4 12.6H2V22h9.4v-9.4z" fill="#00a4ef"/>
+              <path d="M22 12.6h-9.4V22H22v-9.4z" fill="#ffb900"/>
             </svg>
-            <span class="btn-label">Continuer avec Microsoft</span>
+            <span>Continuer avec Microsoft</span>
           </button>
+
+          <!-- Sign up -->
+          <p class="bottom-link">Pas encore de compte ? <a routerLink="/signup">Inscrivez-vous</a></p>
+
         </form>
+      </div><!-- /card-body -->
+    </div><!-- /card-tilt -->
+  </div><!-- /card-perspective -->
 
-        <p class="bottom-link">Vous n'avez pas encore de compte ? <a routerLink="/signup">Inscrivez-vous ici</a></p>
-      </div>
+</div><!-- /login-page -->
 
-    </div>
-  </div>
-</div>
 
-<!-- ══ MFA MODAL ══ -->
+<!-- ══ FORGOT PASSWORD MODAL ══ -->
 <div class="modal-overlay" [class.show]="forgotMode">
   <div class="mfa-modal forgot-modal">
     @if (!forgotSent) {
-    <h3 class="mfa-title">Réinitialiser le mot de passe</h3>
-    <p class="mfa-sub">Entrez votre adresse e-mail et nous vous enverrons un lien pour choisir un nouveau mot de passe.</p>
-
-    <form [formGroup]="forgotForm" (ngSubmit)="requestPasswordReset()">
-      <div class="field-group forgot-field">
-        <label class="field-label">Adresse e-mail</label>
-        <div class="field-wrap">
-          <div class="fi">
-            <svg viewBox="0 0 24 24">
-              <rect x="2" y="4" width="20" height="16" rx="2" />
-              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-            </svg>
+      <h3 class="mfa-title">Réinitialiser le mot de passe</h3>
+      <p class="mfa-sub">Entrez votre adresse e-mail et nous vous enverrons un lien pour choisir un nouveau mot de passe.</p>
+      <form [formGroup]="forgotForm" (ngSubmit)="requestPasswordReset()">
+        <div class="field-group forgot-field">
+          <label class="field-label">Adresse e-mail</label>
+          <div class="field-wrap">
+            <div class="fi">
+              <svg viewBox="0 0 24 24">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+            </div>
+            <input type="email" formControlName="email" placeholder="email@example.com" autocomplete="email">
           </div>
-          <input type="email" formControlName="email" placeholder="email@example.com" autocomplete="email">
         </div>
-      </div>
-
-      <button type="submit" class="btn-verify" [disabled]="forgotLoading || forgotForm.invalid">
-        {{ forgotLoading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation' }}
-      </button>
-    </form>
-
-    <button type="button" class="modal-secondary" (click)="closeForgotPassword()">Retour à la connexion</button>
+        <button type="submit" class="btn-verify" [disabled]="forgotLoading || forgotForm.invalid">
+          {{ forgotLoading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation' }}
+        </button>
+      </form>
+      <button type="button" class="modal-secondary" (click)="closeForgotPassword()">Retour à la connexion</button>
     } @else {
-    <div class="mfa-icon">
-      <svg viewBox="0 0 24 24">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        <path d="M9 12l2 2 4-4" />
-      </svg>
-    </div>
-    <h3 class="mfa-title">Vérifiez vos e-mails</h3>
-    <p class="mfa-sub">Si un compte existe avec cette adresse, un lien de réinitialisation a été envoyé.</p>
-    <button type="button" class="btn-verify" (click)="closeForgotPassword()">Terminé</button>
+      <div class="mfa-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>
+      </div>
+      <h3 class="mfa-title">Vérifiez vos e-mails</h3>
+      <p class="mfa-sub">Si un compte existe avec cette adresse, un lien de réinitialisation a été envoyé.</p>
+      <button type="button" class="btn-verify" (click)="closeForgotPassword()">Terminé</button>
     }
   </div>
 </div>
 
+<!-- ══ MFA MODAL ══ -->
 <div class="modal-overlay" [class.show]="showMFA" id="mfa-modal">
   <div class="mfa-modal">
     <div class="mfa-icon">
-      <svg viewBox="0 0 24 24">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        <path d="M9 12l2 2 4-4" />
-      </svg>
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>
     </div>
     <h3 class="mfa-title">Vérification MFA</h3>
-    <p class="mfa-sub">Un code à 6 chiffres a été envoyé à votre adresse e-mail. Vérifiez votre boîte de réception.</p>
-
+    <p class="mfa-sub">Un code à 6 chiffres a été envoyé à votre adresse e-mail.</p>
     <div class="otp-row">
       <input class="otp-input" type="text" maxlength="1" id="otp1" (input)="onOtpInput($event, 1)" (paste)="onOtpPaste($event)" (keydown.enter)="submitMFA()">
       <input class="otp-input" type="text" maxlength="1" id="otp2" (input)="onOtpInput($event, 2)" (paste)="onOtpPaste($event)" (keydown.enter)="submitMFA()">
@@ -226,13 +213,9 @@
       <input class="otp-input" type="text" maxlength="1" id="otp5" (input)="onOtpInput($event, 5)" (paste)="onOtpPaste($event)" (keydown.enter)="submitMFA()">
       <input class="otp-input" type="text" maxlength="1" id="otp6" (input)="onOtpInput($event, 6)" (paste)="onOtpPaste($event)" (keydown.enter)="submitMFA()">
     </div>
-
     @if (mfaError) {
-      <div style="margin-bottom:14px;font-size:13px;color:#dc2626;font-weight:500;">
-        {{ mfaError }}
-      </div>
+      <div style="margin-bottom:14px;font-size:13px;color:#ef4444;font-weight:500;">{{ mfaError }}</div>
     }
-
     <button class="btn-verify" (click)="submitMFA()" [disabled]="mfaLoading">
       {{ mfaLoading ? 'Vérification...' : 'Vérifier et se connecter' }}
     </button>
@@ -240,10 +223,10 @@
   </div>
 </div>
 
-<!-- ══ TOAST NOTIFICATION ══ -->
+<!-- ══ TOAST ══ -->
 @if (toastMsg()) {
-<div class="toast show" role="status" aria-live="polite">
-  <div class="toast-dot" [style.background]="toastMsg()?.color"></div>
-  <span>{{ toastMsg()?.text }}</span>
-</div>
+  <div class="toast show" role="status" aria-live="polite">
+    <div class="toast-dot" [style.background]="toastMsg()?.color"></div>
+    <span>{{ toastMsg()?.text }}</span>
+  </div>
 }

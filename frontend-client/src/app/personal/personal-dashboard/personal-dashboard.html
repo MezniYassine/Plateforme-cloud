@@ -12,75 +12,82 @@
       </div>
     </div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">Principal</div>
-      <div class="nav-item" [class.active]="activeTab() === 'overview'" (click)="switchTab('overview')">
-        <svg viewBox="0 0 24 24">
-          <rect x="3" y="3" width="7" height="7" />
-          <rect x="14" y="3" width="7" height="7" />
-          <rect x="14" y="14" width="7" height="7" />
-          <rect x="3" y="14" width="7" height="7" />
-        </svg>
-        Vue d'ensemble
+    <div class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Principal</div>
+        <div class="nav-item" [class.active]="activeTab() === 'overview'" (click)="switchTab('overview')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+          Vue d'ensemble
+        </div>
+        <div class="nav-item" [class.active]="activeTab() === 'iaas'" (click)="switchTab('iaas')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="5" rx="2" />
+            <rect x="2" y="11" width="20" height="5" rx="2" />
+          </svg>
+          Mes VMs (IaaS)
+          @if (vms().length > 0) {
+            <span class="nav-pill">{{ vms().length }}</span>
+          }
+        </div>
+        <div class="nav-item" [class.active]="activeTab() === 'paas'" (click)="switchTab('paas')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3" />
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+          </svg>
+          Services PaaS
+          @if (paasInstances().length > 0) {
+            <span class="nav-pill">{{ paasInstances().length }}</span>
+          }
+        </div>
+        <div class="nav-item" [class.active]="activeTab() === 'saas'" (click)="switchTab('saas')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+          </svg>
+          Applications SaaS
+          @if (saasInstances().length > 0) {
+            <span class="nav-pill">{{ saasInstances().length }}</span>
+          }
+        </div>
       </div>
-      <div class="nav-item" [class.active]="activeTab() === 'iaas'" (click)="switchTab('iaas')">
-        <svg viewBox="0 0 24 24">
-          <rect x="2" y="3" width="20" height="5" rx="2" />
-          <rect x="2" y="11" width="20" height="5" rx="2" />
-        </svg>
-        Mes VMs (IaaS)
-        <span class="nav-pill">{{ vms().length }}</span>
-      </div>
-      <div class="nav-item" [class.active]="activeTab() === 'paas'" (click)="switchTab('paas')">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-        Services PaaS
-        <span class="nav-pill">{{ paasInstances().length }}</span>
-      </div>
-      <div class="nav-item" [class.active]="activeTab() === 'saas'" (click)="switchTab('saas')">
-        <svg viewBox="0 0 24 24">
-          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
-        </svg>
-        Applications SaaS
-        <span class="nav-pill">{{ saasInstances().length }}</span>
-      </div>
-    </div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">Mon compte</div>
-      <div class="nav-item" [class.active]="activeTab() === 'monitor'" (click)="switchTab('monitor')">
-        <svg viewBox="0 0 24 24">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-        </svg>
-        Monitoring
-      </div>
-      <div class="nav-item" [class.active]="activeTab() === 'billing'" (click)="switchTab('billing')">
-        <svg viewBox="0 0 24 24">
-          <line x1="12" y1="1" x2="12" y2="23" />
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-        Facturation &amp; Wallet
-      </div>
-      <div class="nav-item" [class.active]="activeTab() === 'profile'" (click)="switchTab('profile')">
-        <svg viewBox="0 0 24 24">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-        Mon profil
+      <div class="sidebar-section">
+        <div class="sidebar-label">Mon compte</div>
+        <div class="nav-item" [class.active]="activeTab() === 'monitor'" (click)="switchTab('monitor')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+          Monitoring
+        </div>
+        <div class="nav-item" [class.active]="activeTab() === 'billing'" (click)="switchTab('billing')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" />
+            <line x1="1" y1="10" x2="23" y2="10" />
+          </svg>
+          Facturation &amp; Wallet
+        </div>
+        <div class="nav-item" [class.active]="activeTab() === 'profile'" (click)="switchTab('profile')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          Mon profil
+        </div>
       </div>
     </div>
 
     <div class="sidebar-footer">
-      <div class="user-card">
-        <div class="user-av"
-          style="border-radius:9px; background:linear-gradient(135deg,var(--blue),#60a5fa); display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; color:#fff;">
+      <div class="user-card" (click)="switchTab('profile')">
+        <div class="user-av">
           {{ actualPers()?.client?.nom?.charAt(0) }}{{ actualPers()?.client?.prenom?.charAt(0) }}
         </div>
-        <div>
-          <div class="user-name">{{ actualPers ()?.client?.nom }} {{ actualPers()?.client?.prenom }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ actualPers()?.client?.nom }} {{ actualPers()?.client?.prenom }}</div>
           <div class="user-email">{{ actualPers()?.client?.email }}</div>
         </div>
       </div>
@@ -103,28 +110,23 @@
         <div class="tb-bread">Personnel · Espace Cloud Dynamix</div>
       </div>
       <div class="tb-right">
-        <div class="wallet-chip" (click)="switchTab('billing')">
-          <svg viewBox="0 0 24 24">
-            <rect x="1" y="4" width="22" height="16" rx="2" />
-            <line x1="1" y1="10" x2="23" y2="10" />
-          </svg>
-          <div>
-            <div class="wallet-label">Solde</div>
-            <div class="wallet-amount">{{ h.walletSolde().toFixed(3) }} {{ h.walletDevise() }}</div>
+        <div class="wallet-chip" (click)="switchTab('billing')" title="Gérer le Wallet & Facturation">
+          <div class="wallet-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="2" y="5" width="20" height="14" rx="2" />
+              <line x1="2" y1="10" x2="22" y2="10" />
+              <circle cx="17" cy="15" r="1.2" fill="currentColor" />
+            </svg>
           </div>
-        </div>
-        <div class="tb-btn">
-          <svg viewBox="0 0 24 24">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-          <div class="notif-dot"></div>
-        </div>
-        <div class="tb-btn">
-          <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="8" r="4" />
-            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-          </svg>
+          <div class="wallet-info">
+            <span class="wallet-label">Solde disponible</span>
+            <span class="wallet-amount">{{ h.walletSolde().toFixed(3) }} <span class="wallet-currency">{{ h.walletDevise() }}</span></span>
+          </div>
+          <div class="wallet-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </div>
         </div>
       </div>
     </div>
@@ -147,15 +149,17 @@
       <app-paas-tab [paasInstances]="paasInstances()" (openDeploy)="handleOpenDeploy($event)"
         (deletePaas)="deletePaas($event)" (openUpgrade)="openUpgradeModal($event, 'paas')">
       </app-paas-tab>
-      }@if (activeTab() === 'saas') {
+      }
+
+      @if (activeTab() === 'saas') {
       <app-saas-tab [saasInstances]="saasInstances()" (openDeploy)="handleOpenDeploy($event)"
-        (deleteSaas)="deleteSaas($event)" (openUpgrade)="openUpgradeModal($event, 'saas')">
+        (deleteSaas)="deleteSaas($event)">
       </app-saas-tab>
       }
 
       @if (activeTab() === 'monitor') {
       <app-monitor-tab [vms]="vms()" [monitorBars]="monitorBars()" [monitorBarTimes]="monitorBarTimes()"
-        [lastRefresh]="lastRefresh()" />
+        [monitorHistory]="monitorHistory()" [lastRefresh]="lastRefresh()" />
       }
 
       @if (activeTab() === 'billing') {
@@ -174,14 +178,34 @@
 <div class="modal-ov" [class.show]="isDeployModalOpen()" (click)="onOverlayClick($event)">
   <div class="modal">
     <div class="modal-head">
-      <div>
-        <div class="modal-title">{{ deployType() === 'vm' ? 'Déployer une VM' : deployType() === 'saas' ? 'Déployer une
-          application SaaS' : 'Déployer ' + deployName() }}</div>
-        <div class="modal-sub">{{ deployType() === 'vm' ? 'Infrastructure as a Service — VMware ESXi' : deployType() ===
-          'saas' ? 'Software as a Service — Application clé en main' : 'Platform / Software as a Service' }}</div>
+      <div class="modal-head-left">
+        <div class="modal-badge-icon">
+          @if (deployType() === 'vm') {
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+              <line x1="6" y1="6" x2="6.01" y2="6"/>
+              <line x1="6" y1="18" x2="6.01" y2="18"/>
+            </svg>
+          } @else if (deployType() === 'paas') {
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+          } @else {
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/>
+            </svg>
+          }
+        </div>
+        <div>
+          <div class="modal-title">{{ deployType() === 'vm' ? 'Déployer une Machine Virtuelle' : deployType() === 'saas' ? 'Déployer une Application SaaS' : 'Déployer ' + deployName() }}</div>
+          <div class="modal-sub">{{ deployType() === 'vm' ? 'Infrastructure as a Service (IaaS) · VMware ESXi' : deployType() === 'saas' ? 'Software as a Service · Déploiement managé' : 'Platform as a Service · Base de données managée' }}</div>
+        </div>
       </div>
-      <button class="modal-x" (click)="closeModal()">
-        <svg viewBox="0 0 24 24">
+      <button class="modal-x" (click)="closeModal()" title="Fermer">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
@@ -191,43 +215,89 @@
     <div class="modal-body">
       @if (deployType() === 'vm') {
 
-      <!-- â”€â”€ STEPPER â”€â”€ -->
+      <!-- ── STEPPER ── -->
       <div class="wizard-stepper">
         <div class="wz-step" [class.active]="deployStep() >= 1" [class.done]="deployStep() > 1">
           <div class="wz-num">
             @if(deployStep() > 1){
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
             } @else { 1 }
           </div>
-          <div class="wz-label">Caractéristiques</div>
+          <div class="wz-label">Nom & Système d'exploitation</div>
         </div>
         <div class="wz-line" [class.done]="deployStep() > 1"></div>
         <div class="wz-step" [class.active]="deployStep() >= 2">
           <div class="wz-num">2</div>
-          <div class="wz-label">Plan IaaS</div>
+          <div class="wz-label">Plan IaaS & Ressources</div>
         </div>
       </div>
 
       @if (deployStep() === 1) {
       <div class="field">
-        <div class="field-label">Nom de l'instance</div>
-        <input type="text" placeholder="ex: prod-web-01" [value]="deployVmName()"
-          (input)="updateDeployName($any($event.target).value)">
+        <div class="field-label-row">
+          <div class="field-label">Nom de l'instance</div>
+          <span class="field-char-count" [class.count-limit]="deployVmName().length >= 32">
+            {{ deployVmName().length }}/32
+          </span>
+        </div>
+        <div class="input-with-icon">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/>
+            <line x1="6" y1="18" x2="6.01" y2="18"/>
+          </svg>
+          <input type="text" maxlength="32" placeholder="ex: prod-web-01" [value]="deployVmName()"
+            (input)="updateDeployName($any($event.target).value)">
+        </div>
+        <div class="field-hint-row">
+          <span class="field-hint" [class.hint-error]="deployVmName().length > 0 && !isDeployNameValid()">
+            @if (deployVmName().length > 0 && !isDeployNameValid()) {
+              {{ getDeployNameError() }}
+            } @else {
+              Format requis : 3 à 32 caractères (a-z, 0-9, -, _)
+            }
+          </span>
+        </div>
       </div>
+
       <div class="field">
-        <div class="field-label">Système d'exploitation</div>
-        <select (change)="updateTemplateName($any($event.target).value)" [disabled]="vmTemplates().length === 0">
-          @if (vmTemplates().length === 0) {
-          <option value="">Aucun template disponible</option>
-          } @else {
+        <div class="field-label-row">
+          <div class="field-label">Système d'exploitation</div>
+          <button class="btn-refresh-templates" (click)="loadVmTemplates()" title="Recharger les templates ESXi">
+            <svg [class.spinning]="isLoadingTemplates()" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <polyline points="23 4 23 10 17 10"/>
+              <polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            <span>{{ isLoadingTemplates() ? 'Recherche...' : 'Actualiser' }}</span>
+          </button>
+        </div>
+
+        <div class="os-cards-grid">
           @for (template of vmTemplates(); track template.id) {
-          <option [value]="template.name" [selected]="template.name === selectedTemplateName()">{{ template.label }}
-          </option>
+          <div class="os-card" [class.selected]="selectedTemplateName() === template.name" (click)="selectTemplate(template.name)">
+            <div class="os-card-icon">
+              <img [src]="getOsLogo(template.name)" [alt]="template.label" style="width:28px;height:28px;object-fit:contain;" />
+            </div>
+
+            <div class="os-card-info">
+              <span class="os-card-title">{{ template.label }}</span>
+              <span class="os-card-sub">Template VMware ESXi</span>
+            </div>
+
+            @if (selectedTemplateName() === template.name) {
+            <div class="os-check-badge">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            }
+          </div>
           }
-          }
-        </select>
+        </div>
       </div>
       }
 
@@ -301,9 +371,30 @@
 
       @if (deployStep() === 1) {
       <div class="field">
-        <div class="field-label">Nom de l'instance</div>
-        <input type="text" placeholder="ex: db-prod-01" [value]="deployVmName()"
-          (input)="updateDeployName($any($event.target).value)">
+        <div class="field-label-row">
+          <div class="field-label">Nom de l'instance</div>
+          <span class="field-char-count" [class.count-limit]="deployVmName().length >= 32">
+            {{ deployVmName().length }}/32
+          </span>
+        </div>
+        <div class="input-with-icon">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+          <input type="text" maxlength="32" placeholder="ex: db-prod-01" [value]="deployVmName()"
+            (input)="updateDeployName($any($event.target).value)">
+        </div>
+        <div class="field-hint-row">
+          <span class="field-hint" [class.hint-error]="deployVmName().length > 0 && !isDeployNameValid()">
+            @if (deployVmName().length > 0 && !isDeployNameValid()) {
+              {{ getDeployNameError() }}
+            } @else {
+              Format requis : 3 à 32 caractères (a-z, 0-9, -, _)
+            }
+          </span>
+        </div>
       </div>
       <div class="field">
         <div class="field-label">Type de base de données</div>
@@ -396,9 +487,28 @@
 
       @if (deployStep() === 1 || deployType() === 'saas') {
       <div class="field">
-        <div class="field-label">Nom de l'application</div>
-        <input type="text" placeholder="ex: mon-wordpress" [value]="deployVmName()"
-          (input)="updateDeployName($any($event.target).value)">
+        <div class="field-label-row">
+          <div class="field-label">Nom de l'application</div>
+          <span class="field-char-count" [class.count-limit]="deployVmName().length >= 32">
+            {{ deployVmName().length }}/32
+          </span>
+        </div>
+        <div class="input-with-icon">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/>
+          </svg>
+          <input type="text" maxlength="32" placeholder="ex: mon-wordpress" [value]="deployVmName()"
+            (input)="updateDeployName($any($event.target).value)">
+        </div>
+        <div class="field-hint-row">
+          <span class="field-hint" [class.hint-error]="deployVmName().length > 0 && !isDeployNameValid()">
+            @if (deployVmName().length > 0 && !isDeployNameValid()) {
+              {{ getDeployNameError() }}
+            } @else {
+              Format requis : 3 à 32 caractères (a-z, 0-9, -, _)
+            }
+          </span>
+        </div>
       </div>
       <div class="field">
         <div class="field-label">Type d'application</div>
@@ -440,27 +550,56 @@
       @if (selectedSaasApp() === 'phpmyadmin/phpmyadmin:latest' ||
       selectedSaasApp() === 'mongo-express:latest' || selectedSaasApp() === 'rediscommander/redis-commander:latest') {
       <div class="field">
-        <div class="field-label">Base de données liée </div>
-        <select (change)="saasLinkedPaasId.set($any($event.target).value ? +$any($event.target).value : null)">
-          <option value="">Aucune (standalone)</option>
-          @for (p of getCompatiblePaas(selectedSaasApp()); track p.id) {
-          <option [value]="p.id">{{ p.nomPersonnalise }} ({{ p.typeSgbd }})</option>
-          }
-        </select>
+        <div class="field-label">Base de données liée</div>
+        <div class="input-with-icon">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+          <select (change)="saasLinkedPaasId.set($any($event.target).value ? +$any($event.target).value : null)">
+            <option value="">Aucune (standalone)</option>
+            @for (p of getCompatiblePaas(selectedSaasApp()); track p.id) {
+            <option [value]="p.id">{{ p.nomPersonnalise }} ({{ p.typeSgbd }})</option>
+            }
+          </select>
+        </div>
       </div>
       }
 
       @if (selectedSaasApp() === 'dpage/pgadmin4:latest' ||
-      selectedSaasApp() === 'mongo-express:latest' || selectedSaasApp() === 'rediscommander/redis-commander:latest') {
+      selectedSaasApp() === 'mongo-express:latest' || selectedSaasApp() === 'rediscommander/redis-commander:latest' || selectedSaasApp() === 'n8nio/n8n:latest') {
       <div class="field">
-        <div class="field-label">Email admin / Nom d'utilisateur</div>
-        <input type="email" placeholder="admin@example.com ou admin" [value]="saasAdminEmail()"
-          (input)="saasAdminEmail.set($any($event.target).value)">
+        <div class="field-label">Email admin / Nom d'utilisateur <span style="color:#dc2626">*</span></div>
+        <div class="input-with-icon">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          <input type="email" placeholder="admin@example.com ou admin" [value]="saasAdminEmail()"
+            (input)="saasAdminEmail.set($any($event.target).value)">
+        </div>
+        @if (saasAdminEmail().length > 0 && !isSaasEmailValid()) {
+          <div class="field-hint-row">
+            <span class="field-hint hint-error">{{ getSaasEmailError() }}</span>
+          </div>
+        }
       </div>
       <div class="field">
-        <div class="field-label">Mot de passe admin</div>
-        <input type="password" placeholder="Mot de passe" [value]="saasAdminPassword()"
-          (input)="saasAdminPassword.set($any($event.target).value)">
+        <div class="field-label">Mot de passe admin <span style="color:#dc2626">*</span></div>
+        <div class="input-with-icon">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input type="password" placeholder="Mot de passe (min. 4 caractères)" [value]="saasAdminPassword()"
+            (input)="saasAdminPassword.set($any($event.target).value)">
+        </div>
+        @if (saasAdminPassword().length > 0 && !isSaasPasswordValid()) {
+          <div class="field-hint-row">
+            <span class="field-hint hint-error">{{ getSaasPasswordError() }}</span>
+          </div>
+        }
       </div>
       }
       }
@@ -518,7 +657,7 @@
     <div class="modal-foot">
       @if ((deployType() === 'vm' || deployType() === 'paas') && deployStep() === 1) {
       <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
-      <button class="btn btn-primary" style="margin-left:auto" (click)="goToStep2()">
+      <button class="btn btn-primary" style="margin-left:auto" [disabled]="!isDeployNameValid()" (click)="goToStep2()">
         Suivant
         <svg viewBox="0 0 24 24">
           <line x1="5" y1="12" x2="19" y2="12" />
@@ -531,7 +670,7 @@
         <span class="cost-label">Coût estimé</span>
         <span class="cost-val">~{{costPreview()}} DT/mois</span>
       </div>
-      <button class="btn btn-primary" [disabled]="isDeploying()" (click)="confirmDeploy()">
+      <button class="btn btn-primary" [disabled]="isDeploying() || !isDeployValid()" (click)="confirmDeploy()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
         </svg>
@@ -549,7 +688,7 @@
         <span class="cost-label">Coût estimé</span>
         <span class="cost-val">~{{costPreview()}} DT/mois</span>
       </div>
-      <button class="btn btn-primary" [disabled]="isDeploying() || !selectedPlan()" (click)="confirmDeploy()">
+      <button class="btn btn-primary" [disabled]="isDeploying() || !isDeployValid()" (click)="confirmDeploy()">
         <svg viewBox="0 0 24 24">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
@@ -561,7 +700,7 @@
         <span class="cost-val">~{{costPreview()}} DT/mois</span>
       </div>
       <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
-      <button class="btn btn-primary" style="margin-left:8px" [disabled]="isDeploying()" (click)="confirmDeploy()">
+      <button class="btn btn-primary" style="margin-left:8px" [disabled]="isDeploying() || !isDeployValid()" (click)="confirmDeploy()">
         <svg viewBox="0 0 24 24">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>

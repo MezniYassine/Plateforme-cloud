@@ -1,169 +1,344 @@
-<div class="stat-row">
-  <div class="stat-card">
-    <div class="sc-top">
-      <span class="sc-label">VMs actives</span>
-      <div class="sc-icon" style="background:var(--blue-l)">
-        <svg viewBox="0 0 24 24" stroke="var(--blue)">
-          <rect x="2" y="3" width="20" height="5" rx="2" />
-          <rect x="2" y="11" width="20" height="5" rx="2" />
-        </svg>
-      </div>
-    </div>
-    <div class="sc-val">{{ vms().length }}</div>
-    <div class="sc-sub">Instances provisionnées</div>
-  </div>
-  <div class="stat-card">
-    <div class="sc-top">
-      <span class="sc-label">Services managés (PaaS)</span>
-      <div class="sc-icon" style="background:var(--teal-l)">
-        <svg viewBox="0 0 24 24" stroke="var(--teal)">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-        </svg>
-      </div>
-    </div>
-    <div class="sc-val">{{ paasInstances().length }}</div>
-    <div class="sc-sub">Bases de données & outils</div>
-  </div>
-  <div class="stat-card">
-    <div class="sc-top">
-      <span class="sc-label">Coût mensuel</span>
-      <div class="sc-icon" style="background:var(--amber-l)">
-        <svg viewBox="0 0 24 24" stroke="var(--amber)" fill="none" stroke-width="1.8" stroke-linecap="round">
-          <line x1="12" y1="1" x2="12" y2="23" />
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      </div>
-    </div>
-    <div class="sc-val">{{ totalSpend.toFixed(2) }}</div>
-    <div class="sc-sub" style="font-size: 11px;">IaaS: {{ vmsSpend.toFixed(2) }} DT | PaaS: {{ paasSpend.toFixed(2) }} DT</div>
-  </div>
-  <div class="stat-card wallet-card">
-    <div class="sc-top">
-      <span class="sc-label">Solde wallet</span>
-      <div class="sc-icon" style="background:var(--purple-l)">
-        <svg viewBox="0 0 24 24" stroke="var(--purple)" fill="none" stroke-width="1.8" stroke-linecap="round">
-          <rect x="2" y="5" width="20" height="14" rx="2" />
-          <path d="M16 12h2" />
-          <path d="M2 10h20" />
-        </svg>
-      </div>
-    </div>
-    <div class="sc-val">{{ h.walletSolde().toFixed(3) }}</div>
-    <div class="sc-sub" style="display:flex;align-items:center;gap:6px">
-      <span>{{ h.walletDevise() }} dispo.</span>
-      <button class="wallet-recharge-btn" (click)="h.rechargerWallet()" [disabled]="h.walletLoading()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="10" height="10">
-          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        {{ h.walletLoading() ? '...' : '+30 DT' }}
-      </button>
-    </div>
-  </div>
-</div>
+<div class="overview-container">
 
-<div class="grid-2">
-  <!-- VM Quick List -->
-  <div class="sc">
-    <div class="sc-head">
-      <div>
-        <div class="sc-title">Mes instances</div>
-        <div class="sc-desc">Ressources IaaS en cours</div>
-      </div>
-      <button class="btn btn-primary" (click)="openDeploy.emit({ type: 'vm', name: '' })">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-        Déployer
-      </button>
-    </div>
-    <div class="vm-list">
-      @for (v of vms(); track v.id) {
-      <div class="vm-card">
-        <div class="vm-top">
-          <div class="vm-name-row">
-            <div class="vm-icon" style="background:var(--blue-l)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round">
-                <rect x="2" y="3" width="20" height="5" rx="2" />
-                <rect x="2" y="11" width="20" height="5" rx="2" />
-              </svg>
-            </div>
-            <div>
-              <div class="vm-name">{{v.name}}</div>
-              <div class="vm-id">{{v.catalogName}}</div>
-            </div>
-          </div>
-          <span class="badge" [class]="v.status"><div class="badge-dot"></div>{{ v.status }}</span>
-        </div>
-        <div class="vm-specs">
-          <span class="vm-spec"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /></svg>{{v.cpu}} vCPU</span>
-          <span class="vm-spec"><svg viewBox="0 0 24 24"><path d="M2 20h20M4 20V10l8-6 8 6v10" /></svg>{{v.ram}} GB RAM</span>
-          <span class="vm-spec"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>{{v.disk}} GB</span>
-        </div>
-        @if (v.status === 'running') {
-        <div class="vm-metrics">
-          <div class="metric-row">
-            <div class="metric-label">CPU</div>
-            <div class="metric-bar"><div class="metric-fill" [style.width.%]="v.cpuUse ?? 0" [style.background]="h.metricColor(v.cpuUse)"></div></div>
-            <div class="metric-val">{{ v.cpuUse !== null ? v.cpuUse + '%' : '—' }}</div>
-          </div>
-          <div class="metric-row">
-            <div class="metric-label">RAM</div>
-            <div class="metric-bar"><div class="metric-fill" [style.width.%]="v.ramUse ?? 0" [style.background]="h.metricColor(v.ramUse)"></div></div>
-            <div class="metric-val">{{ v.ramUse !== null ? v.ramUse + '%' : '—' }}</div>
-          </div>
-        </div>
-        }
-        <div class="vm-actions">
-          @if (v.status === 'running') { <button class="vm-btn stop" (click)="onVmAction(v.id, 'stop')">Arrêter</button> }
-          @if (v.status === 'stopped') { <button class="vm-btn start" (click)="onVmAction(v.id, 'start')">Démarrer</button> }
-          <button class="vm-btn console" [routerLink]="['/vm-console']" [state]="{ id: v.id, returnUrl: '/personal-dashboard' }">Console</button>
-          <button class="vm-btn delete" (click)="onVmAction(v.id, 'delete')" style="margin-left:auto">Supprimer</button>
-        </div>
-      </div>
-      }
-    @empty {
-    <div class="empty-state" style="grid-column:1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; text-align: center; background: var(--bg-white); border: 1px dashed var(--border); border-radius: var(--r);">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.6" stroke-linecap="round" width="48" height="48" style="opacity: 0.8;">
+  <!-- ═══════════════════════════════════════════════════════════════
+       TOP 4 KPI METRIC CARDS (DYNAMIX PALETTE)
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="stats-row">
+    <!-- 1: VMs actives -->
+    <div class="stat-card card-anthracite-dark">
+      <div class="sc-top">
+        <span class="sc-label">VMs actives</span>
+        <div class="sc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <rect x="2" y="3" width="20" height="5" rx="2" />
             <rect x="2" y="11" width="20" height="5" rx="2" />
-        </svg>
-        <p style="color: var(--text-1); margin: 0; font-size: 17px; font-weight: 600; font-family: 'Syne', sans-serif;">Aucune VM provisionnée pour l'instant</p>
-        <button (click)="openDeploy.emit({ type: 'vm', name: '' })" style="background: var(--blue); color: white; margin-top: 4px; padding: 8px 20px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">Déployer une VM</button>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <div class="sc-val">{{ vms().length }}</div>
+        <div class="sc-sub">Instances provisionnées</div>
+      </div>
     </div>
-    }
+
+    <!-- 2: Services PaaS -->
+    <div class="stat-card card-orange-deep">
+      <div class="sc-top">
+        <span class="sc-label">Services managés (PaaS)</span>
+        <div class="sc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <div class="sc-val">{{ paasInstances().length }}</div>
+        <div class="sc-sub">Bases de données & outils</div>
+      </div>
+    </div>
+
+    <!-- 3: Coût mensuel estimé -->
+    <div class="stat-card card-anthracite-mid">
+      <div class="sc-top">
+        <span class="sc-label">Coût mensuel</span>
+        <div class="sc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <div class="sc-val">{{ totalSpend.toFixed(2) }} <span style="font-size: 15px; font-weight: 600;">DT</span></div>
+        <div class="sc-sub">IaaS: {{ vmsSpend.toFixed(2) }} DT · PaaS: {{ paasSpend.toFixed(2) }} DT</div>
+      </div>
+    </div>
+
+    <!-- 4: Solde Wallet -->
+    <div class="stat-card card-orange-vibrant">
+      <div class="sc-top">
+        <span class="sc-label">Solde wallet</span>
+        <div class="sc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <path d="M16 12h2" />
+            <path d="M2 10h20" />
+          </svg>
+        </div>
+      </div>
+      <div>
+        <div class="sc-val">{{ h.walletSolde().toFixed(3) }} <span style="font-size: 14px; font-weight: 600;">{{ h.walletDevise() }}</span></div>
+        <div class="sc-sub" style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+          <span>Disponible</span>
+          <button class="wallet-recharge-btn" (click)="h.rechargerWallet()" [disabled]="h.walletLoading()">
+            {{ h.walletLoading() ? '...' : '+30 DT' }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Right: PaaS + budget -->
-  <div style="display:flex;flex-direction:column;gap:14px">
-    <div class="sc">
-      <div class="sc-head">
-        <div class="sc-title">Services managés</div>
-        <button class="btn btn-ghost" (click)="switchTab.emit('paas')">Voir tout</button>
+  <!-- ═══════════════════════════════════════════════════════════════
+       MAIN 2-COLUMN SECTION: INSTANCES (LEFT) + MANAGED PAAS (RIGHT)
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="grid-2">
+
+    <!-- LEFT: VM QUICK LIST -->
+    <div class="section-card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            Mes instances IaaS
+          </div>
+          <div class="card-desc">Machines virtuelles provisionnées sur ESXi</div>
+        </div>
+        <button class="btn-deploy-new" (click)="openDeploy.emit({ type: 'vm', name: '' })">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Déployer une VM
+        </button>
       </div>
-      <div style="padding:10px 12px 14px;display:flex;flex-direction:column;gap:8px">
-        @for (p of paasInstances(); track p.id) {
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm)">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:#f5f3ff;">
-              @if (getIconForSgbd(p.typeSgbd) === 'db') {
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
-              } @else if (getIconForSgbd(p.typeSgbd) === 'redis') {
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
-              } @else if (getIconForSgbd(p.typeSgbd) === 'mongo') {
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><path d="M11 20c1.74 0 3-1.68 3-3.9 0-3.8-3-8.1-3-8.1s-3 4.3-3 8.1c0 2.22 1.26 3.9 3 3.9z" /><path d="M11 20c.4 1 .8 1.4 1 2M11 15v5"/></svg>
-              }
+
+      <div class="vm-list">
+        @for (v of vms(); track v.id) {
+        <div class="vm-card" [class.is-running]="v.status === 'running'" [class.is-stopped]="v.status === 'stopped'">
+          
+          <!-- Top Row -->
+          <div class="vm-card-head">
+            <div class="os-brand-box" [attr.data-os]="v.os.toLowerCase()">
+              <img [src]="getOsLogo(v.os)" [alt]="v.os || 'OS'" class="os-logo-img" />
             </div>
-            <div>
-              <div style="font-size:13px;font-weight:600">{{ p.nomPersonnalise }}</div>
-              <div style="font-size:11px;color:var(--text-3)">{{ p.typeSgbd }} - {{ p.port }}</div>
+
+            <div class="vm-title-wrap">
+              <div class="vm-name" [title]="v.name">{{ v.name }}</div>
+              <div class="vm-catalog-tag">{{ v.catalogName || v.os || 'VM Dynamix' }}</div>
+            </div>
+
+            <div class="vm-status-badge" [class]="'status-' + v.status">
+              <span class="status-indicator"></span>
+              <span>{{ v.status === 'running' ? 'En marche' : v.status === 'provisioning' ? 'En cours' : 'Arrêtée' }}</span>
             </div>
           </div>
-          <span class="badge" [class]="p.status === 'RUNNING' ? 'running' : 'stopped'"><div class="badge-dot"></div>{{ p.status === 'RUNNING' ? 'Actif' : p.status }}</span>
+
+          <!-- Network & IP bar (if IP present) -->
+          @if (v.ip) {
+          <div class="vm-network-row">
+            <div class="ip-chip" (click)="copyIp(v.ip, $event)" [title]="'Cliquer pour copier: ' + v.ip">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span class="ip-text">{{ v.ip }}</span>
+              @if (copiedIp() === v.ip) {
+                <span class="copied-badge">Copié !</span>
+              }
+            </div>
+            <div class="net-pill" [class.online]="v.internetConnected">
+              <span class="net-dot"></span>
+              <span>{{ v.internetConnected ? 'Internet Public' : 'Réseau Privé' }}</span>
+            </div>
+          </div>
+          }
+
+          <!-- Specs 4-Box Grid -->
+          <div class="vm-specs-grid">
+            <div class="spec-chip">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                <rect x="9" y="9" width="6" height="6"/>
+              </svg>
+              <span>{{ v.cpu }} vCPU</span>
+            </div>
+            <div class="spec-chip">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+              </svg>
+              <span>{{ v.ram }} GB RAM</span>
+            </div>
+            <div class="spec-chip">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              </svg>
+              <span>{{ v.disk }} GB SSD</span>
+            </div>
+            <div class="spec-chip cost">
+              <span>{{ v.cost }} DT/m</span>
+            </div>
+          </div>
+
+          <!-- Gauges if running -->
+          @if (v.status === 'running') {
+          <div class="vm-gauges-panel">
+            <div class="gauge-item">
+              <div class="gauge-head">
+                <span>CPU</span>
+                <span class="gauge-val" [class.warn]="(v.cpuUse ?? 0) > 60" [class.high]="(v.cpuUse ?? 0) > 80">{{ v.cpuUse !== null ? v.cpuUse + '%' : '0%' }}</span>
+              </div>
+              <div class="gauge-track">
+                <div class="gauge-bar" [style.width.%]="v.cpuUse ?? 0" [class.bar-warn]="(v.cpuUse ?? 0) > 60" [class.bar-high]="(v.cpuUse ?? 0) > 80"></div>
+              </div>
+            </div>
+            <div class="gauge-item">
+              <div class="gauge-head">
+                <span>RAM</span>
+                <span class="gauge-val" [class.warn]="(v.ramUse ?? 0) > 60" [class.high]="(v.ramUse ?? 0) > 80">{{ v.ramUse !== null ? v.ramUse + '%' : '0%' }}</span>
+              </div>
+              <div class="gauge-track">
+                <div class="gauge-bar bar-teal" [style.width.%]="v.ramUse ?? 0" [class.bar-warn]="(v.ramUse ?? 0) > 60" [class.bar-high]="(v.ramUse ?? 0) > 80"></div>
+              </div>
+            </div>
+          </div>
+          }
+
+          <!-- Actions -->
+          <div class="vm-actions">
+            @if (v.status === 'running') {
+              <button class="btn-act btn-stop" (click)="onVmAction(v.id, 'stop')" title="Éteindre la VM">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <rect x="6" y="6" width="12" height="12" rx="2"/>
+                </svg>
+                <span>Arrêter</span>
+              </button>
+            } @else if (v.status === 'stopped') {
+              <button class="btn-act btn-start" (click)="onVmAction(v.id, 'start')" title="Démarrer la VM">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span>Démarrer</span>
+              </button>
+            } @else {
+              <button class="btn-act btn-disabled" disabled>
+                <span class="mini-spin"></span>
+                <span>En cours</span>
+              </button>
+            }
+            <button class="btn-act btn-console" [routerLink]="['/vm-console']" [queryParams]="{ id: v.id, returnUrl: '/personal-dashboard' }" [state]="{ id: v.id, returnUrl: '/personal-dashboard' }" title="Console VNC">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="4 17 10 11 4 5"/>
+                <line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+              <span>Console</span>
+            </button>
+            <button class="btn-act btn-del" (click)="onVmAction(v.id, 'delete')" title="Supprimer la VM">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </button>
+          </div>
         </div>
         } @empty {
-          <div style="text-align: center; color: var(--text-3); font-size: 13px; padding: 20px 0;">Aucun service managé</div>
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.6" width="42" height="42">
+            <rect x="2" y="3" width="20" height="5" rx="2" />
+            <rect x="2" y="11" width="20" height="5" rx="2" />
+          </svg>
+          <div style="font-size: 15px; font-weight: 700; color: #0f172a;">Aucune VM provisionnée</div>
+          <p style="font-size: 12.5px; color: #64748b; margin: 0;">Déployez votre première machine virtuelle en quelques clics.</p>
+          <button class="btn-deploy-new" style="margin-top: 4px;" (click)="openDeploy.emit({ type: 'vm', name: '' })">
+            Déployer une VM
+          </button>
+        </div>
         }
       </div>
     </div>
+
+    <!-- RIGHT: PAAS SERVICES -->
+    <div class="section-card paas-section-card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">
+            <div class="card-title-icon paas-icon-bg">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+              </svg>
+            </div>
+            <span>Services managés</span>
+          </div>
+          <div class="card-desc">Bases de données actives ({{ paasInstances().length }})</div>
+        </div>
+        <button class="btn-ghost-action" (click)="switchTab.emit('paas')">
+          <span>Voir tout</span>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="paas-list">
+        @for (p of paasInstances(); track p.id) {
+        <div class="paas-card" (click)="switchTab.emit('paas')" [title]="'Gérer ' + p.nomPersonnalise">
+          
+          <div class="paas-card-left">
+            <div class="paas-logo-box" [attr.data-sgbd]="p.typeSgbd.toLowerCase()">
+              <img [src]="getSgbdLogo(p.typeSgbd)" [alt]="p.typeSgbd" class="db-logo-img" />
+            </div>
+
+            <div class="paas-meta-block">
+              <div class="paas-card-title-row">
+                <span class="paas-name">{{ p.nomPersonnalise }}</span>
+              </div>
+              <div class="paas-details-row">
+                <span class="sgbd-type-tag" [attr.data-sgbd]="p.typeSgbd.toLowerCase()">{{ p.typeSgbd }}</span>
+                <span class="dot-sep">•</span>
+                <span class="paas-port-chip">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="8" rx="2"/>
+                    <rect x="2" y="14" width="20" height="8" rx="2"/>
+                    <line x1="6" y1="6" x2="6.01" y2="6"/>
+                    <line x1="6" y1="18" x2="6.01" y2="18"/>
+                  </svg>
+                  Port {{ p.port }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="paas-card-right">
+            <div class="status-badge-modern" [class.is-running]="p.status === 'RUNNING' || p.status === 'running'">
+              <span class="badge-glow-dot"></span>
+              <span>{{ (p.status === 'RUNNING' || p.status === 'running') ? 'Actif' : p.status }}</span>
+            </div>
+            <div class="paas-chevron">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </div>
+
+        </div>
+        } @empty {
+        <div class="paas-empty-state">
+          <div class="paas-empty-icon">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#94a3b8" stroke-width="1.8">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+          </div>
+          <div class="paas-empty-title">Aucun service managé actif</div>
+          <p class="paas-empty-desc">Déployez PostgreSQL, MySQL, Redis ou MongoDB en un clic.</p>
+          <button class="btn-create-paas" (click)="switchTab.emit('paas')">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Créer une base de données</span>
+          </button>
+        </div>
+        }
+      </div>
+    </div>
+
   </div>
+
 </div>

@@ -1,123 +1,234 @@
-<div class="page-header-row">
-  <div>
-    <div class="page-h-title">Services managés (PaaS)</div>
-    <div class="page-h-sub">Instances de bases de données et services déployés</div>
+<div class="paas-container">
+  <!-- ══════════════════ HEADER & TOOLBAR ══════════════════ -->
+  <div class="paas-header-toolbar">
+    <div class="header-titles">
+      <div class="page-title-row">
+        <h2 class="page-title">Bases de Données & Services Managés</h2>
+        <span class="count-pill">{{ filteredInstances().length }} / {{ paasInstances().length }}</span>
+      </div>
+      <p class="page-subtitle">Instances de bases de données managées et conteneurisées sur l'infrastructure Dynamix Cloud</p>
+    </div>
+
+    <div class="toolbar-actions">
+      <!-- Search Box -->
+      <div class="search-input-box">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          placeholder="Rechercher par nom, SGBD, IP..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+        />
+        @if (searchTerm()) {
+          <button class="clear-search" (click)="searchTerm.set('')">✕</button>
+        }
+      </div>
+
+      <!-- Deploy PaaS Button -->
+      <button class="btn-deploy-paas" (click)="openDeploy.emit({ type: 'paas', name: '' })">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>Déployer une Base de Données</span>
+      </button>
+    </div>
   </div>
-  <button class="btn-sm primary" (click)="openDeploy.emit({ type: 'paas', name: '' })">+ Déployer un service PaaS</button>
-</div>
 
-<div class="vm-cards-grid">
-  @for (p of paasInstances(); track p.id) {
-  <div class="vm-full-card">
-    <div class="vfc-header">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div class="cat-icon" style="width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #f5f3ff;">
-          @if (getIconForSgbd(p.typeSgbd) === 'db') {
-            <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></svg>
-          } @else if (getIconForSgbd(p.typeSgbd) === 'redis') {
-            <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
-          } @else if (getIconForSgbd(p.typeSgbd) === 'mongo') {
-            <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="getColorForSgbd(p.typeSgbd)" stroke-width="1.8"><path d="M11 20c1.74 0 3-1.68 3-3.9 0-3.8-3-8.1-3-8.1s-3 4.3-3 8.1c0 2.22 1.26 3.9 3 3.9z" /><path d="M11 20c.4 1 .8 1.4 1 2M11 15v5"/></svg>
-          }
+  <!-- Filter Pills Bar -->
+  <div class="filter-pills-row">
+    <button class="filter-pill" [class.active]="selectedFilter() === 'ALL'" (click)="selectedFilter.set('ALL')">
+      <span>Tous les types</span>
+      <span class="pill-badge">{{ paasInstances().length }}</span>
+    </button>
+    <button class="filter-pill" [class.active]="selectedFilter() === 'POSTGRES'" (click)="selectedFilter.set('POSTGRES')">
+      <img src="assets/PostgreSQL Logo.png" alt="PostgreSQL" class="pill-logo">
+      <span>PostgreSQL</span>
+    </button>
+    <button class="filter-pill" [class.active]="selectedFilter() === 'MYSQL'" (click)="selectedFilter.set('MYSQL')">
+      <img src="assets/MySQL Logo.png" alt="MySQL" class="pill-logo">
+      <span>MySQL</span>
+    </button>
+    <button class="filter-pill" [class.active]="selectedFilter() === 'MONGO'" (click)="selectedFilter.set('MONGO')">
+      <img src="assets/MongoDB Logo.png" alt="MongoDB" class="pill-logo">
+      <span>MongoDB</span>
+    </button>
+    <button class="filter-pill" [class.active]="selectedFilter() === 'REDIS'" (click)="selectedFilter.set('REDIS')">
+      <img src="assets/Redis logo.png" alt="Redis" class="pill-logo">
+      <span>Redis</span>
+    </button>
+  </div>
+
+  <!-- ══════════════════ PAAS CARDS GRID ══════════════════ -->
+  <div class="paas-cards-grid">
+    @for (p of filteredInstances(); track p.id) {
+    <div class="paas-card" [class]="getDbBrandClass(p.typeSgbd)">
+      
+      <!-- Card Top Brand Bar & Header -->
+      <div class="card-header">
+        <div class="db-identity">
+          <div class="db-logo-box">
+            <img [src]="getDbLogo(p.typeSgbd)" [alt]="p.typeSgbd" class="db-logo-img">
+          </div>
+          <div class="db-info">
+            <h3 class="db-name">{{ p.nomPersonnalise }}</h3>
+            <div class="db-sub-row">
+              <span class="db-type-badge">{{ p.typeSgbd }}</span>
+              <span class="db-dot-sep">·</span>
+              <span class="db-date">{{ (p.dateCreation | date:'dd MMM yyyy') || '-' }}</span>
+              @if (p.port || p.hostIp) {
+                <span class="db-dot-sep">·</span>
+                <span class="db-port-tag monospace">{{ p.hostIp ? p.hostIp + ':' + p.port : 'Port ' + p.port }}</span>
+              }
+            </div>
+          </div>
         </div>
-        <div>
-          <div class="vfc-name">{{ p.nomPersonnalise }}</div>
-          <div class="vfc-os">{{ p.typeSgbd }}</div>
+
+        <!-- Status Badge -->
+        <div class="status-badge" [class.status-running]="p.status === 'RUNNING'" [class.status-provisioning]="p.status !== 'RUNNING'">
+          <span class="pulse-dot"></span>
+          <span>{{ p.status === 'RUNNING' ? 'Actif' : p.status }}</span>
         </div>
       </div>
-      <div class="vfc-status" [class]="p.status === 'RUNNING' ? 'status-running' : 'status-provisioning'">
-        {{ p.status === 'RUNNING' ? 'Actif' : p.status }}
-      </div>
-    </div>
 
-    <div class="vfc-specs-grid">
-      <div class="vfc-spec">
-        <div class="vspec-k">vCPU</div>
-        <div class="vspec-v">{{ p.catalogue?.vcpu || 0 }}</div>
+      <!-- Connection String Box -->
+      @if (p.connectionString) {
+      <div class="conn-box">
+        <div class="conn-label-row">
+          <span class="conn-title">Chaîne de Connexion (URI)</span>
+          <button class="btn-copy-mini" (click)="copyText(p.connectionString, 'uri-' + p.id, $event)">
+            @if (isCopied('uri-' + p.id)) {
+              <span class="badge-copied-text">Copié !</span>
+            } @else {
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span>Copier</span>
+            }
+          </button>
+        </div>
+        <div class="conn-uri monospace">{{ p.connectionString }}</div>
       </div>
-      <div class="vfc-spec">
-        <div class="vspec-k">RAM</div>
-        <div class="vspec-v">{{ p.catalogue?.ramMB || 0 }} GB</div>
-      </div>
-      <div class="vfc-spec">
-        <div class="vspec-k">Disque</div>
-        <div class="vspec-v">{{ p.catalogue?.stockageGB || 0 }} GB</div>
-      </div>
-      <div class="vfc-spec">
-        <div class="vspec-k">IP & Port</div>
-        <div class="vspec-v">{{ p.hostIp ? p.hostIp + ':' + p.port : 'Non assigné' }}</div>
-      </div>
-    </div>
+      }
 
-    <div class="vfc-specs-grid" style="grid-template-columns: 1fr; margin-top: 10px;">
-      <div class="vfc-spec">
-        <div class="vspec-k">Connection String</div>
-        <div class="vspec-v" style="font-family: monospace; font-size: 11px; word-break: break-all;">
-          {{ p.connectionString || 'Non disponible' }}
+      <!-- Credentials Box (User & Password) -->
+      @if (p.dbUser || p.dbPassword) {
+      <div class="credentials-row">
+        @if (p.dbUser) {
+        <div class="cred-cell">
+          <span class="cred-k">Utilisateur :</span>
+          <span class="cred-v monospace">{{ p.dbUser }}</span>
+          <button class="btn-copy-icon" (click)="copyText(p.dbUser, 'user-' + p.id, $event)" title="Copier l'utilisateur">
+            @if (isCopied('user-' + p.id)) {
+              <span class="badge-copied-text">✓</span>
+            } @else {
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            }
+          </button>
+        </div>
+        }
+
+        @if (p.dbPassword) {
+        <div class="cred-cell">
+          <span class="cred-k">Mot de passe :</span>
+          <span class="cred-v monospace">
+            {{ isPasswordVisible(p.id) ? p.dbPassword : '••••••••••••' }}
+          </span>
+          <button class="btn-toggle-eye" (click)="togglePassword(p.id)" [title]="isPasswordVisible(p.id) ? 'Masquer' : 'Afficher'">
+            @if (isPasswordVisible(p.id)) {
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            }
+          </button>
+          <button class="btn-copy-icon" (click)="copyText(p.dbPassword, 'pass-' + p.id, $event)" title="Copier le mot de passe">
+            @if (isCopied('pass-' + p.id)) {
+              <span class="badge-copied-text">✓</span>
+            } @else {
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            }
+          </button>
+        </div>
+        }
+      </div>
+      }
+
+      <!-- Card Footer Actions & Price -->
+      <div class="card-footer">
+        <div class="price-container">
+          <span class="price-tag">{{ p.prixMensuel }} DT<span class="price-sub">/mois</span></span>
+        </div>
+
+        <div class="footer-actions">
+          <button class="btn-card-action btn-upgrade" (click)="openUpgrade.emit(p)" title="Redimensionner l'instance PaaS">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <polyline points="18 15 12 9 6 15"/>
+            </svg>
+            <span>Upgrade</span>
+          </button>
+
+          <button class="btn-card-action btn-delete" (click)="deletePaas.emit(p.id)" title="Supprimer la base de données">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
         </div>
       </div>
-    </div>
-    
-    <div class="vfc-specs-grid" style="margin-top: 10px;">
-      <div class="vfc-spec">
-        <div class="vspec-k">Utilisateur</div>
-        <div class="vspec-v" style="font-family: monospace;">{{ p.dbUser || '-' }}</div>
-      </div>
-      <div class="vfc-spec">
-        <div class="vspec-k">Mot de passe</div>
-        <div class="vspec-v" style="font-family: monospace;">{{ p.dbPassword || '-' }}</div>
-      </div>
-    </div>
 
-    <div class="vfc-specs-grid" style="margin-top: 10px;">
-      <div class="vfc-spec">
-        <div class="vspec-k">Déployé le</div>
-        <div class="vspec-v" style="font-family: monospace;">{{ (p.dateCreation | date:'dd/MM/yyyy HH:mm') || '-' }}</div>
-      </div>
     </div>
-
-    @if (p.metrics) {
-    <div class="vfc-specs-grid" style="margin-top: 10px; grid-template-columns: repeat(3, 1fr);">
-      <div class="vfc-spec">
-        <div class="vspec-k">CPU</div>
-        <div class="vspec-v" style="color: var(--blue);">{{ p.metrics.cpuUsage }}</div>
-      </div>
-      <div class="vfc-spec">
-        <div class="vspec-k">RAM</div>
-        <div class="vspec-v" style="color: var(--blue);">{{ p.metrics.ramPercentage }}</div>
-      </div>
-      <div class="vfc-spec">
-        <div class="vspec-k">Stockage</div>
-        <div class="vspec-v" style="color: var(--blue);">{{ p.metrics.usedStorageMb }} Mo</div>
-      </div>
-    </div>
-    } @else if (p.status === 'RUNNING') {
-    <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">Chargement des métriques...</div>
     }
-
-    <div class="vfc-footer" style="flex-direction: column; align-items: center; gap: 12px;">
-      <div style="display:flex; gap:4px; flex-wrap: nowrap; justify-content: center; width: 100%;">
-        <button class="action-btn upgrade" style="color: var(--blue);" (click)="openUpgrade.emit(p)">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; vertical-align: text-bottom;">
-            <polyline points="18 15 12 9 6 15"></polyline>
-          </svg>
-          Upgrade
-        </button>
-        <button class="action-btn delete" (click)="deletePaas.emit(p.id)">Suppr.</button>
-      </div>
-      <span class="mono-tag">{{ p.prixMensuel }} DT/mois</span>
-    </div>
   </div>
-  }
-  @empty {
-  <div class="empty-state" style="grid-column:1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 14px; text-align: center; background: var(--bg-white); border: 1px dashed var(--border); border-radius: var(--r);">
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.6" stroke-linecap="round" width="48" height="48" style="opacity: 0.8;">
-          <ellipse cx="12" cy="5" rx="9" ry="3" />
-          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+
+  <!-- ══════════════════ EMPTY STATE ══════════════════ -->
+  @if (filteredInstances().length === 0) {
+  <div class="empty-state-card">
+    <div class="empty-icon-circle">
+      <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#F07A1F" stroke-width="1.8" stroke-linecap="round">
+        <ellipse cx="12" cy="5" rx="9" ry="3"/>
+        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
       </svg>
-      <p style="color: var(--text-1); margin: 0; font-size: 17px; font-weight: 600; font-family: 'Syne', sans-serif;">Aucun service PaaS déployé</p>
-      <button (click)="openDeploy.emit({ type: 'paas', name: '' })" style="background: var(--blue); color: white; margin-top: 4px; padding: 8px 20px; border-radius: 50px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">Déployer mon premier service</button>
+    </div>
+    <h3 class="empty-title">
+      {{ searchTerm() || selectedFilter() !== 'ALL' ? 'Aucun résultat trouvé' : 'Aucun service PaaS déployé' }}
+    </h3>
+    <p class="empty-desc">
+      {{ searchTerm() || selectedFilter() !== 'ALL' 
+         ? 'Aucune base de données ne correspond à vos critères de recherche. Essayez de réinitialiser vos filtres.' 
+         : 'Déployez en quelques secondes vos bases de données managées PostgreSQL, MySQL, MongoDB ou Redis avec sauvegardes et haute disponibilité.' }}
+    </p>
+    @if (searchTerm() || selectedFilter() !== 'ALL') {
+      <button class="btn-empty-reset" (click)="searchTerm.set(''); selectedFilter.set('ALL')">
+        Réinitialiser les filtres
+      </button>
+    } @else {
+      <button class="btn-empty-deploy" (click)="openDeploy.emit({ type: 'paas', name: '' })">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>Déployer mon premier service PaaS</span>
+      </button>
+    }
   </div>
   }
 </div>
+
+

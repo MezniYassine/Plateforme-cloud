@@ -10,6 +10,7 @@ import { environment } from '../../../../environments/environment';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, ChangePasswordModalComponent],
   templateUrl: './profile-page.html',
+  styleUrl: './profile-page.scss'
 })
 export class ProfilePageComponent implements OnInit {
   @Input() actualAdmin: any | null = null;
@@ -37,7 +38,7 @@ export class ProfilePageComponent implements OnInit {
       this.http.patch(`${environment.apiBaseUrl}/admin/update-profile`, this.profileForm.value)
         .subscribe({
           next: () => this.showToastMessage('Profil Super Admin mis à jour avec succès', 'success'),
-          error: (err) => this.showToastMessage(err.error.message || 'Erreur lors de la mise à jour', 'error')
+          error: (err) => this.showToastMessage(err.error?.message || 'Erreur lors de la mise à jour', 'error')
         });
     }
   }

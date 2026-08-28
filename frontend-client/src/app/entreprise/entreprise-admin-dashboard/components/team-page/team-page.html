@@ -1,104 +1,416 @@
-<div class="section-card">
-    <div class="card-header">
-        <div>
-            <div class="card-title">Mon équipe</div>
-            <div class="card-sub">{{ teamMembers().length }} membre(s) · Utilisateurs Entreprise de {{
-                companyName() }}</div>
+<div class="team-page-container">
+
+  <!-- Top Header Card -->
+  <div class="team-top-card">
+    <div class="team-title-group">
+      <h3 class="team-title">Mon Équipe</h3>
+      <p class="team-sub">{{ teamMembers().length }} membre(s) · Collaborateurs de <strong>{{ companyName() }}</strong></p>
+    </div>
+    <button class="btn-invite-member" (click)="openInviteModal.emit()">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <line x1="19" y1="8" x2="19" y2="14" />
+        <line x1="22" y1="11" x2="16" y2="11" />
+      </svg>
+      <span>Inviter un collaborateur</span>
+    </button>
+  </div>
+
+  <!-- Team Members Grid -->
+  <div class="team-cards-grid">
+    @for (m of teamMembers(); track m.id) {
+    <div class="member-profile-card" [class.is-suspended]="m.status === 'SUSPENDED'" [class.is-pending]="m.status === 'PENDING_VALIDATION'">
+      
+      <!-- Top banner -->
+      <div class="member-top-banner" [style.background]="'linear-gradient(135deg, ' + m.color + ' 0%, ' + m.color + 'aa 100%)'"></div>
+
+      <div class="member-card-content">
+        <!-- Identity Row -->
+        <div class="member-identity-row">
+          <div class="member-avatar" [style.background]="m.color">
+            {{ getInitials(m.name) }}
+          </div>
+          <div class="member-info-col">
+            <h4 class="member-full-name">{{ m.name }}</h4>
+            <span class="member-email-txt">{{ m.email }}</span>
+          </div>
+          <span class="status-pill" [class]="getMemberStatusClass(m)">
+            <span class="pill-dot"></span>
+            {{ getMemberStatusLabel(m) }}
+          </span>
         </div>
-        <button class="btn-sm primary" (click)="openInviteModal.emit()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                width="13" height="13">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <line x1="19" y1="8" x2="19" y2="14" />
-                <line x1="22" y1="11" x2="16" y2="11" />
+
+        <!-- Stats Chips Grid -->
+        <div class="member-metrics-grid">
+          <div class="m-metric-box">
+            <div class="m-metric-icon icon-blue">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <div class="m-metric-data">
+              <span class="m-metric-val">{{ m.vms }}</span>
+              <span class="m-metric-lbl">VMs IaaS</span>
+            </div>
+          </div>
+
+          <div class="m-metric-box">
+            <div class="m-metric-icon icon-purple">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              </svg>
+            </div>
+            <div class="m-metric-data">
+              <span class="m-metric-val">{{ m.services }}</span>
+              <span class="m-metric-lbl">Services</span>
+            </div>
+          </div>
+
+          <div class="m-metric-box">
+            <div class="m-metric-icon icon-green">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+            <div class="m-metric-data">
+              <span class="m-metric-val">{{ m.spend | number:'1.2-2' }} <small>DT</small></span>
+              <span class="m-metric-lbl">Ce mois</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="member-action-bar">
+          <button class="btn-view-details" (click)="openDetails(m)">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
             </svg>
-            Inviter un membre
+            <span>Détails</span>
+          </button>
+
+          @if (m.status === 'APPROVED' || (m.active && m.status !== 'SUSPENDED' && m.status !== 'PENDING_VALIDATION')) {
+            <button class="btn-toggle-member btn-suspend" (click)="toggleMember.emit(m.id)">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              <span>Suspendre</span>
+            </button>
+          } @else if (m.status === 'SUSPENDED') {
+            <button class="btn-toggle-member btn-reactivate" (click)="toggleMember.emit(m.id)">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Réactiver</span>
+            </button>
+          } @else {
+            <button class="btn-toggle-member btn-pending" title="En attente d'activation par le collaborateur" disabled>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>En attente</span>
+            </button>
+          }
+        </div>
+
+      </div>
+    </div>
+    }
+
+    <!-- Quick Invite Tile -->
+    <div class="invite-tile-card" (click)="openInviteModal.emit()">
+      <div class="invite-icon-sq">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#F07A1F" stroke-width="2" stroke-linecap="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <line x1="19" y1="8" x2="19" y2="14" />
+          <line x1="22" y1="11" x2="16" y2="11" />
+        </svg>
+      </div>
+      <h4 class="invite-tile-title">Ajouter un collaborateur</h4>
+      <p class="invite-tile-sub">Envoyez une invitation sécurisée par email pour intégrer un nouveau membre.</p>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════ MODAL DÉTAILS DU COLLABORATEUR ══════════════════ -->
+  @if (selectedMember()) {
+  <div class="member-modal-backdrop" (click)="closeDetails()">
+    <div class="member-modal-dialog" (click)="$event.stopPropagation()">
+      
+      <!-- Top Color Stripe -->
+      <div class="modal-top-color-stripe" [style.background]="'linear-gradient(135deg, ' + selectedMember()!.color + ' 0%, ' + selectedMember()!.color + 'aa 100%)'"></div>
+
+      <!-- Modal Header -->
+      <div class="modal-header-section">
+        <div class="modal-user-identity">
+          <div class="modal-user-avatar" [style.background]="selectedMember()!.color">
+            {{ getInitials(selectedMember()!.name) }}
+          </div>
+          <div class="modal-user-info">
+            <div class="modal-name-row">
+              <h3 class="modal-user-name">{{ selectedMember()!.name }}</h3>
+              <span class="role-badge">Collaborateur</span>
+              <span class="status-pill" [class]="getMemberStatusClass(selectedMember()!)">
+                <span class="pill-dot"></span>
+                {{ getMemberStatusLabel(selectedMember()!) }}
+              </span>
+            </div>
+            <p class="modal-user-email">{{ selectedMember()!.email }}</p>
+          </div>
+        </div>
+
+        <button class="modal-close-btn" (click)="closeDetails()" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
         </button>
-    </div>
+      </div>
 
-    <div class="team-grid">
-        @for (m of teamMembers(); track m.id) {
-        <div class="member-card" [class.member-inactive]="!m.active">
-            <!-- Header gradient banner -->
-            <div class="member-banner" [style.background]="'linear-gradient(135deg, ' + m.color + ' 0%, ' + m.color + '99 100%)'"></div>
-
-            <div class="member-body">
-                <div class="member-top">
-                    <div class="member-av" [style.background]="m.color">{{ getInitials(m.name) }}</div>
-                    <div class="member-info">
-                        <div class="member-name">{{ m.name }}</div>
-                        <div class="member-email">{{ m.email }}</div>
-                    </div>
-                    <span class="badge" [class]="m.active ? 'approved' : 'suspended'" style="margin-left:auto">
-                        <div class="badge-dot"></div>{{ m.active ? 'Actif' : 'Suspendu' }}
-                    </span>
-                </div>
-
-                <div class="member-stats">
-                    <div class="mstat">
-                        <div class="mstat-icon" style="color: var(--blue); background: var(--blue-light);">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
-                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                                <line x1="8" y1="21" x2="16" y2="21"/>
-                                <line x1="12" y1="17" x2="12" y2="21"/>
-                            </svg>
-                        </div>
-                        <div class="mstat-val">{{ m.vms }}</div>
-                        <div class="mstat-label">VMs</div>
-                    </div>
-                    <div class="mstat">
-                        <div class="mstat-icon" style="color: var(--purple); background: var(--purple-light);">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                                <line x1="12" y1="22.08" x2="12" y2="12"/>
-                            </svg>
-                        </div>
-                        <div class="mstat-val">{{ m.services }}</div>
-                        <div class="mstat-label">Services</div>
-                    </div>
-                    <div class="mstat">
-                        <div class="mstat-icon" style="color: var(--green); background: var(--green-light);">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
-                                <line x1="12" y1="1" x2="12" y2="23"/>
-                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                            </svg>
-                        </div>
-                        <div class="mstat-val">{{ m.spend }} <small>DT</small></div>
-                        <div class="mstat-label">Ce mois</div>
-                    </div>
-                </div>
-
-                <div class="member-actions">
-                    <button class="btn-sm" [class]="m.active ? '' : 'primary'" (click)="toggleMember.emit(m.id)">
-                        @if (m.active) {
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12">
-                                <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-                            </svg>
-                            Suspendre
-                        } @else {
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            Réactiver
-                        }
-                    </button>
-                </div>
-            </div>
+      <!-- Contact & Security Card Grid (Email, Tel, MFA, Date) -->
+      <div class="modal-info-grid">
+        <div class="info-card">
+          <div class="info-card-header">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <span>Email</span>
+          </div>
+          <span class="info-card-val" [title]="selectedMember()!.email">{{ selectedMember()!.email }}</span>
         </div>
-        }
-        <div class="member-card invite-card" (click)="openInviteModal.emit()">
-            <div class="invite-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <line x1="19" y1="8" x2="19" y2="14" />
-                    <line x1="22" y1="11" x2="16" y2="11" />
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <span>Téléphone</span>
+          </div>
+          <span class="info-card-val" [class.is-muted-val]="!selectedMember()!.telephone">
+            {{ selectedMember()!.telephone || 'Non renseigné' }}
+          </span>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>Sécurité 2FA / MFA</span>
+          </div>
+          <div class="info-card-val">
+            <span class="mfa-status-pill" [class.mfa-on]="isMfaActive(selectedMember()!.mfaStatus)" [class.mfa-off]="!isMfaActive(selectedMember()!.mfaStatus)">
+              <span class="mfa-dot"></span>
+              {{ getMfaLabel(selectedMember()!.mfaStatus) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span>Date d'adhésion</span>
+          </div>
+          <span class="info-card-val">{{ formatDate(selectedMember()!.dateInscrit) }}</span>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Ribbon -->
+      <div class="modal-metrics-ribbon">
+        <div class="ribbon-card">
+          <div class="ribbon-icon icon-spend">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <div class="ribbon-data">
+            <span class="ribbon-val">{{ selectedMember()!.spend | number:'1.2-2' }} <small>DT</small></span>
+            <span class="ribbon-lbl">Dépense du mois</span>
+          </div>
+        </div>
+
+        <div class="ribbon-card">
+          <div class="ribbon-icon icon-vms">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <div class="ribbon-data">
+            <span class="ribbon-val">{{ selectedMember()!.vms }}</span>
+            <span class="ribbon-lbl">VMs IaaS</span>
+          </div>
+        </div>
+
+        <div class="ribbon-card">
+          <div class="ribbon-icon icon-services">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            </svg>
+          </div>
+          <div class="ribbon-data">
+            <span class="ribbon-val">{{ selectedMember()!.services }}</span>
+            <span class="ribbon-lbl">Services PaaS / SaaS</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="modal-tabs-header">
+        <button class="modal-tab-btn" [class.is-active]="activeDetailTab() === 'resources'" (click)="activeDetailTab.set('resources')">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+          </svg>
+          <span>Ressources Déployées ({{ memberResources().length }})</span>
+        </button>
+        <button class="modal-tab-btn" [class.is-active]="activeDetailTab() === 'requests'" (click)="activeDetailTab.set('requests')">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span>Demandes ({{ memberRequests().length }})</span>
+        </button>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="modal-tab-content-wrap">
+        
+        <!-- Tab 1: Resources -->
+        @if (activeDetailTab() === 'resources') {
+          @if (memberResources().length > 0) {
+            <div class="modal-resources-list">
+              @for (r of memberResources(); track r.id) {
+              <div class="modal-res-item-card">
+                <div class="modal-res-left">
+                  <div class="modal-res-logo-box" [class.box-vm]="r.type === 'vm'" [class.box-db]="r.type === 'db'" [class.box-saas]="r.type === 'saas'">
+                    @if (hasAppLogo(r.name, r.type)) {
+                      <img [src]="getServiceLogo(r.name, r.type)" [alt]="r.name" class="modal-res-logo" />
+                    } @else if (r.type === 'vm') {
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                        <line x1="6" y1="6" x2="6.01" y2="6"/>
+                        <line x1="6" y1="18" x2="6.01" y2="18"/>
+                      </svg>
+                    } @else if (r.type === 'db') {
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                      </svg>
+                    } @else {
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                      </svg>
+                    }
+                  </div>
+                  <div class="modal-res-info">
+                    <div class="modal-res-title-row">
+                      <span class="modal-res-name">{{ r.name }}</span>
+                      <span class="cat-pill" [class.type-vm]="r.type === 'vm'" [class.type-db]="r.type === 'db'" [class.type-saas]="r.type === 'saas'">
+                        {{ getCategoryLabel(r.type) }}
+                      </span>
+                    </div>
+                    <div class="modal-res-sub-row">
+                      <span class="modal-res-specs">{{ r.specs }}</span>
+                      @if (r.ip) {
+                        <span class="modal-res-ip">{{ r.ip }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div class="modal-res-right">
+                  <div class="modal-res-cost">{{ r.cost | number:'1.2-2' }} <small>DT/mois</small></div>
+                  <span class="status-chip" [class]="statusClass(r.status)">
+                    <span class="status-dot"></span>
+                    <span>{{ statusLabel(r.status) }}</span>
+                  </span>
+                </div>
+              </div>
+              }
+            </div>
+          } @else {
+            <div class="modal-empty-state">
+              <div class="empty-icon-circle">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#94a3b8" stroke-width="1.8">
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
                 </svg>
+              </div>
+              <p class="empty-title">Aucune ressource active</p>
+              <p class="empty-desc">Ce collaborateur ne dispose d'aucune machine ou service déployé pour le moment.</p>
             </div>
-            <div class="invite-label">Inviter un collaborateur</div>
-            <div class="invite-sub">Envoyer un lien d'invitation</div>
-        </div>
+          }
+        }
+
+        <!-- Tab 2: Requests -->
+        @if (activeDetailTab() === 'requests') {
+          @if (memberRequests().length > 0) {
+            <div class="modal-requests-list">
+              @for (req of memberRequests(); track req.id) {
+              <div class="modal-req-item-card">
+                <div class="modal-req-left">
+                  <div class="modal-req-title-row">
+                    <span class="modal-req-name">{{ req.name }}</span>
+                    <span class="modal-req-date">{{ req.date }}</span>
+                  </div>
+                  <span class="modal-req-specs">{{ req.specs }}</span>
+                  @if (req.justification) {
+                    <p class="modal-req-justif">« {{ req.justification }} »</p>
+                  }
+                </div>
+                <div class="modal-req-right">
+                  <span class="modal-req-cost">{{ req.cost | number:'1.2-2' }} <small>DT</small></span>
+                  <span class="status-pill-badge" [class.is-appr]="req.status === 'approved'" [class.is-pend]="req.status === 'pending'" [class.is-rej]="req.status === 'rejected'">
+                    {{ req.status === 'approved' ? 'Approuvée' : req.status === 'pending' ? 'En attente' : 'Rejetée' }}
+                  </span>
+                </div>
+              </div>
+              }
+            </div>
+          } @else {
+            <div class="modal-empty-state">
+              <div class="empty-icon-circle">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#94a3b8" stroke-width="1.8">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+              </div>
+              <p class="empty-title">Aucune demande enregistrée</p>
+              <p class="empty-desc">Aucune demande de provisionnement n'a été soumise par ce collaborateur.</p>
+            </div>
+          }
+        }
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer-bar">
+        <button class="btn-modal-toggle" [class.btn-suspend]="selectedMember()!.active" [class.btn-reactivate]="!selectedMember()!.active" (click)="toggleMember.emit(selectedMember()!.id)">
+          @if (selectedMember()!.active) {
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            <span>Suspendre le compte</span>
+          } @else {
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Réactiver le compte</span>
+          }
+        </button>
+        <button class="btn-modal-close" (click)="closeDetails()">Fermer</button>
+      </div>
+
     </div>
+  </div>
+  }
+
 </div>

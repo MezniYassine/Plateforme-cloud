@@ -1,122 +1,258 @@
-<div class="stats-row" style="grid-template-columns: repeat(3, 1fr);">
-    <div class="stat-card">
-        <div class="stat-header"><span class="stat-label">Dépenses ce mois</span>
-            <div class="stat-icon" style="background:var(--blue-light)"><svg viewBox="0 0 24 24" stroke="var(--blue)"
-                    fill="none" stroke-width="1.8" stroke-linecap="round">
-                    <line x1="12" y1="1" x2="12" y2="23" />
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg></div>
-        </div>
-        <div class="stat-value">{{ monthlySpend() }}</div>
-        <div class="stat-footer"><span class="stat-period">DT ce mois</span></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-header"><span class="stat-label">Budget total</span>
-            <div class="stat-icon" style="background:var(--green-light)"><svg viewBox="0 0 24 24" stroke="var(--green)"
-                    fill="none" stroke-width="1.8" stroke-linecap="round">
-                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                    <polyline points="17 6 23 6 23 12" />
-                </svg></div>
-        </div>
-        <div class="stat-value">{{ monthlyBudget() }}</div>
-        <div class="stat-footer"><span class="stat-period">DT alloués</span></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-header"><span class="stat-label">Restant</span>
-            <div class="stat-icon" style="background:var(--amber-light)"><svg viewBox="0 0 24 24" stroke="var(--amber)"
-                    fill="none" stroke-width="1.8" stroke-linecap="round">
-                    <rect x="1" y="4" width="22" height="16" rx="2" />
-                    <line x1="1" y1="10" x2="23" y2="10" />
-                </svg></div>
-        </div>
-        <div class="stat-value">{{ monthlyBudget() - monthlySpend() }}</div>
-        <div class="stat-footer"><span class="stat-period">DT disponibles</span></div>
-    </div>
-</div>
+<div class="billing-page-container">
 
-<!-- Budget alert -->
-@if (budgetUsedPct() > 80) {
-<div class="alert-banner" style="--alert-color:var(--red);--alert-bg:var(--red-light)">
-    <div class="alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"
-            stroke-linecap="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-        </svg></div>
-    <div>
-        <div class="alert-title">Attention : {{ budgetUsedPct() }}% du budget consommé</div>
-        <div class="alert-sub">Envisagez d'augmenter votre budget ou de réduire les ressources actives</div>
-    </div>
-</div>
-}
-
-<div class="main-grid">
-    <div class="section-card">
-        <div class="card-header">
-            <div>
-                <div class="card-title">Transactions des membres</div>
-                <div class="card-sub">Mouvements réels du wallet entreprise</div>
-            </div>
-            <button class="btn-sm primary" (click)="rechargeWallet.emit()">Recharger le Wallet</button>
+  <!-- Top 3 KPI Cards -->
+  <div class="billing-kpi-row">
+    
+    <!-- 1: Dépenses ce mois (Orange Deep) -->
+    <div class="stat-card card-orange-deep">
+      <div class="sc-top">
+        <span class="sc-label">Dépenses ce mois</span>
+        <div class="sc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="12" y1="1" x2="12" y2="23" />
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
         </div>
-        <table class="inv-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Membre</th>
-                    <th>Description</th>
-                    <th>Type</th>
-                    <th>Montant</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (t of transactions(); track t.id) {
-                <tr>
-                    <td style="font-size:12.5px;color:var(--text-muted)">{{ t.date }}</td>
-                    <td style="font-weight:600">{{ t.memberName || 'Entreprise' }}</td>
-                    <td>{{ t.desc }}</td>
-                    <td><span class="badge" [class]="t.type === 'credit' ? 'approved' : 'rejected'">
-                            <div class="badge-dot"></div>{{ t.type === 'credit' ? 'Credit' : 'Debit' }}
-                        </span></td>
-                    <td style="font-family:'DM Mono',monospace;font-weight:700"
-                        [style.color]="t.type === 'credit' ? 'var(--green)' : 'var(--red)'">
-                        {{ t.type === 'credit' ? '+' : '-' }}{{ t.amount }} DT
-                    </td>
-                </tr>
-                } @empty {
-                <tr>
-                    <td colspan="5" style="padding:22px;text-align:center;color:var(--text-muted)">
-                        Aucune transaction wallet pour cette entreprise.
-                    </td>
-                </tr>
+      </div>
+      <div>
+        <div class="sc-val">{{ monthlySpend() | number:'1.2-2' }} <span style="font-size: 15px; font-weight: 600;">DT</span></div>
+        <div class="sc-sub">Consommation totale équipe</div>
+      </div>
+    </div>
+
+    <!-- 2: Budget total alloué (Anthracite Dark) -->
+    <div class="stat-card card-anthracite-dark">
+      <div class="sc-top">
+        <span class="sc-label">Budget alloué</span>
+        <div class="sc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+            <polyline points="17 6 23 6 23 12" />
+          </svg>
+        </div>
+      </div>
+      <div>
+        <div class="sc-val">{{ monthlyBudget() | number:'1.2-2' }} <span style="font-size: 15px; font-weight: 600;">DT</span></div>
+        <div class="sc-sub">Plafond mensuel fixé</div>
+      </div>
+    </div>
+
+    <!-- 3: Solde disponible (Anthracite Mid) -->
+    <div class="stat-card card-anthracite-mid">
+      <div class="sc-top">
+        <span class="sc-label">Solde disponible</span>
+        <div class="sc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" />
+            <line x1="1" y1="10" x2="23" y2="10" />
+          </svg>
+        </div>
+      </div>
+      <div>
+        <div class="sc-val highlight-green">{{ (monthlyBudget() - monthlySpend()) | number:'1.2-2' }} <span style="font-size: 15px; font-weight: 600;">DT</span></div>
+        <div class="sc-sub">Restant pour le mois en cours</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Budget Alert Banner if > 80% -->
+  @if (budgetUsedPct() > 80) {
+  <div class="alert-budget-warn">
+    <div class="alert-icon-red">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="alert-txt">
+      <div class="alert-head">Attention : {{ budgetUsedPct() }}% du budget d'entreprise consommé</div>
+      <div class="alert-desc">Pensez à recharger votre wallet pour éviter l'interruption des déploiements.</div>
+    </div>
+    <button class="btn-recharge-now" (click)="rechargeWallet.emit()">Recharger</button>
+  </div>
+  }
+
+  <!-- Main 2-Column Grid -->
+  <div class="billing-grid">
+    
+    <!-- Left: Transactions Table -->
+    <div class="billing-card-table">
+      <div class="card-head-bar">
+        <div>
+          <h4 class="card-head-title">Transactions du Wallet Entreprise</h4>
+          <p class="card-head-sub">Historique des mouvements financiers, factures et débits d'infrastructure</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn-export-excel" (click)="exportToExcel()" [disabled]="transactions().length === 0" title="Exporter l'historique sous format Excel">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Exporter Excel</span>
+          </button>
+          <button class="btn-recharge-primary" (click)="rechargeWallet.emit()">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Recharger le Wallet</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="modern-inv-table">
+          <thead>
+            <tr>
+              <th class="col-ref">Réf. Facture</th>
+              <th class="col-date">Date</th>
+              <th class="col-member">Initiateur</th>
+              <th class="col-desc">Ressource</th>
+              <th class="col-catalog">Catalogue / Offre</th>
+              <th class="col-type">Type</th>
+              <th class="col-amount">Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of transactions(); track t.id) {
+            <tr [class.row-credit]="t.type === 'credit'">
+              
+              <!-- 1: Réf. Facture -->
+              <td class="td-ref">
+                <span class="ref-badge" [class.ref-credit]="t.type === 'credit'">
+                  {{ t.refFacture || 'FAC-2026-00000' }}
+                </span>
+              </td>
+
+              <!-- 2: Date -->
+              <td class="td-date">
+                <span class="date-txt">{{ formatDate(t.date) }}</span>
+              </td>
+
+              <!-- 3: Initiateur -->
+              <td class="td-member">
+                <span class="member-chip" [class.is-admin-initiator]="t.type === 'credit'">
+                  {{ t.memberName || 'Entreprise' }}
+                </span>
+              </td>
+
+              <!-- 4: Ressource / Intitulé -->
+              <td class="td-desc">
+                @if (t.type === 'credit') {
+                  <div class="res-credit-cell">
+                    <div class="credit-icon-mini">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <rect x="1" y="4" width="22" height="16" rx="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                      </svg>
+                    </div>
+                    <span class="credit-main-txt">Rechargement Solde</span>
+                  </div>
+                } @else {
+                  <span class="desc-main">{{ t.desc }}</span>
                 }
-            </tbody>
+              </td>
+
+              <!-- 5: Catalogue / Offre -->
+              <td class="td-catalog">
+                @if (t.type === 'credit') {
+                  <span class="catalog-credit-badge">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>Dépôt Fonds</span>
+                  </span>
+                } @else if (t.catalogue) {
+                  <div class="catalog-badge">
+                    <span class="catalog-name">{{ t.catalogue.nomService }}</span>
+                    @if (t.catalogue.vcpu || t.catalogue.ramMB) {
+                      <span class="catalog-specs-chip">{{ t.catalogue.vcpu }} vCPU · {{ t.catalogue.ramMB }} GB RAM</span>
+                    }
+                  </div>
+                } @else if (t.catalogName) {
+                  <span class="catalog-plain">{{ t.catalogName }}</span>
+                } @else {
+                  <span class="catalog-none">—</span>
+                }
+              </td>
+
+              <!-- 6: Type Pill -->
+              <td class="td-type">
+                @if (t.type === 'credit') {
+                  <span class="type-pill is-credit">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                      <line x1="12" y1="19" x2="12" y2="5"/>
+                      <polyline points="5 12 12 5 19 12"/>
+                    </svg>
+                    <span>Crédit</span>
+                  </span>
+                } @else {
+                  <span class="type-pill is-debit">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/>
+                      <polyline points="19 12 12 19 5 12"/>
+                    </svg>
+                    <span>Débit</span>
+                  </span>
+                }
+              </td>
+
+              <!-- 7: Montant -->
+              <td class="td-amount">
+                @if (t.type === 'credit') {
+                  <div class="amount-badge-credit">
+                    <span class="amount-sign">+</span>{{ t.amount | number:'1.2-2' }} <small>DT</small>
+                  </div>
+                } @else {
+                  <div class="amount-badge-debit">
+                    <span class="amount-sign">-</span>{{ t.amount | number:'1.2-2' }} <small>DT</small>
+                  </div>
+                }
+              </td>
+
+            </tr>
+            } @empty {
+            <tr>
+              <td colspan="7" class="td-empty">
+                <p>Aucune transaction enregistrée pour cette entreprise.</p>
+              </td>
+            </tr>
+            }
+          </tbody>
         </table>
+      </div>
     </div>
 
-    <div class="right-col" style="position: sticky; top: 0; align-self: start;">
-        <div class="section-card">
-            <div class="card-header">
-                <div class="card-title">Répartition par membre</div>
-            </div>
-            <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
-                @for (m of teamSpend(); track m.name) {
-                <div class="breakdown-row">
-                    <div class="breakdown-user">
-                        <div class="breakdown-av" [style.background]="m.color">{{ getInitials(m.name) }}
-                        </div>
-                        <span>{{ m.name }}</span>
-                    </div>
-                    <div class="breakdown-bar-wrap">
-                        <div class="breakdown-bar">
-                            <div class="breakdown-fill"
-                                [style.width]="(monthlyBudget() > 0 ? (m.spend / monthlyBudget() * 100) : 0)+'%'"
-                                [style.background]="m.color"></div>
-                        </div>
-                    </div>
-                    <span class="breakdown-val">{{ m.spend }} DT</span>
-                </div>
-                }
-            </div>
+    <!-- Right: Member Breakdown -->
+    <div class="billing-card-side">
+      <div class="card-head-bar">
+        <div>
+          <h4 class="card-head-title">Consommation par Membre</h4>
+          <p class="card-head-sub">Répartition des coûts par collaborateur</p>
         </div>
+      </div>
+
+      <div class="member-breakdown-body">
+        @for (m of teamSpend(); track m.name) {
+        <div class="member-breakdown-row">
+          <div class="b-user-col">
+            <div class="b-user-av" [style.background]="m.color">{{ getInitials(m.name) }}</div>
+            <span class="b-user-name" [title]="m.name">{{ m.name }}</span>
+          </div>
+          <div class="b-bar-col">
+            <div class="b-bar-track">
+              <div class="b-bar-fill" [style.width]="(monthlyBudget() > 0 ? (m.spend / monthlyBudget() * 100) : 0)+'%'" [style.background]="m.color"></div>
+            </div>
+          </div>
+          <span class="b-val-col">{{ m.spend | number:'1.2-2' }} DT</span>
+        </div>
+        } @empty {
+        <div class="empty-side-txt">
+          <p>Aucune donnée de consommation</p>
+        </div>
+        }
+      </div>
     </div>
+
+  </div>
+
 </div>

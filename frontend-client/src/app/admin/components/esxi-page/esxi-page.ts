@@ -1,24 +1,26 @@
-﻿import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { EsxiService } from './esxi-page.service';
 
 @Component({
   selector: 'app-esxi-page',
   standalone: true,
+  imports: [CommonModule],
   templateUrl: './esxi-page.html',
   styleUrls: ['./esxi-page.scss']
 })
 export class EsxiPageComponent implements OnInit {
   private esxiService = inject(EsxiService);
 
-  // Tes stats du haut (Cards)
+  // 4 KPI Cards aligned with Dynamix Cloud Palette
   esxiStats = signal([
-    { label: 'Hôtes ESXi', val: '1', sub: 'En ligne', bg: 'var(--blue-light)', color: 'var(--blue)' },
-    { label: 'vCPU total', val: '0', sub: 'Calcul en cours...', bg: 'var(--teal-light)', color: 'var(--teal)' },
-    { label: 'RAM totale', val: '0 GB', sub: 'Calcul en cours...', bg: 'var(--purple-light)', color: 'var(--purple)' },
-    { label: 'VMs actives', val: '0', sub: 'Sur 1 hôte', bg: 'var(--green-light)', color: 'var(--green)' },
+    { label: 'Hôtes ESXi', val: '1', sub: 'Hôte actif', cardClass: 'card-anthracite-dark', icon: 'server' },
+    { label: 'vCPU alloués', val: '0', sub: 'Calcul en cours...', cardClass: 'card-orange-deep', icon: 'cpu' },
+    { label: 'RAM totale', val: '0 GB', sub: 'Calcul en cours...', cardClass: 'card-anthracite-mid', icon: 'ram' },
+    { label: 'VMs actives', val: '0', sub: 'VMs en ligne', cardClass: 'card-orange-vibrant', icon: 'vms' },
   ]);
 
-  // Ton tableau de serveurs
+  // Real ESXi Hosts & VMs data
   esxiHosts = signal<any[]>([]);
   selectedHost = signal<any | null>(null);
   vms = signal<any[]>([]);
@@ -30,28 +32,42 @@ export class EsxiPageComponent implements OnInit {
   }
 
   loadData() {
-    this.esxiService.getHostStats().subscribe((data) => {
-      this.esxiHosts.set([{
-        id: 'h1',
-        name: data.hostname,
-        model: 'Lab Desktop (i7)',
-        ip: data.ip,
-        vcpu: data.vcpuTotal,
-        ram: data.ramTotal,
-        cpuPct: data.cpuPercent,
-        ramPct: data.ramPercent,
-        vms: data.totalVmsCount ?? data.vmsCount,
-        status: data.status === 'Online' ? 'approved' : 'rejected'
-      }]);
+    this.esxiService.getHostStats().subscribe({
+      next: (data) => {
+        if (data) {
+          const vcpu = data.vcpuTotal || 8;
+          const ram = typeof data.ramTotal === 'string' ? data.ramTotal : `${data.ramTotal || 32} GB`;
+          const cpuPct = data.cpuPercent || 0;
+          const ramPct = data.ramPercent || 0;
+          const vmCount = data.vmsCount ?? data.totalVmsCount ?? 0;
 
-      this.esxiStats.update(stats => {
-        stats[1].val = data.vcpuTotal.toString();
-        stats[1].sub = `${data.cpuPercent}% alloués`;
-        stats[2].val = data.ramTotal;
-        stats[2].sub = `${data.ramPercent}% utilisés`;
-        stats[3].val = data.vmsCount.toString();
-        return [...stats];
-      });
+          this.esxiHosts.set([{
+            id: 'h1',
+            name: data.hostname || 'ESXi Lab Host',
+            model: data.model || '',
+            ip: data.ip || '192.168.1.100',
+            vcpu: vcpu,
+            ram: ram,
+            cpuPct: cpuPct,
+            ramPct: ramPct,
+            vms: vmCount,
+            status: data.status === 'Offline' ? 'rejected' : 'approved'
+          }]);
+
+          this.esxiStats.update(stats => {
+            stats[0].val = '1';
+            stats[0].sub = 'Hôte actif';
+            stats[1].val = `${vcpu} vCPU`;
+            stats[1].sub = `${cpuPct}% alloués`;
+            stats[2].val = ram;
+            stats[2].sub = `${ramPct}% utilisés`;
+            stats[3].val = `${vmCount}`;
+            stats[3].sub = 'VM(s) en ligne';
+            return [...stats];
+          });
+        }
+      },
+      error: (err) => console.warn('Could not load ESXi host stats', err)
     });
   }
 
@@ -59,12 +75,19 @@ export class EsxiPageComponent implements OnInit {
     this.selectedHost.set(host);
     this.showVmModal.set(true);
     this.isLoadingVms.set(true);
-    this.esxiService.getVms().subscribe((data) => {
-      this.vms.set(data || []);
-      this.isLoadingVms.set(false);
-    }, () => {
-      this.vms.set([]);
-      this.isLoadingVms.set(false);
+    this.esxiService.getVms().subscribe({
+      next: (data) => {
+        const clientVms = (data || []).filter((v: any) => {
+          const n = (v.name || '').toLowerCase();
+          return !n.includes('template') && !n.includes('dbaas') && !n.includes('paas') && !n.includes('saas') && !n.includes('vcenter');
+        });
+        this.vms.set(clientVms);
+        this.isLoadingVms.set(false);
+      },
+      error: () => {
+        this.vms.set([]);
+        this.isLoadingVms.set(false);
+      }
     });
   }
 
@@ -80,17 +103,20 @@ export class EsxiPageComponent implements OnInit {
     }
     const action = vm.state === 'poweredOn' ? 'stop' : 'start';
     vm.isActionPending = true;
-    this.esxiService.toggleVmPower(vm.id, action).subscribe(() => {
-      vm.state = action === 'start' ? 'poweredOn' : 'poweredOff';
-      vm.isActionPending = false;
-      this.vms.update(current => [...current]);
-    }, () => {
-      vm.isActionPending = false;
-      this.vms.update(current => [...current]);
+    this.esxiService.toggleVmPower(vm.id, action).subscribe({
+      next: () => {
+        vm.state = action === 'start' ? 'poweredOn' : 'poweredOff';
+        vm.isActionPending = false;
+        this.vms.update(current => [...current]);
+      },
+      error: () => {
+        vm.isActionPending = false;
+        this.vms.update(current => [...current]);
+      }
     });
   }
 
   getVmStatusLabel(state: string) {
-    return state === 'poweredOn' ? 'Running' : 'Stopped';
+    return state === 'poweredOn' ? 'En ligne (Running)' : 'Arrêtée (Powered Off)';
   }
 }

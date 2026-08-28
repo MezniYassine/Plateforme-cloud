@@ -1,51 +1,210 @@
-<div class="wallet-hero">
-  <div>
-    <div class="wallet-bal-label">Solde disponible</div>
-    <div class="wallet-bal"><span>{{h.walletDevise()}} </span><span>{{h.walletSolde().toFixed(3)}}</span></div>
-    <div style="font-size:12px;opacity:.6;margin-top:6px">En temps réel</div>
-  </div>
-  <div class="wallet-actions">
-    <button class="wallet-action-btn" (click)="openRecharge.emit()">
-      <svg viewBox="0 0 24 24">
-        <line x1="12" y1="5" x2="12" y2="19" />
-        <line x1="5" y1="12" x2="19" y2="12" />
-      </svg>
-      Recharger
-    </button>
-  </div>
-</div>
+<div class="billing-container">
 
-<div class="sc">
-  <div class="sc-head">
-    <div>
-      <div class="sc-title">Historique des factures</div>
-      <div class="sc-desc">Facturation automatique mensuelle (pay-as-you-go)</div>
+  <!-- ══════════════════ WALLET HERO & QUICK ACTIONS ══════════════════ -->
+  <div class="wallet-hero-grid">
+    
+    <!-- Balance Card -->
+    <div class="wallet-balance-card">
+      <div class="balance-top">
+        <div class="balance-meta">
+          <span class="balance-tag">Portefeuille Cloud</span>
+          <span class="live-dot-pulse"></span>
+          <span class="live-label">En temps réel</span>
+        </div>
+        <div class="wallet-symbol-box">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="5" width="20" height="14" rx="3"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+            <circle cx="16" cy="15" r="1.5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="balance-amount-row">
+        <span class="currency">{{ h.walletDevise() }}</span>
+        <span class="amount">{{ h.walletSolde().toFixed(3) }}</span>
+      </div>
+
+      <div class="balance-footer">
+        <p class="balance-desc">Facturation automatique mensuelle prélevée sur votre solde disponible.</p>
+        <button class="btn-recharge" (click)="openRecharge.emit()" [disabled]="h.walletLoading()">
+          @if (h.walletLoading()) {
+            <span class="spinning">⏳</span>
+            <span>Rechargement...</span>
+          } @else {
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Recharger (+30 DT)</span>
+          }
+        </button>
+      </div>
     </div>
+
+    <!-- Stats Quick Cards -->
+    <div class="wallet-stats-col">
+      <div class="quick-stat-card">
+        <div class="stat-icon-box stat-icon-green">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Total Rechargé</span>
+          <span class="stat-val">+{{ totalCredits().toFixed(2) }} {{ h.walletDevise() }}</span>
+        </div>
+      </div>
+
+      <div class="quick-stat-card">
+        <div class="stat-icon-box stat-icon-orange">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+            <polyline points="17 18 23 18 23 12"/>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Total Dépensé</span>
+          <span class="stat-val">-{{ totalDebits().toFixed(2) }} {{ h.walletDevise() }}</span>
+        </div>
+      </div>
+
+      <div class="quick-stat-card">
+        <div class="stat-icon-box stat-icon-blue">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Transactions</span>
+          <span class="stat-val">{{ invoices().length }} enregistrées</span>
+        </div>
+      </div>
+    </div>
+
   </div>
-  <table class="inv-table">
-    <thead>
-      <tr>
-        <th>Période</th>
-        <th>Réf. facture</th>
-        <th>Ressources</th>
-        <th>Montant</th>
-        <th>Statut</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (i of invoices(); track $index) {
-      <tr>
-        <td style="font-weight:600">{{i.period}}</td>
-        <td><span
-            style="font-family:'DM Mono',monospace;font-size:12px;background:var(--bg-page);padding:2px 8px;border-radius:5px">{{i.ref}}</span>
-        </td>
-        <td style="color:var(--text-2)">{{i.resources}}</td>
-        <td style="font-family:'Syne',sans-serif;font-weight:700">{{i.amount}}</td>
-        <td><span class="badge" [class]="i.statusClass">
-            <div class="badge-dot"></div>{{i.status}}
-          </span></td>
-      </tr>
+
+  <!-- ══════════════════ INVOICES & TRANSACTIONS TABLE ══════════════════ -->
+  <div class="invoices-section">
+    
+    <!-- Table Header & Controls -->
+    <div class="section-toolbar">
+      <div class="section-titles">
+        <h3 class="section-title">Historique des Factures & Débits</h3>
+        <p class="section-desc">Consultez l'ensemble de vos transactions avec leur référence unique de facturation.</p>
+      </div>
+
+      <div class="toolbar-right">
+        <!-- Search Input -->
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Rechercher par réf. facture..."
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+          />
+          @if (searchTerm()) {
+            <button class="clear-btn" (click)="searchTerm.set('')">✕</button>
+          }
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="filter-group">
+          <button class="filter-btn" [class.active]="filterType() === 'ALL'" (click)="filterType.set('ALL')">
+            Toutes
+          </button>
+          <button class="filter-btn" [class.active]="filterType() === 'DEBIT'" (click)="filterType.set('DEBIT')">
+            Dépenses
+          </button>
+          <button class="filter-btn" [class.active]="filterType() === 'CREDIT'" (click)="filterType.set('CREDIT')">
+            Recharges
+          </button>
+        </div>
+
+        <!-- Export Excel Button -->
+        <button class="btn-export-excel" (click)="exportToExcel()" [disabled]="filteredInvoices().length === 0" title="Exporter l'historique sous format Excel">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>Exporter Excel</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Invoices Table -->
+    <div class="table-container">
+      @if (filteredInvoices().length === 0) {
+        <div class="empty-invoices-box">
+          <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="#F07A1F" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+          <h4>{{ searchTerm() || filterType() !== 'ALL' ? 'Aucune transaction trouvée' : 'Aucune facture pour le moment' }}</h4>
+          <p>{{ searchTerm() || filterType() !== 'ALL' ? 'Modifiez vos filtres ou termes de recherche.' : 'Vos déploiements et recharges apparaîtront ici avec leur référence officielle.' }}</p>
+        </div>
+      } @else {
+        <table class="inv-table">
+          <thead>
+            <tr>
+              <th>Date / Période</th>
+              <th>Réf. Facture</th>
+              <th>Ressources / Description</th>
+              <th>Montant</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (i of filteredInvoices(); track $index) {
+            <tr class="inv-row">
+              <td class="col-date">{{ i.period }}</td>
+              <td class="col-ref">
+                <span class="ref-badge">{{ i.ref }}</span>
+              </td>
+              <td class="col-resource">
+                <div class="resource-cell">
+                  <div class="resource-icon" [class.icon-credit]="i.amount.startsWith('+')" [class.icon-debit]="i.amount.startsWith('-')">
+                    @if (i.amount.startsWith('+')) {
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="17 11 12 6 7 11"/><line x1="12" y1="18" x2="12" y2="6"/>
+                      </svg>
+                    } @else {
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="7 13 12 18 17 13"/><line x1="12" y1="6" x2="12" y2="18"/>
+                      </svg>
+                    }
+                  </div>
+                  <span class="resource-name">{{ i.resources }}</span>
+                </div>
+              </td>
+              <td class="col-amount">
+                <span class="amount-val" [class.amount-credit]="i.amount.startsWith('+')" [class.amount-debit]="i.amount.startsWith('-')">
+                  {{ i.amount }}
+                </span>
+              </td>
+              <td class="col-status">
+                <span class="status-badge" [class.badge-approved]="i.status === 'Payée'" [class.badge-pending]="i.status === 'Recharge'">
+                  <span class="status-dot"></span>
+                  {{ i.status }}
+                </span>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
       }
-    </tbody>
-  </table>
+    </div>
+
+  </div>
+
 </div>

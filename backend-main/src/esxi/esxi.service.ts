@@ -34,6 +34,13 @@ export class EsxiService {
         // Créer un nouveau client vSphere
         this.vsphereClient = new VsphereClient(host, username, password, false);
 
+        // Handler persistant d'erreur sur l'EventEmitter pour éviter les UncaughtException (socket hang up, ECONNRESET, etc.)
+        this.vsphereClient.on('error', (err: any) => {
+            const msg = err?.message || String(err);
+            this.logger.warn(`⚠️ Événement socket/connexion vSphere ESXi: ${msg}`);
+            this.clientReadyPromise = null;
+        });
+
         this.clientReadyPromise = new Promise<void>((resolve, reject) => {
             // Timeout de sécurité : si ni 'ready' ni 'error' ne sont émis
             // (cas d'un ETIMEDOUT silencieux), on rejette après 30s
@@ -49,7 +56,7 @@ export class EsxiService {
             });
             this.vsphereClient.once('error', (err: any) => {
                 clearTimeout(timeoutId);
-                this.logger.error(`❌ Erreur de connexion ESXi : ${err.message}`);
+                this.logger.error(`❌ Erreur de connexion initiale ESXi : ${err.message}`);
                 this.clientReadyPromise = null; // Permettre un nouvel essai
                 reject(err);
             });
@@ -109,6 +116,20 @@ export class EsxiService {
             );
             throw new Error(`Authentification ESXi échouée: ${errorMessage}`);
         }
+    }
+
+    /**
+     * Vérifie si une VM est une VM cliente (et non un template ou une VM d'infrastructure comme dbaas, paas, saas).
+     */
+    isClientVm(name?: string): boolean {
+        if (!name) return false;
+        const lower = name.toLowerCase().trim();
+        if (lower.startsWith('template') || lower.includes('template')) return false;
+        if (lower === 'dbaas' || lower.startsWith('dbaas') || lower.includes('dbaas')) return false;
+        if (lower === 'paas' || lower.startsWith('paas') || lower.includes('paas')) return false;
+        if (lower === 'saas' || lower.startsWith('saas') || lower.includes('saas')) return false;
+        if (lower === 'vcenter' || lower.includes('vcenter')) return false;
+        return true;
     }
 
     /**
@@ -278,17 +299,20 @@ export class EsxiService {
         await this.ensureClientReady();
         try {
             return await new Promise((resolve, reject) => {
-                this.vsphereClient
-                    .runCommand(command, args)
-                    .once('result', resolve)
-                    .once('error', reject);
+                const cmd = this.vsphereClient.runCommand(command, args);
+                cmd.once('result', resolve);
+                cmd.once('error', reject);
             });
         } catch (error: any) {
             const errorMsg = error instanceof Error ? error.message : String(error);
-            if (retryCount === 0 && this.isNetworkError(errorMsg)) {
-                this.logger.warn(`🔄 Erreur réseau ESXi (${errorMsg.split(':')[0]}). Reconnexion automatique...`);
+            if (retryCount < 2 && this.isNetworkError(errorMsg)) {
+                this.logger.warn(`🔄 Erreur réseau ESXi (${errorMsg.split(':')[0]}). Reconnexion automatique (tentative ${retryCount + 1}/2)...`);
                 this.clientReadyPromise = null;
-                await this.initializeVsphereClient();
+                try {
+                    await this.initializeVsphereClient();
+                } catch (e: any) {
+                    this.logger.warn(`Échec réinitialisation vSphere: ${e?.message || e}`);
+                }
                 return this.runVsphereCommand(command, args, retryCount + 1);
             }
             throw error;
@@ -343,10 +367,9 @@ export class EsxiService {
         };
     }
 
-    async powerControl(vmId: string, action: 'start' | 'stop'): Promise<void> {
+    async powerControl(vmId: string, action: 'start' | 'stop' | 'restart' | 'reboot' | 'suspend'): Promise<void> {
         // Résoudre le vrai MoRef ESXi (ex: "vm-5") à partir d'un nom ou d'une référence stockée
         const target = await this.resolveVmTarget(vmId, vmId);
-
 
         if (!target) {
             throw new Error(`VM "${vmId}" introuvable sur l'ESXi. Elle n'existe pas ou a été supprimée.`);
@@ -364,9 +387,20 @@ export class EsxiService {
             this.logger.warn(`VM ${target.name} est déjà éteinte, action ignorée.`);
             return;
         }
+        if (action === 'suspend' && isAlreadyOff) {
+            this.logger.warn(`VM ${target.name} est déjà éteinte ou suspendue, action ignorée.`);
+            return;
+        }
 
         try {
-            const command = action === 'start' ? 'PowerOnVM_Task' : 'PowerOffVM_Task';
+            let command = 'PowerOnVM_Task';
+            if (action === 'stop') {
+                command = 'PowerOffVM_Task';
+            } else if (action === 'restart' || action === 'reboot') {
+                command = isAlreadyOn ? 'ResetVM_Task' : 'PowerOnVM_Task';
+            } else if (action === 'suspend') {
+                command = 'SuspendVM_Task';
+            }
 
             const taskResult: any = await this.runVsphereCommand(command, {
                 _this: target.ref,
@@ -572,10 +606,14 @@ export class EsxiService {
             });
         } catch (error: any) {
             const errorMsg = error instanceof Error ? error.message : String(error);
-            if (retryCount === 0 && this.isNetworkError(errorMsg)) {
+            if (retryCount < 2 && this.isNetworkError(errorMsg)) {
                 this.logger.warn(`🔄 Erreur réseau ESXi (CreateContainerView: ${errorMsg.split(':')[0]}). Reconnexion automatique...`);
                 this.clientReadyPromise = null;
-                await this.initializeVsphereClient();
+                try {
+                    await this.initializeVsphereClient();
+                } catch (e: any) {
+                    this.logger.warn(`Échec réinitialisation vSphere: ${e?.message || e}`);
+                }
                 return this.createContainerView(type, retryCount + 1);
             }
             throw error;
@@ -655,10 +693,11 @@ export class EsxiService {
             const totalCpuCapacityMhz = mhzPerCore * numCores;
             const cpuUsagePercent = Math.round((usedCpuMhz / totalCpuCapacityMhz) * 100);
 
-            // Ajouter le vrai nombre de VMs actives à partir de l'état des VMs
+            // Ajouter le vrai nombre de VMs clientes actives (en excluant les templates et VMs d'infrastructure comme dbaas)
             const vms = await this.getVms();
-            const activeVmsCount = vms.filter(vm => vm.state === 'poweredOn').length;
-            const totalVmsCount = vms.length;
+            const clientVms = vms.filter(vm => this.isClientVm(vm.name));
+            const activeVmsCount = clientVms.filter(vm => vm.state === 'poweredOn').length;
+            const totalVmsCount = clientVms.length;
 
             // --- EXTRACTION DATASTORE ---
             let storageUsagePercent = 0; // Default (will be updated dynamically below)
@@ -1052,56 +1091,95 @@ export class EsxiService {
         return message.includes('CloneVM_Task') && message.includes('pas supporté');
     }
 
-    private async waitForTaskCompletion(taskRef: any, timeoutMs = 10 * 60 * 1000): Promise<void> {
+    private normalizeTaskRef(taskRef: any): any {
+        if (!taskRef) return null;
+        if (typeof taskRef === 'string') {
+            return {
+                attributes: { 'xsi:type': 'ManagedObjectReference', type: 'Task' },
+                $value: taskRef,
+            };
+        }
+        if (typeof taskRef === 'object') {
+            if (taskRef.attributes && taskRef.$value) {
+                return taskRef;
+            }
+            const val = taskRef.$value || taskRef.value || taskRef._;
+            if (val) {
+                return {
+                    attributes: { 'xsi:type': 'ManagedObjectReference', type: 'Task' },
+                    $value: String(val),
+                };
+            }
+        }
+        return taskRef;
+    }
+
+    private async waitForTaskCompletion(taskRef: any, timeoutMs = 15 * 60 * 1000): Promise<void> {
+        const normalizedRef = this.normalizeTaskRef(taskRef);
+        const taskId = this.unwrapSoapValue(normalizedRef?.$value ?? normalizedRef?.value ?? taskRef);
         const startedAt = Date.now();
         let lastLoggedState: string | undefined;
+        let lastLoggedProgress: number | undefined;
 
         while (Date.now() - startedAt < timeoutMs) {
-            const taskInfo = await this.getTaskInfo(taskRef);
-            const state = this.unwrapSoapValue(taskInfo?.state);
-            const taskId = this.unwrapSoapValue(taskRef?.value ?? taskRef);
+            try {
+                const taskInfo = await this.getTaskInfo(normalizedRef);
+                const state = this.unwrapSoapValue(taskInfo?.state);
+                const progress = this.unwrapSoapValue(taskInfo?.progress);
 
-            if (state && state !== lastLoggedState) {
-                this.logger.debug(`Task VMware ${taskId}: ${state}`);
-                lastLoggedState = state;
-            }
-
-            if (state === 'success') {
-                return;
-            }
-
-            if (state === 'error') {
-                const localizedMessage =
-                    this.unwrapSoapValue(taskInfo?.error?.localizedMessage) ??
-                    this.unwrapSoapValue(taskInfo?.error?.fault?.faultMessage?.[0]?.message) ??
-                    JSON.stringify(taskInfo?.error);
-
-                if (localizedMessage === 'The operation is not supported on the object.') {
-                    throw new Error(
-                        'CloneVM_Task n’est pas supporté par cet objet ESXi. Sur un ESXi standalone, le clonage SOAP direct nécessite généralement vCenter ; sinon il faut utiliser une stratégie de copie/register VM.',
-                    );
+                if (state && (state !== lastLoggedState || (progress !== undefined && progress !== lastLoggedProgress))) {
+                    const progressStr = progress !== undefined ? ` (${progress}%)` : '';
+                    this.logger.log(`⏳ Tâche VMware ${taskId}: ${state}${progressStr}`);
+                    lastLoggedState = state;
+                    lastLoggedProgress = progress;
                 }
 
-                throw new Error(`La tâche VMware a échoué: ${localizedMessage}`);
+                if (state === 'success') {
+                    this.logger.log(`✅ Tâche VMware ${taskId} terminée avec succès.`);
+                    return;
+                }
+
+                if (state === 'error') {
+                    const localizedMessage =
+                        this.unwrapSoapValue(taskInfo?.error?.localizedMessage) ??
+                        this.unwrapSoapValue(taskInfo?.error?.fault?.faultMessage?.[0]?.message) ??
+                        JSON.stringify(taskInfo?.error);
+
+                    if (localizedMessage === 'The operation is not supported on the object.') {
+                        throw new Error(
+                            'CloneVM_Task n’est pas supporté par cet objet ESXi. Sur un ESXi standalone, le clonage SOAP direct nécessite généralement vCenter ; sinon il faut utiliser une stratégie de copie/register VM.',
+                        );
+                    }
+
+                    throw new Error(`La tâche VMware a échoué: ${localizedMessage}`);
+                }
+            } catch (err: any) {
+                if (err.message && (err.message.includes('La tâche VMware a échoué') || err.message.includes('CloneVM_Task'))) {
+                    throw err;
+                }
+                this.logger.warn(`⚠️ Statut de la tâche ${taskId}: ${err.message}`);
             }
 
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            const elapsed = Date.now() - startedAt;
+            const pollInterval = elapsed < 4000 ? 400 : (elapsed < 20000 ? 1000 : 2500);
+            await new Promise((resolve) => setTimeout(resolve, pollInterval));
         }
 
-        throw new Error('Timeout: la tâche VMware de clonage est toujours en cours.');
+        throw new Error(`Timeout: la tâche VMware de clonage (${taskId}) a dépassé le délai imparti (${Math.round(timeoutMs / 60000)} min).`);
     }
 
     private async getTaskInfo(taskRef: any): Promise<any> {
         await this.ensureClientReady();
         const serviceContent = this.vsphereClient.serviceContent;
+        const normalizedRef = this.normalizeTaskRef(taskRef);
         const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
             _this: serviceContent.propertyCollector,
             specSet: [
                 {
                     propSet: [
-                        { type: 'Task', all: false, pathSet: ['info.state', 'info.error'] },
+                        { type: 'Task', all: false, pathSet: ['info.state', 'info.error', 'info.progress'] },
                     ],
-                    objectSet: [{ obj: taskRef, skip: false }],
+                    objectSet: [{ obj: normalizedRef, skip: false }],
                 },
             ],
             options: {},
@@ -1111,6 +1189,7 @@ export class EsxiService {
         return {
             state: props.find((prop: any) => prop.name === 'info.state')?.val,
             error: props.find((prop: any) => prop.name === 'info.error')?.val,
+            progress: props.find((prop: any) => prop.name === 'info.progress')?.val,
         };
     }
 
@@ -1218,9 +1297,14 @@ export class EsxiService {
             return result?.returnval?.objects[0]?.obj || null;
         } catch (error: any) {
             const errorMsg = error instanceof Error ? error.message : String(error);
-            if (retryCount === 0 && errorMsg.includes('NotAuthenticated')) {
-                this.logger.warn('Session ESXi expirée. Reconnexion automatique en cours...');
-                this.initializeVsphereClient();
+            if (retryCount < 2 && this.isNetworkError(errorMsg)) {
+                this.logger.warn('Session ou connexion ESXi perdue. Reconnexion automatique en cours...');
+                this.clientReadyPromise = null;
+                try {
+                    await this.initializeVsphereClient();
+                } catch (e: any) {
+                    this.logger.warn(`Échec réinitialisation vSphere: ${e?.message || e}`);
+                }
                 return this.getFirstMoRef(type, retryCount + 1);
             }
             throw error;
@@ -1229,25 +1313,29 @@ export class EsxiService {
 
     async obtenirTicketConsole(vmIdware: string) {
         try {
+            await this.ensureClientReady();
+
+            // Résoudre la vraie référence VMware (MoRef ou nom)
+            const target = await this.resolveVmTarget(vmIdware, vmIdware);
+            const refVal = target?.ref?.$value || target?.id || vmIdware;
+
             // 1. Préparation des paramètres pour l'appel SOAP vSphere 8.0
             const argumentsSoap = {
                 _this: {
                     attributes: { type: 'VirtualMachine' },
-                    $value: vmIdware, // Ex: "1" ou "vm-42" (l'ID VMware de ton Alpine)
+                    $value: refVal,
                 },
                 ticketType: 'webmks', // On demande explicitement le format HTML5 WebMKS
             };
 
             // 2. Appel de la méthode native vSphere "AcquireTicket"
-            // Note : 'this.soapClient' représente ton client connecté à l'ESXi
             const [resultat] = await this.vsphereClient.client.AcquireTicketAsync(argumentsSoap);
 
             // 3. Extraction des données renvoyées par l'ESXi
-            // vSphere renvoie un objet contenant le ticket, le host, et le port
             return {
                 ticket: resultat.returnval.ticket,     // Le token de sécurité unique
                 cfgFile: resultat.returnval.cfgFile,   // Le chemin du fichier .vmx
-                host: this.host,                 // L'IP de ton ESXi (visible sur ta capture)
+                host: this.host,                       // L'IP de l'hôte ESXi
                 port: 443,                             // Le port standard sécurisé
             };
 

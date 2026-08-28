@@ -1,30 +1,282 @@
-import { Component, input } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { VM } from '../../personal-dashboard-helper.service';
+import { Component, input, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { VM, MetricHistoryItem } from '../../personal-dashboard-helper.service';
 import { PersonalDashboardHelperService } from '../../personal-dashboard-helper.service';
 
 @Component({
   selector: 'app-monitor-tab',
   standalone: true,
-  imports: [DatePipe],
+  imports: [CommonModule, FormsModule],
   templateUrl: './monitor-tab.html',
+  styleUrls: ['./monitor-tab.scss']
 })
 export class MonitorTabComponent {
   vms = input.required<VM[]>();
   monitorBars = input.required<Record<string, number[]>>();
   monitorBarTimes = input<Record<string, string[]>>({});
+  monitorHistory = input<Record<string, MetricHistoryItem[]>>({});
   lastRefresh = input<Date | null>(null);
+
+  searchTerm = signal<string>('');
+  selectedFilter = signal<string>('ALL'); // 'ALL' | 'RUNNING' | 'STOPPED'
+
+  // Metric mode per VM: 'cpu' | 'ram' | 'disk'
+  selectedMetric = signal<Record<string, 'cpu' | 'ram' | 'disk'>>({});
+
+  // Range mode per VM: '1h' | '24h' | 'yesterday' | '7d'
+  selectedRange = signal<Record<string, '1h' | '24h' | 'yesterday' | '7d'>>({});
+
+  // Custom historical metrics cache for ranges other than 1h
+  customHistory = signal<Record<string, MetricHistoryItem[]>>({});
+  isLoadingRange = signal<Record<string, boolean>>({});
+
+  // Hovered item per VM for live inspection
+  hoveredItem = signal<Record<string, { item: MetricHistoryItem; idx: number } | null>>({});
 
   constructor(public h: PersonalDashboardHelperService) { }
 
+  // ── Range Selection Helpers ───────────────────────────────────────────
+  getRange(vmId: string): '1h' | '24h' | 'yesterday' | '7d' {
+    return this.selectedRange()[vmId] ?? '1h';
+  }
+
+  setRange(vmId: string, range: '1h' | '24h' | 'yesterday' | '7d', event?: Event) {
+    if (event) event.stopPropagation();
+    this.selectedRange.update(r => ({ ...r, [vmId]: range }));
+
+    if (range === '1h') {
+      // Revenir au flux en direct 1 heure
+      return;
+    }
+
+    this.isLoadingRange.update(l => ({ ...l, [vmId]: true }));
+    this.h.getMetricHistory('IAAS', vmId, range).subscribe({
+      next: (data) => {
+        this.customHistory.update(c => ({ ...c, [vmId]: data || [] }));
+        this.isLoadingRange.update(l => ({ ...l, [vmId]: false }));
+      },
+      error: (err) => {
+        console.warn(`Erreur chargement métriques ${range} pour VM ${vmId}`, err);
+        this.isLoadingRange.update(l => ({ ...l, [vmId]: false }));
+      }
+    });
+  }
+
+  getRangeTitle(range: string): string {
+    switch (range) {
+      case '1h': return 'Dernière Heure';
+      case '24h': return 'Dernières 24 Heures';
+      case 'yesterday': return "Hier (24 Heures)";
+      case '7d': return '7 Derniers Jours';
+      default: return 'Historique';
+    }
+  }
+
+  // ── Metric Mode Helpers ───────────────────────────────────────────────
+  getMetricMode(vmId: string): 'cpu' | 'ram' | 'disk' {
+    return this.selectedMetric()[vmId] ?? 'cpu';
+  }
+
+  setMetricMode(vmId: string, mode: 'cpu' | 'ram' | 'disk', event?: Event) {
+    if (event) event.stopPropagation();
+    this.selectedMetric.update(m => ({ ...m, [vmId]: mode }));
+  }
+
+  getMetricUnit(mode: 'cpu' | 'ram' | 'disk'): string {
+    if (mode === 'disk') return 'Mo';
+    return '%';
+  }
+
+  getMetricLabel(mode: 'cpu' | 'ram' | 'disk'): string {
+    switch (mode) {
+      case 'cpu': return 'Charge CPU';
+      case 'ram': return 'Mémoire RAM';
+      case 'disk': return 'Stockage Disque';
+    }
+  }
+
+  // ── Hover Inspection Helpers ──────────────────────────────────────────
+  setHoveredItem(vmId: string, item: MetricHistoryItem | null, idx = 0) {
+    if (!item) {
+      this.hoveredItem.update(h => ({ ...h, [vmId]: null }));
+    } else {
+      this.hoveredItem.update(h => ({ ...h, [vmId]: { item, idx } }));
+    }
+  }
+
+  getHoveredOrLatest(vmId: string, vm: VM): { label: string; time: string; cpu: number; ram: number; disk: number; isHovered: boolean } {
+    const range = this.getRange(vmId);
+    const hovered = this.hoveredItem()[vmId];
+    if (hovered && hovered.item) {
+      const timeStr = this.formatReadoutTime(hovered.item.timestamp, range);
+      const totalCount = this.getHistoryItems(vmId).length;
+      return {
+        label: `Point inspecté (${hovered.idx + 1}/${totalCount})`,
+        time: timeStr,
+        cpu: hovered.item.cpu,
+        ram: hovered.item.ram,
+        disk: hovered.item.disk,
+        isHovered: true
+      };
+    }
+
+    const history = this.getHistoryItems(vmId);
+    const last = history[history.length - 1];
+    const isLiveMode = range === '1h';
+    const timeStr = last ? this.formatReadoutTime(last.timestamp, range) : (isLiveMode ? 'En direct' : '-');
+
+    return {
+      label: isLiveMode ? 'En direct' : 'Fin de période',
+      time: timeStr,
+      cpu: isLiveMode ? (vm.cpuUse ?? (last?.cpu || 0)) : (last?.cpu || 0),
+      ram: isLiveMode ? (vm.ramUse ?? (last?.ram || 0)) : (last?.ram || 0),
+      disk: last?.disk || (vm.disk || 0),
+      isHovered: false
+    };
+  }
+
+  // ── History & Bar Value Helpers ───────────────────────────────────────
+  getHistoryItems(vmId: string): MetricHistoryItem[] {
+    const range = this.getRange(vmId);
+    if (range !== '1h') {
+      const custom = this.customHistory()[vmId];
+      if (custom && custom.length > 0) {
+        return custom;
+      }
+    }
+
+    const hist = this.monitorHistory()[vmId];
+    if (hist && hist.length > 0) {
+      return hist;
+    }
+    const bars = this.monitorBars()[vmId] ?? [];
+    const times = this.monitorBarTimes()[vmId] ?? [];
+    const now = Date.now();
+
+    return bars.map((b, i) => ({
+      cpu: b,
+      ram: Math.max(0, Math.min(100, Math.round(b * 0.6))),
+      disk: 0,
+      timestamp: times[i] ? new Date().toISOString() : new Date(now - (bars.length - 1 - i) * 3 * 60 * 1000).toISOString()
+    }));
+  }
+
+  getBarValue(item: MetricHistoryItem, mode: 'cpu' | 'ram' | 'disk'): number {
+    switch (mode) {
+      case 'cpu': return Math.max(0, Math.min(100, item.cpu || 0));
+      case 'ram': return Math.max(0, Math.min(100, item.ram || 0));
+      case 'disk': return Math.max(0, Math.min(100, Math.round((item.disk / 50) * 100)));
+    }
+  }
+
+  getBarColor(val: number, mode: 'cpu' | 'ram' | 'disk' = 'cpu'): string {
+    if (mode === 'ram') {
+      if (val >= 85) return 'linear-gradient(180deg, #ef4444 0%, #dc2626 100%)';
+      if (val >= 65) return 'linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%)';
+      return 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)';
+    }
+    if (mode === 'disk') {
+      return 'linear-gradient(180deg, #06b6d4 0%, #0d9488 100%)';
+    }
+    // CPU mode
+    if (val >= 80) return 'linear-gradient(180deg, #ef4444 0%, #dc2626 100%)';
+    if (val >= 50) return 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)';
+    return 'linear-gradient(180deg, #10b981 0%, #059669 100%)';
+  }
+
+  formatTooltipTime(ts: string, range = '1h'): string {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const dateStr = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+    const timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    if (range === '7d') {
+      return `Moyenne du ${d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`;
+    }
+    if (range === 'yesterday') {
+      return `Hier (${dateStr}) à ${timeStr}`;
+    }
+    return `${dateStr} à ${timeStr}`;
+  }
+
+  formatReadoutTime(ts: string, range = '1h'): string {
+    if (!ts) return '';
+    const d = new Date(ts);
+    if (range === '7d') {
+      return 'Moyenne du ' + d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+    }
+    if (range === 'yesterday') {
+      return 'Hier à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+    if (range === '24h') {
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  // ── KPI Summary Calculations ──────────────────────────────────────────
+  totalVmsCount = computed(() => (this.vms() || []).length);
+
+  runningVmsCount = computed(() => {
+    return (this.vms() || []).filter(v => v.status === 'running').length;
+  });
+
+  stoppedVmsCount = computed(() => {
+    return (this.vms() || []).filter(v => v.status !== 'running').length;
+  });
+
+  avgCpuUsage = computed(() => {
+    const running = (this.vms() || []).filter(v => v.status === 'running' && v.cpuUse !== null);
+    if (running.length === 0) return 0;
+    const sum = running.reduce((acc, v) => acc + (v.cpuUse ?? 0), 0);
+    return Math.round(sum / running.length);
+  });
+
+  avgRamUsage = computed(() => {
+    const running = (this.vms() || []).filter(v => v.status === 'running' && v.ramUse !== null);
+    if (running.length === 0) return 0;
+    const sum = running.reduce((acc, v) => acc + (v.ramUse ?? 0), 0);
+    return Math.round(sum / running.length);
+  });
+
+  networkHealthPercentage = computed(() => {
+    const running = (this.vms() || []).filter(v => v.status === 'running');
+    if (running.length === 0) return 100;
+    const connected = running.filter(v => v.internetConnected).length;
+    return Math.round((connected / running.length) * 100);
+  });
+
+  // ── Filtered List ──────────────────────────────────────────────────────
+  filteredVms = computed(() => {
+    const list = this.vms() || [];
+    const search = this.searchTerm().trim().toLowerCase();
+    const filter = this.selectedFilter();
+
+    return list.filter(v => {
+      const matchSearch = !search ||
+        (v.name && v.name.toLowerCase().includes(search)) ||
+        (v.os && v.os.toLowerCase().includes(search)) ||
+        (v.ip && v.ip.toLowerCase().includes(search)) ||
+        (v.catalogName && v.catalogName.toLowerCase().includes(search));
+
+      let matchFilter = true;
+      if (filter === 'RUNNING') matchFilter = v.status === 'running';
+      if (filter === 'STOPPED') matchFilter = v.status !== 'running';
+
+      return matchSearch && matchFilter;
+    });
+  });
+
+  // ── Helpers ────────────────────────────────────────────────────────────
   formatRefresh(d: Date | null): string {
     if (!d) return 'En attente…';
-    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 
   statusLabel(status: string): string {
     switch (status) {
-      case 'running': return 'Running';
+      case 'running': return 'En ligne';
       case 'stopped': return 'Arrêtée';
       case 'provisioning': return 'En cours…';
       case 'pending': return 'En attente…';
@@ -32,31 +284,50 @@ export class MonitorTabComponent {
     }
   }
 
-  statusClass(status: string): string {
-    switch (status) {
-      case 'running': return 'badge running';
-      case 'stopped': return 'badge stopped';
-      case 'provisioning': return 'badge pending';
-      default: return 'badge';
-    }
+  getOsLogo(osName?: string): string {
+    const lower = (osName || '').toLowerCase();
+    if (lower.includes('ubuntu')) return 'assets/ubuntu.png';
+    if (lower.includes('debian')) return 'assets/Debian.png';
+    if (lower.includes('alpine')) return 'assets/alpine.png';
+    if (lower.includes('2000')) return 'assets/windows 2000.png';
+    if (lower.includes('windows') || lower.includes('win')) return 'assets/windows 7.png';
+    return 'assets/ubuntu.png';
   }
 
-  /**
-   * Retourne les indices des barres pour lesquels on affiche un label de temps.
-   * On affiche toujours le premier, le dernier et environ 3 intermédiaires.
-   */
+  getMetricTextColor(val: number | null): string {
+    if (val === null) return '#94a3b8';
+    if (val >= 80) return '#dc2626';
+    if (val >= 50) return '#d97706';
+    return '#059669';
+  }
+
   tickIndices(vmId: string): number[] {
-    const bars = this.monitorBars()[vmId] ?? [];
-    const n = bars.length;
+    const items = this.getHistoryItems(vmId);
+    const n = items.length;
     if (n === 0) return [];
-    if (n <= 5) return bars.map((_, i) => i);
-    // Afficher 5 ticks : 0, 25%, 50%, 75%, 100%
+    if (n <= 7) return items.map((_, i) => i);
     const step = (n - 1) / 4;
     return [0, 1, 2, 3, 4].map(k => Math.round(k * step));
   }
 
   timeAt(vmId: string, idx: number): string {
-    const times = this.monitorBarTimes()[vmId] ?? [];
-    return times[idx] ?? '';
+    const items = this.getHistoryItems(vmId);
+    const item = items[idx];
+    if (!item) return '';
+    const d = new Date(item.timestamp);
+    const range = this.getRange(vmId);
+    if (range === '7d') {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      return `${day}/${month}`;
+    }
+    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  getTimeTickPercent(vmId: string, idx: number): number {
+    const items = this.getHistoryItems(vmId);
+    if (items.length <= 1) return 0;
+    return (idx / (items.length - 1)) * 100;
   }
 }
+

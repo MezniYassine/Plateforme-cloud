@@ -27,11 +27,15 @@ import { MailModule } from './mail/mail.module';
 import { PaasModule } from './paas/paas.module';
 import { ServicePaaS } from './entities/servicePaaS.entity';
 import { SaasModule } from './saas/saas.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { Metric } from './entities/metric.entity';
+import { MetricsModule } from './metrics/metrics.module';
 
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST ?? 'localhost',
@@ -39,7 +43,7 @@ import { SaasModule } from './saas/saas.module';
       username: process.env.DB_USERNAME ?? 'postgres',
       password: process.env.DB_PASSWORD ?? 'password',
       database: process.env.DB_NAME ?? 'dynamix_db',
-      entities: [Admin, Client, Entreprise, MachineVirtuelle, Personal, ServiceInstance, Catalogue, Wallet, Transaction, ServicePaaS],
+      entities: [Admin, Client, Entreprise, MachineVirtuelle, Personal, ServiceInstance, Catalogue, Wallet, Transaction, ServicePaaS, Metric],
       autoLoadEntities: true,
       synchronize: true, // disable in production
       logging: false,
@@ -75,6 +79,7 @@ import { SaasModule } from './saas/saas.module';
     MailModule,
     PaasModule,
     SaasModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

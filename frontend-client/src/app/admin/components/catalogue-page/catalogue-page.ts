@@ -7,6 +7,7 @@ import { CatalogueService, CatalogueItem, ServiceType } from '../../services/cat
   standalone: true,
   imports: [CommonModule],
   templateUrl: './catalogue-page.html',
+  styleUrl: './catalogue-page.scss'
 })
 export class CataloguePageComponent implements OnInit {
   constructor(
@@ -105,6 +106,7 @@ export class CataloguePageComponent implements OnInit {
     this.formStorage.set(item.stockageGB || 0);
     this.formTypeSgbd.set((item.typeSgbd as any) || 'POSTGRESQL');
     this.isModalOpen.set(true);
+    this.cdr.detectChanges();
   }
 
   closeModal() {

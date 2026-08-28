@@ -36,21 +36,29 @@ export class PersonnelService {
             order: { dateTransaction: 'DESC' }
         });
 
-        const invoices = transactions.map(t => {
+        const invoices: any[] = [];
+        for (const t of transactions) {
             const price = Number(t.montant);
             const dDate = new Date(t.dateTransaction);
             const period = dDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
             const isDebit = t.type === 'DEBIT';
-            const ref = `TRX-${String(t.id).padStart(5, '0')}`;
-            return {
+
+            // Ensure reference is persisted in database
+            if (!t.reference) {
+                t.reference = `FAC-${dDate.getFullYear()}-${String(t.id).padStart(5, '0')}`;
+                await this.transactionRepo.save(t);
+            }
+
+            invoices.push({
+                id: t.id,
                 period,
-                ref,
+                ref: t.reference,
                 resources: t.description || (isDebit ? 'Provisionnement de ressources' : 'Recharge Wallet'),
                 amount: `${isDebit ? '-' : '+'}${price.toFixed(2)} DT`,
                 status: isDebit ? 'Payée' : 'Recharge',
                 statusClass: isDebit ? 'running' : 'provisioning'
-            };
-        });
+            });
+        }
 
         return invoices;
     }

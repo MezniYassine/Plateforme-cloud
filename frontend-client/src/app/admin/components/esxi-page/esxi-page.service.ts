@@ -1,4 +1,4 @@
-﻿import { Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -10,14 +10,14 @@ export class EsxiService {
   // Récupérer les stats de l'hôte physique
   getHostStats(): Observable<any> {
     return this.http.get<any>(`${environment.apiBaseUrl}/esxi/host-stats`).pipe(
-      map(res => res.data)
+      map(res => res?.data ?? res)
     );
   }
 
   // Récupérer la liste des VMs ESXi
   getVms(): Observable<any[]> {
     return this.http.get<any>(`${environment.apiBaseUrl}/esxi/vms`).pipe(
-      map(res => res.data || [])
+      map(res => res?.data ?? res ?? [])
     );
   }
 

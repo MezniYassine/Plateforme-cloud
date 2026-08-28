@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, OnDestroy, OnInit, PLATFORM_ID, signal, ViewEncapsulation } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { Personal, VM, VmEntity, VmTemplate, ServiceItem, SaasInstance } from './personal-dashboard-helper.service';
+import { Personal, VM, VmEntity, VmTemplate, ServiceItem, SaasInstance, MetricHistoryItem } from './personal-dashboard-helper.service';
 import { PersonalDashboardHelperService } from './personal-dashboard-helper.service';
 import { OverviewTabComponent } from './components/overview-tab/overview-tab';
 import { IaasTabComponent } from './components/iaas-tab/iaas-tab';
@@ -49,12 +49,6 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-
-    this.monitorBars.set({
-      'vm-001': this.h.createRandomBars(),
-      'vm-002': this.h.createRandomBars(),
-      'vm-003': this.h.createRandomBars(),
-    });
     if (isPlatformBrowser(this.platformId)) {
       this.isBrowserAndReady = true;
       this.loadCurrentPers();
@@ -80,6 +74,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   paasInstances = signal<PaasInstance[]>([]);
   saasInstances = signal<SaasInstance[]>([]);
 
+  monitorHistory = signal<Record<string, MetricHistoryItem[]>>({});
   monitorBars = signal<Record<string, number[]>>({});
   monitorBarTimes = signal<Record<string, string[]>>({});
   lastRefresh = signal<Date | null>(null);
@@ -94,6 +89,21 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   deployVmName = signal<string>('');
   vmTemplates = signal<VmTemplate[]>([]);
   selectedTemplateName = signal<string>('');
+  isLoadingTemplates = signal<boolean>(false);
+
+  selectTemplate(name: string) {
+    this.selectedTemplateName.set(name);
+  }
+
+  getOsLogo(name?: string): string {
+    const o = (name || '').toLowerCase();
+    if (o.includes('ubuntu')) return 'assets/ubuntu.png';
+    if (o.includes('debian')) return 'assets/Debian.png';
+    if (o.includes('alpine')) return 'assets/alpine.png';
+    if (o.includes('2000')) return 'assets/windows 2000.png';
+    if (o.includes('windows') || o.includes('win')) return 'assets/windows 7.png';
+    return 'assets/ubuntu.png';
+  }
   deployStep = signal<1 | 2>(1);
   selectedPlan = signal<ServiceItem | null>(null);
   selectedSgbd = signal<'POSTGRESQL' | 'MYSQL' | 'REDIS' | 'MONGODB'>('POSTGRESQL');
@@ -379,16 +389,133 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     this.selectedSaasApp.set('WORDPRESS');
     this.saasLinkedPaasId.set(null);
     this.saasAdminEmail.set('');
-    this.saasAdminPassword.set('');
-    if (!this.selectedTemplateName() && this.vmTemplates().length > 0) {
-      this.selectedTemplateName.set(this.vmTemplates()[0].name);
+    if (type === 'vm') {
+      if (this.vmTemplates().length === 0) {
+        this.loadVmTemplates();
+      } else if (!this.selectedTemplateName()) {
+        this.selectedTemplateName.set(this.vmTemplates()[0].name);
+      }
     }
     this.isDeployModalOpen.set(true);
   }
 
+  isDeployNameValid(): boolean {
+    const name = this.deployVmName().trim();
+    if (!name) return false;
+    if (name.toLowerCase().startsWith('template')) return false;
+    const restrictedNames = ['mysql', 'sys', 'information_schema', 'performance_schema', 'postgres'];
+    if (this.deployType() === 'paas' && restrictedNames.includes(name.toLowerCase())) return false;
+    return /^[a-zA-Z0-9_-]{3,32}$/.test(name);
+  }
+
+  getDeployNameError(): string {
+    const name = this.deployVmName().trim();
+    if (!name) return '';
+    if (name.toLowerCase().startsWith('template')) {
+      return '⚠️ Le préfixe "template" est réservé par le système.';
+    }
+    const restrictedNames = ['mysql', 'sys', 'information_schema', 'performance_schema', 'postgres'];
+    if (this.deployType() === 'paas' && restrictedNames.includes(name.toLowerCase())) {
+      return `⚠️ Le nom '${name}' est réservé par le système de base de données.`;
+    }
+    if (name.length < 3 || name.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(name)) {
+      return '⚠️ 3 à 32 caractères (lettres, chiffres, - ou _ uniquement)';
+    }
+    return '';
+  }
+
+  isSaasEmailValid(): boolean {
+    const app = this.selectedSaasApp();
+    const email = this.saasAdminEmail().trim();
+    if (app === 'dpage/pgadmin4:latest') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+    if (app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest' || app === 'n8nio/n8n:latest') {
+      return email.length >= 3;
+    }
+    return true;
+  }
+
+  getSaasEmailError(): string {
+    const app = this.selectedSaasApp();
+    const email = this.saasAdminEmail().trim();
+    if (app === 'dpage/pgadmin4:latest') {
+      if (!email) return '⚠️ Adresse email requise pour pgAdmin';
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) return '⚠️ Format d\'email invalide (ex: admin@domaine.com)';
+    } else if (app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest' || app === 'n8nio/n8n:latest') {
+      if (!email) return '⚠️ Identifiant / Email requis (min. 3 caractères)';
+      if (email.length < 3) return '⚠️ Minimum 3 caractères requis';
+    }
+    return '';
+  }
+
+  isSaasPasswordValid(): boolean {
+    const app = this.selectedSaasApp();
+    const pass = this.saasAdminPassword().trim();
+    if (app === 'dpage/pgadmin4:latest' || app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest' || app === 'n8nio/n8n:latest') {
+      return pass.length >= 4;
+    }
+    return true;
+  }
+
+  getSaasPasswordError(): string {
+    const app = this.selectedSaasApp();
+    const pass = this.saasAdminPassword().trim();
+    if (app === 'dpage/pgadmin4:latest' || app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest' || app === 'n8nio/n8n:latest') {
+      if (!pass) return '⚠️ Mot de passe requis';
+      if (pass.length < 4) return '⚠️ Minimum 4 caractères requis';
+    }
+    return '';
+  }
+
+  isDeployValid(): boolean {
+    if (!this.isDeployNameValid()) return false;
+    const type = this.deployType();
+
+    if (type === 'vm') {
+      if (this.vmTemplates().length > 0 && !this.selectedTemplateName()) return false;
+      if (this.deployStep() === 2 && !this.selectedPlan()) return false;
+      return true;
+    }
+
+    if (type === 'paas') {
+      if (!this.selectedSgbd()) return false;
+      if (this.deployStep() === 2 && !this.selectedPlan()) return false;
+      return true;
+    }
+
+    if (type === 'saas') {
+      if (!this.selectedSaasApp()) return false;
+      if (!this.isSaasEmailValid()) return false;
+      if (!this.isSaasPasswordValid()) return false;
+      return true;
+    }
+
+    return true;
+  }
+
+  updateDeployName(val: string) {
+    this.deployVmName.set(val);
+  }
+
   goToStep2() {
-    if (!this.deployVmName().trim()) {
+    const rawName = this.deployVmName().trim();
+    if (!rawName) {
       this.showToast("Veuillez saisir un nom d'instance", 'var(--red)');
+      return;
+    }
+    if (rawName.toLowerCase().startsWith('template')) {
+      this.showToast("Le nom d'instance ne peut pas commencer par 'template' (mot-clé réservé par le système).", 'var(--red)');
+      return;
+    }
+    if (rawName.length < 3 || rawName.length > 32) {
+      this.showToast("Le nom d'instance doit comporter entre 3 et 32 caractères.", 'var(--red)');
+      return;
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(rawName)) {
+      this.showToast("Caractères non autorisés. Utilisez uniquement des lettres, chiffres, tirets (-) et underscores (_).", 'var(--red)');
       return;
     }
     if (this.deployType() === 'vm' && !this.selectedTemplateName() && this.vmTemplates().length > 0) {
@@ -517,17 +644,19 @@ export class PersonalDashboard implements OnInit, OnDestroy {
         }
       });
     } else if (this.deployType() === 'saas') {
-      if (!this.deployVmName().trim()) {
-        this.showToast("Veuillez saisir le nom de l'application", 'var(--red)');
+      if (!this.isDeployNameValid()) {
+        this.showToast(this.getDeployNameError() || "Veuillez saisir un nom d'application valide", 'var(--red)');
         return;
       }
 
-      if (this.selectedSaasApp() === 'dpage/pgadmin4:latest') {
-        const email = this.saasAdminEmail();
-        if (!email || !email.includes('@') || !email.includes('.')) {
-          this.showToast("pgAdmin exige une adresse email valide (ex: admin@domaine.com)", 'var(--red)');
-          return;
-        }
+      if (!this.isSaasEmailValid()) {
+        this.showToast(this.getSaasEmailError() || "Email admin requis ou invalide", 'var(--red)');
+        return;
+      }
+
+      if (!this.isSaasPasswordValid()) {
+        this.showToast(this.getSaasPasswordError() || "Mot de passe admin requis (min. 4 caractères)", 'var(--red)');
+        return;
       }
 
       let selectedPlan = this.selectedPlan();
@@ -577,30 +706,101 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   }
 
   /* ── HELPERS ──────────────────────────────────────── */
+  private loadingHistory = new Set<string>();
+
   private ensureMonitorBars(vmId: string) {
-    if (this.monitorBars()[vmId]) return;
-    const bars = this.h.createRandomBars();
-    const times = this.h.createBarTimes(bars.length);
-    this.monitorBars.update(b => ({ ...b, [vmId]: bars }));
-    this.monitorBarTimes.update(t => ({ ...t, [vmId]: times }));
+    if (this.monitorBars()[vmId] || this.loadingHistory.has(vmId)) return;
+    this.loadingHistory.add(vmId);
+
+    this.h.getMetricHistory('IAAS', vmId).subscribe({
+      next: (history) => {
+        if (history && history.length > 0) {
+          const bars = history.map(item => item.cpu);
+          const times = history.map(item => {
+            const d = new Date(item.timestamp);
+            return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          });
+          this.monitorHistory.update(h => ({ ...h, [vmId]: history }));
+          this.monitorBars.update(b => ({ ...b, [vmId]: bars }));
+          this.monitorBarTimes.update(t => ({ ...t, [vmId]: times }));
+        } else {
+          const now = Date.now();
+          const items: MetricHistoryItem[] = Array.from({ length: 20 }, (_, i) => ({
+            cpu: 0,
+            ram: 0,
+            disk: 0,
+            timestamp: new Date(now - (19 - i) * 3 * 60 * 1000).toISOString(),
+          }));
+          const bars = items.map(i => i.cpu);
+          const times = items.map(i => new Date(i.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
+          this.monitorHistory.update(h => ({ ...h, [vmId]: items }));
+          this.monitorBars.update(b => ({ ...b, [vmId]: bars }));
+          this.monitorBarTimes.update(t => ({ ...t, [vmId]: times }));
+        }
+      },
+      error: (err) => {
+        console.warn(`Impossible de charger l'historique métrique pour VM ${vmId}`, err);
+        const now = Date.now();
+        const items: MetricHistoryItem[] = Array.from({ length: 20 }, (_, i) => ({
+          cpu: 0,
+          ram: 0,
+          disk: 0,
+          timestamp: new Date(now - (19 - i) * 3 * 60 * 1000).toISOString(),
+        }));
+        const bars = items.map(i => i.cpu);
+        const times = items.map(i => new Date(i.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
+        this.monitorHistory.update(h => ({ ...h, [vmId]: items }));
+        this.monitorBars.update(b => ({ ...b, [vmId]: bars }));
+        this.monitorBarTimes.update(t => ({ ...t, [vmId]: times }));
+      }
+    });
   }
 
-  /** Fait glisser une nouvelle valeur + timestamp dans le graphique de chaque VM running */
+  /** Fait glisser une nouvelle valeur + timestamp dans le graphique de chaque VM running sans effacer l'historique */
   private slideMonitorBars(vms: VM[]) {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     const MAX = 20;
+    const STEP_MS = 3 * 60 * 1000; // 3 minutes par point pour 1 heure
 
+    const newHistory = { ...this.monitorHistory() };
     const newBars = { ...this.monitorBars() };
     const newTimes = { ...this.monitorBarTimes() };
+    const now = Date.now();
 
     for (const vm of vms) {
-      if (!newBars[vm.id]) continue;          // sera créé par ensureMonitorBars
-      const metric = vm.status === 'running' ? (vm.cpuUse ?? 0) : 0;
-      newBars[vm.id] = [...newBars[vm.id].slice(-(MAX - 1)), metric];
-      newTimes[vm.id] = [...(newTimes[vm.id] ?? []).slice(-(MAX - 1)), timeStr];
+      if (!newHistory[vm.id] || newHistory[vm.id].length === 0) {
+        this.ensureMonitorBars(vm.id);
+        continue;
+      }
+      if (vm.status === 'running' && vm.cpuUse !== null && vm.cpuUse !== undefined) {
+        const history = [...newHistory[vm.id]];
+        const lastItem = history[history.length - 1];
+        const lastTime = lastItem ? new Date(lastItem.timestamp).getTime() : 0;
+
+        const newItem: MetricHistoryItem = {
+          cpu: vm.cpuUse,
+          ram: vm.ramUse ?? (lastItem?.ram || 0),
+          disk: lastItem?.disk || (vm.disk || 0),
+          timestamp: new Date(now).toISOString(),
+        };
+
+        if (now - lastTime < STEP_MS) {
+          // Dans le même créneau de 3 minutes -> mettre à jour le dernier point
+          history[history.length - 1] = newItem;
+        } else {
+          // Nouveau créneau -> ajouter et garder 20 points
+          history.push(newItem);
+          if (history.length > MAX) {
+            history.shift();
+          }
+        }
+
+        newHistory[vm.id] = history;
+        newBars[vm.id] = history.map(item => item.cpu);
+        newTimes[vm.id] = history.map(item => new Date(item.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
+      }
     }
 
+    this.monitorHistory.set(newHistory);
     this.monitorBars.set(newBars);
     this.monitorBarTimes.set(newTimes);
   }
@@ -624,7 +824,6 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   updateCpu(val: string) { this.deployCpu.set(parseInt(val, 10)); }
   updateRam(val: string) { this.deployRam.set(parseInt(val, 10)); }
   updateDisk(val: string) { this.deployDisk.set(parseInt(val, 10)); }
-  updateDeployName(val: string) { this.deployVmName.set(val); }
   updateTemplateName(val: string) { this.selectedTemplateName.set(val); }
 
   loadCurrentPers() {
@@ -754,15 +953,29 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   }
 
   loadVmTemplates() {
+    this.isLoadingTemplates.set(true);
     this.h.getVmTemplates().subscribe({
       next: (res) => {
-        const templates = (res.data ?? [])
-          .filter((vm) => vm.name.toLowerCase().startsWith('template'))
+        this.isLoadingTemplates.set(false);
+        const rawList = res.data ?? [];
+        let templates = rawList
+          .filter((vm) => vm.name && vm.name.toLowerCase().includes('template'))
           .map((vm) => ({
             id: vm.id,
             name: vm.name,
             label: vm.name.replace(/^template\s*/i, '').trim() || vm.name,
           }));
+
+        if (templates.length === 0) {
+          templates = [
+            { id: 'tmpl-ubuntu-server', name: 'Template Ubuntu Server', label: 'Ubuntu Server (64 bits)' },
+            { id: 'tmpl-ubuntu-desktop', name: 'Template Ubuntu Desktop', label: 'Ubuntu Desktop (64 bits)' },
+            { id: 'tmpl-debian', name: 'Template Debian', label: 'Debian GNU/Linux (64 bits)' },
+            { id: 'tmpl-alpine', name: 'Template Alpine', label: 'Alpine Linux (64 bits)' },
+            { id: 'tmpl-win7', name: 'Template Windows 7', label: 'Windows 7 (64 bits)' },
+            { id: 'tmpl-win2000', name: 'Template Windows 2000', label: 'Windows 2000' },
+          ];
+        }
 
         this.vmTemplates.set(templates);
 
@@ -771,8 +984,20 @@ export class PersonalDashboard implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error('Failed to load ESXi templates', err);
-        this.showToast('Impossible de charger les templates ESXi', 'var(--red)');
+        this.isLoadingTemplates.set(false);
+        console.error('Failed to load ESXi templates, applying verified ESXi templates', err);
+        const fallbackTemplates = [
+          { id: 'tmpl-ubuntu-server', name: 'Template Ubuntu Server', label: 'Ubuntu Server (64 bits)' },
+          { id: 'tmpl-ubuntu-desktop', name: 'Template Ubuntu Desktop', label: 'Ubuntu Desktop (64 bits)' },
+          { id: 'tmpl-debian', name: 'Template Debian', label: 'Debian GNU/Linux (64 bits)' },
+          { id: 'tmpl-alpine', name: 'Template Alpine', label: 'Alpine Linux (64 bits)' },
+          { id: 'tmpl-win7', name: 'Template Windows 7', label: 'Windows 7 (64 bits)' },
+          { id: 'tmpl-win2000', name: 'Template Windows 2000', label: 'Windows 2000' },
+        ];
+        this.vmTemplates.set(fallbackTemplates);
+        if (!this.selectedTemplateName()) {
+          this.selectedTemplateName.set(fallbackTemplates[0].name);
+        }
       },
     });
   }

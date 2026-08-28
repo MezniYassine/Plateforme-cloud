@@ -26,6 +26,23 @@ export class LoginComponent implements OnInit {
   router = inject(Router);
   route = inject(ActivatedRoute);
   readonly showPassword = signal(false);
+  focusedField = '';
+  cardTransform = 'rotateX(0deg) rotateY(0deg)';
+  tiles: { glow: boolean }[] = [];
+
+  onMouseMove(e: MouseEvent) {
+    const el = e.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    this.cardTransform = `rotateX(${-dy * 8}deg) rotateY(${dx * 8}deg)`;
+  }
+
+  onMouseLeave() {
+    this.cardTransform = 'rotateX(0deg) rotateY(0deg)';
+  }
 
   showToast(text: string, color: string = 'var(--blue)') {
     this.toastMsg.set({ text, color });
@@ -43,31 +60,59 @@ export class LoginComponent implements OnInit {
   });
 
   ngOnInit() {
+    if (typeof window !== 'undefined') {
+      const cols = Math.ceil(window.innerWidth / 79) + 2;
+      const rows = Math.ceil(window.innerHeight / 79) + 2;
+      const total = cols * rows;
+      this.tiles = Array.from({ length: total }, () => ({
+        glow: Math.random() < 0.08
+      }));
+    }
   }
 
   onLogin() {
     this.isLoading = true;
+    this.errorMsg = '';
     this.mfaError = '';
     const val = this.loginForm.getRawValue();
     this.auth.login({ email: val.email || '', password: val.password || '' })
       .subscribe({
         next: (res) => {
           this.isLoading = false;
+          const userStatus = res.user?.status;
+          const userRole = res.user?.role;
+
+          // Si le compte est en attente de validation ou non activé
+          if (userStatus === 'PENDING_VALIDATION') {
+            this.saveTokenAndRedirect(res.token, userRole, 'PENDING_VALIDATION');
+            return;
+          }
+          if (userStatus === 'SUSPENDED') {
+            this.saveTokenAndRedirect(res.token, userRole, 'SUSPENDED');
+            return;
+          }
+
           if (res.requiresMFA) {
-            this.pendingRole = res.user.role;
-            this.pendingEmail = res.user.email || val.email || '';
-            this.pendingStatus = res.user.status;
+            this.pendingRole = userRole;
+            this.pendingEmail = res.user?.email || val.email || '';
+            this.pendingStatus = userStatus;
             this.showMFA = true;
             setTimeout(() => {
               (document.getElementById('otp1') as HTMLInputElement)?.focus();
             }, 100);
           } else {
-            this.saveTokenAndRedirect(res.token, res.user.role, res.user.status);
+            this.saveTokenAndRedirect(res.token, userRole, userStatus);
           }
         },
         error: (err) => {
           this.isLoading = false;
-          this.showToast(err?.error?.message || 'Incorrect Email or password .', 'var(--red)');
+          const msg = err?.error?.message || 'E-mail ou mot de passe incorrect.';
+          if (msg.includes('Activation du compte') || msg.includes('attente de validation')) {
+            this.router.navigate(['/pending-approval']);
+            return;
+          }
+          this.errorMsg = msg;
+          this.showToast(msg, 'var(--red)');
         }
       });
   }
@@ -178,29 +223,32 @@ export class LoginComponent implements OnInit {
   private saveTokenAndRedirect(token: string, role?: string, status?: string) {
     this.isLoading = false;
     localStorage.setItem('access_token', token);
+
+    if (status === 'PENDING_VALIDATION') {
+      this.router.navigate(['/pending-approval']);
+      return;
+    }
+
+    if (status === 'SUSPENDED') {
+      this.router.navigate(['/suspended']);
+      return;
+    }
+
     if (role === 'GLOBAL_ADMIN') {
       this.router.navigate(['/admin-dashboard']);
     }
-    else if (role == 'PERSONNEL' && status == 'APPROVED') {
+    else if (role === 'PERSONNEL' && status === 'APPROVED') {
       this.router.navigate(['/personal-dashboard']);
     }
-    else if (role == 'ENTREPRISE_ADMIN' && status == 'APPROVED') {
+    else if (role === 'ENTREPRISE_ADMIN' && status === 'APPROVED') {
       this.router.navigate(['/entreprise-admin-dashboard']);
     }
-
-    else if (status == 'PENDING_VALIDATION') {
-      this.router.navigate(['/pending-approval']);
-    }
-
-    else if (role == 'ENTREPRISE_USER') {
+    else if (role === 'ENTREPRISE_USER' && status === 'APPROVED') {
       this.router.navigate(['/entreprise-user-dashboard']);
     }
-
-    else if (status == 'SUSPENDED') {
-      console.log("Vers Suspended");
-      this.router.navigate(['/suspended']);
+    else if (status !== 'APPROVED') {
+      this.router.navigate(['/pending-approval']);
     }
-
     else {
       this.router.navigate(['/console']);
     }

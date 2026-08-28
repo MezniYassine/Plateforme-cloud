@@ -10,6 +10,7 @@ import { EsxiModule } from 'src/esxi/esxi.module';
 import { MailModule } from 'src/mail/mail.module';
 
 import { Demande } from 'src/demande/entities/demande.entity';
+import { MetricsModule } from 'src/metrics/metrics.module';
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { Demande } from 'src/demande/entities/demande.entity';
         WalletModule,
         EsxiModule,
         MailModule,
+        MetricsModule,
     ],
     providers: [PaasService],
     controllers: [PaasController],

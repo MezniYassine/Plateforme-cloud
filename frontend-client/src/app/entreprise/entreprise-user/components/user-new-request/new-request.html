@@ -1,270 +1,307 @@
 <div class="request-layout">
 
-    <!-- Catalogue panel -->
-    <div class="catalog-panel">
-        <div class="section-card">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Catalogue de services</div>
-                    <div class="card-sub">Choisissez le type de ressource à demander à votre Admin</div>
-                </div>
-            </div>
-            <div class="catalog-tabs-bar">
-                @for (tab of state.catalogTabs(); track tab.key) {
-                <button class="filter-tab" [class.active]="state.catalogFilter()===tab.key"
-                    (click)="state.catalogFilter.set(tab.key)">
-                    {{ tab.label }}
-                </button>
-                }
-            </div>
-            <div class="catalog-grid">
-                @for (s of state.filteredCatalog(); track s.id) {
-                <div class="catalog-card" [class.selected]="state.selectedService()?.id === s.id"
-                    (click)="state.selectService(s)">
-                    @if (state.selectedService()?.id === s.id) {
-                    <div class="cat-selected-tick">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"
-                            width="12" height="12">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                    </div>
-                    }
-                    <div class="cat-icon-sm" [style.background]="s.bg">
-                        <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="s.color" stroke-width="1.8"
-                            stroke-linecap="round" width="18" height="18">
-                            @if (s.type==='vm') {
-                            <rect x="2" y="3" width="20" height="5" rx="2" />
-                            <rect x="2" y="11" width="20" height="5" rx="2" /> }
-                            @else if (s.type==='db') {
-                            <ellipse cx="12" cy="5" rx="9" ry="3" />
-                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /> }
-                            @else {
-                            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" /> }
-                        </svg>
-                    </div>
-                    <div class="cat-name">{{ s.name }}</div>
-                    <div class="cat-desc">{{ s.desc }}</div>
-                    <div class="cat-price">{{ s.price }} DT<span>/mois</span></div>
-                    <div class="cat-specs-row">
-                        @for (sp of s.specs; track sp) { <span class="cat-spec">{{ sp }}</span> }
-                    </div>
-                </div>
-                }
-            </div>
+  <!-- ══════════════════ LEFT COLUMN: CATALOG ══════════════════ -->
+  <div class="catalog-panel">
+    <div class="catalog-card-container">
+      
+      <!-- Catalog Header -->
+      <div class="panel-header">
+        <div class="header-titles">
+          <h3 class="panel-title">Catalogue de Services</h3>
+          <p class="panel-desc">Sélectionnez la ressource à demander à votre Administrateur Entreprise</p>
         </div>
-    </div>
+      </div>
 
-    <!-- Config panel -->
-    <div class="config-panel">
-        <div class="section-card config-sticky">
-            <div class="card-header">
-                <div class="card-title">Configurer la demande</div>
-            </div>
+      <!-- Category Filter Tabs -->
+      <div class="catalog-filter-bar">
+        @for (tab of state.catalogTabs(); track tab.key) {
+        <button class="filter-tab-btn" [class.active]="state.catalogFilter() === tab.key" (click)="state.catalogFilter.set(tab.key)">
+          {{ tab.label }}
+        </button>
+        }
+      </div>
 
-            @if (state.selectedService(); as svc) {
-            <div class="config-body">
+      <!-- Catalog Grid (2 Columns) -->
+      <div class="catalog-grid">
+        @for (s of state.filteredCatalog(); track s.id) {
+        <div class="cat-item-card" [class.is-selected]="state.selectedService()?.id === s.id" (click)="state.selectService(s)">
+          
+          <!-- Selected Tick -->
+          @if (state.selectedService()?.id === s.id) {
+          <div class="cat-selected-badge">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          }
 
-                <!-- Selected preview -->
-                <div class="selected-preview" [style.border-color]="svc.color">
-                    <div class="cat-icon-sm" [style.background]="svc.bg"
-                        style="width:34px;height:34px;border-radius:8px;flex-shrink:0">
-                        <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="svc.color" stroke-width="1.8"
-                            stroke-linecap="round" width="16" height="16">
-                            @if (svc.type==='vm') {
-                            <rect x="2" y="3" width="20" height="5" rx="2" />
-                            <rect x="2" y="11" width="20" height="5" rx="2" /> }
-                            @else if (svc.type==='db') {
-                            <ellipse cx="12" cy="5" rx="9" ry="3" />
-                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /> }
-                            @else {
-                            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" /> }
-                        </svg>
-                    </div>
-                    <div>
-                        <div style="font-size:13.5px;font-weight:700;color:var(--text-1)">{{ svc.name }}
-                        </div>
-                        <div style="font-size:12px;color:var(--text-2)">{{ svc.price }} DT/mois · {{
-                            svc.specs.join(' · ') }}</div>
-                    </div>
-                </div>
-
-                <div class="profile-field">
-                    <label>Nom de l'instance</label>
-                    <input type="text" class="field-input" [placeholder]="'ex: '+svc.type+'-prod-01'"
-                        [value]="state.instanceName()"
-                        (input)="state.instanceName.set($any($event.target).value)">
-                </div>
-
-                @if (svc.type === 'vm') {
-                <div class="profile-field">
-                    <label>Système d'exploitation (selon template)</label>
-                    <select class="field-select" (change)="state.updateTemplateName($any($event.target).value)" [disabled]="state.vmTemplates().length === 0">
-                        @if (state.vmTemplates().length === 0) { <option>Aucun template</option> }
-                        @for (template of state.vmTemplates(); track template.id) {
-                          <option [value]="template.name" [selected]="template.name === state.selectedTemplateName()">{{ template.label }}</option>
-                        }
-                    </select>
-                </div>
-                }
-
-                @if (svc.type === 'db') {
-                <div class="profile-field">
-                    <label>Type de base de données</label>
-                    <div class="sgbd-deploy-grid" style="margin-top:6px">
-                        <button class="sgbd-deploy-btn" [class.selected]="state.selectedSgbd() === 'POSTGRESQL'" (click)="state.selectedSgbd.set('POSTGRESQL')">
-                            <img src="assets/PostgreSQL Logo.png" alt="PostgreSQL" style="width:28px;height:28px;object-fit:contain;" />
-                            <span>PostgreSQL</span>
-                        </button>
-                        <button class="sgbd-deploy-btn" [class.selected]="state.selectedSgbd() === 'MYSQL'" (click)="state.selectedSgbd.set('MYSQL')">
-                            <img src="assets/MySQL Logo.png" alt="MySQL" style="width:28px;height:28px;object-fit:contain;" />
-                            <span>MySQL</span>
-                        </button>
-                        <button class="sgbd-deploy-btn" [class.selected]="state.selectedSgbd() === 'REDIS'" (click)="state.selectedSgbd.set('REDIS')">
-                            <img src="assets/Redis logo.png" alt="Redis" style="width:28px;height:28px;object-fit:contain;" />
-                            <span>Redis</span>
-                        </button>
-                        <button class="sgbd-deploy-btn" [class.selected]="state.selectedSgbd() === 'MONGODB'" (click)="state.selectedSgbd.set('MONGODB')">
-                            <img src="assets/MongoDB Logo.png" alt="MongoDB" style="width:28px;height:28px;object-fit:contain;" />
-                            <span>MongoDB</span>
-                        </button>
-                    </div>
-                </div>
-                }
-
-                @if (svc.type === 'saas') {
-                <!-- App preview derived from catalogue (read-only) -->
-                <div class="profile-field">
-                    <label>Application sélectionnée</label>
-                    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-page, #f8fafc); border: 1px solid var(--border-light, #e2e8f0); border-radius: 10px; margin-top: 4px;">
-                        @if (svc.name.toLowerCase().includes('wordpress')) {
-                            <img src="assets/Wordpress logo.png" alt="WordPress" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
-                        } @else if (svc.name.toLowerCase().includes('phpmyadmin')) {
-                            <img src="assets/MySQL Logo.png" alt="phpMyAdmin" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
-                        } @else if (svc.name.toLowerCase().includes('pgadmin')) {
-                            <img src="assets/PostgreSQL Logo.png" alt="pgAdmin" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
-                        } @else if (svc.name.toLowerCase().includes('n8n')) {
-                            <img src="assets/n8n_Logo.png" alt="n8n" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
-                        } @else if (svc.name.toLowerCase().includes('mongo')) {
-                            <img src="assets/MongoDB Logo.png" alt="Mongo Express" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
-                        } @else if (svc.name.toLowerCase().includes('redis')) {
-                            <img src="assets/Redis logo.png" alt="Redis Commander" width="32" height="32" style="object-fit: contain; border-radius: 6px;">
-                        } @else {
-                            <div style="width:32px; height:32px; border-radius:8px; background: var(--blue-light, #eff6ff); display:flex; align-items:center; justify-content:center;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" width="18" height="18"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
-                            </div>
-                        }
-                        <div>
-                            <div style="font-size: 14px; font-weight: 700; color: var(--text-1);">{{ svc.name }}</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">{{ svc.price }} DT/mois · Déployée automatiquement à validation</div>
-                        </div>
-                        <div style="margin-left: auto; background: #dcfce7; color: #16a34a; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">✓ Catalogue</div>
-                    </div>
-                </div>
-
-                @if (svc.name.toLowerCase().includes('phpmyadmin') ||
-                     svc.name.toLowerCase().includes('mongo') ||
-                     svc.name.toLowerCase().includes('redis')) {
-                @let dbTypeLabel = svc.name.toLowerCase().includes('phpmyadmin') ? 'MySQL'
-                  : svc.name.toLowerCase().includes('mongo') ? 'MongoDB'
-                  : 'Redis';
-                <div class="profile-field">
-                    <label>Base de données liée <span style="color:var(--red);font-weight:700">*</span>
-                      <span style="color:var(--text-muted);font-weight:400;font-size:11px"> — doit être de type {{ dbTypeLabel }}</span>
-                    </label>
-                    @if (state.getCompatiblePaas(svc.name).length === 0) {
-                      <div style="padding: 10px 14px; background: #fff8f0; border: 1px solid #fbbf24; border-radius: 10px; color: #92400e; font-size: 12.5px; margin-top: 4px;">
-                        ⚠️ Aucune base {{ dbTypeLabel }} active trouvée. Veuillez d'abord déployer une base de données {{ dbTypeLabel }}.
-                      </div>
-                    } @else {
-                    <select class="field-select" (change)="state.saasLinkedPaasId.set($any($event.target).value ? +$any($event.target).value : null)">
-                        <option value="">-- Sélectionner une base {{ dbTypeLabel }} --</option>
-                        @for (p of state.getCompatiblePaas(svc.name); track p.id) {
-                        <option [value]="p.id.replace('db-', '')">{{ p.name }} ({{ p.specs }})</option>
-                        }
-                    </select>
-                    }
-                </div>
-                }
-
-                @if (!svc.name.toLowerCase().includes('phpmyadmin')) {
-                  @if (svc.name.toLowerCase().includes('wordpress') || svc.name.toLowerCase().includes('n8n')) {
-                  <!-- WordPress and n8n configure their own credentials on first launch -->
-                  <div style="padding: 12px 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; color: #1e40af; font-size: 12.5px; margin-top: 4px; line-height: 1.6;">
-                    ℹ️ <strong>{{ svc.name }}</strong> : Les identifiants admin seront configurés directement lors du premier accès à l'URL (assistant d'installation). Aucune saisie d'email/mot de passe n'est nécessaire maintenant.
-                  </div>
-                  } @else {
-                <div class="profile-field">
-                    <label>Email admin / Nom d'utilisateur <span style="color:var(--text-muted);font-weight:400">(pour vous connecter)</span></label>
-                    <input type="email" placeholder="admin@monentreprise.com" 
-                        [value]="state.saasAdminEmail()"
-                        (input)="state.saasAdminEmail.set($any($event.target).value)">
-                </div>
-                <div class="profile-field">
-                    <label>Mot de passe admin</label>
-                    <input type="password" placeholder="Minimum 8 caractères" 
-                        [value]="state.saasAdminPassword()"
-                        (input)="state.saasAdminPassword.set($any($event.target).value)">
-                </div>
-                  }
-                }
-                }
-
-                <div class="profile-field">
-                    <label>Justification <span style="color:var(--text-muted);font-weight:400">(visible par
-                            l'Admin)</span></label>
-                    <textarea class="field-textarea" rows="3"
-                        placeholder="Expliquez pourquoi vous avez besoin de cette ressource."
-                        [value]="state.justification()"
-                        (input)="state.justification.set($any($event.target).value)"></textarea>
-                </div>
-
-                <!-- Cost box -->
-                <div class="cost-box">
-                    <div>
-                        <div style="font-size:12px;color:var(--text-2);margin-bottom:3px">Coût mensuel
-                            estimé</div>
-                        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--blue)">
-                            {{ svc.price }} DT<span
-                                style="font-size:12px;font-weight:400;color:var(--text-muted)">/mois</span>
-                        </div>
-                    </div>
-                    <div style="font-size:11.5px;color:var(--text-muted);text-align:right">Prélevé sur
-                        le<br>budget d'équipe</div>
-                </div>
-
-                <!-- Workflow notice -->
-                <div class="workflow-notice">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"
-                        width="15" height="15">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                    <span>La demande sera envoyée à votre Admin Entreprise. Après validation et paiement, le
-                        déploiement sera automatique.</span>
-                </div>
-
-                <button class="btn-submit-req" (click)="state.submitRequest()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"
-                        width="14" height="14">
-                        <path d="M22 2L11 13" />
-                        <path d="M22 2L15 22l-4-9-9-4z" />
-                    </svg>
-                    Soumettre la demande
-                </button>
-            </div>
-
-            } @else {
-            <div class="no-selection">
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.4"
-                    stroke-linecap="round" width="40" height="40">
-                    <path
-                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+          <!-- Top Brand & Title -->
+          <div class="cat-card-top">
+            <div class="cat-brand-box" [class.box-vm]="s.type === 'vm'" [class.box-db]="s.type === 'db'" [class.box-saas]="s.type === 'saas'">
+              @if (hasAppLogo(s.name, s.type)) {
+                <img [src]="getServiceLogo(s.name, s.type)" [alt]="s.name" class="cat-logo-img" />
+              } @else if (s.type === 'vm') {
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                  <line x1="6" y1="6" x2="6.01" y2="6"/>
+                  <line x1="6" y1="18" x2="6.01" y2="18"/>
                 </svg>
-                <p>Sélectionnez un service<br>dans le catalogue</p>
+              } @else if (s.type === 'db') {
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                </svg>
+              }
             </div>
+            <div class="cat-identity">
+              <div class="cat-title-row">
+                <h4 class="cat-title">{{ s.name }}</h4>
+              </div>
+              <span class="cat-type-pill" [class.type-vm]="s.type === 'vm'" [class.type-db]="s.type === 'db'" [class.type-saas]="s.type === 'saas'">
+                {{ getServiceCategory(s.type) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <p class="cat-description">{{ s.desc }}</p>
+
+          <!-- Price -->
+          <div class="cat-price-row">
+            <span class="price-value">{{ s.price }}</span>
+            <span class="price-unit">DT/mois</span>
+          </div>
+
+          <!-- Specs Chips -->
+          @if (s.specs && s.specs.length > 0) {
+          <div class="cat-specs-wrap">
+            @for (sp of s.specs; track sp) {
+            <span class="cat-spec-chip">{{ sp }}</span>
             }
+          </div>
+          }
+
         </div>
+        }
+      </div>
+
     </div>
+  </div>
+
+  <!-- ══════════════════ RIGHT COLUMN: CONFIGURATION ══════════════════ -->
+  <div class="config-panel">
+    <div class="config-card-container">
+      
+      <!-- Panel Header -->
+      <div class="panel-header">
+        <div class="header-titles">
+          <h3 class="panel-title">Configurer la Demande</h3>
+          <p class="panel-desc">Définissez les paramètres de votre nouvelle ressource</p>
+        </div>
+      </div>
+
+      @if (state.selectedService(); as svc) {
+      <div class="config-form-body">
+
+        <!-- Selected Resource Banner -->
+        <div class="selected-summary-card">
+          <div class="summary-logo-box" [class.box-vm]="svc.type === 'vm'" [class.box-db]="svc.type === 'db'" [class.box-saas]="svc.type === 'saas'">
+            @if (hasAppLogo(svc.name, svc.type)) {
+              <img [src]="getServiceLogo(svc.name, svc.type)" [alt]="svc.name" class="summary-logo-img" />
+            } @else if (svc.type === 'vm') {
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                <line x1="6" y1="6" x2="6.01" y2="6"/>
+                <line x1="6" y1="18" x2="6.01" y2="18"/>
+              </svg>
+            } @else if (svc.type === 'db') {
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+              </svg>
+            }
+          </div>
+          <div class="summary-info">
+            <div class="summary-name">{{ svc.name }}</div>
+            <div class="summary-meta">{{ svc.price }} DT/mois · {{ svc.specs.join(' · ') }}</div>
+          </div>
+          <span class="summary-badge">Sélectionné</span>
+        </div>
+
+        <!-- Instance Name Field -->
+        <div class="form-field-group">
+          <label class="form-field-label">Nom de l'instance <span class="req-asterisk">*</span></label>
+          <input type="text" class="form-text-input" [placeholder]="'ex: ' + svc.type + '-prod-01'"
+            [value]="state.instanceName()"
+            (input)="state.instanceName.set($any($event.target).value)" />
+          @if (state.instanceName().length > 0 && !state.isInstanceNameValid()) {
+            <span class="field-error-hint">{{ state.getInstanceNameError() }}</span>
+          }
+        </div>
+
+        <!-- VM Template Field (If VM) -->
+        @if (svc.type === 'vm') {
+        <div class="form-field-group">
+          <label class="form-field-label">Système d'exploitation (Template ESXi)</label>
+          <select class="form-select-input" (change)="state.updateTemplateName($any($event.target).value)" [disabled]="state.vmTemplates().length === 0">
+            @if (state.vmTemplates().length === 0) { <option>Aucun template disponible</option> }
+            @for (template of state.vmTemplates(); track template.id) {
+              <option [value]="template.name" [selected]="template.name === state.selectedTemplateName()">{{ template.label }}</option>
+            }
+          </select>
+        </div>
+        }
+
+        <!-- Database Engine Selector (If DB) -->
+        @if (svc.type === 'db') {
+        <div class="form-field-group">
+          <label class="form-field-label">Moteur de Base de Données</label>
+          <div class="db-engines-grid">
+            <button type="button" class="db-engine-btn" [class.is-active]="state.selectedSgbd() === 'POSTGRESQL'" (click)="state.selectedSgbd.set('POSTGRESQL')">
+              <img src="assets/PostgreSQL Logo.png" alt="PostgreSQL" class="engine-logo" />
+              <span>PostgreSQL</span>
+            </button>
+            <button type="button" class="db-engine-btn" [class.is-active]="state.selectedSgbd() === 'MYSQL'" (click)="state.selectedSgbd.set('MYSQL')">
+              <img src="assets/MySQL Logo.png" alt="MySQL" class="engine-logo" />
+              <span>MySQL</span>
+            </button>
+            <button type="button" class="db-engine-btn" [class.is-active]="state.selectedSgbd() === 'REDIS'" (click)="state.selectedSgbd.set('REDIS')">
+              <img src="assets/Redis logo.png" alt="Redis" class="engine-logo" />
+              <span>Redis</span>
+            </button>
+            <button type="button" class="db-engine-btn" [class.is-active]="state.selectedSgbd() === 'MONGODB'" (click)="state.selectedSgbd.set('MONGODB')">
+              <img src="assets/MongoDB Logo.png" alt="MongoDB" class="engine-logo" />
+              <span>MongoDB</span>
+            </button>
+          </div>
+        </div>
+        }
+
+        <!-- SaaS Linked PaaS DB (If Applicable) -->
+        @if (svc.type === 'saas') {
+          @if (svc.name.toLowerCase().includes('phpmyadmin') ||
+               svc.name.toLowerCase().includes('mongo') ||
+               svc.name.toLowerCase().includes('redis')) {
+            @let dbTypeLabel = svc.name.toLowerCase().includes('phpmyadmin') ? 'MySQL'
+              : svc.name.toLowerCase().includes('mongo') ? 'MongoDB'
+              : 'Redis';
+            <div class="form-field-group">
+              <label class="form-field-label">Base de données liée <span class="req-asterisk">*</span>
+                <span class="label-subnote">(Doit être de type {{ dbTypeLabel }})</span>
+              </label>
+              @if (state.getCompatiblePaas(svc.name).length === 0) {
+                <div class="alert-warn-box">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <span>Aucune base {{ dbTypeLabel }} active trouvée. Veuillez d'abord déployer une base {{ dbTypeLabel }}.</span>
+                </div>
+              } @else {
+                <select class="form-select-input" (change)="state.saasLinkedPaasId.set($any($event.target).value ? +$any($event.target).value : null)">
+                  <option value="">-- Sélectionner une base {{ dbTypeLabel }} --</option>
+                  @for (p of state.getCompatiblePaas(svc.name); track p.id) {
+                    <option [value]="p.id.replace('db-', '')">{{ p.name }} ({{ p.specs }})</option>
+                  }
+                </select>
+              }
+            </div>
+          }
+
+          @if (svc.name.toLowerCase().includes('pgadmin') ||
+               svc.name.toLowerCase().includes('mongo') ||
+               svc.name.toLowerCase().includes('redis')) {
+            <div class="form-field-group">
+              <label class="form-field-label">Email admin / Identifiant <span class="req-asterisk">*</span></label>
+              <input type="email" class="form-text-input"
+                [placeholder]="svc.name.toLowerCase().includes('pgadmin') ? 'ex: admin@domaine.com' : 'ex: admin'"
+                [value]="state.saasAdminEmail()"
+                (input)="state.saasAdminEmail.set($any($event.target).value)" />
+              @if (state.saasAdminEmail().length > 0 && !state.isSaasEmailValid()) {
+                <span class="field-error-hint">{{ state.getSaasEmailError() }}</span>
+              }
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label">Mot de passe admin <span class="req-asterisk">*</span></label>
+              <input type="password" class="form-text-input"
+                placeholder="Mot de passe sécurisé (min. 4 caractères)"
+                [value]="state.saasAdminPassword()"
+                (input)="state.saasAdminPassword.set($any($event.target).value)" />
+              @if (state.saasAdminPassword().length > 0 && !state.isSaasPasswordValid()) {
+                <span class="field-error-hint">{{ state.getSaasPasswordError() }}</span>
+              }
+            </div>
+          }
+
+          @if (svc.name.toLowerCase().includes('wordpress') || svc.name.toLowerCase().includes('n8n')) {
+            <div class="alert-info-box">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span><strong>{{ svc.name }}</strong> : Les identifiants administrateur seront configurés lors du premier accès à l'interface Web (assistant d'installation).</span>
+            </div>
+          }
+        }
+
+        <!-- Justification Field -->
+        <div class="form-field-group">
+          <label class="form-field-label">Justification de la demande <span class="label-subnote">(Visible par l'Admin)</span></label>
+          <textarea class="form-textarea-input" rows="3"
+            placeholder="Décrivez l'utilisation prévue (ex: environnement de test, base de données projet X...)"
+            [value]="state.justification()"
+            (input)="state.justification.set($any($event.target).value)"></textarea>
+        </div>
+
+        <!-- Estimated Cost Box -->
+        <div class="cost-summary-box">
+          <div class="cost-info">
+            <span class="cost-lbl">Coût mensuel estimé</span>
+            <div class="cost-val">
+              {{ svc.price }} <span class="val-dt">DT</span><span class="val-sub">/mois</span>
+            </div>
+          </div>
+          <span class="cost-team-badge">Prélevé sur le budget entreprise</span>
+        </div>
+
+        <!-- Workflow Notice -->
+        <div class="workflow-hint-box">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span>La demande sera transmise à votre Administrateur. Après validation, le provisionnement sera déclenché automatiquement.</span>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="button" class="btn-submit-request" [disabled]="!state.isRequestFormValid()" (click)="state.submitRequest()">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/>
+          </svg>
+          <span>Soumettre la demande</span>
+        </button>
+
+      </div>
+      } @else {
+      <!-- Empty state when no service selected -->
+      <div class="config-empty-state">
+        <div class="empty-hex-icon">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#F07A1F" stroke-width="1.8">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+          </svg>
+        </div>
+        <h4 class="empty-title">Sélectionnez une ressource</h4>
+        <p class="empty-sub">Cliquez sur l'une des cartes du catalogue à gauche pour configurer les paramètres de votre demande.</p>
+      </div>
+      }
+
+    </div>
+  </div>
+
 </div>

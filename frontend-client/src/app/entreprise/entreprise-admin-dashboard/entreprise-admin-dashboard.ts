@@ -67,8 +67,10 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
   adminPrenom = computed(() => this.actualAdmin()?.prenom ?? '');
   inviteForm!: FormGroup;
   adminEmail = computed(() => this.actualAdmin()?.email ?? '');
+  adminTelephone = computed(() => this.actualAdmin()?.telephone ?? this.actualAdmin()?.entreprise?.telephone ?? '');
   companyName = computed(() => this.actualAdmin()?.entreprise?.nomEntreprise ?? '');
   companyTaxId = computed(() => this.actualAdmin()?.entreprise?.identifiantFiscal ?? '');
+  companySize = computed(() => this.actualAdmin()?.entreprise?.tailleEntreprise ?? '');
   adminMfaStatus = computed(() => (this.actualAdmin() as any)?.mfaStatus ?? 'DESACTIVE');
 
   /* WALLET & BUDGET */
@@ -283,20 +285,20 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
   }
 
   approveRequest(id: string | number) {
-    // Ouvre uniquement le modal de confirmation.
-    // L'appel API est déclenché par le bouton "Confirmer" dans le modal (confirmReview -> performApproveRequest).
+    const req = this.resourceRequests().find(r => r.id === id);
+    if (!req || req.isProvisioning || req.status !== 'pending') return;
     this.openReviewModal('approve', id);
   }
 
   rejectRequest(id: string | number) {
-    // Ouvre uniquement le modal de confirmation.
-    // L'appel API est déclenché par le bouton "Confirmer" dans le modal (confirmReview -> performRejectRequest).
+    const req = this.resourceRequests().find(r => r.id === id);
+    if (!req || req.isProvisioning || req.status !== 'pending') return;
     this.openReviewModal('reject', id);
   }
 
   openReviewModal(action: 'approve' | 'reject', id: string | number) {
     const req = this.resourceRequests().find(r => r.id === id);
-    if (!req) return;
+    if (!req || req.isProvisioning) return;
 
     this.reviewAction.set(action);
     this.reviewRequestId.set(id);
@@ -321,7 +323,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     const action = this.reviewAction();
     const commentaireAdmin = this.reviewJustification().trim();
 
-    if (!req || !action) return;
+    if (!req || !action || req.isProvisioning) return;
 
     if (!commentaireAdmin) {
       this.showToast('Veuillez saisir une justification admin', 'var(--amber)');
@@ -345,15 +347,20 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     this.reviewRequestId.set(null);
     this.reviewJustification.set('');
 
-    // 2. Toast persistant « Provisionnement en cours » — ne disparaît pas automatiquement
+    // 2. Marquer IMMÉDIATEMENT la demande comme étant en cours de déploiement pour bloquer tout nouveau clic
+    this.resourceRequests.update(list =>
+      list.map(r => r.id === id ? { ...r, isProvisioning: true } : r)
+    );
+
+    // 3. Toast persistant « Provisionnement en cours » — ne disparaît pas automatiquement
     this.showToast(`⏳ Provisionnement de « ${req.name} » en cours...`, 'var(--blue)', 0);
 
-    // 3. Appel API en arrière-plan — le provisionnement VMware peut durer 30-60 s
+    // 4. Appel API en arrière-plan — le provisionnement VMware peut durer 30-60 s
     this.http.patch(`${environment.apiBaseUrl}/demande/${id}/approuver`, body).subscribe({
       next: (response: any) => {
         this.loadBilling();
         this.resourceRequests.update(list =>
-          list.map(r => r.id === id ? { ...r, status: 'approved', commentaireAdmin } : r)
+          list.map(r => r.id === id ? { ...r, status: 'approved', isProvisioning: false, commentaireAdmin } : r)
         );
         this.pushActivity('approve', req.name);
         // Remplace le toast persistant par un toast de succès (4 s)
@@ -362,7 +369,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Erreur de déploiement :', err);
         this.resourceRequests.update(list =>
-          list.map(r => r.id === id ? { ...r, status: 'rejected', commentaireAdmin } : r)
+          list.map(r => r.id === id ? { ...r, status: 'rejected', isProvisioning: false, commentaireAdmin } : r)
         );
         this.showToast(`❌ Échec : ${err.error?.message || 'Erreur ESXi'}`, 'var(--red)', 5000);
       }
@@ -402,7 +409,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
 
     this.http.patch(`${environment.apiBaseUrl}/users/${id}/status`, { status: statusStr }).subscribe({
       next: () => {
-        this.teamMembers.update(list => list.map(item => item.id === id ? { ...item, active: newState } : item));
+        this.teamMembers.update(list => list.map(item => item.id === id ? { ...item, active: newState, status: statusStr } : item));
         this.showToast(`${m.name} — ${newState ? 'compte réactivé' : 'compte suspendu'}`, newState ? 'var(--green)' : '#64748b');
       },
       error: (err) => {

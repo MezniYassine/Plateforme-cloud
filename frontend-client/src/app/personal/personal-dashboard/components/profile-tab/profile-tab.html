@@ -1,142 +1,322 @@
-<div style="max-width:600px">
-  <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:18px">Mon profil</div>
+<div class="profile-container">
 
-  <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()">
-    <div class="sc" style="margin-bottom:16px">
-      <div class="sc-head">
-        <div class="sc-title">Informations personnelles</div>
-        <button type="button" class="btn btn-ghost">Détails</button>
+  <!-- ══════════════════ HEADER ══════════════════ -->
+  <div class="profile-header-toolbar">
+    <div class="header-titles">
+      <h2 class="page-title">Mon Profil & Sécurité</h2>
+      <p class="page-subtitle">Gérez vos informations personnelles, vos coordonnées et les paramètres de sécurité de votre compte.</p>
+    </div>
+  </div>
+
+  <div class="profile-layout-grid">
+    
+    <!-- ══════════════════ LEFT COLUMN: PERSONAL DETAILS ══════════════════ -->
+    <div class="profile-main-col">
+      
+      <!-- Profile Hero Identity Card -->
+      <div class="profile-hero-card">
+        <div class="hero-avatar">
+          <span class="avatar-text">{{ getInitials() }}</span>
+        </div>
+        <div class="hero-info">
+          <h3 class="hero-name">{{ profileForm.get('prenom')?.value }} {{ profileForm.get('nom')?.value }}</h3>
+          <span class="hero-email">{{ profileForm.get('email')?.value }}</span>
+          <div class="hero-badges">
+            <span class="hero-badge-role">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Compte Personnel
+            </span>
+            <span class="hero-badge-status">
+              <span class="dot-active"></span>
+              Compte Actif
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="field">
-            <div class="field-label">Prénom</div>
-            <input type="text" formControlName="prenom">
+      <!-- Information Form Card -->
+      <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()">
+        <div class="section-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon-box">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="card-title">Informations Personnelles</h4>
+                <span class="card-sub">Mettez à jour votre nom et coordonnées</span>
+              </div>
+            </div>
           </div>
-          <div class="field">
-            <div class="field-label">Nom</div>
-            <input type="text" formControlName="nom">
-          </div>
-        </div>
 
-        <div class="field">
-          <div class="field-label">Email</div>
-          <input type="email" formControlName="email">
-        </div>
+          <div class="card-body">
+            <div class="form-grid-2">
+              <!-- Prénom -->
+              <div class="input-field-wrap">
+                <label class="input-label">Prénom <span class="required-star">*</span></label>
+                <div class="field-control" [class.is-invalid]="isFieldInvalid('prenom')">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  <input type="text" formControlName="prenom" placeholder="Votre prénom" />
+                </div>
+                @if (isFieldInvalid('prenom')) {
+                  <span class="field-error-text">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ getFieldError('prenom') }}
+                  </span>
+                }
+              </div>
 
-        <div class="field">
-          <div class="field-label">Spécialité / Profession</div>
-          <input type="text" formControlName="profession">
-        </div>
+              <!-- Nom -->
+              <div class="input-field-wrap">
+                <label class="input-label">Nom <span class="required-star">*</span></label>
+                <div class="field-control" [class.is-invalid]="isFieldInvalid('nom')">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  <input type="text" formControlName="nom" placeholder="Votre nom" />
+                </div>
+                @if (isFieldInvalid('nom')) {
+                  <span class="field-error-text">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ getFieldError('nom') }}
+                  </span>
+                }
+              </div>
+            </div>
 
-        <button type="submit" class="btn btn-primary" style="width:fit-content" [disabled]="profileForm.invalid">
-          Enregistrer les modifications
-        </button>
-      </div>
-    </div>
-  </form>
+            <div class="form-grid-2">
+              <!-- Email -->
+              <div class="input-field-wrap">
+                <label class="input-label">Adresse Email <span class="required-star">*</span></label>
+                <div class="field-control" [class.is-invalid]="isFieldInvalid('email')">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                  <input type="email" formControlName="email" placeholder="votre.email@exemple.com" />
+                </div>
+                @if (isFieldInvalid('email')) {
+                  <span class="field-error-text">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ getFieldError('email') }}
+                  </span>
+                }
+              </div>
 
-  <div class="sc">
-    <div class="sc-head">
-      <div class="sc-title">Sécurité</div>
-    </div>
-    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+              <!-- Téléphone -->
+              <div class="input-field-wrap">
+                <label class="input-label">Numéro de Téléphone</label>
+                <div class="field-control" [class.is-invalid]="isFieldInvalid('telephone')">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  <input type="tel" formControlName="telephone" placeholder="20 000 000" />
+                </div>
+                @if (isFieldInvalid('telephone')) {
+                  <span class="field-error-text">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ getFieldError('telephone') }}
+                  </span>
+                }
+              </div>
+            </div>
 
-      <!-- === Section MFA === -->
-      <div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">
-
-        <!-- En-tête MFA -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px">
-          <div>
-            <div style="font-size:13.5px;font-weight:600">Authentification MFA</div>
-            <div style="font-size:12px;color:var(--text-3)">
-              @if (mfaStatus === 'ACTIVE') {
-                <span style="color:#16a34a;font-weight:600">● Activée</span> — Votre compte est protégé par OTP email
-              } @else {
-                Protège votre compte avec un code envoyé par email
+            <!-- Spécialité / Profession -->
+            <div class="input-field-wrap">
+              <label class="input-label">Spécialité / Profession</label>
+              <div class="field-control" [class.is-invalid]="isFieldInvalid('profession')">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+                <input type="text" formControlName="profession" placeholder="Ex: Développeur Cloud, DevOps, Ingénieur..." />
+              </div>
+              @if (isFieldInvalid('profession')) {
+                <span class="field-error-text">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  {{ getFieldError('profession') }}
+                </span>
               }
             </div>
-          </div>
-          @if (mfaStatus !== 'ACTIVE' && mfaStep === 'idle') {
-            <button type="button" class="btn btn-primary" (click)="activateMfa()" [disabled]="mfaLoading">
-              {{ mfaLoading ? 'Envoi...' : 'Activer' }}
-            </button>
-          }
-          @if (mfaStatus === 'ACTIVE') {
-            <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              Activé
-            </span>
-          }
-        </div>
 
-        <!-- Étape OTP envoyé -->
-        @if (mfaStep === 'otp-sent') {
-        <div style="border-top:1px solid var(--border);padding:16px;background:var(--bg-2,#f8fafc)">
-          <div style="font-size:13px;color:#475569;margin-bottom:12px">
-            📧 Un code à <strong>6 chiffres</strong> a été envoyé à votre adresse email. Saisissez-le ci-dessous :
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input
-              type="text"
-              maxlength="6"
-              placeholder="000000"
-              [(ngModel)]="otpCode"
-              style="font-size:20px;font-weight:700;letter-spacing:6px;width:140px;text-align:center;padding:10px 12px;border:2px solid #2563eb;border-radius:8px;font-family:monospace;outline:none"
-            >
-            <button type="button" class="btn btn-primary" (click)="verifyOtp()" [disabled]="mfaLoading || otpCode.length < 6">
-              {{ mfaLoading ? 'Vérification...' : 'Valider' }}
-            </button>
-            <button type="button" class="btn btn-ghost" (click)="resendOtp()" [disabled]="mfaLoading">
-              Renvoyer
-            </button>
-            <button type="button" class="btn btn-ghost" (click)="cancelMfa()">Annuler</button>
-          </div>
-          @if (mfaError) {
-            <div style="margin-top:10px;font-size:12px;color:#dc2626;display:flex;align-items:center;gap:6px">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              {{ mfaError }}
+            <!-- Submit Button -->
+            <div class="card-footer-action">
+              <button type="submit" class="btn-save-profile" [disabled]="profileForm.invalid || isSaving()">
+                @if (isSaving()) {
+                  <span class="spinner-dot"></span>
+                  <span>Enregistrement...</span>
+                } @else {
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                  </svg>
+                  <span>Enregistrer les modifications</span>
+                }
+              </button>
             </div>
-          }
-        </div>
-        }
 
-        <!-- Succès -->
-        @if (mfaStep === 'success') {
-        <div style="border-top:1px solid #bbf7d0;padding:12px 16px;background:#f0fdf4;display:flex;align-items:center;gap:8px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
-          <span style="font-size:13px;color:#16a34a;font-weight:600">MFA activé avec succès ! Votre compte est maintenant protégé.</span>
+          </div>
         </div>
-        }
+      </form>
+
+    </div>
+
+    <!-- ══════════════════ RIGHT COLUMN: SECURITY & MFA ══════════════════ -->
+    <div class="profile-side-col">
+      
+      <!-- Security Card -->
+      <div class="section-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon-box card-icon-shield">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <div>
+              <h4 class="card-title">Sécurité & Accès</h4>
+              <span class="card-sub">Authentification et protection du compte</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          
+          <!-- ─── MFA BOX ─── -->
+          <div class="security-item-box">
+            <div class="sec-item-header">
+              <div class="sec-item-info">
+                <div class="sec-item-title">Double Authentification (MFA)</div>
+                <div class="sec-item-desc">
+                  @if (mfaStatus === 'ACTIVE') {
+                    <span class="text-success font-bold">✓ Activée</span> — Protégé par code OTP envoyé par email à chaque connexion.
+                  } @else {
+                    Renforce la sécurité de votre compte avec un code à usage unique.
+                  }
+                </div>
+              </div>
+
+              @if (mfaStatus !== 'ACTIVE' && mfaStep === 'idle') {
+                <button type="button" class="btn-sec-action" (click)="activateMfa()" [disabled]="mfaLoading">
+                  {{ mfaLoading ? 'Envoi...' : 'Activer le MFA' }}
+                </button>
+              }
+
+              @if (mfaStatus === 'ACTIVE') {
+                <span class="badge-mfa-active">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Activé
+                </span>
+              }
+            </div>
+
+            <!-- OTP Input Step -->
+            @if (mfaStep === 'otp-sent') {
+            <div class="otp-verification-panel">
+              <div class="otp-instruction">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2563eb" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span>Code à <strong>6 chiffres</strong> envoyé par email :</span>
+              </div>
+
+              <div class="otp-input-row">
+                <input
+                  type="text"
+                  maxlength="6"
+                  placeholder="000000"
+                  [(ngModel)]="otpCode"
+                  class="otp-digit-input"
+                />
+                <button type="button" class="btn-validate-otp" (click)="verifyOtp()" [disabled]="mfaLoading || otpCode.length < 6">
+                  {{ mfaLoading ? 'Vérification...' : 'Valider' }}
+                </button>
+                <button type="button" class="btn-ghost-sec" (click)="resendOtp()" [disabled]="mfaLoading">
+                  Renvoyer
+                </button>
+                <button type="button" class="btn-ghost-sec" (click)="cancelMfa()">
+                  Annuler
+                </button>
+              </div>
+
+              @if (mfaError) {
+                <div class="otp-error-msg">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  <span>{{ mfaError }}</span>
+                </div>
+              }
+            </div>
+            }
+
+            <!-- MFA Success Notice -->
+            @if (mfaStep === 'success') {
+            <div class="mfa-success-banner">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <span>MFA activé avec succès ! Votre compte est désormais sécurisé.</span>
+            </div>
+            }
+          </div>
+
+          <!-- ─── PASSWORD BOX ─── -->
+          <div class="security-item-box">
+            <div class="sec-item-header">
+              <div class="sec-item-info">
+                <div class="sec-item-title">Mot de Passe de Connexion</div>
+                <div class="sec-item-desc">Changez régulièrement votre mot de passe pour préserver la sécurité de vos ressources.</div>
+              </div>
+              <button type="button" class="btn-sec-action" (click)="showPasswordModal = true">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                Modifier
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      <!-- Changer mot de passe -->
-      <div
-        style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:var(--r-sm)">
-        <div>
-          <div style="font-size:13.5px;font-weight:600">Changer le mot de passe</div>
-          <div style="font-size:12px;color:var(--text-3)">Mettre à jour votre accès sécurisé</div>
-        </div>
-        <button type="button" class="btn btn-ghost" (click)="showPasswordModal = true">Modifier</button>
-      </div>
-      @if (showPasswordModal) {
-      <app-change-password-modal (closeDialog)="showPasswordModal = false"></app-change-password-modal>
-      }
     </div>
 
   </div>
+
 </div>
+
+<!-- ══ CHANGE PASSWORD MODAL ══ -->
+@if (showPasswordModal) {
+<app-change-password-modal (closeDialog)="showPasswordModal = false"></app-change-password-modal>
+}
 
 <!-- ══ GLOBAL TOAST ══ -->
 <div class="global-toast" [class.show]="showToast" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
   <div class="toast-icon">
     @if (toastType === 'success') {
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
     } @else {
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <circle cx="12" cy="12" r="10"></circle>
       <line x1="12" y1="8" x2="12" y2="12"></line>
       <line x1="12" y1="16" x2="12.01" y2="16"></line>

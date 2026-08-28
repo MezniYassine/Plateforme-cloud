@@ -21,6 +21,9 @@ export class Transaction {
 
 
     @Column({ nullable: true })
+    reference?: string;
+
+    @Column({ nullable: true })
     vmId: number;
 
     @ManyToOne(() => Wallet, (wallet) => wallet.transactions)

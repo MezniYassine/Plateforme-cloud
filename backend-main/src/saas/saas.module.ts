@@ -9,12 +9,14 @@ import { Client } from 'src/entities/client.entity';
 import { Demande } from 'src/demande/entities/demande.entity';
 import { WalletModule } from 'src/wallet/wallet.module';
 import { MailModule } from 'src/mail/mail.module';
+import { MetricsModule } from 'src/metrics/metrics.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([ServiceSaaS, ServicePaaS, Catalogue, Client, Demande]),
         WalletModule,
         MailModule,
+        MetricsModule,
     ],
     controllers: [SaasController],
     providers: [SaasService],

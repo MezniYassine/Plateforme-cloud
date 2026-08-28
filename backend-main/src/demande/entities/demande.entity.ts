@@ -57,6 +57,9 @@ export class Demande {
     @Column({ type: 'decimal', precision: 10, scale: 2, default: 0.00 })
     prixMensuel!: number;
 
+    @Column({ type: 'varchar', nullable: true })
+    referenceFacture?: string;
+
     @ManyToOne(() => Catalogue, { nullable: true, eager: true, onDelete: 'SET NULL' })
     catalogue?: Catalogue | null;
 

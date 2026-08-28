@@ -101,12 +101,15 @@ export class UsersService {
     password: string;
     companyName: string;
     taxId: string;
+    telephone?: string;
+    companySize?: string;
   }): Promise<Client> {
     // 1. On crée l'Entreprise en premier (elle obtient son propre ID)
     const entreprise = this.entrepriseRepo.create({
       nomEntreprise: data.companyName,
       identifiantFiscal: data.taxId,
-      maxUtilisateurs: 10,
+      tailleEntreprise: data.companySize,
+      telephone: data.telephone,
     });
     const savedEntreprise = await this.entrepriseRepo.save(entreprise);
 
@@ -116,6 +119,7 @@ export class UsersService {
       prenom: data.prenom,
       email: data.email,
       password: data.password,
+      telephone: data.telephone,
       role: RoleClient.ENTREPRISE_ADMIN, // Assigne le rôle Admin
       entreprise: savedEntreprise,       // Lie le client à l'entreprise
     });
@@ -135,6 +139,7 @@ export class UsersService {
     email: string;
     password: string;
     profession: string;
+    telephone?: string;
   }): Promise<Client> {
     // 1. On crée le Client de base
     const client = this.clientRepo.create({
@@ -142,6 +147,7 @@ export class UsersService {
       prenom: data.prenom,
       email: data.email,
       password: data.password,
+      telephone: data.telephone,
       role: RoleClient.PERSONNEL, // Assigne le rôle Personnel
     });
     const savedClient = await this.clientRepo.save(client);
@@ -179,6 +185,7 @@ export class UsersService {
       nom: updateData.nom ?? client.nom,
       prenom: updateData.prenom ?? client.prenom,
       email: updateData.email ?? client.email,
+      telephone: updateData.telephone !== undefined ? updateData.telephone : client.telephone,
       password: updateData.password ?? client.password,
     });
 
@@ -199,6 +206,8 @@ export class UsersService {
       if (entreprise) {
         if (updateData.nomEntreprise) entreprise.nomEntreprise = updateData.nomEntreprise;
         if (updateData.identifiantFiscal) entreprise.identifiantFiscal = updateData.identifiantFiscal;
+        if (updateData.tailleEntreprise !== undefined) entreprise.tailleEntreprise = updateData.tailleEntreprise;
+        if (updateData.telephone !== undefined) entreprise.telephone = updateData.telephone;
         await this.entrepriseRepo.save(entreprise);
       }
     }

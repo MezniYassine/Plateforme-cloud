@@ -1,87 +1,97 @@
-<!DOCTYPE html>
-<html lang="fr">
+<div class="pending-page-container">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamix Cloud â€” Registration Submitted</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="pending-approval.component.scss">
-</head>
+  <!-- Background Decorative Ambient Glows -->
+  <div class="ambient-glow glow-top"></div>
+  <div class="ambient-glow glow-bottom"></div>
 
-<body>
+  <!-- ══════════════════ NAVBAR ══════════════════ -->
+  <header class="pending-navbar">
+    <a class="pending-logo" [routerLink]="['/']">
+      <div class="logo-icon-box">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F07A1F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="6 3 18 3 22 12 18 21 6 21 2 12" />
+        </svg>
+      </div>
+      <span class="logo-brand-text">Dynamix <span>Cloud</span></span>
+    </a>
+  </header>
 
-    <!-- Navbar -->
-    <nav>
-        <a class="logo" [routerLink]="['']">
-            <div class="logo-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#1a7abf" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <polygon points="6 3 18 3 22 12 18 21 6 21 2 12" />
-                </svg>
-            </div>
-            <span class="logo-text">Dynamix Cloud</span>
-        </a>
-    </nav>
+  <!-- ══════════════════ MAIN BODY ══════════════════ -->
+  <main class="pending-main-content">
+    <div class="pending-card">
 
-    <!-- Main -->
-    <div class="page-body">
-        <div class="card">
-
-            <!-- Hourglass icon -->
-            <div class="icon-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#1a7abf" stroke-width="1.6" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M5 22h14" />
-                    <path d="M5 2h14" />
-                    <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
-                    <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
-                </svg>
-            </div>
-
-            <h1 class="title">Registration Submitted</h1>
-
-            <p class="subtitle">
-                Thank you for choosing Dynamix Cloud. Your account creation request has been successfully submitted
-                and is currently pending review by our administration team.
-            </p>
-
-            <!-- Status banner -->
-            <div class="status-banner">
-                <div class="status-dot-wrap">
-                    <div class="status-dot"></div>
-                </div>
-                <div class="status-text">
-                    <div class="status-title">Account Pending Approval</div>
-                    <div class="status-desc">You will be notified via email within 24 hours.</div>
-                </div>
-            </div>
-
-            <!-- Buttons -->
-            <div class="actions">
-                <a href="mailto:support@dynamix-services.com" class="btn btn-outline">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <rect x="2" y="4" width="20" height="16" rx="2" />
-                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                    </svg>
-                    Contact Support
-                </a>
-                <a [routerLink]="['']" class="btn btn-primary">
-                    Return to Homepage
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                </a>
-            </div>
-
+      <!-- Animated Hourglass Icon Box -->
+      <div class="pending-icon-wrapper">
+        <div class="pulse-ring"></div>
+        <div class="icon-core">
+          <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 22h14" />
+            <path d="M5 2h14" />
+            <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+            <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+          </svg>
         </div>
+      </div>
+
+      <!-- Title & Description -->
+      <h1 class="pending-title">Inscription en cours d'examen</h1>
+
+      <p class="pending-subtitle">
+        Merci d'avoir choisi <strong>Dynamix Cloud</strong>. Votre demande de création de compte a bien été enregistrée et est actuellement en cours de vérification par notre équipe d'administration.
+      </p>
+
+      <!-- Status Banner -->
+      <div class="status-alert-banner">
+        <div class="status-dot-pulse">
+          <span class="dot-core"></span>
+          <span class="dot-ring"></span>
+        </div>
+        <div class="status-alert-content">
+          <div class="status-alert-title">Compte en attente d'approbation</div>
+          <div class="status-alert-desc">Un e-mail de confirmation vous sera envoyé dès que votre demande sera validée.</div>
+        </div>
+      </div>
+
+      <!-- Information Steps -->
+      <div class="info-timeline">
+        <div class="timeline-step">
+          <div class="step-icon done">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="step-text">Formulaire d'inscription transmis</div>
+        </div>
+        <div class="timeline-divider active"></div>
+        <div class="timeline-step">
+          <div class="step-icon active">
+            <div class="spinner-tiny"></div>
+          </div>
+          <div class="step-text">Vérification de sécurité & profil</div>
+        </div>
+        <div class="timeline-divider"></div>
+        <div class="timeline-step">
+          <div class="step-icon">
+            <span class="step-num">3</span>
+          </div>
+          <div class="step-text">Accès complet à la plateforme</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pending-actions">
+        <a [routerLink]="['/']" class="btn-pending btn-primary">
+          <span>Retour à l'accueil</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+
     </div>
+  </main>
 
-</body>
+  <!-- ══════════════════ FOOTER ══════════════════ -->
+  <footer class="pending-footer">
+    <span>&copy; 2026 Dynamix Cloud. Tous droits réservés.</span>
+  </footer>
 
-</html>
+</div>

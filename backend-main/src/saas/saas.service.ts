@@ -19,6 +19,7 @@ import { WalletService } from 'src/wallet/wallet.service';
 import { Demande, DemandeStatus } from 'src/demande/entities/demande.entity';
 import { Client } from 'src/entities/client.entity';
 import { MailService } from 'src/mail/mail.service';
+import { MetricsService } from 'src/metrics/metrics.service';
 
 @Injectable()
 export class SaasService {
@@ -47,6 +48,7 @@ export class SaasService {
         private readonly clientRepo: Repository<Client>,
         private readonly walletService: WalletService,
         private readonly mailService: MailService,
+        private readonly metricsService: MetricsService,
     ) { }
 
     /**
@@ -54,9 +56,11 @@ export class SaasService {
      * Certaines apps (phpMyAdmin, pgAdmin) sont liées à un service PaaS existant.
      */
     async create(dto: CreateSaasDto, adminPayerId?: number): Promise<ServiceSaaS> {
-        if (!dto?.nomPersonnalise) {
-            throw new BadRequestException('Le champ nomPersonnalise est requis.');
+        const sanitizedName = (dto?.nomPersonnalise || '').trim();
+        if (!sanitizedName || sanitizedName.length < 3 || sanitizedName.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(sanitizedName)) {
+            throw new BadRequestException("Le nom d'instance doit comporter entre 3 et 32 caractères alphanumériques (a-z, 0-9, tirets et underscores uniquement).");
         }
+        dto.nomPersonnalise = sanitizedName;
 
         if (!dto.catalogueId) {
             throw new BadRequestException('Veuillez sélectionner un plan valide dans le catalogue pour cette application SaaS.');
@@ -95,9 +99,10 @@ export class SaasService {
         const cleanName = dto.nomPersonnalise.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const containerName = `saas_${cleanName}_${externalPort}`;
 
-        // --- Mot de passe admin par défaut ---
-        const adminPassword = dto.adminPassword || Math.random().toString(36).slice(-8) + 'A1!';
-        const adminEmail = dto.adminEmail || 'admin@cloud.local';
+        // --- Identifiants admin (si applicable) ---
+        const isDbAuthOrWizard = dto.appType === SaasAppType.PHPMYADMIN || dto.appType === SaasAppType.WORDPRESS;
+        const adminPassword = isDbAuthOrWizard ? undefined : (dto.adminPassword || Math.random().toString(36).slice(-8) + 'A1!');
+        const adminEmail = isDbAuthOrWizard ? undefined : (dto.adminEmail || 'admin@cloud.local');
 
         // --- Les limites CPU et RAM du catalogue sont ignorées pour le SaaS ---
         // Les conteneurs SaaS n'auront aucune restriction de ressources
@@ -122,6 +127,12 @@ export class SaasService {
                 break;
 
             case SaasAppType.PGADMIN:
+                if (!adminEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail)) {
+                    throw new BadRequestException("pgAdmin requiert une adresse email valide pour le compte administrateur (ex: admin@domaine.com).");
+                }
+                if (!adminPassword || adminPassword.trim().length < 4) {
+                    throw new BadRequestException("pgAdmin requiert un mot de passe administrateur d'au moins 4 caractères.");
+                }
                 dockerCmd = `docker run -d ${limitsStr}--name ${containerName} ` +
                     `-e PGADMIN_DEFAULT_EMAIL=${adminEmail} ` +
                     `-e PGADMIN_DEFAULT_PASSWORD=${adminPassword} ` +
@@ -248,13 +259,12 @@ export class SaasService {
                 catalogue: catalogue,
                 dateProchaineFacturation: nextMonth,
                 linkedPaasService: linkedPaas ?? undefined,
-                ownerEmail: adminEmail,
-                ownerPassword: adminPassword,
+                ownerEmail: adminEmail ?? undefined,
+                ownerPassword: adminPassword ?? undefined,
             });
 
-            // Attendre quelques secondes pour s'assurer que le conteneur est prêt à écouter les requêtes
-            // (n8n et WordPress nécessitent plus de temps car ils initialisent leurs bases de données)
-            const delayMs = (dto.appType === SaasAppType.N8N || dto.appType === SaasAppType.WORDPRESS) ? 15000 : 5000;
+            // Attendre que le conteneur démarre et initialise son serveur web interne (Gunicorn, Apache, Node)
+            const delayMs = 12000;
             await new Promise(resolve => setTimeout(resolve, delayMs));
 
             const savedSaas = await this.saasRepo.save(newSaas);
@@ -473,7 +483,7 @@ export class SaasService {
             host: this.hostIp,
             username: this.sshUser,
             password: this.sshPass,
-            readyTimeout: 30000,
+            readyTimeout: 3500,
         };
 
         try {
@@ -490,6 +500,9 @@ export class SaasService {
                 } catch (e) { }
 
                 const storageMb = parseInt(diskResult.stdout.trim(), 10) || 0;
+                const cpuNum = parseFloat(String(stats.cpu || '0').replace('%', '')) || 0;
+                const ramNum = parseFloat(String(stats.ramPerc || '0').replace('%', '')) || 0;
+                this.metricsService.recordMetric('SAAS', id, cpuNum, ramNum, storageMb);
 
                 return {
                     containerName,

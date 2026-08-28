@@ -31,6 +31,8 @@ export interface RegisterEnterpriseDto {
   password: string;
   companyName: string;
   taxId: string;
+  companySize?: string;
+  phone?: string;
 }
 
 export interface RegisterPersonalDto {
@@ -39,6 +41,7 @@ export interface RegisterPersonalDto {
   email: string;
   password: string;
   profession?: string;
+  phone?: string;
 }
 
 export interface LoginDto {
@@ -84,6 +87,8 @@ export class AuthService {
       password: hashedPassword,
       companyName: dto.companyName,
       taxId: dto.taxId,
+      telephone: dto.phone,
+      companySize: dto.companySize,
     });
     const adminEmail = this.configService.get<string>('ADMIN_GLOBAL_EMAIL');
 
@@ -97,6 +102,8 @@ export class AuthService {
         <ul>
           <li><strong>Contact :</strong> ${dto.firstName} ${dto.lastName}</li>
           <li><strong>Email :</strong> ${dto.email}</li>
+          <li><strong>Téléphone :</strong> ${dto.phone || 'Non renseigné'}</li>
+          <li><strong>Taille :</strong> ${dto.companySize || 'Non renseigné'}</li>
           <li><strong>SIRET :</strong> ${dto.taxId}</li>
         </ul>
         <p>Veuillez vous connecter à votre console d'administration pour traiter cette demande.</p>
@@ -128,6 +135,7 @@ export class AuthService {
       email: dto.email,
       password: hashedPassword,
       profession: dto.profession ?? '',
+      telephone: dto.phone,
     });
     const adminEmail = this.configService.get<string>('ADMIN_GLOBAL_EMAIL');
 
@@ -141,7 +149,8 @@ export class AuthService {
         <ul>
           <li><strong>Nom :</strong> ${dto.firstName} ${dto.lastName}</li>
           <li><strong>Email :</strong> ${dto.email}</li>
-          <li><strong>Profession :</strong> ${dto.profession ?? 'Non renseignée'}</li>
+          <li><strong>Téléphone :</strong> ${dto.phone || 'Non renseigné'}</li>
+          <li><strong>Profession :</strong> ${dto.profession || 'Non renseignée'}</li>
         </ul>
         <p>Veuillez vous connecter à votre console d'administration pour traiter cette demande.</p>
       `,
@@ -170,16 +179,16 @@ export class AuthService {
     }
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Cet email n'existe pas");
     }
 
     if (!user.password) {
-      throw new UnauthorizedException('Account activation required');
+      throw new UnauthorizedException("Activation du compte requise");
     }
 
     const passwordMatch = await bcrypt.compare(dto.password, user.password);
     if (!passwordMatch) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Mot de passe incorrect");
     }
 
     // --- SÉCURITÉ JWT ---

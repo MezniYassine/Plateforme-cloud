@@ -83,9 +83,11 @@ export class WalletService {
       description: `Rechargement du wallet (+${MONTANT_RECHARGE} DT)`,
       wallet,
     });
-    await this.transactionRepo.save(transaction);
+    const savedTx = await this.transactionRepo.save(transaction);
+    savedTx.reference = `FAC-${new Date().getFullYear()}-${String(savedTx.id).padStart(5, '0')}`;
+    await this.transactionRepo.save(savedTx);
 
-    this.logger.log(`💳 Recharge +${MONTANT_RECHARGE} DT pour client #${clientId}. Nouveau solde: ${wallet.solde} DT`);
+    this.logger.log(`💳 Recharge +${MONTANT_RECHARGE} DT pour client #${clientId}. Réf: ${savedTx.reference}, Nouveau solde: ${wallet.solde} DT`);
     return wallet;
   }
 
@@ -119,9 +121,11 @@ export class WalletService {
       vmId: vmId ?? undefined,
       wallet,
     });
-    await this.transactionRepo.save(transaction);
+    const savedTx = await this.transactionRepo.save(transaction);
+    savedTx.reference = `FAC-${new Date().getFullYear()}-${String(savedTx.id).padStart(5, '0')}`;
+    await this.transactionRepo.save(savedTx);
 
-    this.logger.log(`💸 Débit -${montant} DT pour client #${clientId}. Nouveau solde: ${wallet.solde} DT`);
+    this.logger.log(`💸 Débit -${montant} DT pour client #${clientId}. Réf: ${savedTx.reference}, Nouveau solde: ${wallet.solde} DT`);
     return wallet;
   }
 
@@ -147,9 +151,11 @@ export class WalletService {
       vmId: vmId ?? undefined,
       wallet,
     });
-    await this.transactionRepo.save(transaction);
+    const savedTx = await this.transactionRepo.save(transaction);
+    savedTx.reference = `FAC-${new Date().getFullYear()}-${String(savedTx.id).padStart(5, '0')}`;
+    await this.transactionRepo.save(savedTx);
 
-    this.logger.log(`💳 Crédit +${montant} DT pour client #${clientId}. Nouveau solde: ${wallet.solde} DT`);
+    this.logger.log(`💳 Crédit +${montant} DT pour client #${clientId}. Réf: ${savedTx.reference}, Nouveau solde: ${wallet.solde} DT`);
     return wallet;
   }
 

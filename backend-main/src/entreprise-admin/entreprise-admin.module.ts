@@ -10,16 +10,22 @@ import { Wallet } from 'src/entities/wallet.entity';
 import { Transaction } from 'src/entities/transaction.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { EsxiModule } from 'src/esxi/esxi.module';
-
-
-
 import { ServicePaaS } from 'src/entities/servicePaaS.entity';
+import { ServiceSaaS } from 'src/entities/serviceSaaS.entity';
 import { PaasModule } from 'src/paas/paas.module';
 
 @Module({
-  // On importe l'entité pour que TypeORM puisse injecter le "clientRepo" dans ton AdminService
   imports: [
-    TypeOrmModule.forFeature([Client, Entreprise, Demande, MachineVirtuelle, Wallet, Transaction, ServicePaaS]),
+    TypeOrmModule.forFeature([
+      Client,
+      Entreprise,
+      Demande,
+      MachineVirtuelle,
+      Wallet,
+      Transaction,
+      ServicePaaS,
+      ServiceSaaS,
+    ]),
     JwtModule.register({
       secret: process.env.JWT_SECRET ?? 'dynamix-dev-secret',
       signOptions: { expiresIn: '24h' },
@@ -32,4 +38,3 @@ import { PaasModule } from 'src/paas/paas.module';
   exports: [EntrepriseService],
 })
 export class EntrepriseAdminModule { }
-

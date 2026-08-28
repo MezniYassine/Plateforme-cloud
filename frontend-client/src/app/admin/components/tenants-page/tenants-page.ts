@@ -6,6 +6,7 @@ import { DashboardHelperService, Tenant } from '../../dashboard-helper.service';
   standalone: true,
   imports: [],
   templateUrl: './tenants-page.html',
+  styleUrl: './tenants-page.scss',
 })
 export class TenantsPageComponent {
   tenants = input.required<Tenant[]>();

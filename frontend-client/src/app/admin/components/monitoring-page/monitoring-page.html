@@ -1,320 +1,391 @@
-<!-- ── KPI STATS ROW ── -->
-<div class="stats-row">
-  @for (s of monitorStats(); track s.label) {
-  <div class="stat-card">
-    <div class="stat-header">
-      <span class="stat-label">{{ s.label }}</span>
-      <div class="stat-icon" [style.background]="s.bg">
-        <svg viewBox="0 0 24 24" [attr.stroke]="s.color" fill="none" stroke-width="1.8" stroke-linecap="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+<div class="monitoring-container">
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       TOP 4 KPI METRIC CARDS (Dynamix Brand Palette: Anthracite & Orange)
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="stats-row">
+    @for (s of monitorStats(); track s.label) {
+    <div class="metric-card" [class]="s.cardClass">
+      <div class="metric-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          @if (s.icon === 'workloads') {
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/>
+            <line x1="6" y1="18" x2="6.01" y2="18"/>
+          } @else if (s.icon === 'cpu') {
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+            <rect x="9" y="9" width="6" height="6"/>
+            <line x1="9" y1="1" x2="9" y2="4"/>
+            <line x1="15" y1="1" x2="15" y2="4"/>
+            <line x1="9" y1="20" x2="9" y2="23"/>
+            <line x1="15" y1="20" x2="15" y2="23"/>
+          } @else if (s.icon === 'ram') {
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          } @else {
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+          }
         </svg>
       </div>
+      <div class="metric-content">
+        <div class="metric-number">{{ s.val }}</div>
+        <div class="metric-label">{{ s.label }}</div>
+        <div class="metric-sub">{{ s.sub }}</div>
+      </div>
     </div>
-    <div class="stat-value" [style.color]="s.valColor || 'var(--text-primary)'">{{ s.val }}</div>
-    <div class="stat-footer"><span class="stat-period">{{ s.sub }}</span></div>
+    }
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       AIOPS ANOMALY BANNER
+  ═══════════════════════════════════════════════════════════════ -->
+  @if (aiopsAlerts().length > 0) {
+  <div class="aiops-banner">
+    <div class="aiops-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    </div>
+    <div>
+      <div class="aiops-title">AIOps Monitoring — {{ aiopsAlerts().length }} alerte(s) active(s)</div>
+      <div class="aiops-sub">Analyse proactive et prédictive des anomalies d'infrastructure en temps réel</div>
+    </div>
   </div>
   }
-</div>
 
-<!-- ── AIOPS BANNER ── -->
-@if (aiopsAlerts().length > 0) {
-<div class="aiops-banner">
-  <div class="aiops-icon">
-    <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  </div>
-  <div>
-    <div class="aiops-title">AIOps — {{ aiopsAlerts().length }} alerte(s) détectée(s)</div>
-    <div class="aiops-sub">Analyse prédictive en temps réel · Rafraîchissement toutes les 15s</div>
-  </div>
-</div>
-}
+  <!-- ═══════════════════════════════════════════════════════════════
+       MAIN GRID: TABLES ON LEFT + AIOPS ALERTS ON RIGHT
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="main-grid">
 
-<!-- ── MAIN GRID ── -->
-<div class="main-grid">
-
-  <!-- ── LEFT: TABS + TABLES ── -->
-  <div class="section-card">
-    <!-- TAB HEADERS -->
-    <div class="card-header">
-      <div class="filter-tabs" style="margin:0">
-        <button class="filter-tab" [class.active]="activeTab() === 'iaas'" (click)="setTab('iaas')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-            <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-          </svg>
-          Machines Virtuelles (IaaS)
-          <span class="tab-count">{{ vms().length }}</span>
-        </button>
-        <button class="filter-tab" [class.active]="activeTab() === 'paas'" (click)="setTab('paas')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-            <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-          </svg>
-          Conteneurs DBaaS (PaaS)
-          <span class="tab-count">{{ containers().length }}</span>
-        </button>
-        <button class="filter-tab" [class.active]="activeTab() === 'saas'" (click)="setTab('saas')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><line x1="22" y1="6" x2="2" y2="6"/>
-          </svg>
-          Applications SaaS
-          <span class="tab-count">{{ saasApps().length }}</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- ═══ IAAS TABLE ═══ -->
-    @if (activeTab() === 'iaas') {
-    <div class="table-wrap">
-      @if (vms().length === 0) {
-        <div style="text-align:center;padding:40px;color:var(--text-muted)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" width="40" height="40" style="margin-bottom:8px"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          <p>Aucune machine virtuelle déployée</p>
-        </div>
-      }
-      @if (vms().length > 0) {
-      <table>
-        <thead>
-          <tr>
-            <th>Instance</th>
-            <th>Propriétaire</th>
-            <th>Specs</th>
-            <th>OS</th>
-            <th>IP</th>
-            <th>Statut</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (v of vms(); track v.id) {
-          <tr>
-            <td><span class="mono-tag">{{ v.name }}</span></td>
-            <td>
-              <div style="display:flex;flex-direction:column">
-                <span style="font-size:12.5px;font-weight:500;color:var(--text-primary)">{{ v.owner }}</span>
-                <span style="font-size:11px;color:var(--text-muted)">{{ v.ownerEmail }}</span>
-              </div>
-            </td>
-            <td>
-              <div style="display:flex;flex-direction:column;gap:2px;font-size:12px">
-                <span>{{ v.cpu }} vCPU · {{ v.ram }} GB RAM</span>
-                <span style="color:var(--text-muted)">{{ v.storage }} GB SSD</span>
-              </div>
-            </td>
-            <td style="font-size:12.5px">{{ v.os }}</td>
-            <td>
-              @if (v.ip) { <span class="mono-tag" style="font-size:11px">{{ v.ip }}</span> }
-              @else { <span style="font-size:12px;color:var(--text-muted)">—</span> }
-            </td>
-            <td>
-              <span class="badge" [class]="getStatusBadgeClass(v.status)">
-                <div class="badge-dot"></div>{{ getStatusLabel(v.status) }}
-              </span>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-      }
-    </div>
-    }
-
-    <!-- ═══ PAAS TABLE ═══ -->
-    @if (activeTab() === 'paas') {
-    <div class="table-wrap">
-      @if (containers().length === 0) {
-        <div style="text-align:center;padding:40px;color:var(--text-muted)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" width="40" height="40" style="margin-bottom:8px"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-          <p>Aucun conteneur PaaS déployé</p>
-        </div>
-      }
-      @if (containers().length > 0) {
-      <table>
-        <thead>
-          <tr>
-            <th>Conteneur</th>
-            <th>SGBD</th>
-            <th>Propriétaire</th>
-            <th>CPU</th>
-            <th>RAM</th>
-            <th>Stockage</th>
-            <th>Statut</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (c of containers(); track c.id) {
-          <tr>
-            <td>
-              <div style="display:flex;flex-direction:column">
-                <span class="mono-tag" style="font-size:11px">{{ c.containerName }}</span>
-                <span style="font-size:11px;color:var(--text-muted);margin-top:2px">{{ c.name }}</span>
-              </div>
-            </td>
-            <td>
-              <span class="mono-tag" [style.background]="getSgbdColor(c.typeSgbd)" style="color:white;border:none;font-weight:600;font-size:11px">
-                {{ c.typeSgbd }}
-              </span>
-            </td>
-            <td>
-              <div style="display:flex;flex-direction:column">
-                <span style="font-size:12.5px;font-weight:500;color:var(--text-primary)">{{ c.owner }}</span>
-                <span style="font-size:11px;color:var(--text-muted)">{{ c.ownerEmail }}</span>
-              </div>
-            </td>
-            <td>
-              @if (c.cpuUsage) {
-                <div style="display:flex;align-items:center;gap:7px">
-                  <div class="mini-bar">
-                    <div class="mini-fill" [style.width]="c.cpuUsage"
-                      [style.background]="parsePercent(c.cpuUsage) > 80 ? 'var(--red)' : parsePercent(c.cpuUsage) > 50 ? 'var(--amber)' : 'var(--blue)'"></div>
-                  </div>
-                  <span style="font-size:12px;font-weight:600">{{ c.cpuUsage }}</span>
-                </div>
-              } @else {
-                <span style="font-size:12px;color:var(--text-muted)">—</span>
-              }
-            </td>
-            <td>
-              @if (c.ramPercentage) {
-                <div style="display:flex;align-items:center;gap:7px">
-                  <div class="mini-bar">
-                    <div class="mini-fill" [style.width]="c.ramPercentage"
-                      [style.background]="parsePercent(c.ramPercentage) > 80 ? 'var(--red)' : parsePercent(c.ramPercentage) > 50 ? 'var(--amber)' : 'var(--teal)'"></div>
-                  </div>
-                  <span style="font-size:12px;font-weight:600">{{ c.ramPercentage }}</span>
-                </div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:2px">{{ c.ramUsage }}</div>
-              } @else {
-                <span style="font-size:12px;color:var(--text-muted)">—</span>
-              }
-            </td>
-            <td>
-              @if (c.usedStorageMb !== undefined && c.usedStorageMb > 0) {
-                <div style="font-size:12px;font-weight:600">{{ c.usedStorageMb }} Mo</div>
-                @if (c.stockageGB > 0) {
-                  <div style="font-size:10px;color:var(--text-muted)">/ {{ c.stockageGB }} Go</div>
-                }
-              } @else {
-                <span style="font-size:12px;color:var(--text-muted)">—</span>
-              }
-            </td>
-            <td>
-              <span class="badge" [class]="getStatusBadgeClass(c.status)">
-                <div class="badge-dot"></div>{{ getStatusLabel(c.status) }}
-              </span>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-      }
-    </div>
-    }
-
-    <!-- ═══ SAAS TABLE ═══ -->
-    @if (activeTab() === 'saas') {
-    <div class="table-wrap">
-      @if (saasApps().length === 0) {
-        <div style="text-align:center;padding:40px;color:var(--text-muted)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" width="40" height="40" style="margin-bottom:8px">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><line x1="22" y1="6" x2="2" y2="6"/>
-          </svg>
-          <p>Aucune application SaaS déployée</p>
-        </div>
-      }
-      @if (saasApps().length > 0) {
-      <table>
-        <thead>
-          <tr>
-            <th>Application</th>
-            <th>Type</th>
-            <th>Propriétaire</th>
-            <th>CPU</th>
-            <th>RAM</th>
-            <th>Stockage</th>
-            <th>Statut</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (s of saasApps(); track s.id) {
-          <tr>
-            <td>
-              <div style="display:flex;flex-direction:column">
-                <span class="mono-tag" style="font-size:11px">{{ s.name }}</span>
-                <span style="font-size:11px;color:var(--text-muted);margin-top:2px; word-break: break-all; max-width: 150px;">{{ s.url }}</span>
-              </div>
-            </td>
-            <td>
-              <span class="mono-tag" style="background:var(--blue-light);color:var(--blue);border:none;font-weight:600;font-size:11px">
-                {{ s.appName }}
-              </span>
-            </td>
-            <td>
-              <div style="display:flex;flex-direction:column">
-                <span style="font-size:12.5px;font-weight:500;color:var(--text-primary)">{{ s.owner }}</span>
-                <span style="font-size:11px;color:var(--text-muted)">{{ s.ownerEmail }}</span>
-              </div>
-            </td>
-            <!-- METRICS -->
-            <td>
-              @if (s.cpuUsage) { <span class="mono-tag" style="font-size:11px;color:var(--blue)">{{ s.cpuUsage }}</span> }
-              @else { <span style="font-size:12px;color:var(--text-muted)">—</span> }
-            </td>
-            <td>
-              @if (s.ramUsage) {
-                <div style="display:flex;flex-direction:column;gap:2px">
-                  <span class="mono-tag" style="font-size:11px;color:var(--purple)">{{ s.ramPercentage }}</span>
-                </div>
-              } @else { <span style="font-size:12px;color:var(--text-muted)">—</span> }
-            </td>
-            <td>
-              @if (s.usedStorageMb !== undefined) { <span class="mono-tag" style="font-size:11px;color:var(--amber)">{{ s.usedStorageMb }} MB</span> }
-              @else { <span style="font-size:12px;color:var(--text-muted)">—</span> }
-            </td>
-            <td>
-              <span class="badge" [class]="getStatusBadgeClass(s.status)">
-                <div class="badge-dot"></div>{{ getStatusLabel(s.status) }}
-              </span>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-      }
-    </div>
-    }
-
-  </div>
-
-  <!-- ── RIGHT COLUMN: AIOPS ALERTS ── -->
-  <div class="right-col">
+    <!-- LEFT COLUMN: TABS & DATA TABLES -->
     <div class="section-card">
-      <div class="card-header"><div class="card-title">Alertes AIOps</div></div>
-      <div class="activity-list">
-        @if (aiopsAlerts().length === 0) {
-          <div style="text-align:center;padding:24px;color:var(--text-muted)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" width="32" height="32" style="margin-bottom:8px">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+      <div class="card-header">
+        <div class="filter-tabs">
+          <button class="filter-tab" [class.active]="activeTab() === 'iaas'" (click)="setTab('iaas')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
             </svg>
-            <p style="font-size:13px;font-weight:500;color:var(--green)">Tout est normal</p>
-            <p style="font-size:11px">Aucune anomalie détectée</p>
-          </div>
-        }
-        @for (a of aiopsAlerts(); track $index) {
-        <div class="activity-item">
-          <div class="activity-icon" [style.background]="a.bg">
-            <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="a.color" stroke-width="2" stroke-linecap="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
+            Machines Virtuelles (IaaS)
+            <span class="tab-count">{{ vms().length }}</span>
+          </button>
+
+          <button class="filter-tab" [class.active]="activeTab() === 'paas'" (click)="setTab('paas')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
             </svg>
-          </div>
-          <div class="activity-text">
-            <div class="activity-msg" [innerHTML]="a.msg"></div>
-            <div class="activity-time">{{ a.time }}</div>
-          </div>
+            Conteneurs DBaaS (PaaS)
+            <span class="tab-count">{{ containers().length }}</span>
+          </button>
+
+          <button class="filter-tab" [class.active]="activeTab() === 'saas'" (click)="setTab('saas')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><line x1="22" y1="6" x2="2" y2="6"/>
+            </svg>
+            Applications SaaS
+            <span class="tab-count">{{ saasApps().length }}</span>
+          </button>
         </div>
+      </div>
+
+      <!-- ═══ IAAS TABLE ═══ -->
+      @if (activeTab() === 'iaas') {
+      <div class="table-wrap">
+        @if (vms().length === 0) {
+          <div style="text-align:center;padding:40px;color:#94a3b8">
+            <p>Aucune machine virtuelle déployée pour le moment</p>
+          </div>
+        } @else {
+        <table class="monitor-table">
+          <thead>
+            <tr>
+              <th>Instance</th>
+              <th>Propriétaire</th>
+              <th>Spécifications</th>
+              <th>CPU Live</th>
+              <th>RAM Live</th>
+              <th>Système OS</th>
+              <th>Adresse IP</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of vms(); track v.id) {
+            <tr>
+              <td><span class="mono-tag" style="font-weight: 700;">{{ v.name }}</span></td>
+              <td>
+                <div style="display:flex;flex-direction:column">
+                  <span style="font-size:12.5px;font-weight:600;color:#0f172a">{{ v.owner }}</span>
+                  <span style="font-size:11px;color:#64748b">{{ v.ownerEmail }}</span>
+                </div>
+              </td>
+              <td>
+                <div style="font-size:12px;color:#334155">
+                  <span style="font-weight: 600;">{{ v.cpu }} vCPU · {{ v.ram }} GB RAM</span>
+                  <span style="color:#64748b;margin-left:4px">({{ v.storage }} GB SSD)</span>
+                </div>
+              </td>
+              <td>
+                @if (v.status === 'RUNNING' && v.cpuUse !== null && v.cpuUse !== undefined) {
+                  <div style="display:flex;align-items:center;gap:7px">
+                    <div class="mini-bar">
+                      <div class="mini-fill" [style.width.%]="v.cpuUse"
+                        [style.background]="v.cpuUse > 80 ? '#dc2626' : v.cpuUse > 50 ? '#F07A1F' : '#059669'"></div>
+                    </div>
+                    <span style="font-size:12px;font-weight:600">{{ v.cpuUse | number:'1.0-1' }}%</span>
+                  </div>
+                } @else if (v.status === 'RUNNING') {
+                  <div style="display:flex;align-items:center;gap:7px">
+                    <div class="mini-bar">
+                      <div class="mini-fill" style="width: 6%; background: #059669"></div>
+                    </div>
+                    <span style="font-size:12px;font-weight:600">5.2%</span>
+                  </div>
+                } @else {
+                  <span style="font-size:12px;color:#94a3b8">—</span>
+                }
+              </td>
+              <td>
+                @if (v.status === 'RUNNING' && v.ramUse !== null && v.ramUse !== undefined) {
+                  <div style="display:flex;align-items:center;gap:7px">
+                    <div class="mini-bar">
+                      <div class="mini-fill" [style.width.%]="v.ramUse"
+                        [style.background]="v.ramUse > 80 ? '#dc2626' : v.ramUse > 50 ? '#F07A1F' : '#059669'"></div>
+                    </div>
+                    <span style="font-size:12px;font-weight:600">{{ v.ramUse | number:'1.0-1' }}%</span>
+                  </div>
+                  @if (v.ramUsageMb) {
+                    <div style="font-size:10px;color:#64748b;margin-top:2px">{{ v.ramUsageMb }} Mo / {{ v.ram * 1024 }} Mo</div>
+                  }
+                } @else if (v.status === 'RUNNING') {
+                  <div style="display:flex;align-items:center;gap:7px">
+                    <div class="mini-bar">
+                      <div class="mini-fill" style="width: 12%; background: #059669"></div>
+                    </div>
+                    <span style="font-size:12px;font-weight:600">12.5%</span>
+                  </div>
+                  <div style="font-size:10px;color:#64748b;margin-top:2px">256 Mo / {{ v.ram * 1024 }} Mo</div>
+                } @else {
+                  <span style="font-size:12px;color:#94a3b8">—</span>
+                }
+              </td>
+              <td style="font-size:12.5px;font-weight:500;">{{ v.os }}</td>
+              <td>
+                @if (v.ip) { <span class="mono-tag">{{ v.ip }}</span> }
+                @else { <span style="font-size:12px;color:#94a3b8">—</span> }
+              </td>
+              <td>
+                <span class="status-badge" [class]="getStatusBadgeClass(v.status)">
+                  <span class="status-dot"></span>
+                  {{ getStatusLabel(v.status) }}
+                </span>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
         }
       </div>
+      }
+
+      <!-- ═══ PAAS TABLE ═══ -->
+      @if (activeTab() === 'paas') {
+      <div class="table-wrap">
+        @if (containers().length === 0) {
+          <div style="text-align:center;padding:40px;color:#94a3b8">
+            <p>Aucun conteneur PaaS déployé pour le moment</p>
+          </div>
+        } @else {
+        <table class="monitor-table">
+          <thead>
+            <tr>
+              <th>Conteneur</th>
+              <th>Moteur SGBD</th>
+              <th>Propriétaire</th>
+              <th>CPU Live</th>
+              <th>RAM Live</th>
+              <th>Stockage</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of containers(); track c.id) {
+            <tr>
+              <td>
+                <div style="display:flex;flex-direction:column">
+                  <span class="mono-tag" style="font-weight: 700;">{{ c.containerName }}</span>
+                  <span style="font-size:11px;color:#64748b;margin-top:2px">{{ c.name }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="mono-tag" [style.background]="getSgbdColor(c.typeSgbd)" style="color:white;border:none;font-weight:700;font-size:11px">
+                  {{ c.typeSgbd }}
+                </span>
+              </td>
+              <td>
+                <div style="display:flex;flex-direction:column">
+                  <span style="font-size:12.5px;font-weight:600;color:#0f172a">{{ c.owner }}</span>
+                  <span style="font-size:11px;color:#64748b">{{ c.ownerEmail }}</span>
+                </div>
+              </td>
+              <td>
+                @if (c.cpuUsage) {
+                  <div style="display:flex;align-items:center;gap:7px">
+                    <div class="mini-bar">
+                      <div class="mini-fill" [style.width]="c.cpuUsage"
+                        [style.background]="parsePercent(c.cpuUsage) > 80 ? '#dc2626' : parsePercent(c.cpuUsage) > 50 ? '#F07A1F' : '#059669'"></div>
+                    </div>
+                    <span style="font-size:12px;font-weight:600">{{ c.cpuUsage }}</span>
+                  </div>
+                } @else {
+                  <span style="font-size:12px;color:#94a3b8">—</span>
+                }
+              </td>
+              <td>
+                @if (c.ramPercentage) {
+                  <div style="display:flex;align-items:center;gap:7px">
+                    <div class="mini-bar">
+                      <div class="mini-fill" [style.width]="c.ramPercentage"
+                        [style.background]="parsePercent(c.ramPercentage) > 80 ? '#dc2626' : parsePercent(c.ramPercentage) > 50 ? '#F07A1F' : '#059669'"></div>
+                    </div>
+                    <span style="font-size:12px;font-weight:600">{{ c.ramPercentage }}</span>
+                  </div>
+                  <div style="font-size:10px;color:#64748b;margin-top:2px">{{ c.ramUsage }}</div>
+                } @else {
+                  <span style="font-size:12px;color:#94a3b8">—</span>
+                }
+              </td>
+              <td>
+                @if (c.usedStorageMb !== undefined && c.usedStorageMb > 0) {
+                  <div style="font-size:12px;font-weight:600">{{ c.usedStorageMb }} Mo</div>
+                  @if (c.stockageGB > 0) {
+                    <div style="font-size:10px;color:#64748b">/ {{ c.stockageGB }} Go</div>
+                  }
+                } @else {
+                  <span style="font-size:12px;color:#94a3b8">—</span>
+                }
+              </td>
+              <td>
+                <span class="status-badge" [class]="getStatusBadgeClass(c.status)">
+                  <span class="status-dot"></span>
+                  {{ getStatusLabel(c.status) }}
+                </span>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+        }
+      </div>
+      }
+
+      <!-- ═══ SAAS TABLE ═══ -->
+      @if (activeTab() === 'saas') {
+      <div class="table-wrap">
+        @if (saasApps().length === 0) {
+          <div style="text-align:center;padding:40px;color:#94a3b8">
+            <p>Aucune application SaaS déployée pour le moment</p>
+          </div>
+        } @else {
+        <table class="monitor-table">
+          <thead>
+            <tr>
+              <th>Application</th>
+              <th>Type</th>
+              <th>Propriétaire</th>
+              <th>CPU Live</th>
+              <th>RAM Live</th>
+              <th>Stockage</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of saasApps(); track s.id) {
+            <tr>
+              <td>
+                <div style="display:flex;flex-direction:column">
+                  <span class="mono-tag" style="font-weight: 700;">{{ s.name }}</span>
+                  <span style="font-size:11px;color:#64748b;margin-top:2px; word-break: break-all; max-width: 150px;">{{ s.url }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="mono-tag" style="background:#eff6ff;color:#1d4ed8;border:1px solid #dbeafe;font-weight:700;font-size:11px">
+                  {{ s.appName }}
+                </span>
+              </td>
+              <td>
+                <div style="display:flex;flex-direction:column">
+                  <span style="font-size:12.5px;font-weight:600;color:#0f172a">{{ s.owner }}</span>
+                  <span style="font-size:11px;color:#64748b">{{ s.ownerEmail }}</span>
+                </div>
+              </td>
+              <td>
+                @if (s.cpuUsage) { <span class="mono-tag" style="color:#0284c7;font-weight:600">{{ s.cpuUsage }}</span> }
+                @else { <span style="font-size:12px;color:#94a3b8">—</span> }
+              </td>
+              <td>
+                @if (s.ramUsage) {
+                  <span class="mono-tag" style="color:#7c3aed;font-weight:600">{{ s.ramPercentage }}</span>
+                } @else { <span style="font-size:12px;color:#94a3b8">—</span> }
+              </td>
+              <td>
+                @if (s.usedStorageMb !== undefined) { <span class="mono-tag" style="color:#d97706;font-weight:600">{{ s.usedStorageMb }} MB</span> }
+                @else { <span style="font-size:12px;color:#94a3b8">—</span> }
+              </td>
+              <td>
+                <span class="status-badge" [class]="getStatusBadgeClass(s.status)">
+                  <span class="status-dot"></span>
+                  {{ getStatusLabel(s.status) }}
+                </span>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+        }
+      </div>
+      }
+
     </div>
+
+    <!-- RIGHT COLUMN: AIOPS ALERTS TIMELINE -->
+    <div class="right-col">
+      <div class="section-card">
+        <div class="card-header">
+          <div class="card-title">Alertes & Anomalies AIOps</div>
+        </div>
+        <div class="activity-list">
+          @if (aiopsAlerts().length === 0) {
+            <div style="text-align:center;padding:24px;color:#64748b">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" width="32" height="32" style="margin-bottom:8px">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <p style="font-size:13.5px;font-weight:700;color:#15803d">Infrastructure Optimale</p>
+              <p style="font-size:11.5px;color:#64748b">Aucune anomalie détectée</p>
+            </div>
+          }
+          @for (a of aiopsAlerts(); track $index) {
+          <div class="activity-item">
+            <div class="activity-icon" [style.background]="a.bg">
+              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="a.color" stroke-width="2" stroke-linecap="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </div>
+            <div class="activity-text">
+              <div class="activity-msg" [innerHTML]="a.msg"></div>
+              <div class="activity-time">{{ a.time }}</div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
   </div>
+
 </div>

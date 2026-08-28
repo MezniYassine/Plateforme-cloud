@@ -1,8 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, TableInheritance, CreateDateColumn } from 'typeorm';
-import { Client } from './client.entity'; // Assure-toi d'avoir cette entité
+import { Client } from './client.entity';
 import { ServiceStatus } from 'src/enum/service-status.enum';
 import { Catalogue } from 'src/catalogue/entities/catalogue.entity';
-
 
 @Entity()
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
@@ -34,6 +33,9 @@ export abstract class ServiceInstance {
 
   @Column({ type: 'text', nullable: true })
   connectionString!: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  referenceFacture?: string;
 
   @ManyToOne(() => Client, (client) => client.services)
   client!: Client;

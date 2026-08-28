@@ -1,99 +1,167 @@
-<div style="max-width:640px">
+<div class="profile-container">
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SUPER ADMIN PROFILE CARD
+  ═══════════════════════════════════════════════════════════════ -->
   <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()">
-    <div class="section-card" style="margin-bottom:16px">
+    <div class="section-card">
       <div class="card-header">
-        <div class="card-title">Profil Super Admin</div>
-        <button type="submit" class="btn-sm primary" [disabled]="profileForm.invalid">Enregistrer</button>
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          Profil Super Administrateur
+        </div>
+        <button type="submit" class="btn-save" [disabled]="profileForm.invalid">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Enregistrer
+        </button>
       </div>
 
-      <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
-        <div
-          style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--border-light)">
-          <div class="admin-avatar" style="width:56px;height:56px;font-size:20px;border-radius:14px">
+      <div class="card-body">
+        <!-- Admin Info Header -->
+        <div class="admin-profile-header">
+          <div class="admin-avatar">
             {{ getInitials() }}
           </div>
           <div>
-            <div style="font-size:15px;font-weight:600">{{ actualAdmin?.prenom }} {{ actualAdmin?.nom }}</div>
-            <div style="font-size:12.5px;color:var(--text-muted)">{{ actualAdmin?.email }} · Rôle : SUPER_ADMIN</div>
+            <div class="admin-name">{{ actualAdmin?.prenom }} {{ actualAdmin?.nom }}</div>
+            <div class="admin-email">{{ actualAdmin?.email }}</div>
+            <div class="admin-role-badge">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              SUPER_ADMIN · Accès Total Plateforme
+            </div>
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <!-- Form Inputs -->
+        <div class="form-grid-2">
           <div class="profile-field">
             <label>Prénom</label>
-            <input type="text" formControlName="prenom">
+            <input type="text" formControlName="prenom" placeholder="Votre prénom">
           </div>
           <div class="profile-field">
             <label>Nom</label>
-            <input type="text" formControlName="nom">
+            <input type="text" formControlName="nom" placeholder="Votre nom">
           </div>
         </div>
 
         <div class="profile-field">
-          <label>Email</label>
-          <input type="email" formControlName="email">
+          <label>Adresse Email de Connexion</label>
+          <input type="email" formControlName="email" placeholder="admin@dynamix.cloud">
         </div>
       </div>
     </div>
   </form>
 
+  <!-- ═══════════════════════════════════════════════════════════════
+       ACCOUNT SECURITY & AUDIT LOGS CARD
+  ═══════════════════════════════════════════════════════════════ -->
   <div class="section-card">
     <div class="card-header">
-      <div class="card-title">Sécurité du compte</div>
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Sécurité & Authentification
+      </div>
     </div>
-    <div style="padding:16px 22px;display:flex;flex-direction:column;gap:10px">
 
-      <div
-        style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#f0fdf4">
-        <div>
-          <div style="font-size:13.5px;font-weight:600">Authentification MFA</div>
-          <div style="font-size:12px;color:#16a34a;font-weight:500">
-            ● Toujours active — Un code OTP est envoyé par email à chaque connexion
+    <div class="card-body">
+      <div class="security-list">
+        <!-- MFA Status Row -->
+        <div class="security-row mfa-active">
+          <div class="sec-info">
+            <div class="sec-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="sec-title">Double Authentification (MFA / 2FA)</div>
+              <div class="sec-sub green">● Active en permanence — Code OTP sécurisé envoyé par email à chaque connexion</div>
+            </div>
           </div>
+          <span class="badge-active">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Activé
+          </span>
         </div>
-        <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#16a34a;background:#dcfce7;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-          Activé
-        </span>
-      </div>
 
-      <div
-        style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
-        <div>
-          <div style="font-size:13.5px;font-weight:600">Changer le mot de passe</div>
+        <!-- Password Change Row -->
+        <div class="security-row">
+          <div class="sec-info">
+            <div class="sec-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="sec-title">Mot de passe du compte</div>
+              <div class="sec-sub">Modifiez régulièrement votre mot de passe pour garantir la sécurité de la plateforme</div>
+            </div>
+          </div>
+          <button type="button" class="btn-sec-action" (click)="showPasswordModal = true">
+            Modifier
+          </button>
         </div>
-        <button type="button" class="btn-sm" (click)="showPasswordModal = true">Modifier</button>
-      </div>
-      @if (showPasswordModal) {
-      <app-change-password-modal (closeDialog)="showPasswordModal = false" [role]="role"></app-change-password-modal>
-      }
-      <div
-        style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm)">
-        <div>
-          <div style="font-size:13.5px;font-weight:600">Journal d'audit</div>
-          <div style="font-size:12px;color:var(--text-muted)">Toutes vos actions sont tracées</div>
+
+        <!-- Audit Log Row -->
+        <div class="security-row">
+          <div class="sec-info">
+            <div class="sec-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <div>
+              <div class="sec-title">Journal d'audit & Traçabilité</div>
+              <div class="sec-sub">Toutes les actions d'administration et approbations sont tracées</div>
+            </div>
+          </div>
+          <button type="button" class="btn-sec-action primary">
+            Traçabilité active
+          </button>
         </div>
-        <button type="button" class="btn-sm primary">Voir les logs</button>
       </div>
     </div>
   </div>
 
-<!-- ══ GLOBAL TOAST ══ -->
-<div class="global-toast" [class.show]="showToast" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
-  <div class="toast-icon">
-    @if (toastType === 'success') {
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-    } @else {
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="12" y1="8" x2="12" y2="12"></line>
-      <line x1="12" y1="16" x2="12.01" y2="16"></line>
-    </svg>
-    }
+  <!-- Password Change Modal Component -->
+  @if (showPasswordModal) {
+    <app-change-password-modal (closeDialog)="showPasswordModal = false" [role]="role"></app-change-password-modal>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       GLOBAL FLOATING TOAST
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="global-toast" [class.show]="showToast" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
+    <div class="toast-icon">
+      @if (toastType === 'success') {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      }
+    </div>
+    <span>{{ toastMessage }}</span>
   </div>
-  <span>{{ toastMessage }}</span>
-</div>
 
 </div>
