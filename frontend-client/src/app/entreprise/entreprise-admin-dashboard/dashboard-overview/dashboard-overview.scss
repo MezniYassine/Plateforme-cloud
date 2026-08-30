@@ -485,10 +485,11 @@
   }
 
   &:disabled {
-    opacity: 0.65;
+    opacity: 0.38;
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
+    pointer-events: none;
   }
 }
 
@@ -511,10 +512,11 @@
   }
 
   &:disabled {
-    opacity: 0.45;
+    opacity: 0.35;
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
+    pointer-events: none;
   }
 }
 
@@ -525,6 +527,28 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+.status-pill-prov {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ea580c;
+  background: #fff7ed;
+  border: 1.5px solid #fed7aa;
+  padding: 5px 13px;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.12);
+  letter-spacing: -0.01em;
+  pointer-events: none;
+  user-select: none;
+
+  svg {
+    stroke: #ea580c;
+    flex-shrink: 0;
+  }
 }
 
 .status-pill-ok {

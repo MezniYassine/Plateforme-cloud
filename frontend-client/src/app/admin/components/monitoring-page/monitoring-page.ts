@@ -1,8 +1,10 @@
 import { Component, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
 import { DashboardHelperService, Activity } from '../../dashboard-helper.service';
+import { AdminLogsService, SystemLog } from '../../services/logs.service';
 import { forkJoin } from 'rxjs';
 
 interface MonitorVM {
@@ -37,43 +39,61 @@ interface MonitorSaas {
 @Component({
   selector: 'app-monitoring-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './monitoring-page.html',
   styleUrl: './monitoring-page.scss'
 })
 export class MonitoringPageComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
+  private logsService = inject(AdminLogsService);
   public h = inject(DashboardHelperService);
   private pollInterval: any;
 
-  activeTab = signal<'iaas' | 'paas' | 'saas'>('iaas');
+  activeTab = signal<'iaas' | 'paas' | 'saas' | 'logs'>('iaas');
 
   vms = signal<MonitorVM[]>([]);
   containers = signal<MonitorContainer[]>([]);
   saasApps = signal<MonitorSaas[]>([]);
+
+  // Logs & Incidents System
+  logs = signal<SystemLog[]>([]);
+  logStats = signal({
+    unresolvedCount: 0,
+    criticalCount: 0,
+    errorCount: 0,
+    warnCount: 0,
+  });
+  selectedLogSource = signal<string>('ALL');
+  selectedLogLevel = signal<string>('ALL');
+  selectedLogResolved = signal<boolean | undefined>(undefined);
+  isResolvingLog = signal<number | null>(null);
 
   // 4 Top KPI Cards aligned with Dynamix Cloud Palette
   monitorStats = signal([
     { label: 'Workloads actifs', val: '0', sub: 'Calcul en cours...', cardClass: 'card-anthracite-dark', icon: 'workloads' },
     { label: 'CPU moyen', val: '0%', sub: 'Sur toutes les instances', cardClass: 'card-orange-deep', icon: 'cpu' },
     { label: 'RAM moyenne', val: '0%', sub: 'Sur toutes les instances', cardClass: 'card-anthracite-mid', icon: 'ram' },
-    { label: 'Alertes AIOps', val: '0', sub: 'Aucune anomalie', cardClass: 'card-orange-vibrant', icon: 'alert' },
+    { label: 'Incidents & Logs', val: '0', sub: 'Aucun incident', cardClass: 'card-orange-vibrant', icon: 'alert' },
   ]);
-
-  // AIOps Alerts (dynamic from actual health metrics)
-  aiopsAlerts = signal<Activity[]>([]);
 
   ngOnInit() {
     this.loadData();
-    this.pollInterval = setInterval(() => this.loadData(), 10000);
+    this.loadLogs();
+    this.pollInterval = setInterval(() => {
+      this.loadData();
+      this.loadLogs();
+    }, 10000);
   }
 
   ngOnDestroy() {
     if (this.pollInterval) clearInterval(this.pollInterval);
   }
 
-  setTab(tab: 'iaas' | 'paas' | 'saas') {
+  setTab(tab: 'iaas' | 'paas' | 'saas' | 'logs') {
     this.activeTab.set(tab);
+    if (tab === 'logs') {
+      this.loadLogs();
+    }
   }
 
   loadData() {
@@ -189,56 +209,7 @@ export class MonitoringPageComponent implements OnInit, OnDestroy {
     const cpuPct = hostData?.cpuPercent ?? 0;
     const ramPct = hostData?.ramPercent ?? 0;
 
-    // Generate AIOps alerts dynamically
-    const alerts: Activity[] = [];
-    if (cpuPct > 80) {
-      alerts.push({
-        type: 'alert', color: '#dc2626', bg: '#fef2f2',
-        msg: `<strong>Hôte ESXi</strong> — CPU critique à ${cpuPct}%`,
-        time: 'Temps réel'
-      });
-    } else if (cpuPct > 60) {
-      alerts.push({
-        type: 'warn', color: '#c2410c', bg: '#fff7ed',
-        msg: `<strong>Hôte ESXi</strong> — CPU élevé à ${cpuPct}%`,
-        time: 'Temps réel'
-      });
-    }
-
-    if (ramPct > 85) {
-      alerts.push({
-        type: 'alert', color: '#dc2626', bg: '#fef2f2',
-        msg: `<strong>Hôte ESXi</strong> — RAM critique à ${ramPct}%`,
-        time: 'Temps réel'
-      });
-    } else if (ramPct > 70) {
-      alerts.push({
-        type: 'warn', color: '#c2410c', bg: '#fff7ed',
-        msg: `<strong>Hôte ESXi</strong> — RAM élevée à ${ramPct}%`,
-        time: 'Temps réel'
-      });
-    }
-
-    for (const c of containers) {
-      const ramP = parseFloat(c.ramPercentage?.replace('%', '') || '0');
-      if (ramP > 80) {
-        alerts.push({
-          type: 'alert', color: '#dc2626', bg: '#fef2f2',
-          msg: `<strong>${c.containerName}</strong> — RAM à ${ramP.toFixed(1)}%`,
-          time: 'Temps réel'
-        });
-      }
-      const cpuP = parseFloat(c.cpuUsage?.replace('%', '') || '0');
-      if (cpuP > 50) {
-        alerts.push({
-          type: 'warn', color: '#c2410c', bg: '#fff7ed',
-          msg: `<strong>${c.containerName}</strong> — CPU à ${cpuP.toFixed(1)}%`,
-          time: 'Temps réel'
-        });
-      }
-    }
-
-    this.aiopsAlerts.set(alerts);
+    const unresolvedIncidents = this.logStats().unresolvedCount;
 
     this.monitorStats.set([
       { 
@@ -263,13 +234,108 @@ export class MonitoringPageComponent implements OnInit, OnDestroy {
         icon: 'ram'
       },
       { 
-        label: 'Alertes AIOps', 
-        val: `${alerts.length}`, 
-        sub: alerts.length === 0 ? 'Système optimal' : `${alerts.length} alerte(s) active(s)`, 
+        label: 'Incidents & Logs', 
+        val: `${unresolvedIncidents}`, 
+        sub: unresolvedIncidents === 0 ? 'Système optimal' : `${unresolvedIncidents} incident(s) actif(s)`, 
         cardClass: 'card-orange-vibrant',
         icon: 'alert'
       },
     ]);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // LOGS & INCIDENTS MANAGEMENT
+  // ═══════════════════════════════════════════════════════════════
+  loadLogs() {
+    this.logsService.getLogs({
+      source: this.selectedLogSource(),
+      level: this.selectedLogLevel(),
+      resolved: this.selectedLogResolved(),
+      limit: 150,
+    }).subscribe({
+      next: (res) => {
+        this.logs.set(res.logs || []);
+        if (res.stats) {
+          this.logStats.set(res.stats);
+        }
+      },
+      error: (err) => console.warn('Could not load system logs', err)
+    });
+  }
+
+  onFilterChange() {
+    this.loadLogs();
+  }
+
+  resolveLog(id: number, event?: Event) {
+    if (event) event.stopPropagation();
+    this.isResolvingLog.set(id);
+    this.logsService.resolveLog(id).subscribe({
+      next: (updated) => {
+        this.isResolvingLog.set(null);
+        this.logs.update(current => current.map(l => l.id === id ? { ...l, resolved: true, resolvedAt: updated.resolvedAt } : l));
+        this.logStats.update(s => ({
+          ...s,
+          unresolvedCount: Math.max(0, s.unresolvedCount - 1),
+        }));
+      },
+      error: (err) => {
+        this.isResolvingLog.set(null);
+        console.error('Erreur lors de la résolution du log', err);
+      }
+    });
+  }
+
+  clearResolvedLogs() {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer tous les logs marqués comme résolus ?')) return;
+    this.logsService.clearResolved().subscribe({
+      next: () => {
+        this.loadLogs();
+      },
+      error: (err) => console.error('Erreur purge logs', err)
+    });
+  }
+
+  getLogLevelClass(level: string): string {
+    const l = (level || '').toUpperCase();
+    if (l === 'CRITICAL') return 'lvl-critical';
+    if (l === 'ERROR') return 'lvl-error';
+    if (l === 'WARN') return 'lvl-warn';
+    return 'lvl-info';
+  }
+
+  getLogLevelLabel(level: string): string {
+    const l = (level || '').toUpperCase();
+    if (l === 'CRITICAL') return 'Critique';
+    if (l === 'ERROR') return 'Erreur';
+    if (l === 'WARN') return 'Avertissement';
+    return 'Info';
+  }
+
+  getLogSourceLabel(source: string): string {
+    const s = (source || '').toUpperCase();
+    switch (s) {
+      case 'ESXI': return 'VMware ESXi';
+      case 'DOCKER': return 'Moteur Docker';
+      case 'DBAAS': return 'Machine DBaaS';
+      case 'PROVISIONING': return 'Provisioning';
+      case 'STORAGE': return 'Stockage / Disque';
+      case 'SERVICE': return 'Service Client';
+      case 'AUTH': return 'Authentification';
+      default: return 'Système';
+    }
+  }
+
+  getLogSourceBadgeClass(source: string): string {
+    const s = (source || '').toUpperCase();
+    switch (s) {
+      case 'ESXI': return 'src-esxi';
+      case 'DOCKER': return 'src-docker';
+      case 'DBAAS': return 'src-dbaas';
+      case 'PROVISIONING': return 'src-prov';
+      case 'STORAGE': return 'src-storage';
+      default: return 'src-default';
+    }
   }
 
   getStatusBadgeClass(status: string): string {

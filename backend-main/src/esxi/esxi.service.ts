@@ -1,10 +1,12 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, Inject, forwardRef, Optional } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import * as https from 'https';
 import { Client as VsphereClient } from '@vates/node-vsphere-soap';
 import { withSsh } from '../common/ssh.util';
+import { LogsService } from 'src/logs/logs.service';
+import { LogSource } from 'src/enum/log-source.enum';
 
 export interface VmSshSummaryMetrics {
     cpuUse: number;
@@ -22,6 +24,9 @@ export class EsxiService {
     constructor(
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
+        @Optional()
+        @Inject(forwardRef(() => LogsService))
+        private readonly logsService?: LogsService,
     ) {
         this.initializeVsphereClient();
     }

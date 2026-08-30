@@ -143,16 +143,19 @@
           </div>
         </div>
 
-        @if (r.status === 'pending') {
+        @if (r.isProvisioning) {
+        <div class="req-action-buttons-group">
+          <span class="status-pill-prov">
+            <svg class="spin-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="10"/></svg>
+            <span>Provisionnement en cours...</span>
+          </span>
+        </div>
+        <span class="wallet-debit-hint" style="color: #ea580c; font-weight: 600;">Déploiement de l'infrastructure en cours...</span>
+        } @else if (r.status === 'pending') {
         <div class="req-action-buttons-group">
           <button class="btn-approve-primary" [disabled]="r.isProvisioning" (click)="approveRequest.emit(r.id)">
-            @if (r.isProvisioning) {
-              <svg class="spin-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="10"/></svg>
-              <span>Déploiement en cours...</span>
-            } @else {
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Approuver</span>
-            }
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Approuver</span>
           </button>
           <button class="btn-reject-dark" [disabled]="r.isProvisioning" (click)="rejectRequest.emit(r.id)">
             <span>Rejeter</span>

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, OnModuleInit, Logger, Inject, forwardRef, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { withSsh } from '../common/ssh.util';
@@ -11,6 +11,8 @@ import { WalletService } from 'src/wallet/wallet.service';
 import { EsxiService } from 'src/esxi/esxi.service';
 import { Demande, DemandeStatus } from 'src/demande/entities/demande.entity';
 import { MetricsService } from 'src/metrics/metrics.service';
+import { LogsService } from 'src/logs/logs.service';
+import { LogSource } from 'src/enum/log-source.enum';
 
 @Injectable()
 export class PaasService implements OnModuleInit {
@@ -36,6 +38,9 @@ export class PaasService implements OnModuleInit {
         private readonly walletService: WalletService,
         private readonly esxiService: EsxiService,
         private readonly metricsService: MetricsService,
+        @Optional()
+        @Inject(forwardRef(() => LogsService))
+        private readonly logsService?: LogsService,
     ) { }
 
     async onModuleInit() {
@@ -51,14 +56,32 @@ export class PaasService implements OnModuleInit {
                     this.logger.warn('⚠️ La machine DBaaS est éteinte. Tentative de démarrage...');
                     await this.esxiService.powerControl(paasVm.id, 'start');
                     this.logger.log('✅ Ordre de démarrage envoyé pour la machine DBaaS.');
+                    await this.logsService?.logWarn(
+                        LogSource.DBAAS,
+                        'La machine virtuelle DBaaS était éteinte au démarrage du serveur. Ordre de démarrage automatique transmis.',
+                        { state: paasVm.state },
+                        { serviceType: 'PAAS', resourceName: 'DBaaS' }
+                    );
                 } else {
                     this.logger.log('✅ La machine DBaaS (DBaaS) est déjà en cours d\'exécution.');
                 }
             } else {
                 this.logger.warn('⚠️ Attention : Aucune machine nommée "DBaaS" n\'a été trouvée sur l\'ESXi.');
+                await this.logsService?.logWarn(
+                    LogSource.DBAAS,
+                    'Aucune machine virtuelle nommée "DBaaS" n\'a été détectée sur l\'ESXi.',
+                    undefined,
+                    { serviceType: 'PAAS', resourceName: 'DBaaS' }
+                );
             }
-        } catch (error) {
+        } catch (error: any) {
             this.logger.error(`Erreur lors de la vérification de la machine DBaaS : ${error.message}`);
+            await this.logsService?.logCritical(
+                LogSource.DBAAS,
+                `Erreur lors de la vérification de la machine DBaaS sur l'ESXi : ${error.message}`,
+                error?.stack,
+                { serviceType: 'PAAS', resourceName: 'DBaaS' }
+            );
         }
     }
 
@@ -181,7 +204,13 @@ export class PaasService implements OnModuleInit {
 
             return await this.paasRepo.save(newPaas);
 
-        } catch (error) {
+        } catch (error: any) {
+            await this.logsService?.logError(
+                LogSource.PROVISIONING,
+                `Échec du déploiement PaaS (${dto.nomPersonnalise} - ${dto.typeSgbd}) : ${error?.message || error}`,
+                error?.stack || String(error),
+                { serviceType: 'PAAS', resourceName: dto.nomPersonnalise }
+            );
             throw new InternalServerErrorException(`Échec du déploiement DBaaS : ${error.message}`);
         }
     }

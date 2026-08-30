@@ -15,6 +15,7 @@ import { ServiceSaaS } from 'src/entities/serviceSaaS.entity';
 import { Transaction } from 'src/entities/transaction.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { EsxiModule } from 'src/esxi/esxi.module';
+import { LogsModule } from 'src/logs/logs.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { EsxiModule } from 'src/esxi/esxi.module';
       signOptions: { expiresIn: '24h' },
     }),
     forwardRef(() => EsxiModule),
+    forwardRef(() => LogsModule),
   ],
   controllers: [AdminController],
   providers: [AdminService],

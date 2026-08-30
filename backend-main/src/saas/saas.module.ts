@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { SaasService } from './saas.service';
 import { SaasController } from './saas.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,6 +10,7 @@ import { Demande } from 'src/demande/entities/demande.entity';
 import { WalletModule } from 'src/wallet/wallet.module';
 import { MailModule } from 'src/mail/mail.module';
 import { MetricsModule } from 'src/metrics/metrics.module';
+import { LogsModule } from 'src/logs/logs.module';
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { MetricsModule } from 'src/metrics/metrics.module';
         WalletModule,
         MailModule,
         MetricsModule,
+        forwardRef(() => LogsModule),
     ],
     controllers: [SaasController],
     providers: [SaasService],

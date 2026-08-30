@@ -68,6 +68,7 @@
   --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.08);
 
   --sidebar-w: 240px;
+  --sidebar-collapsed-w: 72px;
   --topbar-h: 68px;
 }
 
@@ -96,17 +97,56 @@ html, body {
   flex-direction: column;
   flex-shrink: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
   padding: 8px 0;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .sidebar-logo {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px 20px;
+  padding: 16px 18px 20px;
   text-decoration: none;
   border-bottom: 1px solid var(--border-light);
+  position: relative;
+  transition: padding 0.25s ease;
+}
+
+.logo-text-wrap {
+  flex: 1;
+  min-width: 0;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-toggle-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-white);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: auto;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--accent-border);
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.25s ease;
+  }
 }
 
 .logo-icon {
@@ -314,6 +354,152 @@ html, body {
 .logout-btn svg {
   width: 16px;
   height: 16px;
+}
+
+/* ══════════════════ COLLAPSED SIDEBAR (ICON ONLY) ══════════════════ */
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-w);
+
+  .sidebar-logo {
+    padding: 14px 4px 12px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 4px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: #f8fafc;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto;
+    }
+
+    .logo-text-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      opacity: 1;
+      max-width: 100%;
+    }
+
+    .logo-text {
+      font-size: 11px !important;
+      font-weight: 800 !important;
+      line-height: 1.15;
+      text-align: center;
+      color: var(--text-primary);
+    }
+
+    .logo-sub {
+      font-size: 9.5px !important;
+      font-weight: 700 !important;
+      color: var(--accent) !important;
+      line-height: 1.1;
+      max-width: 62px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+      margin-top: 1px;
+    }
+
+    .sidebar-toggle-btn {
+      display: none;
+    }
+  }
+
+  .sidebar-section {
+    padding: 12px 6px 4px;
+  }
+
+  .sidebar-label {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 10px 0;
+    margin-bottom: 4px;
+
+    .nav-label {
+      display: none;
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+    }
+
+    .nav-badge {
+      position: absolute;
+      top: 6px;
+      right: 14px;
+      min-width: 8px;
+      height: 8px;
+      padding: 0;
+      font-size: 0;
+      border-radius: 50%;
+      border: 2px solid #fff;
+    }
+  }
+
+  .sidebar-footer {
+    padding: 12px 6px;
+    flex-direction: column;
+    gap: 8px;
+
+    .sidebar-expand-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-white);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin: 0 auto;
+
+      &:hover {
+        background: var(--bg-page);
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      svg {
+        width: 15px;
+        height: 15px;
+      }
+    }
+
+    .admin-card {
+      padding: 4px 0;
+      justify-content: center;
+      background: transparent;
+      border-color: transparent;
+
+      .admin-info {
+        display: none;
+      }
+    }
+
+    .logout-btn {
+      width: 32px;
+      height: 32px;
+    }
+  }
 }
 
 /* ══════════════════ MAIN VIEW & TOPBAR ══════════════════ */

@@ -47,7 +47,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
     tenants: 'Locataires',
     inscriptions: 'Inscriptions',
     esxi: 'Serveurs ESXi',
-    monitoring: 'Monitoring AIOps',
+    monitoring: 'Monitoring Infrastructure',
     billing: 'Facturation',
     catalogue: 'Catalogue',
     profile: 'Mon profil',

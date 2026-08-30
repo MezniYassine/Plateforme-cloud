@@ -11,9 +11,9 @@ import { Wallet } from 'src/entities/wallet.entity';
 import { Transaction } from 'src/entities/transaction.entity';
 import { WalletModule } from 'src/wallet/wallet.module';
 import { MailModule } from 'src/mail/mail.module';
-
 import { Demande } from 'src/demande/entities/demande.entity';
 import { MetricsModule } from 'src/metrics/metrics.module';
+import { LogsModule } from 'src/logs/logs.module';
 
 @Module({
   imports: [
@@ -22,6 +22,7 @@ import { MetricsModule } from 'src/metrics/metrics.module';
     forwardRef(() => WalletModule),
     MailModule,
     MetricsModule,
+    forwardRef(() => LogsModule),
   ],
   controllers: [EsxiController],
   providers: [EsxiService],

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PaasService } from './paas.service';
 import { PaasController } from './paas.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,9 +8,9 @@ import { Client } from 'src/entities/client.entity';
 import { WalletModule } from 'src/wallet/wallet.module';
 import { EsxiModule } from 'src/esxi/esxi.module';
 import { MailModule } from 'src/mail/mail.module';
-
 import { Demande } from 'src/demande/entities/demande.entity';
 import { MetricsModule } from 'src/metrics/metrics.module';
+import { LogsModule } from 'src/logs/logs.module';
 
 @Module({
     imports: [
@@ -19,6 +19,7 @@ import { MetricsModule } from 'src/metrics/metrics.module';
         EsxiModule,
         MailModule,
         MetricsModule,
+        forwardRef(() => LogsModule),
     ],
     providers: [PaasService],
     controllers: [PaasController],

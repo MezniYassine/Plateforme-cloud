@@ -1,5 +1,7 @@
 *,
 *::before,
+*,
+*::before,
 *::after {
     box-sizing: border-box;
     margin: 0;
@@ -8,6 +10,7 @@
 
 :root {
     --sidebar-w: 232px;
+    --sidebar-collapsed-w: 72px;
     --topbar-h: 60px;
     --bg-page: #f4f6fb;
     --bg-white: #ffffff;
@@ -72,6 +75,7 @@ body {
     overflow: hidden;
     position: relative;
     z-index: 20;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-logo {
@@ -82,6 +86,42 @@ body {
     padding: 18px 16px 14px;
     border-bottom: 1px solid #f1f5f9;
     flex-shrink: 0;
+    position: relative;
+    transition: padding 0.25s ease;
+}
+
+.logo-text-wrap {
+    flex: 1;
+    min-width: 0;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar-toggle-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: auto;
+    flex-shrink: 0;
+
+    &:hover {
+        background: #f8fafc;
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
+
+    svg {
+        width: 14px;
+        height: 14px;
+        transition: transform 0.25s ease;
+    }
 }
 
 .logo-icon {
@@ -313,6 +353,155 @@ body {
         background: #fee2e2 !important;
         border-color: #fca5a5 !important;
         color: #b91c1c !important;
+    }
+}
+
+/* ══════════════════ COLLAPSED SIDEBAR (ICON ONLY) ══════════════════ */
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-w, 72px);
+
+    .sidebar-logo {
+        padding: 14px 4px 12px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 4px;
+        cursor: pointer;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.15s ease;
+
+        &:hover {
+            background: #f8fafc;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            margin: 0 auto;
+        }
+
+        .logo-text-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            opacity: 1;
+            max-width: 100%;
+        }
+
+        .logo-text {
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            line-height: 1.15;
+            text-align: center;
+            color: #0f172a !important;
+        }
+
+        .logo-sub {
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            color: #F07A1F !important;
+            line-height: 1.1;
+            max-width: 62px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
+            margin-top: 1px !important;
+        }
+
+        .sidebar-toggle-btn {
+            display: none;
+        }
+    }
+
+    .sidebar-section {
+        padding: 12px 6px 4px;
+    }
+
+    .sidebar-label {
+        display: none;
+    }
+
+    .nav-item {
+        justify-content: center;
+        padding: 10px 0;
+        margin-bottom: 4px;
+
+        .nav-label {
+            display: none;
+        }
+
+        svg {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+        }
+
+        .nav-pill {
+            position: absolute;
+            top: 6px;
+            right: 14px;
+            min-width: 8px;
+            height: 8px;
+            padding: 0;
+            font-size: 0;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+    }
+
+    .sidebar-footer {
+        padding: 12px 6px;
+        flex-direction: column;
+        gap: 8px;
+
+        .sidebar-expand-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0 auto;
+
+            &:hover {
+                background: #f8fafc;
+                color: #F07A1F;
+                border-color: #F07A1F;
+            }
+
+            svg {
+                width: 15px;
+                height: 15px;
+            }
+        }
+
+        .user-card {
+            padding: 4px 0;
+            justify-content: center;
+            background: transparent;
+            border-color: transparent;
+
+            .user-info {
+                display: none;
+            }
+        }
+
+        .logout-btn {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            min-height: 32px !important;
+            flex: 0 0 32px !important;
+        }
     }
 }
 

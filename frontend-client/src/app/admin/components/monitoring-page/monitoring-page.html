@@ -9,24 +9,25 @@
       <div class="metric-icon-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           @if (s.icon === 'workloads') {
-            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
-            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-            <line x1="6" y1="6" x2="6.01" y2="6"/>
-            <line x1="6" y1="18" x2="6.01" y2="18"/>
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+          <line x1="6" y1="6" x2="6.01" y2="6" />
+          <line x1="6" y1="18" x2="6.01" y2="18" />
           } @else if (s.icon === 'cpu') {
-            <rect x="4" y="4" width="16" height="16" rx="2"/>
-            <rect x="9" y="9" width="6" height="6"/>
-            <line x1="9" y1="1" x2="9" y2="4"/>
-            <line x1="15" y1="1" x2="15" y2="4"/>
-            <line x1="9" y1="20" x2="9" y2="23"/>
-            <line x1="15" y1="20" x2="15" y2="23"/>
+          <rect x="4" y="4" width="16" height="16" rx="2" />
+          <rect x="9" y="9" width="6" height="6" />
+          <line x1="9" y1="1" x2="9" y2="4" />
+          <line x1="15" y1="1" x2="15" y2="4" />
+          <line x1="9" y1="20" x2="9" y2="23" />
+          <line x1="15" y1="20" x2="15" y2="23" />
           } @else if (s.icon === 'ram') {
-            <rect x="2" y="3" width="20" height="14" rx="2"/>
-            <line x1="8" y1="21" x2="16" y2="21"/>
-            <line x1="12" y1="17" x2="12" y2="21"/>
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <line x1="8" y1="21" x2="16" y2="21" />
+          <line x1="12" y1="17" x2="12" y2="21" />
           } @else {
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
           }
         </svg>
       </div>
@@ -40,25 +41,7 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════
-       AIOPS ANOMALY BANNER
-  ═══════════════════════════════════════════════════════════════ -->
-  @if (aiopsAlerts().length > 0) {
-  <div class="aiops-banner">
-    <div class="aiops-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-        <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
-      </svg>
-    </div>
-    <div>
-      <div class="aiops-title">AIOps Monitoring — {{ aiopsAlerts().length }} alerte(s) active(s)</div>
-      <div class="aiops-sub">Analyse proactive et prédictive des anomalies d'infrastructure en temps réel</div>
-    </div>
-  </div>
-  }
-
-  <!-- ═══════════════════════════════════════════════════════════════
-       MAIN GRID: TABLES ON LEFT + AIOPS ALERTS ON RIGHT
+       MAIN CONTENT: DATA TABLES & LOGS
   ═══════════════════════════════════════════════════════════════ -->
   <div class="main-grid">
 
@@ -68,7 +51,9 @@
         <div class="filter-tabs">
           <button class="filter-tab" [class.active]="activeTab() === 'iaas'" (click)="setTab('iaas')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-              <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
             </svg>
             Machines Virtuelles (IaaS)
             <span class="tab-count">{{ vms().length }}</span>
@@ -76,7 +61,9 @@
 
           <button class="filter-tab" [class.active]="activeTab() === 'paas'" (click)="setTab('paas')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-              <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
             </svg>
             Conteneurs DBaaS (PaaS)
             <span class="tab-count">{{ containers().length }}</span>
@@ -84,10 +71,27 @@
 
           <button class="filter-tab" [class.active]="activeTab() === 'saas'" (click)="setTab('saas')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><line x1="22" y1="6" x2="2" y2="6"/>
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <line x1="22" y1="6" x2="2" y2="6" />
             </svg>
             Applications SaaS
             <span class="tab-count">{{ saasApps().length }}</span>
+          </button>
+
+          <button class="filter-tab tab-logs" [class.active]="activeTab() === 'logs'" (click)="setTab('logs')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+            🚨 Incidents &amp; Logs
+            @if (logStats().unresolvedCount > 0) {
+            <span class="tab-count count-danger">{{ logStats().unresolvedCount }}</span>
+            } @else {
+            <span class="tab-count">{{ logs().length }}</span>
+            }
           </button>
         </div>
       </div>
@@ -96,9 +100,9 @@
       @if (activeTab() === 'iaas') {
       <div class="table-wrap">
         @if (vms().length === 0) {
-          <div style="text-align:center;padding:40px;color:#94a3b8">
-            <p>Aucune machine virtuelle déployée pour le moment</p>
-          </div>
+        <div style="text-align:center;padding:40px;color:#94a3b8">
+          <p>Aucune machine virtuelle déployée pour le moment</p>
+        </div>
         } @else {
         <table class="monitor-table">
           <thead>
@@ -131,46 +135,47 @@
               </td>
               <td>
                 @if (v.status === 'RUNNING' && v.cpuUse !== null && v.cpuUse !== undefined) {
-                  <div style="display:flex;align-items:center;gap:7px">
-                    <div class="mini-bar">
-                      <div class="mini-fill" [style.width.%]="v.cpuUse"
-                        [style.background]="v.cpuUse > 80 ? '#dc2626' : v.cpuUse > 50 ? '#F07A1F' : '#059669'"></div>
-                    </div>
-                    <span style="font-size:12px;font-weight:600">{{ v.cpuUse | number:'1.0-1' }}%</span>
+                <div style="display:flex;align-items:center;gap:7px">
+                  <div class="mini-bar">
+                    <div class="mini-fill" [style.width.%]="v.cpuUse"
+                      [style.background]="v.cpuUse > 80 ? '#dc2626' : v.cpuUse > 50 ? '#F07A1F' : '#059669'"></div>
                   </div>
+                  <span style="font-size:12px;font-weight:600">{{ v.cpuUse | number:'1.0-1' }}%</span>
+                </div>
                 } @else if (v.status === 'RUNNING') {
-                  <div style="display:flex;align-items:center;gap:7px">
-                    <div class="mini-bar">
-                      <div class="mini-fill" style="width: 6%; background: #059669"></div>
-                    </div>
-                    <span style="font-size:12px;font-weight:600">5.2%</span>
+                <div style="display:flex;align-items:center;gap:7px">
+                  <div class="mini-bar">
+                    <div class="mini-fill" style="width: 6%; background: #059669"></div>
                   </div>
+                  <span style="font-size:12px;font-weight:600">5.2%</span>
+                </div>
                 } @else {
-                  <span style="font-size:12px;color:#94a3b8">—</span>
+                <span style="font-size:12px;color:#94a3b8">—</span>
                 }
               </td>
               <td>
                 @if (v.status === 'RUNNING' && v.ramUse !== null && v.ramUse !== undefined) {
-                  <div style="display:flex;align-items:center;gap:7px">
-                    <div class="mini-bar">
-                      <div class="mini-fill" [style.width.%]="v.ramUse"
-                        [style.background]="v.ramUse > 80 ? '#dc2626' : v.ramUse > 50 ? '#F07A1F' : '#059669'"></div>
-                    </div>
-                    <span style="font-size:12px;font-weight:600">{{ v.ramUse | number:'1.0-1' }}%</span>
+                <div style="display:flex;align-items:center;gap:7px">
+                  <div class="mini-bar">
+                    <div class="mini-fill" [style.width.%]="v.ramUse"
+                      [style.background]="v.ramUse > 80 ? '#dc2626' : v.ramUse > 50 ? '#F07A1F' : '#059669'"></div>
                   </div>
-                  @if (v.ramUsageMb) {
-                    <div style="font-size:10px;color:#64748b;margin-top:2px">{{ v.ramUsageMb }} Mo / {{ v.ram * 1024 }} Mo</div>
-                  }
+                  <span style="font-size:12px;font-weight:600">{{ v.ramUse | number:'1.0-1' }}%</span>
+                </div>
+                @if (v.ramUsageMb) {
+                <div style="font-size:10px;color:#64748b;margin-top:2px">{{ v.ramUsageMb }} Mo / {{ v.ram * 1024 }} Mo
+                </div>
+                }
                 } @else if (v.status === 'RUNNING') {
-                  <div style="display:flex;align-items:center;gap:7px">
-                    <div class="mini-bar">
-                      <div class="mini-fill" style="width: 12%; background: #059669"></div>
-                    </div>
-                    <span style="font-size:12px;font-weight:600">12.5%</span>
+                <div style="display:flex;align-items:center;gap:7px">
+                  <div class="mini-bar">
+                    <div class="mini-fill" style="width: 12%; background: #059669"></div>
                   </div>
-                  <div style="font-size:10px;color:#64748b;margin-top:2px">256 Mo / {{ v.ram * 1024 }} Mo</div>
+                  <span style="font-size:12px;font-weight:600">12.5%</span>
+                </div>
+                <div style="font-size:10px;color:#64748b;margin-top:2px">256 Mo / {{ v.ram * 1024 }} Mo</div>
                 } @else {
-                  <span style="font-size:12px;color:#94a3b8">—</span>
+                <span style="font-size:12px;color:#94a3b8">—</span>
                 }
               </td>
               <td style="font-size:12.5px;font-weight:500;">{{ v.os }}</td>
@@ -196,9 +201,9 @@
       @if (activeTab() === 'paas') {
       <div class="table-wrap">
         @if (containers().length === 0) {
-          <div style="text-align:center;padding:40px;color:#94a3b8">
-            <p>Aucun conteneur PaaS déployé pour le moment</p>
-          </div>
+        <div style="text-align:center;padding:40px;color:#94a3b8">
+          <p>Aucun conteneur PaaS déployé pour le moment</p>
+        </div>
         } @else {
         <table class="monitor-table">
           <thead>
@@ -222,7 +227,8 @@
                 </div>
               </td>
               <td>
-                <span class="mono-tag" [style.background]="getSgbdColor(c.typeSgbd)" style="color:white;border:none;font-weight:700;font-size:11px">
+                <span class="mono-tag" [style.background]="getSgbdColor(c.typeSgbd)"
+                  style="color:white;border:none;font-weight:700;font-size:11px">
                   {{ c.typeSgbd }}
                 </span>
               </td>
@@ -234,39 +240,41 @@
               </td>
               <td>
                 @if (c.cpuUsage) {
-                  <div style="display:flex;align-items:center;gap:7px">
-                    <div class="mini-bar">
-                      <div class="mini-fill" [style.width]="c.cpuUsage"
-                        [style.background]="parsePercent(c.cpuUsage) > 80 ? '#dc2626' : parsePercent(c.cpuUsage) > 50 ? '#F07A1F' : '#059669'"></div>
+                <div style="display:flex;align-items:center;gap:7px">
+                  <div class="mini-bar">
+                    <div class="mini-fill" [style.width]="c.cpuUsage"
+                      [style.background]="parsePercent(c.cpuUsage) > 80 ? '#dc2626' : parsePercent(c.cpuUsage) > 50 ? '#F07A1F' : '#059669'">
                     </div>
-                    <span style="font-size:12px;font-weight:600">{{ c.cpuUsage }}</span>
                   </div>
+                  <span style="font-size:12px;font-weight:600">{{ c.cpuUsage }}</span>
+                </div>
                 } @else {
-                  <span style="font-size:12px;color:#94a3b8">—</span>
+                <span style="font-size:12px;color:#94a3b8">—</span>
                 }
               </td>
               <td>
                 @if (c.ramPercentage) {
-                  <div style="display:flex;align-items:center;gap:7px">
-                    <div class="mini-bar">
-                      <div class="mini-fill" [style.width]="c.ramPercentage"
-                        [style.background]="parsePercent(c.ramPercentage) > 80 ? '#dc2626' : parsePercent(c.ramPercentage) > 50 ? '#F07A1F' : '#059669'"></div>
+                <div style="display:flex;align-items:center;gap:7px">
+                  <div class="mini-bar">
+                    <div class="mini-fill" [style.width]="c.ramPercentage"
+                      [style.background]="parsePercent(c.ramPercentage) > 80 ? '#dc2626' : parsePercent(c.ramPercentage) > 50 ? '#F07A1F' : '#059669'">
                     </div>
-                    <span style="font-size:12px;font-weight:600">{{ c.ramPercentage }}</span>
                   </div>
-                  <div style="font-size:10px;color:#64748b;margin-top:2px">{{ c.ramUsage }}</div>
+                  <span style="font-size:12px;font-weight:600">{{ c.ramPercentage }}</span>
+                </div>
+                <div style="font-size:10px;color:#64748b;margin-top:2px">{{ c.ramUsage }}</div>
                 } @else {
-                  <span style="font-size:12px;color:#94a3b8">—</span>
+                <span style="font-size:12px;color:#94a3b8">—</span>
                 }
               </td>
               <td>
                 @if (c.usedStorageMb !== undefined && c.usedStorageMb > 0) {
-                  <div style="font-size:12px;font-weight:600">{{ c.usedStorageMb }} Mo</div>
-                  @if (c.stockageGB > 0) {
-                    <div style="font-size:10px;color:#64748b">/ {{ c.stockageGB }} Go</div>
-                  }
+                <div style="font-size:12px;font-weight:600">{{ c.usedStorageMb }} Mo</div>
+                @if (c.stockageGB > 0) {
+                <div style="font-size:10px;color:#64748b">/ {{ c.stockageGB }} Go</div>
+                }
                 } @else {
-                  <span style="font-size:12px;color:#94a3b8">—</span>
+                <span style="font-size:12px;color:#94a3b8">—</span>
                 }
               </td>
               <td>
@@ -287,9 +295,9 @@
       @if (activeTab() === 'saas') {
       <div class="table-wrap">
         @if (saasApps().length === 0) {
-          <div style="text-align:center;padding:40px;color:#94a3b8">
-            <p>Aucune application SaaS déployée pour le moment</p>
-          </div>
+        <div style="text-align:center;padding:40px;color:#94a3b8">
+          <p>Aucune application SaaS déployée pour le moment</p>
+        </div>
         } @else {
         <table class="monitor-table">
           <thead>
@@ -309,11 +317,13 @@
               <td>
                 <div style="display:flex;flex-direction:column">
                   <span class="mono-tag" style="font-weight: 700;">{{ s.name }}</span>
-                  <span style="font-size:11px;color:#64748b;margin-top:2px; word-break: break-all; max-width: 150px;">{{ s.url }}</span>
+                  <span style="font-size:11px;color:#64748b;margin-top:2px; word-break: break-all; max-width: 150px;">{{
+                    s.url }}</span>
                 </div>
               </td>
               <td>
-                <span class="mono-tag" style="background:#eff6ff;color:#1d4ed8;border:1px solid #dbeafe;font-weight:700;font-size:11px">
+                <span class="mono-tag"
+                  style="background:#eff6ff;color:#1d4ed8;border:1px solid #dbeafe;font-weight:700;font-size:11px">
                   {{ s.appName }}
                 </span>
               </td>
@@ -324,16 +334,18 @@
                 </div>
               </td>
               <td>
-                @if (s.cpuUsage) { <span class="mono-tag" style="color:#0284c7;font-weight:600">{{ s.cpuUsage }}</span> }
+                @if (s.cpuUsage) { <span class="mono-tag" style="color:#0284c7;font-weight:600">{{ s.cpuUsage }}</span>
+                }
                 @else { <span style="font-size:12px;color:#94a3b8">—</span> }
               </td>
               <td>
                 @if (s.ramUsage) {
-                  <span class="mono-tag" style="color:#7c3aed;font-weight:600">{{ s.ramPercentage }}</span>
+                <span class="mono-tag" style="color:#7c3aed;font-weight:600">{{ s.ramPercentage }}</span>
                 } @else { <span style="font-size:12px;color:#94a3b8">—</span> }
               </td>
               <td>
-                @if (s.usedStorageMb !== undefined) { <span class="mono-tag" style="color:#d97706;font-weight:600">{{ s.usedStorageMb }} MB</span> }
+                @if (s.usedStorageMb !== undefined) { <span class="mono-tag" style="color:#d97706;font-weight:600">{{
+                  s.usedStorageMb }} MB</span> }
                 @else { <span style="font-size:12px;color:#94a3b8">—</span> }
               </td>
               <td>
@@ -350,40 +362,167 @@
       </div>
       }
 
-    </div>
-
-    <!-- RIGHT COLUMN: AIOPS ALERTS TIMELINE -->
-    <div class="right-col">
-      <div class="section-card">
-        <div class="card-header">
-          <div class="card-title">Alertes & Anomalies AIOps</div>
-        </div>
-        <div class="activity-list">
-          @if (aiopsAlerts().length === 0) {
-            <div style="text-align:center;padding:24px;color:#64748b">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" width="32" height="32" style="margin-bottom:8px">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-              <p style="font-size:13.5px;font-weight:700;color:#15803d">Infrastructure Optimale</p>
-              <p style="font-size:11.5px;color:#64748b">Aucune anomalie détectée</p>
-            </div>
-          }
-          @for (a of aiopsAlerts(); track $index) {
-          <div class="activity-item">
-            <div class="activity-icon" [style.background]="a.bg">
-              <svg viewBox="0 0 24 24" fill="none" [attr.stroke]="a.color" stroke-width="2" stroke-linecap="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            </div>
-            <div class="activity-text">
-              <div class="activity-msg" [innerHTML]="a.msg"></div>
-              <div class="activity-time">{{ a.time }}</div>
-            </div>
+      <!-- ═══ LOGS & INCIDENTS TABLE ═══ -->
+      @if (activeTab() === 'logs') {
+      <div class="logs-container">
+        <!-- Log Filter Controls -->
+        <div class="logs-filter-bar">
+          <div class="filter-group">
+            <label>Gravité :</label>
+            <select [ngModel]="selectedLogLevel()" (ngModelChange)="selectedLogLevel.set($event); onFilterChange()"
+              class="filter-select">
+              <option value="ALL">Toutes les gravités</option>
+              <option value="CRITICAL">🔴 Critique (CRITICAL)</option>
+              <option value="ERROR">⛔ Erreur (ERROR)</option>
+              <option value="WARN">⚠️ Avertissement (WARN)</option>
+              <option value="INFO">ℹ️ Info</option>
+            </select>
           </div>
+
+          <div class="filter-group">
+            <label>Source :</label>
+            <select [ngModel]="selectedLogSource()" (ngModelChange)="selectedLogSource.set($event); onFilterChange()"
+              class="filter-select">
+              <option value="ALL">Toutes les sources</option>
+              <option value="ESXI">VMware ESXi</option>
+              <option value="DOCKER">Moteur Docker</option>
+              <option value="DBAAS">Machine DBaaS</option>
+              <option value="PROVISIONING">Provisioning</option>
+              <option value="STORAGE">Stockage / Disque</option>
+              <option value="SERVICE">Service Client</option>
+              <option value="AUTH">Authentification</option>
+              <option value="SYSTEM">Système Global</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>État :</label>
+            <select
+              [ngModel]="selectedLogResolved() === undefined ? 'ALL' : selectedLogResolved() ? 'RESOLVED' : 'ACTIVE'"
+              (ngModelChange)="selectedLogResolved.set($event === 'ALL' ? undefined : $event === 'RESOLVED'); onFilterChange()"
+              class="filter-select">
+              <option value="ALL">Tous les états</option>
+              <option value="ACTIVE">Actifs / Non résolus</option>
+              <option value="RESOLVED">Résolus</option>
+            </select>
+          </div>
+
+          <div class="filter-actions">
+            <button class="btn-refresh-logs" (click)="loadLogs()" title="Rafraîchir les logs">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+              Actualiser
+            </button>
+            <button class="btn-clear-logs" (click)="clearResolvedLogs()" title="Supprimer les logs déjà résolus">
+              Purger résolus
+            </button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          @if (logs().length === 0) {
+          <div style="text-align:center;padding:48px 24px;color:#64748b">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#16a34a" stroke-width="2"
+              style="margin-bottom:10px">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+            <p style="font-size:14px;font-weight:700;color:#0f172a">Aucun incident détecté</p>
+            <p style="font-size:12px;color:#94a3b8;margin-top:2px">Tous les composants de l'infrastructure fonctionnent
+              sans anomalie.</p>
+          </div>
+          } @else {
+          <table class="monitor-table logs-table">
+            <thead>
+              <tr>
+                <th style="width: 100px;">Gravité</th>
+                <th style="width: 130px;">Source</th>
+                <th>Incident / Message d'erreur</th>
+                <th>Contexte / Ressource</th>
+                <th style="width: 130px;">Date &amp; Heure</th>
+                <th style="width: 90px;">État</th>
+                <th style="text-align: right; width: 140px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (l of logs(); track l.id) {
+              <tr [class.row-unresolved]="!l.resolved">
+                <td>
+                  <span class="log-lvl-badge" [class]="getLogLevelClass(l.level)">
+                    <span class="lvl-dot"></span>
+                    {{ getLogLevelLabel(l.level) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="log-src-badge" [class]="getLogSourceBadgeClass(l.source)">
+                    {{ getLogSourceLabel(l.source) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="log-msg-wrap">
+                    <span class="log-msg-text" [title]="l.message">{{ l.message }}</span>
+                  </div>
+                </td>
+                <td>
+                  @if (l.resourceName || l.clientEmail || l.serviceType) {
+                  <div style="display:flex;flex-direction:column;font-size:12px">
+                    @if (l.resourceName) {
+                    <span style="font-weight:700;color:#0f172a">{{ l.resourceName }}</span>
+                    }
+                    @if (l.clientEmail) {
+                    <span style="font-size:11px;color:#64748b">{{ l.clientEmail }}</span>
+                    }
+                    @if (l.serviceType) {
+                    <span style="font-size:10px;font-weight:700;color:#F07A1F">{{ l.serviceType }}</span>
+                    }
+                  </div>
+                  } @else {
+                  <span style="font-size:12px;color:#94a3b8">—</span>
+                  }
+                </td>
+                <td>
+                  <div style="font-size:11.5px;color:#475569">
+                    <div>{{ l.createdAt | date:'dd/MM/yyyy' }}</div>
+                    <div style="font-size:10.5px;color:#94a3b8">{{ l.createdAt | date:'HH:mm:ss' }}</div>
+                  </div>
+                </td>
+                <td>
+                  @if (l.resolved) {
+                  <span class="log-state-resolved">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                      stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Résolu
+                  </span>
+                  } @else {
+                  <span class="log-state-active">
+                    <span class="pulse-dot"></span>
+                    Actif
+                  </span>
+                  }
+                </td>
+                <td style="text-align: right;">
+                  @if (!l.resolved) {
+                  <button type="button" class="btn-resolve-log" (click)="resolveLog(l.id, $event)"
+                    [disabled]="isResolvingLog() === l.id" title="Marquer cet incident comme résolu">
+                    @if (isResolvingLog() === l.id) { ... }
+                    @else { Résoudre }
+                  </button>
+                  }
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
           }
         </div>
       </div>
+      }
+
     </div>
 
   </div>

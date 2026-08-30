@@ -1,86 +1,102 @@
 @if(isBrowserAndReady){
 <div class="app">
 
-    <aside class="sidebar">
-        <div class="sidebar-logo">
+    <aside class="sidebar" [class.collapsed]="isSidebarCollapsed()">
+        <div class="sidebar-logo" (click)="isSidebarCollapsed() && toggleSidebar()" [title]="isSidebarCollapsed() ? 'Agrandir la barre latérale' : ''">
             <div class="logo-icon">
                 <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Logo">
             </div>
-            <div>
+            <div class="logo-text-wrap">
                 <div class="logo-text">Dynamix</div>
                 <div class="logo-sub">{{ actualAdmin()?.entreprise?.nomEntreprise }}</div>
             </div>
+            @if (!isSidebarCollapsed()) {
+            <button class="sidebar-toggle-btn" type="button" (click)="$event.stopPropagation(); toggleSidebar()" title="Réduire la barre latérale">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            }
         </div>
 
-        <div class="sidebar-section">
-            <div class="sidebar-label">Principal</div>
-            <div class="nav-item" [class.active]="activePage()==='dashboard'" (click)="setPage('dashboard')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <rect x="3" y="3" width="7" height="7" />
-                    <rect x="14" y="3" width="7" height="7" />
-                    <rect x="14" y="14" width="7" height="7" />
-                    <rect x="3" y="14" width="7" height="7" />
-                </svg>
-                <span>Dashboard</span>
-            </div>
-            <div class="nav-item" [class.active]="activePage()==='requests'" (click)="setPage('requests')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M9 11l3 3L22 4" />
-                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                </svg>
-                <span>Demandes à valider</span>
-                @if (pendingRequestsCount() > 0) {
-                <span class="nav-pill">{{ pendingRequestsCount() }}</span>
-                }
-            </div>
-        </div>
-
-        <div class="sidebar-section">
-            <div class="sidebar-label">Mon organisation</div>
-            <div class="nav-item" [class.active]="activePage()==='team'" (click)="setPage('team')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                <span>Mon équipe</span>
-                <span class="nav-count-pill">{{ teamMembers().length }}</span>
-            </div>
-            <div class="nav-item" [class.active]="activePage()==='resources'" (click)="setPage('resources')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <rect x="2" y="3" width="20" height="5" rx="2" />
-                    <rect x="2" y="11" width="20" height="5" rx="2" />
-                </svg>
-                <span>Ressources déployées</span>
-            </div>
-        </div>
-
-        <div class="sidebar-section">
-            <div class="sidebar-label">Finance</div>
-            <div class="nav-item" [class.active]="activePage()==='billing'" (click)="setPage('billing')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <line x1="12" y1="1" x2="12" y2="23" />
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-                <span>Budget &amp; Facturation</span>
+        <div class="sidebar-nav">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Principal</div>
+                <div class="nav-item" [class.active]="activePage()==='dashboard'" (click)="setPage('dashboard')" title="Dashboard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    <span class="nav-label">Dashboard</span>
+                </div>
+                <div class="nav-item" [class.active]="activePage()==='requests'" (click)="setPage('requests')" [title]="'Demandes à valider (' + pendingRequestsCount() + ')'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M9 11l3 3L22 4" />
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                    </svg>
+                    <span class="nav-label">Demandes à valider</span>
+                    @if (pendingRequestsCount() > 0) {
+                    <span class="nav-pill">{{ pendingRequestsCount() }}</span>
+                    }
+                </div>
             </div>
 
-        </div>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Mon organisation</div>
+                <div class="nav-item" [class.active]="activePage()==='team'" (click)="setPage('team')" [title]="'Mon équipe (' + teamMembers().length + ')'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span class="nav-label">Mon équipe</span>
+                    <span class="nav-count-pill">{{ teamMembers().length }}</span>
+                </div>
+                <div class="nav-item" [class.active]="activePage()==='resources'" (click)="setPage('resources')" title="Ressources déployées">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <rect x="2" y="3" width="20" height="5" rx="2" />
+                        <rect x="2" y="11" width="20" height="5" rx="2" />
+                    </svg>
+                    <span class="nav-label">Ressources déployées</span>
+                </div>
+            </div>
 
-        <div class="sidebar-section">
-            <div class="sidebar-label">Compte</div>
-            <div class="nav-item" [class.active]="activePage()==='profile'" (click)="setPage('profile')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                </svg>
-                <span>Mon profil</span>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Finance</div>
+                <div class="nav-item" [class.active]="activePage()==='billing'" (click)="setPage('billing')" title="Budget & Facturation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <line x1="12" y1="1" x2="12" y2="23" />
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
+                    <span class="nav-label">Budget &amp; Facturation</span>
+                </div>
+
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Compte</div>
+                <div class="nav-item" [class.active]="activePage()==='profile'" (click)="setPage('profile')" title="Mon profil">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <span class="nav-label">Mon profil</span>
+                </div>
             </div>
         </div>
 
         <div class="sidebar-footer">
-            <div class="admin-card" (click)="setPage('profile')">
+            @if (isSidebarCollapsed()) {
+            <button class="sidebar-expand-btn" type="button" (click)="toggleSidebar()" title="Agrandir la barre latérale">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+            }
+            <div class="admin-card" (click)="setPage('profile')" [title]="(actualAdmin()?.nom || '') + ' ' + (actualAdmin()?.prenom || '') + ' (' + (actualAdmin()?.email || '') + ')'">
                 <div class="admin-avatar">{{ actualAdmin()?.nom?.charAt(0) }}{{ actualAdmin()?.prenom?.charAt(0) }}</div>
                 <div class="admin-info">
                     <div class="admin-name">{{ actualAdmin()?.nom }} {{ actualAdmin()?.prenom }}</div>

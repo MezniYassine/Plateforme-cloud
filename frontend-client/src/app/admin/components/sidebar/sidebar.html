@@ -1,84 +1,104 @@
-<aside class="sidebar">
-    <div class="sidebar-logo">
+<aside class="sidebar" [class.collapsed]="isCollapsed()">
+    <div class="sidebar-logo" (click)="isCollapsed() && toggleCollapse()" [title]="isCollapsed() ? 'Agrandir la barre latérale' : ''">
         <div class="logo-icon">
             <img src="/assets/DYNAMIX_DS.png" alt="Dynamix Logo">
         </div>
-        <div>
+        <div class="logo-text-wrap">
             <div class="logo-text">Dynamix</div>
             <div class="logo-sub">Admin Global</div>
         </div>
+        @if (!isCollapsed()) {
+        <button class="sidebar-toggle-btn" type="button" (click)="$event.stopPropagation(); toggleCollapse()" title="Réduire la barre latérale">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
+        }
     </div>
 
-    <div class="sidebar-section">
-        <div class="sidebar-label">Principal</div>
-        <div class="nav-item" [class.active]="activePage==='dashboard'" (click)="setPage('dashboard')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-            </svg>
-            Dashboard
-        </div>
-        <div class="nav-item" [class.active]="activePage==='tenants'" (click)="setPage('tenants')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            Locataires
-            <span class="nav-badge">{{ tenantCount }}</span>
-        </div>
-        <div class="nav-item" [class.active]="activePage==='inscriptions'" (click)="setPage('inscriptions')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-            </svg>
-            Inscriptions
-            <span class="nav-badge amber">{{ pendingCount }}</span>
-        </div>
-    </div>
-
-    <div class="sidebar-section">
-        <div class="sidebar-label">Infrastructure</div>
-        <div class="nav-item" [class.active]="activePage==='esxi'" (click)="setPage('esxi')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <rect x="2" y="3" width="20" height="5" rx="2" />
-                <rect x="2" y="11" width="20" height="5" rx="2" />
-                <rect x="2" y="19" width="20" height="2" rx="1" />
-            </svg>
-            Serveurs ESXi
-        </div>
-        <div class="nav-item" [class.active]="activePage==='monitoring'" (click)="setPage('monitoring')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
-            Monitoring AIOps
-        </div>
-    </div>
-
-    <div class="sidebar-section">
-        <div class="sidebar-label">Gestion</div>
-        <div class="nav-item" [class.active]="activePage==='billing'" (click)="setPage('billing')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <line x1="12" y1="1" x2="12" y2="23" />
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-            Facturation
+    <div class="sidebar-nav">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Principal</div>
+            <div class="nav-item" [class.active]="activePage==='dashboard'" (click)="setPage('dashboard')" title="Dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                <span class="nav-label">Dashboard</span>
+            </div>
+            <div class="nav-item" [class.active]="activePage==='tenants'" (click)="setPage('tenants')" [title]="'Locataires (' + tenantCount + ')'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <span class="nav-label">Locataires</span>
+                @if (tenantCount > 0) {
+                    <span class="nav-badge">{{ tenantCount }}</span>
+                }
+            </div>
+            <div class="nav-item" [class.active]="activePage==='inscriptions'" (click)="setPage('inscriptions')" [title]="'Inscriptions (' + pendingCount + ')'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span class="nav-label">Inscriptions</span>
+                @if (pendingCount > 0) {
+                    <span class="nav-badge amber">{{ pendingCount }}</span>
+                }
+            </div>
         </div>
 
-        <div class="nav-item" [class.active]="activePage==='catalogue'" (click)="setPage('catalogue')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
-            </svg>
-            Catalogue
+        <div class="sidebar-section">
+            <div class="sidebar-label">Infrastructure</div>
+            <div class="nav-item" [class.active]="activePage==='esxi'" (click)="setPage('esxi')" title="Serveurs ESXi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <rect x="2" y="3" width="20" height="5" rx="2" />
+                    <rect x="2" y="11" width="20" height="5" rx="2" />
+                    <rect x="2" y="19" width="20" height="2" rx="1" />
+                </svg>
+                <span class="nav-label">Serveurs ESXi</span>
+            </div>
+            <div class="nav-item" [class.active]="activePage==='monitoring'" (click)="setPage('monitoring')" title="Monitoring & Logs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                <span class="nav-label">Monitoring & Logs</span>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-label">Gestion</div>
+            <div class="nav-item" [class.active]="activePage==='billing'" (click)="setPage('billing')" title="Facturation">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                <span class="nav-label">Facturation</span>
+            </div>
+
+            <div class="nav-item" [class.active]="activePage==='catalogue'" (click)="setPage('catalogue')" title="Catalogue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+                </svg>
+                <span class="nav-label">Catalogue</span>
+            </div>
         </div>
     </div>
 
     <div class="sidebar-footer">
-        <div class="admin-card" (click)="setPage('profile')">
+        @if (isCollapsed()) {
+        <button class="sidebar-expand-btn" type="button" (click)="toggleCollapse()" title="Agrandir la barre latérale">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </button>
+        }
+        <div class="admin-card" (click)="setPage('profile')" [title]="(actualAdmin?.nom || '') + ' ' + (actualAdmin?.prenom || '') + ' (' + (actualAdmin?.email || '') + ')'">
             <div class="admin-avatar">{{ actualAdmin?.nom?.charAt(0) }}{{ actualAdmin?.prenom?.charAt(0) }}</div>
             <div class="admin-info">
                 <div class="admin-name">{{ actualAdmin?.nom }} {{ actualAdmin?.prenom }}</div>

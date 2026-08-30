@@ -338,6 +338,7 @@
   color: #15803d;
   border: 1px solid #dcfce7;
 }
+
 .status-badge.approved .status-dot,
 .status-badge.running .status-dot {
   background: #16a34a;
@@ -350,6 +351,7 @@
   color: #c2410c;
   border: 1px solid #ffedd5;
 }
+
 .status-badge.pending .status-dot,
 .status-badge.stopped .status-dot {
   background: #f97316;
@@ -361,6 +363,7 @@
   color: #b91c1c;
   border: 1px solid #fee2e2;
 }
+
 .status-badge.rejected .status-dot,
 .status-badge.failed .status-dot {
   background: #dc2626;
@@ -420,4 +423,304 @@
 .activity-time {
   font-size: 11px;
   color: #94a3b8;
+}
+
+/* ══════════════════ LOGS & INCIDENTS STYLES ══════════════════ */
+.tab-count.count-danger {
+  background: #fee2e2;
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.logs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.logs-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.filter-select {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.filter-select:focus {
+  border-color: #F07A1F;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.btn-refresh-logs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-refresh-logs:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.btn-clear-logs {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-clear-logs:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+/* Row Unresolved */
+.monitor-table tr.row-unresolved {
+  background: rgba(254, 242, 242, 0.45);
+}
+
+.monitor-table tr.row-unresolved:hover {
+  background: rgba(254, 226, 226, 0.6);
+}
+
+/* Log Level Badges */
+.log-lvl-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.log-lvl-badge .lvl-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.log-lvl-badge.lvl-critical {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.log-lvl-badge.lvl-critical .lvl-dot {
+  background: #dc2626;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+}
+
+.log-lvl-badge.lvl-error {
+  background: #ffe4e6;
+  color: #9f1239;
+  border: 1px solid #fecdd3;
+}
+
+.log-lvl-badge.lvl-error .lvl-dot {
+  background: #e11d48;
+}
+
+.log-lvl-badge.lvl-warn {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.log-lvl-badge.lvl-warn .lvl-dot {
+  background: #d97706;
+}
+
+.log-lvl-badge.lvl-info {
+  background: #e0f2fe;
+  color: #075985;
+  border: 1px solid #bae6fd;
+}
+
+.log-lvl-badge.lvl-info .lvl-dot {
+  background: #0284c7;
+}
+
+/* Log Source Badges */
+.log-src-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.log-src-badge.src-esxi {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.log-src-badge.src-docker {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.log-src-badge.src-dbaas {
+  background: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.log-src-badge.src-prov {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.log-src-badge.src-storage {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+}
+
+.log-src-badge.src-default {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+/* Message Column */
+.log-msg-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.log-msg-text {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.log-has-details-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6366f1;
+  background: #eef2ff;
+  padding: 1px 5px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+/* Log State Badges */
+.log-state-resolved {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.log-state-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #dc2626;
+  animation: pulse-red 1.5s infinite;
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6);
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+/* Log Actions */
+.btn-resolve-log {
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-resolve-log:hover {
+  background: #dcfce7;
+  border-color: #86efac;
 }

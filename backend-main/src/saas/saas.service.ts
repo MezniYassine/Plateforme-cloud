@@ -4,6 +4,9 @@ import {
     InternalServerErrorException,
     NotFoundException,
     Logger,
+    Inject,
+    forwardRef,
+    Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -20,6 +23,8 @@ import { Demande, DemandeStatus } from 'src/demande/entities/demande.entity';
 import { Client } from 'src/entities/client.entity';
 import { MailService } from 'src/mail/mail.service';
 import { MetricsService } from 'src/metrics/metrics.service';
+import { LogsService } from 'src/logs/logs.service';
+import { LogSource } from 'src/enum/log-source.enum';
 
 @Injectable()
 export class SaasService {
@@ -49,6 +54,9 @@ export class SaasService {
         private readonly walletService: WalletService,
         private readonly mailService: MailService,
         private readonly metricsService: MetricsService,
+        @Optional()
+        @Inject(forwardRef(() => LogsService))
+        private readonly logsService?: LogsService,
     ) { }
 
     /**
@@ -283,7 +291,13 @@ export class SaasService {
 
             return savedSaas;
 
-        } catch (error) {
+        } catch (error: any) {
+            await this.logsService?.logError(
+                LogSource.PROVISIONING,
+                `Échec du déploiement SaaS (${dto.nomPersonnalise} - ${dto.appType}) : ${error?.message || error}`,
+                error?.stack || String(error),
+                { serviceType: 'SAAS', resourceName: dto.nomPersonnalise }
+            );
             throw new InternalServerErrorException(`Échec du déploiement SaaS : ${error.message}`);
         }
     }

@@ -55,6 +55,15 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
   pageTitle = computed(() => this.PAGE_TITLES[this.activePage()] ?? 'Dashboard');
   setPage(p: string) { this.activePage.set(p); }
 
+  isSidebarCollapsed = signal<boolean>(typeof localStorage !== 'undefined' ? localStorage.getItem('sidebar_collapsed_ent_admin') === 'true' : false);
+
+  toggleSidebar() {
+    this.isSidebarCollapsed.update(v => !v);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('sidebar_collapsed_ent_admin', String(this.isSidebarCollapsed()));
+    }
+  }
+
   /* COMPANY INFO */
   actualAdmin = signal<Admin | null>(null);
   teamMembers = signal<TeamMember[]>([]);
@@ -83,6 +92,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
 
   /* RESOURCE REQUESTS */
   resourceRequests = signal<ResourceRequest[]>([]);
+  provisioningRequestIds = signal<Set<string>>(new Set());
   reqFilter = signal<string>('all');
 
   filteredRequests = computed(() => {
@@ -250,6 +260,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
           }
 
           const user = d.client ? `${d.client.prenom} ${d.client.nom}` : 'Inconnu';
+          const isProv = this.provisioningRequestIds().has(String(d.id)) || d.status === 'EN_COURS' || d.status === 'PROVISIONING';
           return {
             id: String(d.id),
             name: d.nomInstanceSouhaite,
@@ -260,7 +271,8 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
             date: new Date(d.dateDemande).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
             justification: d.justification,
             commentaireAdmin: d.commentaireAdmin,
-            status: statusMap[d.status] ?? 'pending',
+            status: isProv ? 'pending' : (statusMap[d.status] ?? 'pending'),
+            isProvisioning: isProv,
           };
         });
         this.resourceRequests.set(mapped);
@@ -348,6 +360,11 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     this.reviewJustification.set('');
 
     // 2. Marquer IMMÉDIATEMENT la demande comme étant en cours de déploiement pour bloquer tout nouveau clic
+    this.provisioningRequestIds.update(set => {
+      const next = new Set(set);
+      next.add(String(id));
+      return next;
+    });
     this.resourceRequests.update(list =>
       list.map(r => r.id === id ? { ...r, isProvisioning: true } : r)
     );
@@ -358,6 +375,11 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     // 4. Appel API en arrière-plan — le provisionnement VMware peut durer 30-60 s
     this.http.patch(`${environment.apiBaseUrl}/demande/${id}/approuver`, body).subscribe({
       next: (response: any) => {
+        this.provisioningRequestIds.update(set => {
+          const next = new Set(set);
+          next.delete(String(id));
+          return next;
+        });
         this.loadBilling();
         this.resourceRequests.update(list =>
           list.map(r => r.id === id ? { ...r, status: 'approved', isProvisioning: false, commentaireAdmin } : r)
@@ -368,6 +390,11 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Erreur de déploiement :', err);
+        this.provisioningRequestIds.update(set => {
+          const next = new Set(set);
+          next.delete(String(id));
+          return next;
+        });
         this.resourceRequests.update(list =>
           list.map(r => r.id === id ? { ...r, status: 'rejected', isProvisioning: false, commentaireAdmin } : r)
         );

@@ -30,6 +30,8 @@ import { SaasModule } from './saas/saas.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { Metric } from './entities/metric.entity';
 import { MetricsModule } from './metrics/metrics.module';
+import { SystemLog } from './entities/system-log.entity';
+import { LogsModule } from './logs/logs.module';
 
 
 @Module({
@@ -43,7 +45,7 @@ import { MetricsModule } from './metrics/metrics.module';
       username: process.env.DB_USERNAME ?? 'postgres',
       password: process.env.DB_PASSWORD ?? 'password',
       database: process.env.DB_NAME ?? 'dynamix_db',
-      entities: [Admin, Client, Entreprise, MachineVirtuelle, Personal, ServiceInstance, Catalogue, Wallet, Transaction, ServicePaaS, Metric],
+      entities: [Admin, Client, Entreprise, MachineVirtuelle, Personal, ServiceInstance, Catalogue, Wallet, Transaction, ServicePaaS, Metric, SystemLog],
       autoLoadEntities: true,
       synchronize: true, // disable in production
       logging: false,
@@ -80,6 +82,7 @@ import { MetricsModule } from './metrics/metrics.module';
     PaasModule,
     SaasModule,
     MetricsModule,
+    LogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

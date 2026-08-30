@@ -69,6 +69,15 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     monitor: 'Monitoring', billing: 'Facturation & Wallet', profile: 'Mon profil',
   };
 
+  isSidebarCollapsed = signal<boolean>(typeof localStorage !== 'undefined' ? localStorage.getItem('sidebar_collapsed_personal') === 'true' : false);
+
+  toggleSidebar() {
+    this.isSidebarCollapsed.update(v => !v);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('sidebar_collapsed_personal', String(this.isSidebarCollapsed()));
+    }
+  }
+
   /* ── VMs & PAAS ──────────────────────────────────────────── */
   vms = signal<VM[]>([]);
   paasInstances = signal<PaasInstance[]>([]);
