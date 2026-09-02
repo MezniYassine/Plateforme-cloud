@@ -292,8 +292,8 @@
       </div>
       }
 
-      <!-- Telemetry metrics (if available for PaaS) -->
-      @if (s.metrics) {
+      <!-- Telemetry metrics (uniquement pour les bases de données PaaS, masquées pour SaaS) -->
+      @if (s.type === 'db' && s.metrics) {
       <div class="svc-metrics-panel">
         <!-- CPU Gauge -->
         <div class="metric-block">

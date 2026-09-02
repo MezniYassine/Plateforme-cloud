@@ -10,6 +10,7 @@ import { ResourcesPageComponent } from './components/resources-page/resources-pa
 import { BillingPageComponent } from './components/billing-page/billing-page';
 
 import { ProfilePageComponent } from './components/profile-page/profile-page';
+import { SupportContactModalComponent } from '../../common/support-contact-modal/support-contact-modal.component';
 import { isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DemandeService } from '../../services/demande.service';
@@ -27,8 +28,8 @@ import { DemandeService } from '../../services/demande.service';
     TeamPageComponent,
     ResourcesPageComponent,
     BillingPageComponent,
-
     ProfilePageComponent,
+    SupportContactModalComponent,
     ReactiveFormsModule
   ],
   templateUrl: './entreprise-admin-dashboard.html',

@@ -882,8 +882,8 @@ export class DashboardHelperService {
 
             this.myServices.set([...paasItems, ...saasItems]);
 
-            // Fetch metrics for running PaaS databases and SaaS apps
-            [...paasItems, ...saasItems].filter(s => s.status === 'running').forEach(s => {
+            // Fetch metrics uniquement pour les bases de données PaaS
+            paasItems.filter(s => s.status === 'running').forEach(s => {
               this.loadServiceMetrics(s.id);
             });
           },

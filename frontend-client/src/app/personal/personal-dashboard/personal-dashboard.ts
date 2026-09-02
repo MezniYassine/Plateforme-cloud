@@ -11,6 +11,7 @@ import { SaasTabComponent } from './components/saas-tab/saas-tab';
 import { MonitorTabComponent } from './components/monitor-tab/monitor-tab';
 import { BillingTabComponent } from './components/billing-tab/billing-tab';
 import { ProfileTabComponent } from './components/profile-tab/profile-tab';
+import { SupportContactModalComponent } from '../../common/support-contact-modal/support-contact-modal.component';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { PaasInstance } from './personal-dashboard-helper.service';
@@ -27,6 +28,7 @@ import { SaasAppType } from './saas-app-types';
     MonitorTabComponent,
     BillingTabComponent,
     ProfileTabComponent,
+    SupportContactModalComponent,
   ],
   templateUrl: './personal-dashboard.html',
   styleUrl: './personal-dashboard.scss',
@@ -902,19 +904,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
   loadMySaas(clientId: number) {
     this.h.getMySaas(clientId).subscribe({
       next: (data) => {
-        const existing = this.saasInstances();
-        data = data.map((s: SaasInstance) => {
-          const prev = existing.find(e => e.id === s.id);
-          if (prev && prev.metrics) {
-            s.metrics = prev.metrics;
-          }
-          return s;
-        });
-        this.saasInstances.set(data);
-
-        data.filter((s: SaasInstance) => s.status === 'RUNNING').forEach((s: SaasInstance) => {
-          this.loadSaasMetrics(s.id);
-        });
+        this.saasInstances.set(data || []);
       },
       error: (err) => {
         console.error('Failed to load SaaS instances', err);

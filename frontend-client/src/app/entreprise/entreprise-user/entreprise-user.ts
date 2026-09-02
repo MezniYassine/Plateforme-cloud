@@ -11,6 +11,7 @@ import { Vms } from './components/user-vms/vms';
 import { Services } from './components/user-services/services';
 import { Monitoring } from './components/user-monitoring/monitoring';
 import { Profile } from './components/user-profile/profile';
+import { SupportContactModalComponent } from '../../common/support-contact-modal/support-contact-modal.component';
 
 @Component({
   selector: 'app-entreprise-user',
@@ -27,6 +28,7 @@ import { Profile } from './components/user-profile/profile';
     Services,
     Monitoring,
     Profile,
+    SupportContactModalComponent,
   ],
   templateUrl: './entreprise-user.html',
   styleUrl: './entreprise-user.scss',

@@ -3,7 +3,7 @@
 
   <!-- · SIDEBAR · -->
   <app-sidebar [activePage]="activePage()" [tenantCount]="tenantCount()" [pendingCount]="pendingCount()"
-    [actualAdmin]="actualAdmin()" (pageChange)="setPage($event)" />
+    [openTicketsCount]="openTicketsCount()" [actualAdmin]="actualAdmin()" (pageChange)="setPage($event)" />
 
   <!-- · MAIN · -->
   <div class="main">
@@ -37,10 +37,12 @@
       <app-billing-page (navigateTo)="setPage($event)" />
       }
 
-
-
       @if (activePage() === 'catalogue') {
       <app-catalogue-page />
+      }
+
+      @if (activePage() === 'tickets') {
+      <app-tickets-page (ticketUpdated)="loadTicketStats()" />
       }
 
       @if (activePage() === 'profile') {

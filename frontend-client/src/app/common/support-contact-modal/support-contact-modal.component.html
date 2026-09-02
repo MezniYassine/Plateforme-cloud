@@ -1,0 +1,284 @@
+<!-- BOUTON FLOTTANT D'AIDE & CONTACT (?) -->
+<div class="support-fab-container">
+  <button class="support-fab-btn" (click)="openModal()" title="Besoin d'aide ? Contactez l'administrateur global">
+    <span class="fab-icon">?</span>
+    <span class="fab-label">Assistance</span>
+    @if (getResolvedCount() > 0) {
+      <span class="fab-badge pulse">{{ getResolvedCount() }}</span>
+    }
+  </button>
+</div>
+
+<!-- MODAL DE CONTACT & SUPPORT -->
+@if (isOpen()) {
+<div class="modal-backdrop" (click)="closeModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-left">
+        <div class="header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <div>
+          <h2 class="modal-title">Assistance &amp; Contact Administrateur</h2>
+          <p class="modal-sub">Signalez un problème technique ou posez une question à l'équipe Dynamix</p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeModal()" title="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="modal-tabs">
+      <button class="tab-btn" [class.active]="activeTab() === 'new'" (click)="setTab('new')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        Nouveau message
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'list'" (click)="setTab('list')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 11 12 14 22 4"></polyline>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+        </svg>
+        Mes demandes
+        @if (myTickets().length > 0) {
+          <span class="tab-count">{{ myTickets().length }}</span>
+        }
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <!-- NOTIFICATIONS -->
+      @if (successMessage()) {
+        <div class="alert-box success">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>{{ successMessage() }}</span>
+        </div>
+      }
+      @if (errorMessage()) {
+        <div class="alert-box error">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- TAB 1: NOUVEAU TICKET FORM -->
+      @if (activeTab() === 'new') {
+        <div class="form-container">
+          <!-- Catégories -->
+          <div class="form-group">
+            <label class="form-label">Catégorie de la demande</label>
+            <div class="category-grid">
+              <button type="button" class="category-chip" [class.selected]="formCategorie === 'TECHNIQUE'" (click)="formCategorie = 'TECHNIQUE'">
+                <div class="cat-icon-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                  </svg>
+                </div>
+                <span class="cat-title">Problème Technique</span>
+              </button>
+              <button type="button" class="category-chip" [class.selected]="formCategorie === 'INFORMATION'" (click)="formCategorie = 'INFORMATION'">
+                <div class="cat-icon-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                </div>
+                <span class="cat-title">Demande d'Information</span>
+              </button>
+              <button type="button" class="category-chip" [class.selected]="formCategorie === 'FACTURATION'" (click)="formCategorie = 'FACTURATION'">
+                <div class="cat-icon-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                  </svg>
+                </div>
+                <span class="cat-title">Facturation &amp; Wallet</span>
+              </button>
+              <button type="button" class="category-chip" [class.selected]="formCategorie === 'AUTRE'" (click)="formCategorie = 'AUTRE'">
+                <div class="cat-icon-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                </div>
+                <span class="cat-title">Autre Demande</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sujet -->
+          <div class="form-group">
+            <div class="label-row">
+              <label class="form-label" for="ticket-sujet">Sujet de votre demande *</label>
+              <span class="char-counter" [class.warn]="formSujet.length > 130">{{ formSujet.length }}/150</span>
+            </div>
+            <input
+              id="ticket-sujet"
+              type="text"
+              class="form-input"
+              [(ngModel)]="formSujet"
+              placeholder="Ex: Erreur lors du déploiement de ma VM Ubuntu, question sur le quota..."
+              maxlength="150"
+            />
+            @if (formSujet.trim().length > 0 && formSujet.trim().length < 3) {
+              <div class="input-hint-error">Le sujet doit contenir au moins 3 caractères.</div>
+            }
+          </div>
+
+          <!-- Message -->
+          <div class="form-group">
+            <div class="label-row">
+              <label class="form-label" for="ticket-message">Message détaillé *</label>
+              <span class="char-counter" [class.warn]="formMessage.length > 2800">{{ formMessage.length }}/3000</span>
+            </div>
+            <textarea
+              id="ticket-message"
+              class="form-textarea"
+              rows="4"
+              [(ngModel)]="formMessage"
+              placeholder="Décrivez votre problème ou votre question avec précision (ressource concernée, message d'erreur, etc.)..."
+              maxlength="3000"
+            ></textarea>
+            @if (formMessage.trim().length > 0 && formMessage.trim().length < 10) {
+              <div class="input-hint-error">Le message doit contenir au moins 10 caractères explicatifs.</div>
+            }
+          </div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
+            <button
+              type="button"
+              class="btn-primary"
+              [disabled]="isSubmitting() || formSujet.trim().length < 3 || formMessage.trim().length < 10"
+              (click)="submitTicket()"
+            >
+              @if (isSubmitting()) {
+                <span class="spinner"></span>
+                <span>Envoi en cours...</span>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span>Envoyer à l'administrateur</span>
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- TAB 2: LISTE DES TICKETS -->
+      @if (activeTab() === 'list') {
+        <div class="tickets-list-container">
+          @if (isLoading()) {
+            <div class="loading-state">
+              <div class="spinner-large"></div>
+              <p>Chargement de vos demandes...</p>
+            </div>
+          } @else if (myTickets().length === 0) {
+            <div class="empty-state">
+              <div class="empty-icon-svg">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
+                  <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                </svg>
+              </div>
+              <h3>Aucune demande enregistrée</h3>
+              <p>Vous n'avez envoyé aucun ticket pour le moment. Besoin d'aide ?</p>
+              <button class="btn-primary" (click)="setTab('new')">Créer une demande</button>
+            </div>
+          } @else {
+            <div class="tickets-grid">
+              @for (ticket of myTickets(); track ticket.id) {
+                <div class="ticket-card" [class.has-reply]="!!ticket.reponseAdmin" [class.expanded]="expandedTicketId() === ticket.id">
+                  <div class="ticket-card-header" (click)="toggleExpand(ticket.id)">
+                    <div class="ticket-meta">
+                      <span class="ticket-id">#{{ ticket.id }}</span>
+                      <span class="ticket-date">{{ ticket.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+                      <span class="category-tag">{{ ticket.categorie }}</span>
+                    </div>
+                    <div class="ticket-status-wrap">
+                      @if (ticket.status === 'OUVERT') {
+                        <span class="status-pill status-open"><span class="status-dot"></span>En attente</span>
+                      } @else if (ticket.status === 'EN_COURS') {
+                        <span class="status-pill status-prog"><span class="status-dot"></span>En cours</span>
+                      } @else if (ticket.status === 'RESOLU') {
+                        <span class="status-pill status-resolved"><span class="status-dot"></span>Résolu</span>
+                      } @else {
+                        <span class="status-pill status-closed"><span class="status-dot"></span>Fermé</span>
+                      }
+                      <button class="expand-icon-btn" [title]="expandedTicketId() === ticket.id ? 'Réduire' : 'Afficher le détail'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline [attr.points]="expandedTicketId() === ticket.id ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"></polyline>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="ticket-subject" (click)="toggleExpand(ticket.id)">
+                    {{ ticket.sujet }}
+                  </div>
+
+                  <!-- Expanded Content -->
+                  @if (expandedTicketId() === ticket.id) {
+                    <div class="ticket-details">
+                      <div class="user-msg-box">
+                        <div class="box-title">Votre message :</div>
+                        <p class="box-text">{{ ticket.message }}</p>
+                      </div>
+
+                      @if (ticket.reponseAdmin) {
+                        <div class="admin-reply-box">
+                          <div class="admin-reply-header">
+                            <div class="admin-badge">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                              </svg>
+                              <span>Réponse de l'administrateur Global</span>
+                            </div>
+                            @if (ticket.dateReponse) {
+                              <span class="reply-date">{{ ticket.dateReponse | date:'dd/MM/yyyy HH:mm' }}</span>
+                            }
+                          </div>
+                          <p class="admin-reply-text">{{ ticket.reponseAdmin }}</p>
+                        </div>
+                      } @else {
+                        <div class="no-reply-notice">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                          </svg>
+                          <span>Demande en cours d'examen par l'équipe d'administration. Vous recevrez une réponse ici.</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+}

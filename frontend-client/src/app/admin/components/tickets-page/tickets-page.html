@@ -1,0 +1,396 @@
+<div class="tickets-page-container">
+
+  <!-- TOAST NOTIFICATION -->
+  @if (toastMessage()) {
+    <div class="toast-popup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>{{ toastMessage() }}</span>
+    </div>
+  }
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      </div>
+      <div>
+        <h1 class="page-title">Gestion des Tickets &amp; Support</h1>
+        <p class="page-sub">Centralisez et répondez aux demandes d'assistance, questions et signalements des utilisateurs.</p>
+      </div>
+    </div>
+    <button class="btn-refresh" (click)="loadStats(); loadTickets()" [title]="'Actualiser la liste'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <polyline points="1 20 1 14 7 14"></polyline>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+      <span>Actualiser</span>
+    </button>
+  </div>
+
+  <!-- STATS CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card" [class.active-stat]="selectedStatus() === 'ALL'" (click)="setStatusFilter('ALL')">
+      <div class="stat-icon gray">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <div class="stat-label">Total Tickets</div>
+        <div class="stat-value">{{ stats().total }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card amber" [class.active-stat]="selectedStatus() === 'OUVERT'" (click)="setStatusFilter('OUVERT')">
+      <div class="stat-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <div class="stat-label">En attente (Ouverts)</div>
+        <div class="stat-value text-amber">{{ stats().ouvert }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card blue" [class.active-stat]="selectedStatus() === 'EN_COURS'" (click)="setStatusFilter('EN_COURS')">
+      <div class="stat-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <div class="stat-label">En cours de traitement</div>
+        <div class="stat-value text-blue">{{ stats().enCours }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card green" [class.active-stat]="selectedStatus() === 'RESOLU'" (click)="setStatusFilter('RESOLU')">
+      <div class="stat-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <div class="stat-label">Résolus</div>
+        <div class="stat-value text-green">{{ stats().resolu }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTROLS: SEARCH & FILTERS -->
+  <div class="controls-bar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Rechercher par demandeur, sujet, email, entreprise..."
+        [(ngModel)]="searchQuery"
+        (input)="onSearchChange()"
+        maxlength="100"
+      />
+      @if (searchQuery()) {
+        <button class="clear-search-btn" (click)="searchQuery.set(''); onSearchChange()">✕</button>
+      }
+    </div>
+
+    <div class="status-filters">
+      <button class="filter-pill" [class.active]="selectedStatus() === 'ALL'" (click)="setStatusFilter('ALL')">
+        Tous ({{ stats().total }})
+      </button>
+      <button class="filter-pill amber" [class.active]="selectedStatus() === 'OUVERT'" (click)="setStatusFilter('OUVERT')">
+        En attente ({{ stats().ouvert }})
+      </button>
+      <button class="filter-pill blue" [class.active]="selectedStatus() === 'EN_COURS'" (click)="setStatusFilter('EN_COURS')">
+        En cours ({{ stats().enCours }})
+      </button>
+      <button class="filter-pill green" [class.active]="selectedStatus() === 'RESOLU'" (click)="setStatusFilter('RESOLU')">
+        Résolus ({{ stats().resolu }})
+      </button>
+      <button class="filter-pill gray" [class.active]="selectedStatus() === 'FERME'" (click)="setStatusFilter('FERME')">
+        Fermés ({{ stats().ferme }})
+      </button>
+    </div>
+  </div>
+
+  <!-- TABLE DES TICKETS -->
+  <div class="tickets-table-card">
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner-large"></div>
+        <p>Chargement des tickets...</p>
+      </div>
+    } @else if (tickets().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon-svg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
+            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+          </svg>
+        </div>
+        <h3>Aucun ticket trouvé</h3>
+        <p>Aucun ticket ne correspond à vos critères de recherche ou filtre.</p>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="tickets-table">
+          <thead>
+            <tr>
+              <th>ID &amp; Date</th>
+              <th>Demandeur</th>
+              <th>Sujet &amp; Catégorie</th>
+              <th>Statut</th>
+              <th>Réponse Admin</th>
+              <th class="text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ticket of tickets(); track ticket.id) {
+              <tr class="ticket-row" (click)="openReplyModal(ticket)">
+                <!-- ID & Date -->
+                <td class="cell-id-date">
+                  <div class="ticket-id-badge">#{{ ticket.id }}</div>
+                  <div class="ticket-date-time">{{ ticket.dateCreation | date:'dd/MM/yy HH:mm' }}</div>
+                </td>
+
+                <!-- Demandeur -->
+                <td class="cell-user">
+                  <div class="user-cell-wrap">
+                    <div class="user-avatar-mini">
+                      {{ ticket.auteurNom.charAt(0) }}
+                    </div>
+                    <div class="user-cell-info">
+                      <div class="user-cell-name">{{ ticket.auteurNom }}</div>
+                      <div class="user-cell-email">{{ ticket.auteurEmail }}</div>
+                      <div class="user-cell-tags">
+                        <span class="role-tag" [ngClass]="getRoleBadge(ticket.auteurRole).class">
+                          {{ getRoleBadge(ticket.auteurRole).label }}
+                        </span>
+                        @if (ticket.entrepriseNom) {
+                          <span class="ent-tag">{{ ticket.entrepriseNom }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Sujet & Catégorie -->
+                <td class="cell-subject">
+                  <div class="subject-title">{{ ticket.sujet }}</div>
+                  <div class="subject-preview">{{ ticket.message | slice:0:80 }}{{ ticket.message.length > 80 ? '...' : '' }}</div>
+                  <span class="category-pill">{{ ticket.categorie }}</span>
+                </td>
+
+                <!-- Statut -->
+                <td class="cell-status">
+                  @if (ticket.status === 'OUVERT') {
+                    <span class="status-pill status-open"><span class="status-dot"></span>En attente</span>
+                  } @else if (ticket.status === 'EN_COURS') {
+                    <span class="status-pill status-prog"><span class="status-dot"></span>En cours</span>
+                  } @else if (ticket.status === 'RESOLU') {
+                    <span class="status-pill status-resolved"><span class="status-dot"></span>Résolu</span>
+                  } @else {
+                    <span class="status-pill status-closed"><span class="status-dot"></span>Fermé</span>
+                  }
+                </td>
+
+                <!-- Réponse -->
+                <td class="cell-reply">
+                  @if (ticket.reponseAdmin) {
+                    <div class="reply-preview-badge">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      <span>Répondu</span>
+                    </div>
+                    <div class="reply-text-snippet">{{ ticket.reponseAdmin | slice:0:50 }}...</div>
+                  } @else {
+                    <span class="no-reply-text">En attente de réponse</span>
+                  }
+                </td>
+
+                <!-- Action -->
+                <td class="cell-actions text-right" (click)="$event.stopPropagation()">
+                  <button class="btn-action-reply" (click)="openReplyModal(ticket)" title="Consulter et répondre">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>Traiter</span>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- MODAL DE REPONSE / TRAITEMENT -->
+  @if (activeTicket()) {
+    <div class="modal-backdrop" (click)="closeReplyModal()">
+      <div class="modal-card modal-large" (click)="$event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <div class="header-left">
+            <div class="header-icon-reply">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <div class="modal-badge-row">
+                <span class="ticket-id-tag">Ticket #{{ activeTicket()?.id }}</span>
+                <span class="ticket-cat-tag">{{ activeTicket()?.categorie }}</span>
+                <span class="ticket-date-tag">{{ activeTicket()?.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <h2 class="modal-title">{{ activeTicket()?.sujet }}</h2>
+            </div>
+          </div>
+          <button class="close-btn" (click)="closeReplyModal()" title="Fermer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- DEMANDEUR INFO CARD -->
+          <div class="demandeur-card">
+            <div class="demandeur-av">{{ activeTicket()?.auteurNom?.charAt(0) }}</div>
+            <div class="demandeur-info">
+              <div class="demandeur-name">{{ activeTicket()?.auteurNom }}</div>
+              <div class="demandeur-email">{{ activeTicket()?.auteurEmail }}</div>
+            </div>
+            <div class="demandeur-meta">
+              <span class="role-tag" [ngClass]="getRoleBadge(activeTicket()?.auteurRole || '').class">
+                {{ getRoleBadge(activeTicket()?.auteurRole || '').label }}
+              </span>
+              @if (activeTicket()?.entrepriseNom) {
+                <span class="ent-tag">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ent-svg">
+                    <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+                    <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                    <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
+                    <path d="M10 6h4"></path>
+                    <path d="M10 10h4"></path>
+                    <path d="M10 14h4"></path>
+                    <path d="M10 18h4"></path>
+                  </svg>
+                  {{ activeTicket()?.entrepriseNom }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- USER MESSAGE -->
+          <div class="msg-box-wrap">
+            <div class="msg-box-label">Message du demandeur :</div>
+            <div class="msg-box-content">{{ activeTicket()?.message }}</div>
+          </div>
+
+          <!-- STATUT SELECTOR -->
+          <div class="form-group-reply">
+            <label class="form-label">Statut du ticket</label>
+            <div class="status-selector-grid">
+              <button
+                type="button"
+                class="status-select-btn"
+                [class.selected-open]="replyStatus() === 'OUVERT'"
+                (click)="replyStatus.set('OUVERT')"
+              >
+                <span class="status-dot amber-dot"></span>
+                <span>En attente</span>
+              </button>
+              <button
+                type="button"
+                class="status-select-btn"
+                [class.selected-prog]="replyStatus() === 'EN_COURS'"
+                (click)="replyStatus.set('EN_COURS')"
+              >
+                <span class="status-dot blue-dot"></span>
+                <span>En cours de traitement</span>
+              </button>
+              <button
+                type="button"
+                class="status-select-btn"
+                [class.selected-resolved]="replyStatus() === 'RESOLU'"
+                (click)="replyStatus.set('RESOLU')"
+              >
+                <span class="status-dot green-dot"></span>
+                <span>Résolu</span>
+              </button>
+              <button
+                type="button"
+                class="status-select-btn"
+                [class.selected-closed]="replyStatus() === 'FERME'"
+                (click)="replyStatus.set('FERME')"
+              >
+                <span class="status-dot gray-dot"></span>
+                <span>Fermé</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ADMIN REPLY TEXTAREA -->
+          <div class="form-group-reply">
+            <div class="label-row-reply">
+              <label class="form-label" for="admin-reply-field">Votre réponse au demandeur</label>
+              <span class="char-counter-reply" [class.warn]="replyText().length > 3800">{{ replyText().length }}/4000</span>
+            </div>
+            <textarea
+              id="admin-reply-field"
+              class="form-textarea-admin"
+              rows="5"
+              [(ngModel)]="replyText"
+              placeholder="Rédigez ici votre réponse officielle à l'utilisateur (instructions, résolution, précisions)..."
+              maxlength="4000"
+            ></textarea>
+            <div class="textarea-hint">
+              Cette réponse sera immédiatement visible par l'utilisateur dans son espace.
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="closeReplyModal()">Annuler</button>
+          <button class="btn-save-reply" [disabled]="isSaving()" (click)="saveReply()">
+            @if (isSaving()) {
+              <span class="spinner"></span>
+              <span>Enregistrement...</span>
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+              <span>Enregistrer &amp; Actualiser</span>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

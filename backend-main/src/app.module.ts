@@ -32,6 +32,8 @@ import { Metric } from './entities/metric.entity';
 import { MetricsModule } from './metrics/metrics.module';
 import { SystemLog } from './entities/system-log.entity';
 import { LogsModule } from './logs/logs.module';
+import { SupportTicket } from './entities/support-ticket.entity';
+import { TicketsModule } from './tickets/tickets.module';
 
 
 @Module({
@@ -45,7 +47,7 @@ import { LogsModule } from './logs/logs.module';
       username: process.env.DB_USERNAME ?? 'postgres',
       password: process.env.DB_PASSWORD ?? 'password',
       database: process.env.DB_NAME ?? 'dynamix_db',
-      entities: [Admin, Client, Entreprise, MachineVirtuelle, Personal, ServiceInstance, Catalogue, Wallet, Transaction, ServicePaaS, Metric, SystemLog],
+      entities: [Admin, Client, Entreprise, MachineVirtuelle, Personal, ServiceInstance, Catalogue, Wallet, Transaction, ServicePaaS, Metric, SystemLog, SupportTicket],
       autoLoadEntities: true,
       synchronize: true, // disable in production
       logging: false,
@@ -83,6 +85,7 @@ import { LogsModule } from './logs/logs.module';
     SaasModule,
     MetricsModule,
     LogsModule,
+    TicketsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

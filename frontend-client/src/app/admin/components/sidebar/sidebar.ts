@@ -12,6 +12,7 @@ export class Sidebar {
   @Input() activePage = 'dashboard';
   @Input() tenantCount = 0;
   @Input() pendingCount = 0;
+  @Input() openTicketsCount = 0;
   @Input() actualAdmin: Admin | null = null;
 
   @Output() pageChange = new EventEmitter<string>();

@@ -1,0 +1,6 @@
+export enum TicketCategory {
+  TECHNIQUE = 'TECHNIQUE',
+  INFORMATION = 'INFORMATION',
+  FACTURATION = 'FACTURATION',
+  AUTRE = 'AUTRE',
+}

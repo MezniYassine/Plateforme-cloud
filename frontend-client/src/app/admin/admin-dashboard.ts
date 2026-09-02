@@ -10,6 +10,7 @@ import { MonitoringPageComponent } from './components/monitoring-page/monitoring
 import { BillingPageComponent } from './components/billing-page/billing-page';
 import { CataloguePageComponent } from './components/catalogue-page/catalogue-page';
 import { ProfilePageComponent } from './components/profile-page/profile-page';
+import { TicketsPageComponent } from './components/tickets-page/tickets-page';
 import { isPlatformBrowser } from '@angular/common';
 import { Sidebar } from './components/sidebar/sidebar';
 import { Topbar } from './components/topbar/topbar';
@@ -26,6 +27,7 @@ import { Topbar } from './components/topbar/topbar';
     BillingPageComponent,
     CataloguePageComponent,
     ProfilePageComponent,
+    TicketsPageComponent,
     Sidebar,
     Topbar
   ],
@@ -50,6 +52,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
     monitoring: 'Monitoring Infrastructure',
     billing: 'Facturation',
     catalogue: 'Catalogue',
+    tickets: 'Tickets & Support',
     profile: 'Mon profil',
   };
 
@@ -74,6 +77,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
     { label: 'Stockage (SAN)', val: '0%', pct: 0, color: 'amber' },
   ]);
   activeVmCount = signal<number>(0);
+  openTicketsCount = signal<number>(0);
 
   /* · TOAST · */
   toastMsg = signal<string>('');
@@ -93,12 +97,14 @@ export class AdminDashboard implements OnInit, OnDestroy {
       this.loadTenants();
       this.loadCurrentAdmin();
       this.loadInfraMetrics();
+      this.loadTicketStats();
 
-      // Poll tenants list and infrastructure metrics every 4 seconds
+      // Poll tenants list, infrastructure metrics and tickets every 4-6 seconds
       this.pollInterval = setInterval(() => {
         this.loadTenants();
         this.loadInfraMetrics();
-      }, 4000);
+        this.loadTicketStats();
+      }, 5000);
     }
   }
 
@@ -106,6 +112,16 @@ export class AdminDashboard implements OnInit, OnDestroy {
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
     }
+  }
+
+  loadTicketStats() {
+    const url = `${environment.apiBaseUrl.replace(/\/$/, '')}/tickets/admin/stats`;
+    this.http.get<any>(url).subscribe({
+      next: (res) => {
+        this.openTicketsCount.set(res?.ouvert || 0);
+      },
+      error: (err) => console.error('Erreur chargement ticket stats:', err),
+    });
   }
 
   loadInfraMetrics() {

@@ -73,7 +73,7 @@ export class MonitoringPageComponent implements OnInit, OnDestroy {
     { label: 'Workloads actifs', val: '0', sub: 'Calcul en cours...', cardClass: 'card-anthracite-dark', icon: 'workloads' },
     { label: 'CPU moyen', val: '0%', sub: 'Sur toutes les instances', cardClass: 'card-orange-deep', icon: 'cpu' },
     { label: 'RAM moyenne', val: '0%', sub: 'Sur toutes les instances', cardClass: 'card-anthracite-mid', icon: 'ram' },
-    { label: 'Incidents & Logs', val: '0', sub: 'Aucun incident', cardClass: 'card-orange-vibrant', icon: 'alert' },
+    { label: 'Incidents & Logs', val: '0', sub: 'Aucun incident', cardClass: 'card-orange-vibrant', icon: 'logs' },
   ]);
 
   ngOnInit() {
