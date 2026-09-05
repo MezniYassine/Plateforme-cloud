@@ -102,6 +102,161 @@
 
 </div>
 
+<!-- ══════════════════ ANALYTICS ROW (WAVE CHART + DONUT DISTRIBUTION) ══════════════════ -->
+<div class="analytics-row">
+
+  <!-- Main Analytics Wave Chart Card -->
+  <div class="overview-section-card chart-panel">
+    <div class="panel-header">
+      <div class="header-left">
+        <h4 class="sec-card-title">Vue d'ensemble de la Plateforme</h4>
+        <p class="sec-card-sub">Consommation réelle des ressources et activité globale</p>
+      </div>
+
+      <div class="header-right">
+        <!-- Period Switcher Tabs -->
+        <div class="period-tabs">
+          <button class="period-btn" [class.active]="selectedPeriod() === 'daily'" (click)="setPeriod('daily')">JOUR</button>
+          <button class="period-btn" [class.active]="selectedPeriod() === 'weekly'" (click)="setPeriod('weekly')">SEMAINE</button>
+          <button class="period-btn" [class.active]="selectedPeriod() === 'monthly'" (click)="setPeriod('monthly')">MOIS</button>
+          <button class="period-btn" [class.active]="selectedPeriod() === 'yearly'" (click)="setPeriod('yearly')">ANNÉE</button>
+        </div>
+
+        <!-- Legend (Current Period vs Previous Period) -->
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-dot dot-orange"></span> {{ waveChartData().legendCurrent }}</span>
+          <span class="legend-item"><span class="legend-dot dot-anthracite"></span> {{ waveChartData().legendPrev }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Main Body -->
+    <div class="chart-body">
+      <div class="chart-summary-side">
+        <div class="summary-amount">{{ chartMetrics().total }}</div>
+        <div class="summary-period">{{ chartMetrics().label }}</div>
+        <div class="summary-badge" [class.is-neg]="chartMetrics().growth.startsWith('-')">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+            @if (chartMetrics().growth.startsWith('-')) {
+              <polyline points="6 9 12 15 18 9"/>
+            } @else {
+              <polyline points="18 15 12 9 6 15"/>
+            }
+          </svg>
+          {{ chartMetrics().growth }}
+        </div>
+        <button class="btn-summary-cta" (click)="navigateTo.emit('billing')">
+          Détails Facturation
+        </button>
+      </div>
+
+      <!-- 100% Dynamic SVG Wave Chart Graphic -->
+      <div class="chart-graphic-wrap">
+        <svg viewBox="0 0 500 130" class="wave-svg" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="entGradOrange" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#F07A1F" stop-opacity="0.45" />
+              <stop offset="100%" stop-color="#F07A1F" stop-opacity="0.0" />
+            </linearGradient>
+            <linearGradient id="entGradAnthracite" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#334155" stop-opacity="0.30" />
+              <stop offset="100%" stop-color="#334155" stop-opacity="0.0" />
+            </linearGradient>
+          </defs>
+
+          <!-- Horizontal Gridlines -->
+          <line x1="0" y1="25" x2="500" y2="25" stroke="#f1f5f9" stroke-dasharray="3,3" stroke-width="1" />
+          <line x1="0" y1="55" x2="500" y2="55" stroke="#f1f5f9" stroke-dasharray="3,3" stroke-width="1" />
+          <line x1="0" y1="85" x2="500" y2="85" stroke="#f1f5f9" stroke-dasharray="3,3" stroke-width="1" />
+          <line x1="0" y1="115" x2="500" y2="115" stroke="#f1f5f9" stroke-dasharray="3,3" stroke-width="1" />
+
+          <!-- Previous Period Curve & Fill -->
+          @if (waveChartData().prevArea) {
+            <path [attr.d]="waveChartData().prevArea" fill="url(#entGradAnthracite)" />
+            <path [attr.d]="waveChartData().prevPath" fill="none" stroke="#64748b" stroke-width="2.2" stroke-linecap="round" />
+          }
+
+          <!-- Current Period Curve & Fill -->
+          @if (waveChartData().currentArea) {
+            <path [attr.d]="waveChartData().currentArea" fill="url(#entGradOrange)" />
+            <path [attr.d]="waveChartData().currentPath" fill="none" stroke="#F07A1F" stroke-width="3" stroke-linecap="round" />
+          }
+
+          <!-- Highlight Dots on Peaks -->
+          @for (dot of waveChartData().dots; track $index) {
+            <circle [attr.cx]="dot.cx" [attr.cy]="dot.cy" r="4.5" fill="#fff" stroke="#F07A1F" stroke-width="3" />
+          }
+        </svg>
+
+        <!-- Dynamic Period-Accurate X-axis Labels -->
+        <div class="chart-x-axis">
+          @for (lbl of waveChartData().labels; track $index) {
+            <span>{{ lbl }}</span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Donut Analytics Card: Technical Service Breakdown (IaaS, PaaS, SaaS) -->
+  <div class="overview-section-card donut-panel">
+    <div class="panel-header">
+      <div>
+        <h4 class="sec-card-title">Répartition Cloud</h4>
+        <p class="sec-card-sub">Répartition par type de service (IaaS / PaaS / SaaS)</p>
+      </div>
+      <button class="btn-icon-dot" title="Monitoring des services" (click)="navigateTo.emit('monitoring')">•••</button>
+    </div>
+
+    <!-- Circular Donut Graphic -->
+    <div class="donut-wrap">
+      <div class="donut-chart-container">
+        <svg viewBox="0 0 160 160" class="donut-svg">
+          <!-- Background track -->
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#f1f5f9" stroke-width="16" />
+
+          <!-- Segment 1: Brand Orange #F07A1F (IaaS - VMs) -->
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#F07A1F" stroke-width="16"
+            [attr.stroke-dasharray]="donutStats().dash1" stroke-dashoffset="0" stroke-linecap="round" class="donut-segment" />
+
+          <!-- Segment 2: Deep Dark Orange #9A4306 (PaaS - Databases) -->
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#9A4306" stroke-width="16"
+            [attr.stroke-dasharray]="donutStats().dash2" [attr.stroke-dashoffset]="donutStats().offset2" stroke-linecap="round" class="donut-segment" />
+
+          <!-- Segment 3: Charcoal Anthracite #2D3340 (SaaS - Applications) -->
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#2D3340" stroke-width="16"
+            [attr.stroke-dasharray]="donutStats().dash3" [attr.stroke-dashoffset]="donutStats().offset3" stroke-linecap="round" class="donut-segment" />
+        </svg>
+
+        <div class="donut-center-label">
+          <span class="donut-pct">{{ donutStats().totalActive }}</span>
+          <span class="donut-sub">Services Actifs</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Donut Legend items: Strictly IaaS / PaaS / SaaS -->
+    <div class="donut-legend">
+      <div class="donut-legend-item">
+        <span class="d-dot dot-orange"></span>
+        <span class="d-name">IaaS (Serveurs &amp; VMs)</span>
+        <span class="d-val">{{ donutStats().iaasPct }}%</span>
+      </div>
+      <div class="donut-legend-item">
+        <span class="d-dot dot-dark-orange"></span>
+        <span class="d-name">PaaS (Bases de données)</span>
+        <span class="d-val">{{ donutStats().paasPct }}%</span>
+      </div>
+      <div class="donut-legend-item">
+        <span class="d-dot dot-anthracite"></span>
+        <span class="d-name">SaaS (Applications)</span>
+        <span class="d-val">{{ donutStats().saasPct }}%</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
 <!-- ══════════════════ MAIN 2-COLUMN GRID ══════════════════ -->
 <div class="main-grid">
 
@@ -320,46 +475,6 @@
             </div>
             }
           </div>
-        </div>
-        }
-      </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="overview-section-card">
-      <div class="sec-card-header">
-        <div>
-          <h4 class="sec-card-title">Journal d'Activité</h4>
-          <p class="sec-card-sub">Événements récents de l'organisation</p>
-        </div>
-      </div>
-
-      <div class="activity-feed-list">
-        @for (a of activities().slice(0, 4); track $index) {
-        <div class="activity-feed-item">
-          <div class="act-icon-box" [style.background]="a.bg">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" [attr.stroke]="a.color" stroke-width="2.5" stroke-linecap="round">
-              @if (a.type === 'approve') { <polyline points="20 6 9 17 4 12" /> }
-              @else if (a.type === 'reject') { <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /> }
-              @else if (a.type === 'request') { <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5" /> }
-              @else { <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /> }
-            </svg>
-          </div>
-          <div class="act-content">
-            <div class="act-msg" [innerHTML]="a.msg"></div>
-            <span class="act-time">{{ a.time }}</span>
-          </div>
-        </div>
-        } @empty {
-        <div class="empty-act-box">
-          <div class="empty-act-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#94a3b8" stroke-width="1.8">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          </div>
-          <span class="empty-act-title">Aucune activité récente</span>
-          <span class="empty-act-sub">Les approbations et actions d'équipe s'afficheront ici</span>
         </div>
         }
       </div>

@@ -28,7 +28,7 @@ export class EsxiService {
         @Inject(forwardRef(() => LogsService))
         private readonly logsService?: LogsService,
     ) {
-        this.initializeVsphereClient();
+        this.initializeVsphereClient().catch(() => {});
     }
 
     private initializeVsphereClient(): Promise<void> {
@@ -423,18 +423,24 @@ export class EsxiService {
     }
 
     async getVmRuntime(vmReference?: string | null, vmName?: string): Promise<{ id: string; name: string; state: string; ipAddress?: string } | null> {
-        const target = await this.resolveVmTarget(vmReference, vmName);
+        try {
+            const target = await this.resolveVmTarget(vmReference, vmName);
 
-        if (!target) {
+            if (!target) {
+                return null;
+            }
+
+            return {
+                id: target.id,
+                name: target.name,
+                state: target.state,
+                ipAddress: target.ipAddress,
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            this.logger.warn(`⚠️ getVmRuntime indisponible (${vmName || vmReference}) : ${message}`);
             return null;
         }
-
-        return {
-            id: target.id,
-            name: target.name,
-            state: target.state,
-            ipAddress: target.ipAddress,
-        };
     }
 
     async getVmSummaryMetricsBySsh(vmReference?: string | null): Promise<VmSshSummaryMetrics | null> {

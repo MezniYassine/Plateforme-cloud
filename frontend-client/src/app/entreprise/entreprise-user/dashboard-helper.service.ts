@@ -30,11 +30,15 @@ export interface MyService {
   dbUser?: string;
   dbPassword?: string;
   dateCreation?: string;
+  storageGB?: number;
   metrics?: {
     cpuUsage: string;
     ramUsage: string;
     ramPercentage: string;
     usedStorageMb: number;
+    totalStorageGb?: number;
+    totalStorageMb?: number;
+    storagePercentage?: number;
   };
 }
 
@@ -379,10 +383,10 @@ export class DashboardHelperService {
     const name = this.instanceName().trim();
     if (!name) return '';
     if (name.toLowerCase().startsWith('template')) {
-      return '⚠️ Le préfixe "template" est réservé par le système.';
+      return 'Le préfixe "template" est réservé par le système.';
     }
     if (name.length < 3 || name.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(name)) {
-      return '⚠️ 3 à 32 caractères (lettres, chiffres, - ou _ uniquement)';
+      return '3 à 32 caractères (lettres, chiffres, - ou _ uniquement)';
     }
     return '';
   }
@@ -425,12 +429,12 @@ export class DashboardHelperService {
 
     const email = this.saasAdminEmail().trim();
     if (name.includes('pgadmin')) {
-      if (!email) return '⚠️ Adresse email requise pour pgAdmin';
+      if (!email) return 'Adresse email requise pour pgAdmin';
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) return '⚠️ Format d\'email invalide (ex: admin@domaine.com)';
+      if (!emailRegex.test(email)) return 'Format d\'email invalide (ex: admin@domaine.com)';
     } else {
-      if (!email) return '⚠️ Identifiant / Email requis (min. 3 caractères)';
-      if (email.length < 3) return '⚠️ Minimum 3 caractères requis';
+      if (!email) return 'Identifiant / Email requis (min. 3 caractères)';
+      if (email.length < 3) return 'Minimum 3 caractères requis';
     }
     return '';
   }
@@ -458,8 +462,8 @@ export class DashboardHelperService {
     if (isPhpMyAdmin || isWordPress || isN8n) return '';
 
     const pass = this.saasAdminPassword().trim();
-    if (!pass) return '⚠️ Mot de passe requis';
-    if (pass.length < 4) return '⚠️ Minimum 4 caractères requis';
+    if (!pass) return 'Mot de passe requis';
+    if (pass.length < 4) return 'Minimum 4 caractères requis';
     return '';
   }
 
@@ -851,6 +855,7 @@ export class DashboardHelperService {
             dbUser: db.dbUser,
             dbPassword: db.dbPassword,
             dateCreation: db.dateCreation,
+            storageGB: db.catalogue?.stockageGB || 1,
             metrics: existing ? existing.metrics : undefined
           };
         });

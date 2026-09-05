@@ -33,12 +33,31 @@ export interface TeamMember {
 }
 
 export interface DeployedResource {
-    id: string; name: string; type: 'vm' | 'db' | 'saas';
-    owner: string; specs: string; cost: number;
-    ip?: string; url?: string; cpu?: number; ram?: number; storage?: number;
+    id: string;
+    realId?: number;
+    name: string;
+    type: 'vm' | 'db' | 'saas';
+    owner: string;
+    ownerId?: number;
+    specs: string;
+    cost: number;
+    ip?: string;
+    url?: string;
+    connectionString?: string;
+    dbUser?: string;
+    dbPassword?: string;
+    typeSgbd?: string;
+    appType?: string;
+    adminEmail?: string;
+    adminPassword?: string;
+    os?: string;
+    cpu?: number;
+    ram?: number;
+    storage?: number;
     status?: string;
     statusLabel?: string;
     ownerColor?: string;
+    dateCreation?: string | Date;
 }
 
 export interface WalletTransaction {
@@ -46,6 +65,7 @@ export interface WalletTransaction {
     refFacture?: string;
     desc: string;
     date: string;
+    rawDate?: string;
     type: 'credit' | 'debit';
     amount: number;
     memberName?: string;
@@ -83,5 +103,3 @@ export class EntrepriseDashboardHelperService {
         return ({ pending: 'En attente', approved: 'Approuvé', rejected: 'Rejeté', suspended: 'Suspendu' } as Record<string, string>)[s] || s;
     }
 }
-
-

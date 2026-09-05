@@ -2,6 +2,7 @@ import { Controller, Patch, Param, Body, ParseIntPipe, Get, UseGuards, Req, Http
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { EsxiService } from './esxi.service';
 import { ServiceStatus } from 'src/enum/service-status.enum';
+import { RoleClient } from 'src/enum/role-client.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MachineVirtuelle } from 'src/entities/machineVirtuelle.entity';
 import { Client } from 'src/entities/client.entity';
@@ -12,6 +13,7 @@ import { MailService } from 'src/mail/mail.service';
 import { MetricsService } from 'src/metrics/metrics.service';
 
 import { IsString, IsNumber, IsOptional, Length, Matches } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateVmDto {
   @IsString()
@@ -19,13 +21,16 @@ export class CreateVmDto {
   @Matches(/^[a-zA-Z0-9_-]+$/, { message: "Le nom d'instance ne peut contenir que des lettres, des chiffres, des tirets (-) et des underscores (_)." })
   name!: string;
 
+  @Type(() => Number)
   @IsNumber()
   ramGB!: number;
 
+  @Type(() => Number)
   @IsNumber()
   vCPU!: number;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   storageGB?: number;
 
@@ -34,8 +39,14 @@ export class CreateVmDto {
   templateName: string = 'windows 2000';
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   catalogueId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  clientId?: number;
 }
 
 import { Demande, DemandeStatus } from 'src/demande/entities/demande.entity';
@@ -198,10 +209,21 @@ export class EsxiController {
       );
     }
 
-    const vm = await this.vmRepo.findOne({
-      where: { id, client: { id: req.user.sub } },
-      relations: ['client'],
-    });
+    const clientId = Number(req.user.sub);
+    const client = await this.clientRepo.findOne({ where: { id: clientId }, relations: ['entreprise'] });
+    let vm: MachineVirtuelle | null = null;
+
+    if (client?.role === RoleClient.ENTREPRISE_ADMIN && client.entreprise) {
+      vm = await this.vmRepo.findOne({
+        where: { id, client: { entreprise: { id: client.entreprise.id } } },
+        relations: ['client', 'client.entreprise'],
+      });
+    } else {
+      vm = await this.vmRepo.findOne({
+        where: { id, client: { id: clientId } },
+        relations: ['client'],
+      });
+    }
 
     if (!vm) {
       throw new NotFoundException('VM introuvable pour ce client.');
@@ -238,10 +260,21 @@ export class EsxiController {
   @UseGuards(JwtAuthGuard)
   @Delete('my-vms/:id')
   async deleteMyVm(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
-    const vm = await this.vmRepo.findOne({
-      where: { id, client: { id: req.user.sub } },
-      relations: ['client'],
-    });
+    const clientId = Number(req.user.sub);
+    const client = await this.clientRepo.findOne({ where: { id: clientId }, relations: ['entreprise'] });
+    let vm: MachineVirtuelle | null = null;
+
+    if (client?.role === RoleClient.ENTREPRISE_ADMIN && client.entreprise) {
+      vm = await this.vmRepo.findOne({
+        where: { id, client: { entreprise: { id: client.entreprise.id } } },
+        relations: ['client', 'client.entreprise'],
+      });
+    } else {
+      vm = await this.vmRepo.findOne({
+        where: { id, client: { id: clientId } },
+        relations: ['client'],
+      });
+    }
 
     if (!vm) {
       throw new NotFoundException('VM introuvable pour ce client.');
@@ -400,7 +433,10 @@ export class EsxiController {
     }
 
     const clientId = Number(req.user.sub);
-    const client = await this.clientRepo.findOne({ where: { id: clientId } });
+    const client = await this.clientRepo.findOne({ 
+      where: { id: clientId },
+      relations: ['entreprise'] 
+    });
 
     if (!client) {
       throw new NotFoundException(`Client introuvable pour l'id ${clientId}. Reconnecte-toi avec un compte client valide.`);
@@ -438,11 +474,32 @@ export class EsxiController {
     }
     dto.name = sanitizedName;
 
-    const existingDbVm = await this.vmRepo.findOne({ 
-      where: { nomPersonnalise: dto.name, client: { id: clientId } } 
-    });
+    let duplicateVmQuery = this.vmRepo
+      .createQueryBuilder('vm')
+      .innerJoin('vm.client', 'client')
+      .where('LOWER(TRIM(vm.nomPersonnalise)) = LOWER(TRIM(:nom))', { nom: sanitizedName })
+      .andWhere('vm.status != :failedStatus', { failedStatus: ServiceStatus.FAILED });
+
+    if (client.entreprise?.id) {
+      duplicateVmQuery = duplicateVmQuery.andWhere('client.entrepriseId = :entId', { entId: client.entreprise.id });
+    } else {
+      duplicateVmQuery = duplicateVmQuery.andWhere('client.id = :clientId', { clientId });
+    }
+
+    const existingDbVm = await duplicateVmQuery.getOne();
     if (existingDbVm) {
-      throw new BadRequestException(`Vous avez déjà une machine nommée "${dto.name}". Veuillez choisir un autre nom.`);
+      throw new BadRequestException(`Une machine virtuelle nommée "${dto.name}" existe déjà. Deux instances ne peuvent pas avoir le même nom.`);
+    }
+
+    // Déterminer le client destinataire (collaborateur ou admin)
+    let targetClient = client;
+    if (dto.clientId && client.role === RoleClient.ENTREPRISE_ADMIN && client.entreprise?.id) {
+      const assigned = await this.clientRepo.findOne({
+        where: { id: Number(dto.clientId), entreprise: { id: client.entreprise.id } }
+      });
+      if (assigned) {
+        targetClient = assigned;
+      }
     }
 
     // 2. CRÉATION EN BASE DE DONNÉES (Statut: PROVISIONING)
@@ -454,7 +511,7 @@ export class EsxiController {
     newVmRecord.status = ServiceStatus.PROVISIONING;
     newVmRecord.dateCreation = new Date();
     newVmRecord.os = this.getOsNameFromTemplate(dto.templateName);
-    newVmRecord.client = client;
+    newVmRecord.client = targetClient;
     newVmRecord.catalogue = catalogue;
     newVmRecord.prixMensuel = prixMensuel;
 
@@ -472,6 +529,15 @@ export class EsxiController {
       dto.storageGB ?? 20
     )
       .then(async (taskId) => {
+        // Démarrer automatiquement la VM sur l'ESXi pour qu'elle boote et reçoive son IP
+        try {
+          console.log(`⚡ Démarrage automatique de la VM ${esxiName} (ref: ${taskId})...`);
+          await this.esxiService.powerControl(taskId, 'start');
+          console.log(`✅ VM ${esxiName} mise sous tension avec succès !`);
+        } catch (powerErr) {
+          console.warn(`⚠️ Impossible d'allumer automatiquement la VM ${esxiName}:`, powerErr.message);
+        }
+
         const now = new Date();
         const nextMonth = new Date(now);
         nextMonth.setMonth(now.getMonth() + 1);
@@ -489,7 +555,7 @@ export class EsxiController {
             await this.walletService.debiter(
               clientId,
               prixMensuel,
-              `Déploiement d'une infrastructure IaaS (Machine Virtuelle)`,
+              `Déploiement d'une infrastructure IaaS (Machine Virtuelle)${targetClient.id !== client.id ? ` pour ${targetClient.prenom} ${targetClient.nom}` : ''}`,
               savedVm.id,
             );
             console.log(`💸 Débit de ${prixMensuel} DT pour VM "${dto.name}" (client #${clientId})`);
@@ -498,18 +564,34 @@ export class EsxiController {
           }
         }
 
-        // ── EMAIL : Notifier le personnel que sa VM est prête ─────────────────
+        // ── EMAIL : Notifier le personnel ou collaborateur que sa VM est prête ─────────────────
         const specs = catalogue
           ? `${catalogue.vcpu} vCPU · ${catalogue.ramMB} GB RAM · ${catalogue.stockageGB} GB SSD`
           : `${dto.vCPU} vCPU · ${dto.ramGB} GB RAM · ${dto.storageGB ?? 20} GB SSD`;
-        this.mailService.sendProvisionningSuccesPersonnel({
-          userEmail: client.email,
-          userPrenom: client.prenom,
-          userNom: client.nom,
-          nomInstance: dto.name,
-          specs,
-          esxiRef: taskId ?? esxiName,
-        });
+
+        if (targetClient.id !== client.id) {
+          this.mailService.sendAttributionRessourceUtilisateur({
+            userEmail: targetClient.email,
+            userPrenom: targetClient.prenom,
+            userNom: targetClient.nom,
+            adminPrenom: client.prenom,
+            adminNom: client.nom,
+            entrepriseNom: client.entreprise?.nomEntreprise,
+            nomInstance: dto.name,
+            typeService: 'VM',
+            specs,
+            pointAcces: taskId ?? esxiName,
+          });
+        } else {
+          this.mailService.sendProvisionningSuccesPersonnel({
+            userEmail: targetClient.email,
+            userPrenom: targetClient.prenom,
+            userNom: targetClient.nom,
+            nomInstance: dto.name,
+            specs,
+            esxiRef: taskId ?? esxiName,
+          });
+        }
       })
       .catch(async (err) => {
         // Supprimer immédiatement la VM orpheline en cas d'échec de provisionnement
@@ -534,25 +616,29 @@ export class EsxiController {
       return vm; // Ne pas essayer de synchroniser ou d'adopter une VM échouée
     }
 
-    const esxiName = `${vm.nomPersonnalise}-${vm.id}`;
-    const runtime = await this.esxiService.getVmRuntime(
-      vm.vmReference || vm.nomPersonnalise,
-      esxiName,
-    );
-
-    if (!runtime) {
-      // Fallback pour les anciennes VMs
-      const fallbackRuntime = await this.esxiService.getVmRuntime(
+    try {
+      const esxiName = `${vm.nomPersonnalise}-${vm.id}`;
+      const runtime = await this.esxiService.getVmRuntime(
         vm.vmReference || vm.nomPersonnalise,
-        vm.nomPersonnalise,
+        esxiName,
       );
-      if (!fallbackRuntime) {
-        return vm;
-      }
-      return this.applyRuntimeUpdates(vm, fallbackRuntime, skipMetrics);
-    }
 
-    return this.applyRuntimeUpdates(vm, runtime, skipMetrics);
+      if (!runtime) {
+        // Fallback pour les anciennes VMs
+        const fallbackRuntime = await this.esxiService.getVmRuntime(
+          vm.vmReference || vm.nomPersonnalise,
+          vm.nomPersonnalise,
+        );
+        if (!fallbackRuntime) {
+          return vm;
+        }
+        return this.applyRuntimeUpdates(vm, fallbackRuntime, skipMetrics);
+      }
+
+      return this.applyRuntimeUpdates(vm, runtime, skipMetrics);
+    } catch (err) {
+      return vm;
+    }
   }
 
   private async applyRuntimeUpdates(vm: MachineVirtuelle, runtime: any, skipMetrics = false): Promise<MachineVirtuelle> {

@@ -5,14 +5,17 @@ import { withSsh } from '../common/ssh.util';
 import { ServicePaaS } from 'src/entities/servicePaaS.entity';
 import { ServiceStatus } from 'src/enum/service-status.enum';
 import { TypeSgbd } from 'src/enum/type-sgbd.enum';
+import { RoleClient } from 'src/enum/role-client.enum';
 import { CreatePaasDto } from './dto/create-paas.dto';
 import { Catalogue } from 'src/catalogue/entities/catalogue.entity';
+import { Client } from 'src/entities/client.entity';
 import { WalletService } from 'src/wallet/wallet.service';
 import { EsxiService } from 'src/esxi/esxi.service';
 import { Demande, DemandeStatus } from 'src/demande/entities/demande.entity';
 import { MetricsService } from 'src/metrics/metrics.service';
 import { LogsService } from 'src/logs/logs.service';
 import { LogSource } from 'src/enum/log-source.enum';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class PaasService implements OnModuleInit {
@@ -33,11 +36,14 @@ export class PaasService implements OnModuleInit {
         private readonly paasRepo: Repository<ServicePaaS>,
         @InjectRepository(Catalogue)
         private readonly catalogueRepo: Repository<Catalogue>,
+        @InjectRepository(Client)
+        private readonly clientRepo: Repository<Client>,
         @InjectRepository(Demande)
         private readonly demandeRepo: Repository<Demande>,
         private readonly walletService: WalletService,
         private readonly esxiService: EsxiService,
         private readonly metricsService: MetricsService,
+        private readonly mailService: MailService,
         @Optional()
         @Inject(forwardRef(() => LogsService))
         private readonly logsService?: LogsService,
@@ -92,12 +98,46 @@ export class PaasService implements OnModuleInit {
         }
         dto.nomPersonnalise = sanitizedName;
 
-        const catalogue = await this.catalogueRepo.findOne({ where: { id: dto.catalogueId, isActive: true } });
+        // Contrôle d'unicité : pas deux instances avec le même nom pour un admin / organisation
+        const targetClient = await this.clientRepo.findOne({
+            where: { id: Number(dto.clientId) },
+            relations: ['entreprise'],
+        });
+
+        let duplicatePaasQuery = this.paasRepo
+            .createQueryBuilder('paas')
+            .innerJoin('paas.client', 'client')
+            .where('LOWER(TRIM(paas.nomPersonnalise)) = LOWER(TRIM(:nom))', { nom: sanitizedName })
+            .andWhere('paas.status != :failedStatus', { failedStatus: ServiceStatus.FAILED });
+
+        if (targetClient?.entreprise?.id) {
+            duplicatePaasQuery = duplicatePaasQuery.andWhere('client.entrepriseId = :entId', { entId: targetClient.entreprise.id });
+        } else {
+            duplicatePaasQuery = duplicatePaasQuery.andWhere('client.id = :clientId', { clientId: Number(dto.clientId) });
+        }
+
+        const duplicatePaas = await duplicatePaasQuery.getOne();
+        if (duplicatePaas) {
+            throw new BadRequestException(`Une base de données PaaS nommée "${sanitizedName}" existe déjà. Deux instances ne peuvent pas avoir le même nom.`);
+        }
+
+        const catalogue = await this.catalogueRepo.findOne({ where: { id: Number(dto.catalogueId), isActive: true } });
         if (!catalogue) {
             throw new NotFoundException(`Offre catalogue #${dto.catalogueId} introuvable ou inactive.`);
         }
         const prixMensuel = Number(catalogue.prix) || 0;
-        const payerId = adminPayerId ?? dto.clientId;
+        let payerId = adminPayerId ?? Number(dto.clientId);
+        let adminClient: Client | null = null;
+
+        // Si la ressource est attribuée à un ENTREPRISE_USER, la facturation est portée par l'administrateur de son entreprise
+        if (targetClient?.role === RoleClient.ENTREPRISE_USER && targetClient?.entreprise?.id) {
+            adminClient = await this.clientRepo.findOne({
+                where: { entreprise: { id: targetClient.entreprise.id }, role: RoleClient.ENTREPRISE_ADMIN },
+            });
+            if (adminClient && !adminPayerId) {
+                payerId = adminClient.id;
+            }
+        }
 
         if (prixMensuel > 0) {
             const soldeOk = await this.walletService.checkSolde(payerId, prixMensuel);
@@ -177,7 +217,7 @@ export class PaasService implements OnModuleInit {
                 await this.walletService.debiter(
                     payerId,
                     prixMensuel,
-                    `Déploiement d'un service PaaS (${dto.nomPersonnalise})`,
+                    `Déploiement d'un service PaaS (${dto.nomPersonnalise})${targetClient && targetClient.id !== payerId ? ` pour ${targetClient.prenom} ${targetClient.nom}` : ''}`,
                     undefined,
                 );
             }
@@ -197,12 +237,49 @@ export class PaasService implements OnModuleInit {
                 hostIp: this.hostIp,
                 port: externalPort,
                 connectionString,
-                client: { id: dto.clientId } as any,
+                client: targetClient || ({ id: Number(dto.clientId) } as any),
                 catalogue: catalogue,
                 dateProchaineFacturation: nextMonth,
             });
 
-            return await this.paasRepo.save(newPaas);
+            const savedPaas = await this.paasRepo.save(newPaas);
+
+            if (targetClient) {
+                const specs = catalogue
+                    ? `${catalogue.vcpu} vCPU · ${catalogue.ramMB} GB RAM · ${catalogue.stockageGB} GB SSD`
+                    : `${dto.typeSgbd}`;
+
+                if (adminClient && targetClient.id !== adminClient.id) {
+                    this.mailService.sendAttributionRessourceUtilisateur({
+                        userEmail: targetClient.email,
+                        userPrenom: targetClient.prenom,
+                        userNom: targetClient.nom,
+                        adminPrenom: adminClient.prenom,
+                        adminNom: adminClient.nom,
+                        entrepriseNom: targetClient.entreprise?.nomEntreprise,
+                        nomInstance: dto.nomPersonnalise,
+                        typeService: 'PAAS',
+                        specs: `${dto.typeSgbd} · ${specs}`,
+                        pointAcces: `${this.hostIp}:${externalPort}`,
+                        identifiants: {
+                            dbUser,
+                            dbPassword: dbPass,
+                        },
+                    });
+                } else {
+                    this.mailService.sendProvisionningSucces({
+                        userEmail: targetClient.email,
+                        userPrenom: targetClient.prenom,
+                        userNom: targetClient.nom,
+                        nomInstance: dto.nomPersonnalise,
+                        specs: `${dto.typeSgbd} · ${specs}`,
+                        commentaireAdmin: "Déployé avec succès par l'administrateur de l'entreprise",
+                        typeService: 'PAAS',
+                    });
+                }
+            }
+
+            return savedPaas;
 
         } catch (error: any) {
             await this.logsService?.logError(
@@ -369,12 +446,17 @@ export class PaasService implements OnModuleInit {
     }
 
     async getContainerMetrics(id: number) {
-        const paasService = await this.paasRepo.findOne({ where: { id } });
+        const paasService = await this.paasRepo.findOne({
+            where: { id },
+            relations: ['catalogue'],
+        });
         if (!paasService) {
             throw new NotFoundException(`Service PaaS avec l'ID ${id} introuvable.`);
         }
         const cleanDbName = paasService.nomPersonnalise.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const containerName = `db_${cleanDbName}_${paasService.port}`;
+        const totalStorageGb = paasService.catalogue?.stockageGB || 1;
+        const totalStorageMb = totalStorageGb * 1024;
 
         const sshOptions = {
             host: this.hostIp,
@@ -403,12 +485,17 @@ export class PaasService implements OnModuleInit {
                 const ramNum = parseFloat(String(stats.ramPerc || '0').replace('%', '')) || 0;
                 this.metricsService.recordMetric('PAAS', id, cpuNum, ramNum, storageMb);
 
+                const storagePercentage = Math.min(100, Math.round((storageMb / totalStorageMb) * 100));
+
                 return {
                     containerName,
                     cpuUsage: stats.cpu || '0.00%',
                     ramUsage: stats.ramUsage || '0B / 0B',
                     ramPercentage: stats.ramPerc || '0.00%',
                     usedStorageMb: storageMb,
+                    totalStorageGb,
+                    totalStorageMb,
+                    storagePercentage,
                 };
             });
         } catch (error) {
@@ -419,6 +506,9 @@ export class PaasService implements OnModuleInit {
                 ramUsage: '0B / 0B',
                 ramPercentage: '0.00%',
                 usedStorageMb: 0,
+                totalStorageGb,
+                totalStorageMb,
+                storagePercentage: 0,
             };
         }
     }

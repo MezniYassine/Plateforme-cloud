@@ -97,4 +97,15 @@ export class Services {
     const num = parseFloat(String(val).replace(/[^0-9.]/g, ''));
     return isNaN(num) ? 0 : Math.min(100, Math.max(0, num));
   }
+
+  getStoragePercent(s: MyService): number {
+    if (!s.metrics) return 0;
+    if (s.metrics.storagePercentage !== undefined) {
+      return Math.min(100, Math.max(0, s.metrics.storagePercentage));
+    }
+    const usedMb = s.metrics.usedStorageMb || 0;
+    const totalMb = (s.storageGB || s.metrics.totalStorageGb || 1) * 1024;
+    const pct = (usedMb / totalMb) * 100;
+    return Math.min(100, Math.max(0, parseFloat(pct.toFixed(1))));
+  }
 }

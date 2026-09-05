@@ -16,6 +16,7 @@ import { ServiceSaaS } from 'src/entities/serviceSaaS.entity';
 import { ServicePaaS } from 'src/entities/servicePaaS.entity';
 import { ServiceStatus } from 'src/enum/service-status.enum';
 import { SaasAppType } from 'src/enum/saas-app-type.enum';
+import { RoleClient } from 'src/enum/role-client.enum';
 import { CreateSaasDto } from './dto/create-saas.dto';
 import { Catalogue } from 'src/catalogue/entities/catalogue.entity';
 import { WalletService } from 'src/wallet/wallet.service';
@@ -70,17 +71,51 @@ export class SaasService {
         }
         dto.nomPersonnalise = sanitizedName;
 
+        // Contrôle d'unicité : pas deux instances avec le même nom pour un admin / organisation
+        const targetClient = await this.clientRepo.findOne({
+            where: { id: Number(dto.clientId) },
+            relations: ['entreprise'],
+        });
+
+        let duplicateSaasQuery = this.saasRepo
+            .createQueryBuilder('saas')
+            .innerJoin('saas.client', 'client')
+            .where('LOWER(TRIM(saas.nomPersonnalise)) = LOWER(TRIM(:nom))', { nom: sanitizedName })
+            .andWhere('saas.status != :failedStatus', { failedStatus: ServiceStatus.FAILED });
+
+        if (targetClient?.entreprise?.id) {
+            duplicateSaasQuery = duplicateSaasQuery.andWhere('client.entrepriseId = :entId', { entId: targetClient.entreprise.id });
+        } else {
+            duplicateSaasQuery = duplicateSaasQuery.andWhere('client.id = :clientId', { clientId: Number(dto.clientId) });
+        }
+
+        const duplicateSaas = await duplicateSaasQuery.getOne();
+        if (duplicateSaas) {
+            throw new BadRequestException(`Une application SaaS nommée "${sanitizedName}" existe déjà. Deux instances ne peuvent pas avoir le même nom.`);
+        }
+
         if (!dto.catalogueId) {
             throw new BadRequestException('Veuillez sélectionner un plan valide dans le catalogue pour cette application SaaS.');
         }
 
         // --- Vérification du catalogue ---
-        const catalogue = await this.catalogueRepo.findOne({ where: { id: dto.catalogueId, isActive: true } });
+        const catalogue = await this.catalogueRepo.findOne({ where: { id: Number(dto.catalogueId), isActive: true } });
         if (!catalogue) {
             throw new NotFoundException(`Offre catalogue #${dto.catalogueId} introuvable ou inactive.`);
         }
         const prixMensuel = Number(catalogue.prix) || 0;
-        const payerId = adminPayerId ?? dto.clientId;
+        let payerId = adminPayerId ?? Number(dto.clientId);
+        let adminClient: Client | null = null;
+
+        // Si la ressource est attribuée à un ENTREPRISE_USER, la facturation est portée par l'administrateur de son entreprise
+        if (targetClient?.role === RoleClient.ENTREPRISE_USER && targetClient?.entreprise?.id) {
+            adminClient = await this.clientRepo.findOne({
+                where: { entreprise: { id: targetClient.entreprise.id }, role: RoleClient.ENTREPRISE_ADMIN },
+            });
+            if (adminClient && !adminPayerId) {
+                payerId = adminClient.id;
+            }
+        }
 
         // --- Vérification du solde ---
         if (prixMensuel > 0) {
@@ -247,7 +282,7 @@ export class SaasService {
                 await this.walletService.debiter(
                     payerId,
                     prixMensuel,
-                    `Déploiement d'un service SaaS (${dto.nomPersonnalise})`,
+                    `Déploiement d'un service SaaS (${dto.nomPersonnalise})${targetClient && targetClient.id !== payerId ? ` pour ${targetClient.prenom} ${targetClient.nom}` : ''}`,
                     undefined,
                 );
             }
@@ -263,7 +298,7 @@ export class SaasService {
                 status: ServiceStatus.RUNNING,
                 port: externalPort,
                 connectionString,
-                client: { id: dto.clientId } as any,
+                client: targetClient || ({ id: Number(dto.clientId) } as any),
                 catalogue: catalogue,
                 dateProchaineFacturation: nextMonth,
                 linkedPaasService: linkedPaas ?? undefined,
@@ -277,16 +312,38 @@ export class SaasService {
 
             const savedSaas = await this.saasRepo.save(newSaas);
 
-            // Fetch client for email notification
-            const client = await this.clientRepo.findOne({ where: { id: dto.clientId } });
-            if (client) {
-                this.mailService.sendProvisionningSuccesSaas({
-                    userEmail: client.email,
-                    userPrenom: client.prenom,
-                    userNom: client.nom,
-                    nomInstance: dto.nomPersonnalise,
-                    urlAcces: connectionString,
-                });
+            // Envoi de l'email de confirmation ou d'attribution
+            if (targetClient) {
+                const specs = catalogue
+                    ? `${catalogue.nomService || 'Application SaaS'} (${catalogue.vcpu || 1} vCPU · ${catalogue.ramMB || 1} GB RAM)`
+                    : 'Application SaaS Managée';
+
+                if (adminClient && targetClient.id !== adminClient.id) {
+                    this.mailService.sendAttributionRessourceUtilisateur({
+                        userEmail: targetClient.email,
+                        userPrenom: targetClient.prenom,
+                        userNom: targetClient.nom,
+                        adminPrenom: adminClient.prenom,
+                        adminNom: adminClient.nom,
+                        entrepriseNom: targetClient.entreprise?.nomEntreprise,
+                        nomInstance: dto.nomPersonnalise,
+                        typeService: 'SAAS',
+                        specs,
+                        pointAcces: connectionString,
+                        identifiants: (adminEmail || adminPassword) ? {
+                            adminEmail,
+                            adminPassword,
+                        } : undefined,
+                    });
+                } else {
+                    this.mailService.sendProvisionningSuccesSaas({
+                        userEmail: targetClient.email,
+                        userPrenom: targetClient.prenom,
+                        userNom: targetClient.nom,
+                        nomInstance: dto.nomPersonnalise,
+                        urlAcces: connectionString,
+                    });
+                }
             }
 
             return savedSaas;

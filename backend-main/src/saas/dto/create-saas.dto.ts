@@ -1,4 +1,5 @@
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { Type } from 'class-transformer';
 import { SaasAppType } from 'src/enum/saas-app-type.enum';
 
 export class CreateSaasDto {
@@ -13,14 +14,17 @@ export class CreateSaasDto {
     appType!: SaasAppType;
 
     @IsNotEmpty()
+    @Type(() => Number)
     @IsNumber()
     clientId!: number;
 
     @IsNotEmpty()
+    @Type(() => Number)
     @IsNumber()
     catalogueId!: number;
 
     @IsOptional()
+    @Type(() => Number)
     @IsNumber()
     linkedPaasServiceId?: number;
 

@@ -95,7 +95,7 @@ export class AuthService {
     if (adminEmail) {
       await this.mailerService.sendMail({
         to: adminEmail,
-        subject: '🔔 Nouvelle inscription d\'entreprise à valider',
+        subject: 'Nouvelle inscription d\'entreprise à valider',
         html: `
         <h3>Nouvelle inscription sur Dynamix</h3>
         <p>Une nouvelle entreprise <strong>${dto.companyName}</strong> a été créée et attend votre validation.</p>
@@ -142,7 +142,7 @@ export class AuthService {
     if (adminEmail) {
       await this.mailerService.sendMail({
         to: adminEmail,
-        subject: '🔔 Nouveau compte Particulier à valider',
+        subject: 'Nouveau compte Particulier à valider',
         html: `
         <h3>Nouvelle inscription sur Dynamix</h3>
         <p>Un nouveau compte <strong>Particulier</strong> a été créé et attend votre validation.</p>
@@ -223,7 +223,7 @@ export class AuthService {
       console.log(`🔑 [MFA OTP CODE] Code OTP généré pour ${user.email} : ${otp}`);
       await this.mailerService.sendMail({
         to: user.email,
-        subject: '🔐 Code de connexion sécurisé — Dynamix',
+        subject: 'Code de connexion sécurisé — Dynamix',
         html: this.buildOtpEmail(user.prenom, otp),
         attachments: [this.getLogoAttachment()],
       }).catch(err => console.error('[Login MFA] Erreur envoi OTP Mailtrap:', err.message || err));
@@ -260,7 +260,7 @@ export class AuthService {
     console.log(`🔑 [PROFILE MFA OTP] Code OTP généré pour ${user.email} : ${otp}`);
     await this.mailerService.sendMail({
       to: user.email,
-      subject: '🔐 Votre code de vérification MFA — Dynamix',
+      subject: 'Votre code de vérification MFA — Dynamix',
       html: this.buildOtpEmail(user.prenom, otp),
       attachments: [this.getLogoAttachment()],
     }).catch(err => console.error('[MFA] Erreur envoi OTP Mailtrap:', err.message || err));
@@ -306,7 +306,7 @@ export class AuthService {
       console.log(`🔑 [RESEND ADMIN OTP] Code OTP pour ${admin.email} : ${otp}`);
       await this.mailerService.sendMail({
         to: admin.email,
-        subject: '🔐 Code de connexion sécurisé — Dynamix',
+        subject: 'Code de connexion sécurisé — Dynamix',
         html: this.buildOtpEmail(admin.prenom, otp),
         attachments: [this.getLogoAttachment()],
       }).catch(err => console.error('[MFA Admin] Erreur envoi OTP Mailtrap:', err.message || err));
@@ -326,7 +326,7 @@ export class AuthService {
     console.log(`🔑 [RESEND LOGIN OTP] Code OTP pour ${user.email} : ${otp}`);
     await this.mailerService.sendMail({
       to: user.email,
-      subject: '🔐 Code de connexion sécurisé — Dynamix',
+      subject: 'Code de connexion sécurisé — Dynamix',
       html: this.buildOtpEmail(user.prenom, otp),
       attachments: [this.getLogoAttachment()],
     }).catch(err => console.error('[MFA Login] Erreur envoi OTP Mailtrap:', err.message || err));
@@ -415,7 +415,6 @@ export class AuthService {
       <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
         <tr>
           <td style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);padding:32px 40px;text-align:center;">
-            <div style="font-size:42px;margin-bottom:10px;">🔐</div>
             <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">Vérification en deux étapes</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.8);font-size:13px;">Dynamix Cloud · Sécurité</p>
           </td>

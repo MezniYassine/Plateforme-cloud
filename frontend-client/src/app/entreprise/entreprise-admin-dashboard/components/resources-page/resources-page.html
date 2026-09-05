@@ -19,23 +19,56 @@
       </div>
     </div>
 
-    <div class="filter-tabs-bar">
-      <button class="filter-btn" [class.is-active]="resFilter() === 'all'" (click)="filterChange.emit('all')">
-        <span>Toutes</span>
-      </button>
-      <button class="filter-btn" [class.is-active]="resFilter() === 'vm'" (click)="filterChange.emit('vm')">
-        <span>VMs IaaS</span>
-      </button>
-      <button class="filter-btn" [class.is-active]="resFilter() === 'db'" (click)="filterChange.emit('db')">
-        <span>Bases PaaS</span>
-      </button>
-      <button class="filter-btn" [class.is-active]="resFilter() === 'saas'" (click)="filterChange.emit('saas')">
-        <span>Apps SaaS</span>
+    <div class="res-actions-toolbar">
+      <!-- Category Filter Tabs -->
+      <div class="filter-tabs-bar">
+        <button class="filter-btn" [class.is-active]="resFilter() === 'all'" (click)="filterChange.emit('all')">
+          <span>Toutes</span>
+        </button>
+        <button class="filter-btn" [class.is-active]="resFilter() === 'vm'" (click)="filterChange.emit('vm')">
+          <span>VMs IaaS</span>
+        </button>
+        <button class="filter-btn" [class.is-active]="resFilter() === 'db'" (click)="filterChange.emit('db')">
+          <span>Bases PaaS</span>
+        </button>
+        <button class="filter-btn" [class.is-active]="resFilter() === 'saas'" (click)="filterChange.emit('saas')">
+          <span>Apps SaaS</span>
+        </button>
+      </div>
+
+      <!-- View Mode Switcher (Table vs Cards) -->
+      <div class="view-mode-toggle">
+        <button class="btn-mode" [class.active]="viewMode() === 'table'" (click)="viewMode.set('table')" title="Vue Tableau">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          <span>Tableau</span>
+        </button>
+        <button class="btn-mode" [class.active]="viewMode() === 'cards'" (click)="viewMode.set('cards')" title="Vue Cartes">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          <span>Cartes</span>
+        </button>
+      </div>
+
+      <!-- Quick Deploy CTA -->
+      <button class="btn-deploy-quick" (click)="openDeploy.emit()" title="Provisionner une nouvelle ressource">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>Déployer</span>
       </button>
     </div>
   </div>
 
-  <!-- Resources Table Card -->
+  <!-- ═══════════════════════════════════════════════════════════════
+       VIEW 1: MODERN TABLE VIEW
+  ═══════════════════════════════════════════════════════════════ -->
+  @if (viewMode() === 'table') {
   <div class="res-table-card">
     <div class="table-responsive-wrap">
       <table class="res-modern-table">
@@ -60,14 +93,10 @@
             <td class="td-res">
               <div class="res-cell-brand">
                 <div class="res-brand-box" [class.box-vm]="r.type === 'vm'" [class.box-db]="r.type === 'db'" [class.box-saas]="r.type === 'saas'">
-                  @if (hasAppLogo(r.name, r.type)) {
-                    <img [src]="getServiceLogo(r.name, r.type)" [alt]="r.name" class="res-logo-img" />
-                  } @else if (r.type === 'vm') {
+                  @if (r.type === 'vm') {
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
-                      <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-                      <line x1="6" y1="6" x2="6.01" y2="6"/>
-                      <line x1="6" y1="18" x2="6.01" y2="18"/>
+                      <rect x="2" y="3" width="20" height="14" rx="2"/>
+                      <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
                     </svg>
                   } @else if (r.type === 'db') {
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -75,6 +104,8 @@
                       <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
                       <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
                     </svg>
+                  } @else if (hasAppLogo(r.name)) {
+                    <img [src]="getServiceLogo(r.name)" [alt]="r.name" class="res-logo-img" />
                   } @else {
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
@@ -83,6 +114,9 @@
                 </div>
                 <div class="res-name-col">
                   <span class="res-name-txt" [title]="r.name">{{ r.name }}</span>
+                  @if (r.dateCreation) {
+                    <span class="res-created-sub">{{ r.dateCreation | date:'dd/MM/yy' }} à {{ r.dateCreation | date:'HH:mm' }}</span>
+                  }
                 </div>
               </div>
             </td>
@@ -106,16 +140,47 @@
 
             <!-- Config / Specs -->
             <td class="td-specs">
-              <span class="specs-txt">{{ formatSpecs(r.specs, r.type) }}</span>
+              <span class="specs-text" [title]="r.specs">{{ formatSpecs(r.specs, r.type) }}</span>
             </td>
 
-            <!-- IP / Endpoint -->
+            <!-- IP / Endpoint with Action Buttons -->
             <td class="td-ip">
-              @if (r.ip) {
-                <span class="mono-ip-badge">{{ r.ip }}</span>
-              } @else {
-                <span class="empty-dash">—</span>
-              }
+              <div class="endpoint-cell-wrap">
+                @if (r.type === 'saas' && (r.connectionString || r.url || r.ip)) {
+                  <button class="btn-open-link" (click)="openSaasApp(r.connectionString || r.url || r.ip, $event)" title="Ouvrir l'application dans un nouvel onglet">
+                    <span class="link-txt font-mono">{{ r.connectionString || r.url || r.ip }}</span>
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                      <polyline points="15 3 21 3 21 9"/>
+                      <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                  </button>
+                } @else if (r.type === 'db') {
+                  <div class="db-endpoint-row">
+                    <span class="mono-ip-badge font-mono">{{ r.connectionString || r.ip || 'Port généré' }}</span>
+                    <button class="btn-tbl-key" (click)="openCredentialsModal(r, $event)" title="Voir les identifiants de connexion">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 2l-2 2m-1.5 1.5L14 9l-3-3 1.5-1.5m6.5-2.5L14 7"/>
+                        <circle cx="7.5" cy="16.5" r="4.5"/>
+                      </svg>
+                      <span>Identifiants</span>
+                    </button>
+                  </div>
+                } @else if (r.ip) {
+                  <div class="vm-endpoint-row">
+                    <span class="mono-ip-badge font-mono">{{ r.ip }}</span>
+                    <button class="btn-tbl-console" (click)="openConsole(r.id, $event)" title="Ouvrir la console Web">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="4 17 10 11 4 5"/>
+                        <line x1="12" y1="19" x2="20" y2="19"/>
+                      </svg>
+                      <span>Console</span>
+                    </button>
+                  </div>
+                } @else {
+                  <span class="empty-dash">—</span>
+                }
+              </div>
             </td>
 
             <!-- CPU -->
@@ -208,5 +273,246 @@
       </table>
     </div>
   </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       VIEW 2: CARDS GRID VIEW
+  ═══════════════════════════════════════════════════════════════ -->
+  @if (viewMode() === 'cards') {
+  <div class="res-cards-grid">
+    @for (r of filteredResources(); track r.id) {
+    <div class="res-interactive-card" [class.card-vm]="r.type === 'vm'" [class.card-db]="r.type === 'db'" [class.card-saas]="r.type === 'saas'">
+      
+      <div class="card-accent-line"></div>
+
+      <!-- Card Top -->
+      <div class="rc-head">
+        <div class="rc-brand-box" [class.box-vm]="r.type === 'vm'" [class.box-db]="r.type === 'db'" [class.box-saas]="r.type === 'saas'">
+          @if (r.type === 'vm') {
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          } @else if (r.type === 'db') {
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+          } @else if (hasAppLogo(r.name)) {
+            <img [src]="getServiceLogo(r.name)" [alt]="r.name" class="rc-logo-img" />
+          } @else {
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+            </svg>
+          }
+        </div>
+
+        <div class="rc-identity">
+          <div class="rc-title-row">
+            <h4 class="rc-name" [title]="r.name">{{ r.name }}</h4>
+            <span class="rc-type-tag" [class.tag-vm]="r.type === 'vm'" [class.tag-db]="r.type === 'db'" [class.tag-saas]="r.type === 'saas'">
+              {{ getCategoryLabel(r.type) }}
+            </span>
+          </div>
+          <div class="rc-owner-row">
+            <span class="rc-owner-dot" [style.background]="r.ownerColor || '#F07A1F'"></span>
+            <span class="rc-owner-txt">{{ r.owner }}</span>
+            <span class="rc-sep">·</span>
+            <span class="rc-specs-txt">{{ r.specs }}</span>
+            @if (r.dateCreation) {
+              <span class="rc-sep">·</span>
+              <span class="rc-date-badge" [title]="'Date de création : ' + (r.dateCreation | date:'dd/MM/yy HH:mm')">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" class="rc-date-icon">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>{{ r.dateCreation | date:'dd/MM/yy' }} à {{ r.dateCreation | date:'HH:mm' }}</span>
+              </span>
+            }
+          </div>
+        </div>
+
+        <span class="rc-status-chip" [class.is-running]="isRunning(r.status)" [class.is-stopped]="isStopped(r.status)">
+          <span class="rc-dot"></span>
+          <span>{{ statusLabel(r.status) }}</span>
+        </span>
+      </div>
+
+      <!-- Point d'accès / Connection Row -->
+      <div class="rc-conn-box">
+        <span class="rc-conn-lbl">Point d'accès :</span>
+        <div class="rc-conn-bar" (click)="copyToClipboard(r.connectionString || r.url || r.ip, r.id + '-card-ip', $event)">
+          <span class="rc-conn-txt font-mono">{{ r.connectionString || r.url || r.ip || 'En cours de provisionnement...' }}</span>
+          <button class="btn-copy-mini" type="button">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </button>
+          @if (copiedField() === (r.id + '-card-ip')) {
+            <span class="rc-copied-tag">Copié</span>
+          }
+        </div>
+      </div>
+
+      <!-- Credentials Box for PaaS / SaaS -->
+      @if (r.type === 'db' || (r.type === 'saas' && (r.adminEmail || r.adminPassword))) {
+      <div class="rc-creds-box">
+        <div class="rc-cred-field">
+          <span class="rc-cred-title">{{ r.type === 'saas' ? 'Admin Email' : 'Utilisateur' }}</span>
+          <div class="rc-cred-val-box">
+            <span class="rc-cred-txt font-mono">{{ (r.type === 'saas' ? r.adminEmail : r.dbUser) || 'root' }}</span>
+            <button class="btn-cred-copy" (click)="copyToClipboard((r.type === 'saas' ? r.adminEmail : r.dbUser) || 'root', r.id + '-card-usr', $event)">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        @if (r.dbPassword || r.adminPassword) {
+        <div class="rc-cred-field">
+          <span class="rc-cred-title">Mot de passe</span>
+          <div class="rc-cred-val-box">
+            <span class="rc-cred-txt font-mono">{{ isPasswordVisible(r.id) ? (r.dbPassword || r.adminPassword) : '••••••••••••' }}</span>
+            <div class="rc-cred-actions">
+              <button class="btn-cred-eye" (click)="togglePassword(r.id, $event)">
+                @if (isPasswordVisible(r.id)) {
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                }
+              </button>
+              <button class="btn-cred-copy" (click)="copyToClipboard(r.dbPassword || r.adminPassword, r.id + '-card-pwd', $event)">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+      }
+
+      <!-- Telemetry Gauges -->
+      @if ((r.type === 'vm' || r.type === 'db') && (r.cpu !== null || r.ram !== null)) {
+      <div class="rc-metrics-grid">
+        <div class="rc-metric-item">
+          <div class="rc-mhead">
+            <span>CPU</span>
+            <span class="font-mono">{{ r.cpu ?? 0 }}%</span>
+          </div>
+          <div class="rc-mtrack">
+            <div class="rc-mfill fill-cpu" [style.width.%]="r.cpu ?? 0"></div>
+          </div>
+        </div>
+        <div class="rc-metric-item">
+          <div class="rc-mhead">
+            <span>RAM</span>
+            <span class="font-mono">{{ r.ram ?? 0 }}%</span>
+          </div>
+          <div class="rc-mtrack">
+            <div class="rc-mfill fill-ram" [style.width.%]="r.ram ?? 0"></div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Footer Buttons -->
+      <div class="rc-foot">
+        <div class="rc-btns">
+          @if (r.type === 'saas') {
+            <button class="btn-rc-open" (click)="openSaasApp(r.connectionString || r.url, $event)">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <span>Ouvrir l'application</span>
+            </button>
+          }
+          @if (r.type === 'vm') {
+            <button class="btn-rc-action" (click)="openConsole(r.id, $event)">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Console Web</span>
+            </button>
+          }
+        </div>
+
+        <div class="rc-cost-chip">
+          <span class="rc-cost-val">{{ r.cost | number:'1.2-2' }}</span>
+          <span class="rc-cost-unit">DT/mois</span>
+        </div>
+      </div>
+
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       MODAL: IDENTIFIANTS PAAS / SAAS
+  ═══════════════════════════════════════════════════════════════ -->
+  @if (isCredModalOpen() && credTarget(); as tgt) {
+  <div class="modal-backdrop" (click)="closeCredentialsModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div class="mhead-left">
+          <div class="mhead-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 2l-2 2m-1.5 1.5L14 9l-3-3 1.5-1.5m6.5-2.5L14 7"/>
+              <circle cx="7.5" cy="16.5" r="4.5"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title">Identifiants de Connexion</h3>
+            <p class="modal-sub">Ressource : <strong>{{ tgt.name }}</strong> ({{ tgt.specs }})</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" (click)="closeCredentialsModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="cred-modal-group">
+          <label>Point d'accès / Hôte :</label>
+          <div class="cred-modal-input-row">
+            <input type="text" readonly [value]="tgt.connectionString || tgt.ip" class="font-mono" />
+            <button class="btn-modal-copy" (click)="copyToClipboard(tgt.connectionString || tgt.ip, 'modal-ip', $event)">
+              {{ copiedField() === 'modal-ip' ? 'Copié !' : 'Copier' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="cred-modal-group">
+          <label>{{ tgt.type === 'saas' ? 'Email Administrateur :' : 'Nom d\'utilisateur :' }}</label>
+          <div class="cred-modal-input-row">
+            <input type="text" readonly [value]="(tgt.type === 'saas' ? tgt.adminEmail : tgt.dbUser) || 'root'" class="font-mono" />
+            <button class="btn-modal-copy" (click)="copyToClipboard((tgt.type === 'saas' ? tgt.adminEmail : tgt.dbUser) || 'root', 'modal-usr', $event)">
+              {{ copiedField() === 'modal-usr' ? 'Copié !' : 'Copier' }}
+            </button>
+          </div>
+        </div>
+
+        @if (tgt.dbPassword || tgt.adminPassword) {
+        <div class="cred-modal-group">
+          <label>Mot de passe :</label>
+          <div class="cred-modal-input-row">
+            <input [type]="isPasswordVisible(tgt.id) ? 'text' : 'password'" readonly [value]="tgt.dbPassword || tgt.adminPassword" class="font-mono" />
+            <button class="btn-modal-eye" (click)="togglePassword(tgt.id, $event)">
+              {{ isPasswordVisible(tgt.id) ? 'Masquer' : 'Afficher' }}
+            </button>
+            <button class="btn-modal-copy" (click)="copyToClipboard(tgt.dbPassword || tgt.adminPassword, 'modal-pwd', $event)">
+              {{ copiedField() === 'modal-pwd' ? 'Copié !' : 'Copier' }}
+            </button>
+          </div>
+        </div>
+        }
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn-primary-close" (click)="closeCredentialsModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+  }
 
 </div>

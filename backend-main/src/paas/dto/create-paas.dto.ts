@@ -1,4 +1,5 @@
 import { IsEnum, IsNotEmpty, IsNumber, IsString, Length, Matches } from 'class-validator';
+import { Type } from 'class-transformer';
 import { TypeSgbd } from 'src/enum/type-sgbd.enum';
 
 export class CreatePaasDto {
@@ -13,10 +14,12 @@ export class CreatePaasDto {
     typeSgbd!: TypeSgbd;
 
     @IsNotEmpty()
+    @Type(() => Number)
     @IsNumber()
     clientId!: number;
 
     @IsNotEmpty()
+    @Type(() => Number)
     @IsNumber()
     catalogueId!: number;
 }

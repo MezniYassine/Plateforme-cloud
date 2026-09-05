@@ -55,7 +55,7 @@ export class AdminService {
         if (status === AccountStatus.APPROVED) {
             await this.mailerService.sendMail({
                 to: client.email,
-                subject: 'Bienvenue chez Dynamix ! Votre compte est activé 🎉',
+                subject: 'Bienvenue chez Dynamix ! Votre compte est activé',
                 html: `
           <h3>Félicitations !</h3>
           <p>Votre compte a été approuvé par notre équipe. Vous pouvez désormais vous connecter.</p>

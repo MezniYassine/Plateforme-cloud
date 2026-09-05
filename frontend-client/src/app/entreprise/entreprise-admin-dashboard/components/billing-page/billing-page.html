@@ -81,7 +81,7 @@
           <p class="card-head-sub">Historique des mouvements financiers, factures et débits d'infrastructure</p>
         </div>
         <div class="head-actions">
-          <button class="btn-export-excel" (click)="exportToExcel()" [disabled]="transactions().length === 0" title="Exporter l'historique sous format Excel">
+          <button class="btn-export-excel" (click)="exportToExcel()" [disabled]="filteredTransactions().length === 0" title="Exporter l'historique sous format Excel">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
@@ -99,6 +99,32 @@
         </div>
       </div>
 
+      <!-- Date Filter Bar -->
+      <div class="date-filter-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" style="color:#F07A1F;flex-shrink:0">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span class="dfb-label">Filtrer par date :</span>
+        <label class="dfb-input-wrap">
+          <span>Du</span>
+          <input type="date" class="dfb-input" [ngModel]="startDate()" (ngModelChange)="startDate.set($event); onDateChange()" />
+        </label>
+        <label class="dfb-input-wrap">
+          <span>Au</span>
+          <input type="date" class="dfb-input" [ngModel]="endDate()" (ngModelChange)="endDate.set($event); onDateChange()" />
+        </label>
+        @if (startDate() || endDate()) {
+          <button class="btn-clear-date" (click)="clearDateFilter()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Effacer
+          </button>
+        }
+        <span class="dfb-result">{{ filteredTransactions().length }} transaction{{ filteredTransactions().length > 1 ? 's' : '' }}</span>
+      </div>
+
       <div class="table-responsive">
         <table class="modern-inv-table">
           <thead>
@@ -113,7 +139,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (t of transactions(); track t.id) {
+            @for (t of pagedTransactions(); track t.id) {
             <tr [class.row-credit]="t.type === 'credit'">
               
               <!-- 1: Réf. Facture -->
@@ -219,36 +245,146 @@
             }
           </tbody>
         </table>
+
+        <!-- Pagination -->
+        @if (totalPages() > 1) {
+          <div class="ent-pagination-bar">
+            <button class="epag-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            @for (p of pageNumbers(); track p) {
+              <button class="epag-btn epag-num" [class.epag-active]="currentPage() === p" (click)="goToPage(p)">{{ p }}</button>
+            }
+            <button class="epag-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <span class="epag-info">Page {{ currentPage() }} / {{ totalPages() }} — {{ filteredTransactions().length }} transaction{{ filteredTransactions().length > 1 ? 's' : '' }}</span>
+          </div>
+        }
       </div>
     </div>
 
-    <!-- Right: Member Breakdown -->
+    <!-- Right: Member Breakdown & Donut Chart -->
     <div class="billing-card-side">
       <div class="card-head-bar">
         <div>
           <h4 class="card-head-title">Consommation par Membre</h4>
           <p class="card-head-sub">Répartition des coûts par collaborateur</p>
         </div>
+        @if (memberStats().items.length > 0) {
+          <span class="member-count-badge">{{ memberStats().items.length }} membre{{ memberStats().items.length > 1 ? 's' : '' }}</span>
+        }
       </div>
 
-      <div class="member-breakdown-body">
-        @for (m of teamSpend(); track m.name) {
-        <div class="member-breakdown-row">
-          <div class="b-user-col">
-            <div class="b-user-av" [style.background]="m.color">{{ getInitials(m.name) }}</div>
-            <span class="b-user-name" [title]="m.name">{{ m.name }}</span>
+      <!-- Donut Chart Section -->
+      <div class="member-chart-wrap">
+        <div class="member-donut-box">
+          <svg viewBox="0 0 160 160" class="member-donut-svg">
+            <!-- Background track ring -->
+            <circle
+              cx="80"
+              cy="80"
+              r="60"
+              fill="transparent"
+              stroke="#f1f5f9"
+              stroke-width="13"
+              class="member-donut-bg"
+            />
+
+            <!-- Empty dashed ring if no spend -->
+            @if (!memberStats().hasSpend) {
+              <circle
+                cx="80"
+                cy="80"
+                r="60"
+                fill="transparent"
+                stroke="#cbd5e1"
+                stroke-width="3"
+                stroke-dasharray="6 6"
+              />
+            }
+
+            <!-- Member Segments -->
+            @if (memberStats().hasSpend) {
+              @for (item of memberStats().items; track item.name) {
+                @if (item.spend > 0) {
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    fill="transparent"
+                    [attr.stroke]="item.color"
+                    stroke-width="13"
+                    [attr.stroke-dasharray]="item.dash"
+                    [attr.stroke-dashoffset]="item.offset"
+                    [attr.stroke-linecap]="memberStats().activeCount > 1 ? 'round' : 'butt'"
+                    class="member-donut-arc"
+                  />
+                }
+              }
+            }
+          </svg>
+
+          <!-- Center Label -->
+          <div class="member-donut-center">
+            <span class="donut-center-val">{{ memberStats().totalSpend | number:'1.2-2' }}</span>
+            <span class="donut-center-unit">DT</span>
+            <span class="donut-center-lbl">Total consommé</span>
           </div>
-          <div class="b-bar-col">
-            <div class="b-bar-track">
-              <div class="b-bar-fill" [style.width]="(monthlyBudget() > 0 ? (m.spend / monthlyBudget() * 100) : 0)+'%'" [style.background]="m.color"></div>
+        </div>
+      </div>
+
+      <!-- Top Spender Highlight Banner if active -->
+      @if (memberStats().topSpender; as top) {
+        <div class="top-spender-strip">
+          <div class="tss-badge">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            Top consommateur
+          </div>
+          <div class="tss-info">
+            <span class="tss-name">{{ top.name }}</span>
+            <span class="tss-share">{{ top.pctOfTotal }}% des coûts</span>
+          </div>
+        </div>
+      }
+
+      <!-- Detailed Member Breakdown Rows -->
+      <div class="member-breakdown-list">
+        @for (m of memberStats().items; track m.name) {
+          <div class="member-item-card">
+            <div class="mic-top-row">
+              <div class="mic-user-info">
+                <div class="mic-avatar" [style.background]="m.color">
+                  {{ m.initials }}
+                </div>
+                <div class="mic-meta">
+                  <span class="mic-name" [title]="m.name">{{ m.name }}</span>
+                  <span class="mic-pct-chip" [style.color]="m.color" [style.background]="m.color + '15'">
+                    {{ m.pctOfTotal }}% du total
+                  </span>
+                </div>
+              </div>
+              <div class="mic-amount">
+                <span class="mic-val">{{ m.spend | number:'1.2-2' }}</span>
+                <span class="mic-unit">DT</span>
+              </div>
+            </div>
+
+            <!-- Proportional Progress Bar -->
+            <div class="mic-bar-track">
+              <div
+                class="mic-bar-fill"
+                [style.width.%]="m.barWidth"
+                [style.background]="m.color"
+              ></div>
             </div>
           </div>
-          <span class="b-val-col">{{ m.spend | number:'1.2-2' }} DT</span>
-        </div>
         } @empty {
-        <div class="empty-side-txt">
-          <p>Aucune donnée de consommation</p>
-        </div>
+          <div class="empty-side-txt">
+            <p>Aucune donnée de consommation</p>
+          </div>
         }
       </div>
     </div>

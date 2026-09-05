@@ -64,10 +64,20 @@
           Tous <span class="tab-count">{{ billingInvoices().length }}</span>
         </button>
         <button class="filter-tab" [class.active]="activeFilter() === 'entreprise'" (click)="setFilter('entreprise')">
-          🏢 Entreprise <span class="tab-count">{{ enterpriseCount() }}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+            <line x1="12" y1="12" x2="12" y2="17"/>
+            <line x1="9" y1="14.5" x2="15" y2="14.5"/>
+          </svg>
+          Entreprise <span class="tab-count">{{ enterpriseCount() }}</span>
         </button>
         <button class="filter-tab" [class.active]="activeFilter() === 'personnel'" (click)="setFilter('personnel')">
-          👤 Particulier <span class="tab-count">{{ personnelCount() }}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          Particulier <span class="tab-count">{{ personnelCount() }}</span>
         </button>
       </div>
 
@@ -76,8 +86,36 @@
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input class="search-input" type="text" placeholder="Rechercher un client, email…" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" />
+        <input class="search-input" type="text" placeholder="Rechercher un client, email…" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event); onFilterChange()" />
       </div>
+    </div>
+
+    <!-- Date Filter Row -->
+    <div class="date-filter-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" style="color:#F07A1F;flex-shrink:0">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span class="date-filter-label">Filtrer par date :</span>
+      <label class="date-input-wrap">
+        <span>Du</span>
+        <input type="date" class="date-input" [ngModel]="startDate()" (ngModelChange)="startDate.set($event); onFilterChange()" />
+      </label>
+      <label class="date-input-wrap">
+        <span>Au</span>
+        <input type="date" class="date-input" [ngModel]="endDate()" (ngModelChange)="endDate.set($event); onFilterChange()" />
+      </label>
+      @if (startDate() || endDate()) {
+        <button class="btn-clear-date" (click)="clearDateFilter()" title="Effacer le filtre date">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Effacer
+        </button>
+      }
+      <span class="date-filter-result">
+        {{ filteredInvoices().length }} facture{{ filteredInvoices().length > 1 ? 's' : '' }} trouvée{{ filteredInvoices().length > 1 ? 's' : '' }}
+      </span>
     </div>
 
     <!-- Invoices Data Table -->
@@ -101,7 +139,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (inv of filteredInvoices(); track inv.id) {
+          @for (inv of pagedInvoices(); track inv.id) {
           <tr class="invoice-row" [class.expanded]="isExpanded(inv.id)" (click)="toggleRow(inv.id)">
             <!-- Account & Shiny Avatar -->
             <td>
@@ -227,6 +265,22 @@
           }
         </tbody>
       </table>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="pagination-bar">
+          <button class="pag-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          @for (p of pageNumbers(); track p) {
+            <button class="pag-btn pag-num" [class.pag-active]="currentPage() === p" (click)="goToPage(p)">{{ p }}</button>
+          }
+          <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <span class="pag-info">Page {{ currentPage() }} / {{ totalPages() }} — {{ filteredInvoices().length }} facture{{ filteredInvoices().length > 1 ? 's' : '' }}</span>
+        </div>
+      }
       }
     </div>
   </div>

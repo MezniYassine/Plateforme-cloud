@@ -1,5 +1,6 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { DeployedResource, TeamMember } from '../../entreprise-helper.service';
 
 @Component({
@@ -10,14 +11,28 @@ import { DeployedResource, TeamMember } from '../../entreprise-helper.service';
   styleUrl: './resources-page.scss',
 })
 export class ResourcesPageComponent {
+  private router = inject(Router);
+
   filteredResources = input.required<DeployedResource[]>();
   resFilter = input.required<string>();
   teamMembers = input.required<TeamMember[]>();
 
   filterChange = output<string>();
+  openDeploy = output<void>();
+
+  /* VIEW MODE: TABLE vs CARDS */
+  viewMode = signal<'table' | 'cards'>('table');
+
+  /* CREDENTIALS & CLIPBOARD */
+  passwordVisibilityMap = signal<Record<string, boolean>>({});
+  copiedField = signal<string | null>(null);
+
+  /* CREDENTIALS MODAL (FOR TABLE VIEW) */
+  isCredModalOpen = signal<boolean>(false);
+  credTarget = signal<DeployedResource | null>(null);
 
   getInitials(name: string): string {
-    return (name || '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    return (name || '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'AD';
   }
 
   hasAppLogo(name?: string, type?: string): boolean {
@@ -131,10 +146,61 @@ export class ResourcesPageComponent {
   }
 
   isRunning(status?: string): boolean {
-    return status === 'RUNNING';
+    return status === 'RUNNING' || status === 'running' || !status;
   }
 
   isStopped(status?: string): boolean {
-    return status === 'STOPPED';
+    return status === 'STOPPED' || status === 'stopped';
+  }
+
+  /* ── ACTIONS & UTILS ── */
+  copyToClipboard(text?: string, fieldId?: string, event?: Event) {
+    if (event) event.stopPropagation();
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      if (fieldId) {
+        this.copiedField.set(fieldId);
+        setTimeout(() => {
+          if (this.copiedField() === fieldId) this.copiedField.set(null);
+        }, 2000);
+      }
+    });
+  }
+
+  togglePassword(id: string, event?: Event) {
+    if (event) event.stopPropagation();
+    this.passwordVisibilityMap.update(map => ({
+      ...map,
+      [id]: !map[id]
+    }));
+  }
+
+  isPasswordVisible(id: string): boolean {
+    return !!this.passwordVisibilityMap()[id];
+  }
+
+  openSaasApp(url?: string, event?: Event) {
+    if (event) event.stopPropagation();
+    if (!url) return;
+    const targetUrl = url.startsWith('http') ? url : `http://${url}`;
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  openConsole(vmId: string, event?: Event) {
+    if (event) event.stopPropagation();
+    this.router.navigate(['/vm-console'], {
+      state: { id: vmId, returnUrl: '/entreprise-admin-dashboard' }
+    });
+  }
+
+  openCredentialsModal(r: DeployedResource, event?: Event) {
+    if (event) event.stopPropagation();
+    this.credTarget.set(r);
+    this.isCredModalOpen.set(true);
+  }
+
+  closeCredentialsModal() {
+    this.isCredModalOpen.set(false);
+    this.credTarget.set(null);
   }
 }

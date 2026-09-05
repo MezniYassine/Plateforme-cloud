@@ -332,13 +332,20 @@
         </div>
 
         <!-- Storage Gauge -->
-        <div class="metric-block">
+        <div class="metric-block" [title]="(s.metrics.usedStorageMb || 0) + ' Mo / ' + (s.metrics.totalStorageGb || s.storageGB || 1) + ' Go alloués (' + getStoragePercent(s) + '%)'">
           <div class="metric-top">
             <span class="m-title">Disque</span>
-            <span class="m-val font-mono">{{ s.metrics.usedStorageMb }} Mo</span>
+            <span class="m-val font-mono" [class.warn]="getStoragePercent(s) > 75" [class.high]="getStoragePercent(s) > 90">
+              {{ s.metrics.usedStorageMb }} Mo
+            </span>
           </div>
           <div class="metric-track">
-            <div class="metric-bar bar-storage" [style.width.%]="40"></div>
+            <div
+              class="metric-bar bar-storage"
+              [style.width.%]="getStoragePercent(s)"
+              [class.bar-warn]="getStoragePercent(s) > 75"
+              [class.bar-high]="getStoragePercent(s) > 90">
+            </div>
           </div>
         </div>
       </div>

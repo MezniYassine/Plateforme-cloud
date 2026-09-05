@@ -1,7 +1,7 @@
 <!-- ══ WRAPPER ══ -->
-<div class="login-page" (mousemove)="onMouseMove($event)" (mouseleave)="onMouseLeave()">
+<div class="login-page">
 
-  <!-- ══ CUBE GRID BACKGROUND (mirrors home page) ══ -->
+  <!-- ══ CUBE GRID BACKGROUND ══ -->
   <div class="cube-grid-bg">
     @for (tile of tiles; track $index) {
       <div class="cube-tile" [class.cube-glow]="tile.glow"
@@ -43,7 +43,7 @@
         </div>
 
         <!-- ── Login Form ── -->
-        <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="card-form">
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()" (submit)="$event.preventDefault()" class="card-form">
 
           @if (errorMsg) {
             <div class="login-error-alert">
@@ -115,7 +115,7 @@
           </div>
 
           <!-- Submit -->
-          <button type="submit" class="btn-submit" [class.loading]="isLoading" [disabled]="isLoading || loginForm.invalid">
+          <button type="submit" class="btn-submit" [class.loading]="isLoading" [disabled]="isLoading">
             <div class="btn-shimmer"></div>
             <div class="spinner"></div>
             <span class="btn-label">

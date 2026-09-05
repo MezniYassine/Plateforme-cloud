@@ -61,7 +61,7 @@ export class MailService {
       const sig = await this.buildSignature();
       await this.mailer.sendMail({
         to: params.adminEmail,
-        subject: `📋 Nouvelle demande de ressource — ${params.nomInstance}`,
+        subject: `Nouvelle demande de ressource — ${params.nomInstance}`,
         html: this.buildNouvelleDemandeHtml(params, sig),
         attachments: [this.getLogoAttachment()],
       });
@@ -89,7 +89,7 @@ export class MailService {
       const subjectType = isPaas ? 'base de données' : 'machine virtuelle';
       await this.mailer.sendMail({
         to: params.userEmail,
-        subject: `✅ Votre ${subjectType} « ${params.nomInstance} » est prête !`,
+        subject: `Votre ${subjectType} « ${params.nomInstance} » est prête !`,
         html: this.buildSuccesHtml(params, sig),
         attachments: [this.getLogoAttachment()],
       });
@@ -113,7 +113,7 @@ export class MailService {
       const sig = await this.buildSignature();
       await this.mailer.sendMail({
         to: params.userEmail,
-        subject: `❌ Échec du déploiement de « ${params.nomInstance} »`,
+        subject: `Échec du déploiement de « ${params.nomInstance} »`,
         html: this.buildEchecHtml(params, sig),
         attachments: [this.getLogoAttachment()],
       });
@@ -136,7 +136,7 @@ export class MailService {
       const sig = await this.buildSignature();
       await this.mailer.sendMail({
         to: params.userEmail,
-        subject: `🚫 Demande refusée — ${params.nomInstance}`,
+        subject: `Demande refusée — ${params.nomInstance}`,
         html: this.buildRejetHtml(params, sig),
         attachments: [this.getLogoAttachment()],
       });
@@ -162,7 +162,7 @@ export class MailService {
       const sig = await this.buildSignature();
       await this.mailer.sendMail({
         to: params.userEmail,
-        subject: `🚀 Votre machine virtuelle « ${params.nomInstance} » est opérationnelle !`,
+        subject: `Votre machine virtuelle « ${params.nomInstance} » est opérationnelle !`,
         html: this.buildSuccesPersonnelHtml(params, sig),
         attachments: [this.getLogoAttachment()],
       });
@@ -187,7 +187,7 @@ export class MailService {
       const sig = await this.buildSignature();
       await this.mailer.sendMail({
         to: params.userEmail,
-        subject: `🚀 Votre application SaaS « ${params.nomInstance} » est prête !`,
+        subject: `Votre application SaaS « ${params.nomInstance} » est prête !`,
         html: this.buildSuccesSaasHtml(params, sig),
         attachments: [this.getLogoAttachment()],
       });
@@ -215,7 +215,7 @@ export class MailService {
       const sig = await this.buildSignature();
       await this.mailer.sendMail({
         to: params.adminEmail,
-        subject: `⬆️ Scale-up effectué par ${params.userPrenom} ${params.userNom} — ${params.resourceName}`,
+        subject: `Scale-up effectué par ${params.userPrenom} ${params.userNom} — ${params.resourceName}`,
         html: this.buildUpgradeNotificationHtml(params, sig),
         attachments: [this.getLogoAttachment()],
       });
@@ -225,7 +225,169 @@ export class MailService {
     }
   }
 
+  /**
+   * Email envoyé à un collaborateur (ENTREPRISE_USER) lorsqu'un administrateur lui attribue une ressource directement.
+   */
+  async sendAttributionRessourceUtilisateur(params: {
+    userEmail: string;
+    userPrenom: string;
+    userNom: string;
+    adminPrenom: string;
+    adminNom: string;
+    entrepriseNom?: string;
+    nomInstance: string;
+    typeService: 'VM' | 'PAAS' | 'SAAS' | string;
+    specs: string;
+    pointAcces?: string;
+    identifiants?: {
+      dbUser?: string;
+      dbPassword?: string;
+      adminEmail?: string;
+      adminPassword?: string;
+    };
+  }): Promise<void> {
+    try {
+      const sig = await this.buildSignature();
+      await this.mailer.sendMail({
+        to: params.userEmail,
+        subject: `Une nouvelle ressource « ${params.nomInstance} » vous a été attribuée !`,
+        html: this.buildAttributionRessourceHtml(params, sig),
+        attachments: [this.getLogoAttachment()],
+      });
+      this.logger.log(`[Mail] Attribution ressource → utilisateur ${params.userEmail} (${params.nomInstance})`);
+    } catch (err) {
+      this.logger.error(`[Mail] Échec envoi attribution ressource: ${err.message}`);
+    }
+  }
+
   // ── Templates HTML ──────────────────────────────────────────────────────────
+
+  private buildAttributionRessourceHtml(p: {
+    userPrenom: string;
+    userNom: string;
+    adminPrenom: string;
+    adminNom: string;
+    entrepriseNom?: string;
+    nomInstance: string;
+    typeService: 'VM' | 'PAAS' | 'SAAS' | string;
+    specs: string;
+    pointAcces?: string;
+    identifiants?: {
+      dbUser?: string;
+      dbPassword?: string;
+      adminEmail?: string;
+      adminPassword?: string;
+    };
+  }, signature: string): string {
+    const now = new Date().toLocaleString('fr-FR', {
+      day: '2-digit', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+
+    const isPaas = p.typeService === 'PAAS';
+    const isSaas = p.typeService === 'SAAS';
+    const typeBadge = isPaas ? 'Base de données PaaS' : isSaas ? 'Application SaaS' : 'Machine Virtuelle IaaS';
+    const orgLabel = p.entrepriseNom ? `l'organisation <strong>${p.entrepriseNom}</strong>` : 'votre organisation';
+
+    return `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nouvelle ressource attribuée</title></head>
+<body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#f97316 0%,#ea580c 100%);padding:36px 40px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">Nouvelle ressource attribuée !</h1>
+            <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:14px;">Une ressource cloud vient d'être mise à votre disposition</p>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="margin:0 0 16px;font-size:16px;color:#0f172a;">Bonjour <strong>${p.userPrenom} ${p.userNom}</strong>,</p>
+            <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.6;">
+              Votre administrateur <strong>${p.adminPrenom} ${p.adminNom}</strong> (${orgLabel}) vient de provisionner et de vous attribuer une nouvelle ressource sur la plateforme <strong>Dynamix Cloud</strong>.
+            </p>
+
+            <!-- Details Card -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;margin-bottom:24px;">
+              <tr><td style="padding:20px 24px;">
+                <p style="margin:0 0 14px;font-size:12px;font-weight:700;color:#ea580c;text-transform:uppercase;letter-spacing:0.8px;">Paramètres de la ressource</p>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding:7px 0;font-size:13px;color:#64748b;width:160px;border-bottom:1px solid #ffedd5;">Nom de l'instance</td>
+                    <td style="padding:7px 0;font-size:13px;color:#0f172a;font-weight:700;border-bottom:1px solid #ffedd5;">${p.nomInstance}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:7px 0;font-size:13px;color:#64748b;border-bottom:1px solid #ffedd5;">Type de service</td>
+                    <td style="padding:7px 0;font-size:13px;color:#0f172a;font-weight:600;border-bottom:1px solid #ffedd5;">${typeBadge}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:7px 0;font-size:13px;color:#64748b;border-bottom:1px solid #ffedd5;">Configuration</td>
+                    <td style="padding:7px 0;font-size:13px;color:#0f172a;font-weight:600;border-bottom:1px solid #ffedd5;">${p.specs}</td>
+                  </tr>
+                  ${p.pointAcces ? `
+                  <tr>
+                    <td style="padding:7px 0;font-size:13px;color:#64748b;border-bottom:1px solid #ffedd5;">Point d'accès / URL</td>
+                    <td style="padding:7px 0;font-size:13px;color:#0284c7;font-weight:600;font-family:monospace;border-bottom:1px solid #ffedd5;">${p.pointAcces}</td>
+                  </tr>` : ''}
+                  ${p.identifiants?.dbUser || p.identifiants?.adminEmail ? `
+                  <tr>
+                    <td style="padding:7px 0;font-size:13px;color:#64748b;border-bottom:1px solid #ffedd5;">Identifiant</td>
+                    <td style="padding:7px 0;font-size:13px;color:#0f172a;font-family:monospace;border-bottom:1px solid #ffedd5;">${p.identifiants.dbUser || p.identifiants.adminEmail}</td>
+                  </tr>` : ''}
+                  ${p.identifiants?.dbPassword || p.identifiants?.adminPassword ? `
+                  <tr>
+                    <td style="padding:7px 0;font-size:13px;color:#64748b;border-bottom:1px solid #ffedd5;">Mot de passe initial</td>
+                    <td style="padding:7px 0;font-size:13px;color:#0f172a;font-family:monospace;border-bottom:1px solid #ffedd5;">${p.identifiants.dbPassword || p.identifiants.adminPassword}</td>
+                  </tr>` : ''}
+                  <tr>
+                    <td style="padding:7px 0;font-size:13px;color:#64748b;">Attribuée le</td>
+                    <td style="padding:7px 0;font-size:13px;color:#0f172a;font-weight:600;">${now}</td>
+                  </tr>
+                </table>
+              </td></tr>
+            </table>
+
+            <!-- Running Banner -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin-bottom:24px;">
+              <tr><td style="padding:14px 20px;text-align:center;">
+                <span style="display:inline-block;background:#16a34a;color:#fff;font-size:12px;font-weight:700;padding:4px 14px;border-radius:100px;letter-spacing:0.5px;">● ACTIVE</span>
+                <span style="margin-left:10px;font-size:13px;color:#15803d;font-weight:600;">Ressource opérationnelle</span>
+              </td></tr>
+            </table>
+
+            <!-- CTA Button -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr><td align="center">
+                <a href="http://localhost:4200/entreprise-user-dashboard" style="display:inline-block;background:#ea580c;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 32px;border-radius:10px;box-shadow:0 4px 12px rgba(234,88,12,0.3);">
+                  Accéder à mon tableau de bord
+                </a>
+              </td></tr>
+            </table>
+
+            <p style="margin:0 0 24px;font-size:13px;color:#64748b;line-height:1.6;text-align:center;">
+              Vous pouvez démarrer, arrêter, redémarrer cette ressource et surveiller ses métriques directement depuis votre espace collaborateur.
+            </p>
+
+            ${signature}
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  }
 
 
   private buildNouvelleDemandeHtml(p: {
@@ -248,7 +410,7 @@ export class MailService {
         <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">🖥️ Dynamix Cloud</h1>
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">Dynamix Cloud</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.8);font-size:14px;">Plateforme de gestion des ressources cloud</p>
           </td>
         </tr>
@@ -322,7 +484,6 @@ export class MailService {
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
         <tr>
           <td style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);padding:32px 40px;text-align:center;">
-            <div style="font-size:48px;margin-bottom:12px;">✅</div>
             <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">${titleType} déployée !</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Votre infrastructure est prête à l'emploi</p>
           </td>
@@ -386,7 +547,6 @@ export class MailService {
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
         <tr>
           <td style="background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%);padding:32px 40px;text-align:center;">
-            <div style="font-size:48px;margin-bottom:12px;">❌</div>
             <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">Échec du déploiement</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Une erreur est survenue lors du provisionnement</p>
           </td>
@@ -437,7 +597,6 @@ export class MailService {
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
         <tr>
           <td style="background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);padding:32px 40px;text-align:center;">
-            <div style="font-size:48px;margin-bottom:12px;">🚫</div>
             <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">Demande non approuvée</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Votre administrateur a examiné votre demande</p>
           </td>
@@ -494,7 +653,6 @@ export class MailService {
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
         <tr>
           <td style="background:linear-gradient(135deg,#0891b2 0%,#0e7490 100%);padding:32px 40px;text-align:center;">
-            <div style="font-size:48px;margin-bottom:12px;">🚀</div>
             <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">Machine virtuelle opérationnelle !</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Votre infrastructure personnelle est prête à l'emploi</p>
           </td>
@@ -508,7 +666,7 @@ export class MailService {
             </p>
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#ecfeff;border:1px solid #a5f3fc;border-radius:12px;margin-bottom:20px;">
               <tr><td style="padding:20px 24px;">
-                <p style="margin:0 0 14px;font-size:12px;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:0.8px;">⚙️ Détails de votre machine</p>
+                <p style="margin:0 0 14px;font-size:12px;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:0.8px;">Détails de votre machine</p>
                 <table width="100%" cellpadding="0" cellspacing="0">
                   <tr>
                     <td style="padding:7px 0;font-size:13px;color:#64748b;width:160px;border-bottom:1px solid #cffafe;">Nom de la VM</td>
@@ -573,7 +731,6 @@ export class MailService {
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
         <tr>
           <td style="background:linear-gradient(135deg,#0891b2 0%,#0e7490 100%);padding:32px 40px;text-align:center;">
-            <div style="font-size:48px;margin-bottom:12px;">🚀</div>
             <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">Application SaaS prête !</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Votre application est déployée et opérationnelle</p>
           </td>
@@ -587,7 +744,7 @@ export class MailService {
             </p>
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#ecfeff;border:1px solid #a5f3fc;border-radius:12px;margin-bottom:20px;">
               <tr><td style="padding:20px 24px;">
-                <p style="margin:0 0 14px;font-size:12px;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:0.8px;">⚙️ Détails de votre application</p>
+                <p style="margin:0 0 14px;font-size:12px;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:0.8px;">Détails de votre application</p>
                 <table width="100%" cellpadding="0" cellspacing="0">
                   <tr>
                     <td style="padding:7px 0;font-size:13px;color:#64748b;width:160px;border-bottom:1px solid #cffafe;">Nom</td>
@@ -649,7 +806,7 @@ export class MailService {
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
         <tr>
           <td style="background:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">⬆️ Dynamix Cloud</h1>
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">Dynamix Cloud</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.8);font-size:14px;">Notification de mise à niveau</p>
           </td>
         </tr>

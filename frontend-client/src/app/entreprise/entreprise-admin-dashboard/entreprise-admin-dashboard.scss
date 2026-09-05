@@ -578,29 +578,43 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border: 1.5px solid #ea580c;
   border-radius: 20px;
   padding: 6px 14px;
   cursor: pointer;
-  transition: all 0.16s ease;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.28);
 
   &:hover {
-    background: #d1fae5;
+    background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+    border-color: #c2410c;
     transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(234, 88, 12, 0.42);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 
   svg {
-    width: 14px;
-    height: 14px;
-    stroke: var(--green);
+    width: 15px;
+    height: 15px;
+    stroke: #ffffff;
+    stroke-width: 2.2;
+    transition: transform 0.18s ease;
+  }
+
+  &:hover svg {
+    transform: scale(1.08);
   }
 
   span {
     font-family: 'DM Mono', monospace;
     font-size: 13.5px;
     font-weight: 800;
-    color: var(--green);
+    color: #ffffff;
+    letter-spacing: 0.02em;
   }
 }
 

@@ -49,6 +49,14 @@ export class BillingPageComponent implements OnInit {
   searchQuery = signal<string>('');
   expandedRow = signal<string | null>(null);
 
+  // Date filter
+  startDate = signal<string>('');
+  endDate = signal<string>('');
+
+  // Pagination
+  readonly PAGE_SIZE = 5;
+  currentPage = signal<number>(1);
+
   @Output() navigateTo = new EventEmitter<string>();
 
   private http = inject(HttpClient);
@@ -90,21 +98,62 @@ export class BillingPageComponent implements OnInit {
   filteredInvoices = computed(() => {
     const filter = this.activeFilter();
     const q = this.searchQuery().toLowerCase().trim();
+    const start = this.startDate();
+    const end = this.endDate();
+
     return this.billingInvoices().filter(inv => {
       const matchType = filter === 'all' || inv.clientType === filter;
       const matchSearch = !q ||
         inv.client.toLowerCase().includes(q) ||
         inv.email.toLowerCase().includes(q) ||
         inv.period.toLowerCase().includes(q);
-      return matchType && matchSearch;
+
+      let matchDate = true;
+      if (start || end) {
+        // Try to parse invoice date from period (YYYY-MM or full date string)
+        const invDate = inv.period ? new Date(inv.period) : null;
+        if (invDate && !isNaN(invDate.getTime())) {
+          if (start) matchDate = matchDate && invDate >= new Date(start);
+          if (end)   matchDate = matchDate && invDate <= new Date(end + 'T23:59:59');
+        }
+      }
+
+      return matchType && matchSearch && matchDate;
     });
   });
+
+  totalPages = computed(() => Math.max(1, Math.ceil(this.filteredInvoices().length / this.PAGE_SIZE)));
+
+  pagedInvoices = computed(() => {
+    const page = Math.min(this.currentPage(), this.totalPages());
+    const start = (page - 1) * this.PAGE_SIZE;
+    return this.filteredInvoices().slice(start, start + this.PAGE_SIZE);
+  });
+
+  pageNumbers = computed(() =>
+    Array.from({ length: this.totalPages() }, (_, i) => i + 1)
+  );
 
   enterpriseCount = computed(() => this.billingInvoices().filter(i => i.clientType === 'entreprise').length);
   personnelCount  = computed(() => this.billingInvoices().filter(i => i.clientType === 'personnel').length);
 
   setFilter(f: 'all' | 'entreprise' | 'personnel') {
     this.activeFilter.set(f);
+    this.currentPage.set(1);
+  }
+
+  clearDateFilter() {
+    this.startDate.set('');
+    this.endDate.set('');
+    this.currentPage.set(1);
+  }
+
+  onFilterChange() {
+    this.currentPage.set(1);
+  }
+
+  goToPage(p: number) {
+    if (p >= 1 && p <= this.totalPages()) this.currentPage.set(p);
   }
 
   toggleRow(id: string) {

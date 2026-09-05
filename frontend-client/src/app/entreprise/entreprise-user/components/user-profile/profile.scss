@@ -210,6 +210,8 @@
   border: 1px solid #fed7aa;
   padding: 3px 9px;
   border-radius: 20px;
+
+  svg { stroke: currentColor; flex-shrink: 0; }
 }
 
 .company-pill {
@@ -223,6 +225,8 @@
   border: 1px solid #e2e8f0;
   padding: 3px 9px;
   border-radius: 20px;
+
+  svg { stroke: currentColor; flex-shrink: 0; }
 }
 
 /* ══════════════════ SECURITY SECTION ══════════════════ */

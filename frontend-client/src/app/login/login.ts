@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, NgZone, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -10,7 +10,11 @@ import { AuthService } from '../services/auth-service';
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
+  private zone = inject(NgZone);
+  private el = inject(ElementRef);
+  private cdr = inject(ChangeDetectorRef);
+  private mouseMoveListener?: () => void;
   pendingRole = '';
   pendingEmail = '';
   pendingStatus = '';
@@ -31,13 +35,16 @@ export class LoginComponent implements OnInit {
   tiles: { glow: boolean }[] = [];
 
   onMouseMove(e: MouseEvent) {
-    const el = e.currentTarget as HTMLElement;
-    const rect = el.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const dx = (e.clientX - cx) / (rect.width / 2);
-    const dy = (e.clientY - cy) / (rect.height / 2);
-    this.cardTransform = `rotateX(${-dy * 8}deg) rotateY(${dx * 8}deg)`;
+    try {
+      const el = e.currentTarget as HTMLElement;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = (e.clientX - cx) / (rect.width / 2);
+      const dy = (e.clientY - cy) / (rect.height / 2);
+      this.cardTransform = `rotateX(${-dy * 8}deg) rotateY(${dx * 8}deg)`;
+    } catch { /* ignore */ }
   }
 
   onMouseLeave() {
@@ -67,52 +74,95 @@ export class LoginComponent implements OnInit {
       this.tiles = Array.from({ length: total }, () => ({
         glow: Math.random() < 0.08
       }));
+
+      // Mousemove outside zone to avoid any remaining zone.js conflicts
+      this.zone.runOutsideAngular(() => {
+        const page = this.el.nativeElement.querySelector('.login-page');
+        if (page) {
+          const handler = (e: MouseEvent) => {
+            try {
+              const rect = page.getBoundingClientRect();
+              const cx = rect.left + rect.width / 2;
+              const cy = rect.top + rect.height / 2;
+              const dx = (e.clientX - cx) / (rect.width / 2);
+              const dy = (e.clientY - cy) / (rect.height / 2);
+              this.zone.run(() => {
+                this.cardTransform = `rotateX(${-dy * 8}deg) rotateY(${dx * 8}deg)`;
+              });
+            } catch { /* ignore */ }
+          };
+          page.addEventListener('mousemove', handler);
+          this.mouseMoveListener = () => page.removeEventListener('mousemove', handler);
+        }
+      });
     }
   }
 
+  ngOnDestroy() {
+    this.mouseMoveListener?.();
+  }
+
+
   onLogin() {
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      this.errorMsg = 'Veuillez saisir un e-mail valide et votre mot de passe.';
+      return;
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('access_token');
+    }
     this.isLoading = true;
     this.errorMsg = '';
     this.mfaError = '';
+    this.cdr.detectChanges();
     const val = this.loginForm.getRawValue();
+    console.log('[Login] Tentative avec:', val.email);
     this.auth.login({ email: val.email || '', password: val.password || '' })
       .subscribe({
         next: (res) => {
-          this.isLoading = false;
-          const userStatus = res.user?.status;
-          const userRole = res.user?.role;
+          this.zone.run(() => {
+            this.isLoading = false;
+            console.log('[Login] Réponse backend:', res);
+            const userStatus = res.user?.status;
+            const userRole = res.user?.role;
 
-          // Si le compte est en attente de validation ou non activé
-          if (userStatus === 'PENDING_VALIDATION') {
-            this.saveTokenAndRedirect(res.token, userRole, 'PENDING_VALIDATION');
-            return;
-          }
-          if (userStatus === 'SUSPENDED') {
-            this.saveTokenAndRedirect(res.token, userRole, 'SUSPENDED');
-            return;
-          }
+            // Si le compte est en attente de validation ou non activé
+            if (userStatus === 'PENDING_VALIDATION') {
+              this.saveTokenAndRedirect(res.token, userRole, 'PENDING_VALIDATION');
+              return;
+            }
+            if (userStatus === 'SUSPENDED') {
+              this.saveTokenAndRedirect(res.token, userRole, 'SUSPENDED');
+              return;
+            }
 
-          if (res.requiresMFA) {
-            this.pendingRole = userRole;
-            this.pendingEmail = res.user?.email || val.email || '';
-            this.pendingStatus = userStatus;
-            this.showMFA = true;
-            setTimeout(() => {
-              (document.getElementById('otp1') as HTMLInputElement)?.focus();
-            }, 100);
-          } else {
-            this.saveTokenAndRedirect(res.token, userRole, userStatus);
-          }
+            if (res.requiresMFA) {
+              this.pendingRole = userRole;
+              this.pendingEmail = res.user?.email || val.email || '';
+              this.pendingStatus = userStatus;
+              this.showMFA = true;
+              this.cdr.detectChanges();
+              setTimeout(() => {
+                (document.getElementById('otp1') as HTMLInputElement)?.focus();
+              }, 100);
+            } else {
+              this.saveTokenAndRedirect(res.token, userRole, userStatus);
+            }
+          });
         },
         error: (err) => {
-          this.isLoading = false;
-          const msg = err?.error?.message || 'E-mail ou mot de passe incorrect.';
-          if (msg.includes('Activation du compte') || msg.includes('attente de validation')) {
-            this.router.navigate(['/pending-approval']);
-            return;
-          }
-          this.errorMsg = msg;
-          this.showToast(msg, 'var(--red)');
+          this.zone.run(() => {
+            this.isLoading = false;
+            const msg = err?.error?.message || 'E-mail ou mot de passe incorrect.';
+            if (msg.includes('Activation du compte') || msg.includes('attente de validation')) {
+              this.router.navigate(['/pending-approval']);
+              return;
+            }
+            this.errorMsg = msg;
+            this.cdr.detectChanges();
+            this.showToast(msg, 'var(--red)');
+          });
         }
       });
   }

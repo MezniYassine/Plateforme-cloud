@@ -423,14 +423,14 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     const name = this.deployVmName().trim();
     if (!name) return '';
     if (name.toLowerCase().startsWith('template')) {
-      return '⚠️ Le préfixe "template" est réservé par le système.';
+      return 'Le préfixe "template" est réservé par le système.';
     }
     const restrictedNames = ['mysql', 'sys', 'information_schema', 'performance_schema', 'postgres'];
     if (this.deployType() === 'paas' && restrictedNames.includes(name.toLowerCase())) {
-      return `⚠️ Le nom '${name}' est réservé par le système de base de données.`;
+      return `Le nom '${name}' est réservé par le système de base de données.`;
     }
     if (name.length < 3 || name.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(name)) {
-      return '⚠️ 3 à 32 caractères (lettres, chiffres, - ou _ uniquement)';
+      return '3 à 32 caractères (lettres, chiffres, - ou _ uniquement)';
     }
     return '';
   }
@@ -452,12 +452,12 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     const app = this.selectedSaasApp();
     const email = this.saasAdminEmail().trim();
     if (app === 'dpage/pgadmin4:latest') {
-      if (!email) return '⚠️ Adresse email requise pour pgAdmin';
+      if (!email) return 'Adresse email requise pour pgAdmin';
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) return '⚠️ Format d\'email invalide (ex: admin@domaine.com)';
+      if (!emailRegex.test(email)) return 'Format d\'email invalide (ex: admin@domaine.com)';
     } else if (app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest' || app === 'n8nio/n8n:latest') {
-      if (!email) return '⚠️ Identifiant / Email requis (min. 3 caractères)';
-      if (email.length < 3) return '⚠️ Minimum 3 caractères requis';
+      if (!email) return 'Identifiant / Email requis (min. 3 caractères)';
+      if (email.length < 3) return 'Minimum 3 caractères requis';
     }
     return '';
   }
@@ -475,8 +475,8 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     const app = this.selectedSaasApp();
     const pass = this.saasAdminPassword().trim();
     if (app === 'dpage/pgadmin4:latest' || app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest' || app === 'n8nio/n8n:latest') {
-      if (!pass) return '⚠️ Mot de passe requis';
-      if (pass.length < 4) return '⚠️ Minimum 4 caractères requis';
+      if (!pass) return 'Mot de passe requis';
+      if (pass.length < 4) return 'Minimum 4 caractères requis';
     }
     return '';
   }

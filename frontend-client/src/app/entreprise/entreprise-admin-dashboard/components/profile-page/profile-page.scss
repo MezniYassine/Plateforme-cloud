@@ -173,6 +173,8 @@
   border: 1px solid #bfdbfe;
   padding: 3px 9px;
   border-radius: 20px;
+
+  svg { stroke: currentColor; flex-shrink: 0; }
 }
 
 .card-block-sub {

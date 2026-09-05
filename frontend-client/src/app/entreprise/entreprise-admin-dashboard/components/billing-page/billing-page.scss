@@ -596,38 +596,173 @@
   font-size: 13px;
 }
 
-/* ══════════════════ MEMBER BREAKDOWN (RIGHT COLUMN) ══════════════════ */
-.member-breakdown-body {
+/* ══════════════════ MEMBER BREAKDOWN & DONUT CHART ══════════════════ */
+.member-count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+
+.member-chart-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0 4px 0;
+}
+
+.member-donut-box {
+  position: relative;
+  width: 164px;
+  height: 164px;
+}
+
+.member-donut-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.member-donut-bg {
+  transition: stroke 0.3s ease;
+}
+
+.member-donut-arc {
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1), stroke-dasharray 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.member-donut-center {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
 }
 
-.member-breakdown-row {
+.donut-center-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.donut-center-unit {
+  font-size: 11px;
+  font-weight: 800;
+  color: #059669;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 1px;
+}
+
+.donut-center-lbl {
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Top Spender Strip */
+.top-spender-strip {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  transition: background 0.15s ease;
-
-  &:hover { background: #f8fafc; }
-}
-
-.b-user-col {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 140px;
-  min-width: 140px;
-}
-
-.b-user-av {
-  width: 32px;
-  height: 32px;
+  justify-content: space-between;
+  padding: 7px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
+  gap: 8px;
+}
+
+.tss-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 2px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.tss-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tss-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tss-share {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+/* Member Breakdown List */
+.member-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.member-item-card {
+  padding: 9px 12px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+  }
+}
+
+.mic-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mic-user-info {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.mic-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
   color: #ffffff;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -636,41 +771,62 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
-.b-user-name {
-  font-size: 13px;
+.mic-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.mic-name {
+  font-size: 12.5px;
   font-weight: 700;
   color: #0f172a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 130px;
 }
 
-.b-bar-col {
-  flex: 1;
+.mic-pct-chip {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
 }
 
-.b-bar-track {
-  height: 6px;
+.mic-amount {
+  font-family: 'DM Mono', monospace;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.mic-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.mic-unit {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.mic-bar-track {
+  height: 5px;
   background: #f1f5f9;
   border-radius: 10px;
   overflow: hidden;
 }
 
-.b-bar-fill {
+.mic-bar-fill {
   height: 100%;
   border-radius: 10px;
-  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  min-width: 4px;
-}
-
-.b-val-col {
-  font-family: 'DM Mono', monospace;
-  font-size: 12.5px;
-  font-weight: 800;
-  color: #0f172a;
-  white-space: nowrap;
-  width: 75px;
-  text-align: right;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .empty-side-txt {
@@ -688,4 +844,133 @@
   .billing-card-side {
     position: static;
   }
+}
+
+/* ══════════════════ DATE FILTER BAR (Entreprise) ══════════════════ */
+.date-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: #fffbf7;
+  border: 1px solid #ffedd5;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.dfb-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #9a3412;
+  white-space: nowrap;
+}
+
+.dfb-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+
+  span { white-space: nowrap; }
+}
+
+.dfb-input {
+  padding: 5px 10px;
+  font-size: 12.5px;
+  border: 1px solid #fbd5aa;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #0f172a;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s;
+
+  &:focus {
+    border-color: #F07A1F;
+    box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.12);
+  }
+}
+
+.btn-clear-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #c2410c;
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+
+  &:hover {
+    background: #fee2d5;
+    border-color: #f97316;
+  }
+}
+
+.dfb-result {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+/* ══════════════════ PAGINATION (Entreprise) ══════════════════ */
+.ent-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 16px;
+  border-top: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
+.epag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  background: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not([disabled]) {
+    border-color: #F07A1F;
+    color: #F07A1F;
+    background: #fff7ed;
+  }
+
+  &[disabled] {
+    opacity: 0.38;
+    cursor: not-allowed;
+  }
+
+  &.epag-active {
+    background: #F07A1F;
+    border-color: #F07A1F;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(240, 122, 31, 0.3);
+  }
+}
+
+.epag-info {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-left: 8px;
+  white-space: nowrap;
 }

@@ -6,17 +6,15 @@ import { DashboardOverview } from './dashboard-overview/dashboard-overview';
 import { Activity, Admin, DeployedResource, ResourceRequest, TeamMember, WalletTransaction } from './entreprise-helper.service';
 import { RequestsPageComponent } from './components/requests-page/requests-page';
 import { TeamPageComponent } from './components/team-page/team-page';
-import { ResourcesPageComponent } from './components/resources-page/resources-page';
+import { MonitoringPageComponent } from './components/monitoring-page/monitoring-page';
 import { BillingPageComponent } from './components/billing-page/billing-page';
 
 import { ProfilePageComponent } from './components/profile-page/profile-page';
+import { DeployPageComponent } from './components/deploy-page/deploy-page';
 import { SupportContactModalComponent } from '../../common/support-contact-modal/support-contact-modal.component';
 import { isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DemandeService } from '../../services/demande.service';
-
-
-
 
 /* ── COMPONENT ──────────────────────────────────────────────────────────── */
 @Component({
@@ -26,9 +24,10 @@ import { DemandeService } from '../../services/demande.service';
     DashboardOverview,
     RequestsPageComponent,
     TeamPageComponent,
-    ResourcesPageComponent,
+    MonitoringPageComponent,
     BillingPageComponent,
     ProfilePageComponent,
+    DeployPageComponent,
     SupportContactModalComponent,
     ReactiveFormsModule
   ],
@@ -46,15 +45,19 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
 
   readonly PAGE_TITLES: Record<string, string> = {
     dashboard: 'Vue d\'ensemble',
-    requests: 'Demandes a valider',
-    team: 'Mon equipe',
-    resources: 'Ressources deployees',
+    requests: 'Demandes à valider',
+    team: 'Mon équipe',
+    monitoring: 'Monitoring des services',
+    resources: 'Monitoring des services',
+    deploy: 'Déployer des Ressources',
     billing: 'Budget & Facturation',
-
     profile: 'Mon profil',
   };
   pageTitle = computed(() => this.PAGE_TITLES[this.activePage()] ?? 'Dashboard');
-  setPage(p: string) { this.activePage.set(p); }
+  setPage(p: string) {
+    if (p === 'resources') p = 'monitoring';
+    this.activePage.set(p);
+  }
 
   isSidebarCollapsed = signal<boolean>(typeof localStorage !== 'undefined' ? localStorage.getItem('sidebar_collapsed_ent_admin') === 'true' : false);
 
@@ -200,6 +203,11 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     });
   }
 
+  onResourceDeployed() {
+    this.loadOrgVms();
+    this.loadBilling();
+  }
+
   loadOrgVms() {
     const url = `${environment.apiBaseUrl}/entreprise-admin/org-vms`;
     this.http.get<DeployedResource[]>(url).subscribe({
@@ -230,6 +238,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
         this.billingTeamSpend.set(data.teamSpend ?? []);
         this.walletTransactions.set((data.transactions ?? []).map(t => ({
           ...t,
+          rawDate: t.date,
           amount: Number(t.amount ?? 0),
           date: this.formatDateTime(t.date),
         })));
@@ -387,7 +396,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
         );
         this.pushActivity('approve', req.name);
         // Remplace le toast persistant par un toast de succès (4 s)
-        this.showToast(`✅ ${req.name} déployé avec succès sur VMware`, 'var(--green)', 4000);
+        this.showToast(`${req.name} déployé avec succès sur VMware`, 'var(--green)', 4000);
       },
       error: (err) => {
         console.error('Erreur de déploiement :', err);
@@ -399,7 +408,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
         this.resourceRequests.update(list =>
           list.map(r => r.id === id ? { ...r, status: 'rejected', isProvisioning: false, commentaireAdmin } : r)
         );
-        this.showToast(`❌ Échec : ${err.error?.message || 'Erreur ESXi'}`, 'var(--red)', 5000);
+        this.showToast(`Échec : ${err.error?.message || 'Erreur ESXi'}`, 'var(--red)', 5000);
       }
     });
   }
