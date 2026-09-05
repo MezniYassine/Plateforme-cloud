@@ -2,15 +2,19 @@ import { Component, output, signal, computed, inject, OnInit } from '@angular/co
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Invoice, PersonalDashboardHelperService } from '../../personal-dashboard-helper.service';
+import { environment } from '../../../../../environments/environment';
+import { CostPredictionCardComponent } from '../../../../common/cost-prediction-card/cost-prediction-card.component';
 
 @Component({
   selector: 'app-billing-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CostPredictionCardComponent],
   templateUrl: './billing-tab.html',
   styleUrls: ['./billing-tab.scss']
 })
 export class BillingTabComponent implements OnInit {
+  readonly predictionApiUrl = `${environment.apiBaseUrl}/personal/billing/prediction`;
+
   h = inject(PersonalDashboardHelperService);
   openRecharge = output<void>();
 
@@ -74,7 +78,7 @@ export class BillingTabComponent implements OnInit {
         const d = i.period ? new Date(i.period) : null;
         if (d && !isNaN(d.getTime())) {
           if (start) matchDate = matchDate && d >= new Date(start);
-          if (end)   matchDate = matchDate && d <= new Date(end + 'T23:59:59');
+          if (end) matchDate = matchDate && d <= new Date(end + 'T23:59:59');
         }
       }
 

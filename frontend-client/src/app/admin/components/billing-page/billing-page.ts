@@ -4,16 +4,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-export interface BillingTransaction {
-  ref?: string;
-  name: string;
-  catalogName: string | null;
-  typeService: 'IAAS' | 'PAAS' | 'SAAS';
-  price: number;
-  status: string;
-  date: string;
-}
+import { CostPredictionCardComponent } from '../../../common/cost-prediction-card/cost-prediction-card.component';
+import * as XLSX from 'xlsx';
 
 export interface BillingInvoice {
   id: string;
@@ -21,23 +13,27 @@ export interface BillingInvoice {
   clientType: 'entreprise' | 'personnel';
   client: string;
   email: string;
+  date: string;
   period: string;
-  vmCount: number;
-  serviceCount: number;
-  resources: string;
+  resourceName: string;
+  catalogName?: string | null;
+  typeService: 'IAAS' | 'PAAS' | 'SAAS';
   amount: string;
+  price?: number;
   paid: boolean;
-  transactions: BillingTransaction[];
+  status?: string;
 }
 
 @Component({
   selector: 'app-billing-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CostPredictionCardComponent],
   templateUrl: './billing-page.html',
   styleUrl: './billing-page.scss'
 })
 export class BillingPageComponent implements OnInit {
+  readonly predictionApiUrl = `${environment.apiBaseUrl}/admin/billing/prediction`;
+
   billingStats = signal<any[]>([]);
   billingInvoices = signal<BillingInvoice[]>([]);
   revenueChart = signal<any[]>([]);
@@ -47,7 +43,6 @@ export class BillingPageComponent implements OnInit {
   // Filter & search
   activeFilter = signal<'all' | 'entreprise' | 'personnel'>('all');
   searchQuery = signal<string>('');
-  expandedRow = signal<string | null>(null);
 
   // Date filter
   startDate = signal<string>('');
@@ -106,12 +101,14 @@ export class BillingPageComponent implements OnInit {
       const matchSearch = !q ||
         inv.client.toLowerCase().includes(q) ||
         inv.email.toLowerCase().includes(q) ||
+        (inv.ref && inv.ref.toLowerCase().includes(q)) ||
+        (inv.resourceName && inv.resourceName.toLowerCase().includes(q)) ||
+        (inv.catalogName && inv.catalogName.toLowerCase().includes(q)) ||
         inv.period.toLowerCase().includes(q);
 
       let matchDate = true;
       if (start || end) {
-        // Try to parse invoice date from period (YYYY-MM or full date string)
-        const invDate = inv.period ? new Date(inv.period) : null;
+        const invDate = inv.date ? new Date(inv.date) : (inv.period ? new Date(inv.period) : null);
         if (invDate && !isNaN(invDate.getTime())) {
           if (start) matchDate = matchDate && invDate >= new Date(start);
           if (end)   matchDate = matchDate && invDate <= new Date(end + 'T23:59:59');
@@ -156,53 +153,26 @@ export class BillingPageComponent implements OnInit {
     if (p >= 1 && p <= this.totalPages()) this.currentPage.set(p);
   }
 
-  toggleRow(id: string) {
-    this.expandedRow.set(this.expandedRow() === id ? null : id);
-  }
-
-  isExpanded(id: string): boolean {
-    return this.expandedRow() === id;
-  }
-
   formatDate(iso: string): string {
     if (!iso) return '—';
     return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  statusClass(s: string): string {
-    const m: Record<string, string> = {
-      RUNNING: 'tx-running',
-      STOPPED: 'tx-stopped',
-      PROVISIONING: 'tx-pending',
-      FAILED: 'tx-failed',
-      active: 'tx-running',
-    };
-    return m[s] ?? 'tx-pending';
-  }
-
-  statusLabel(s: string): string {
-    const m: Record<string, string> = {
-      RUNNING: 'Active',
-      STOPPED: 'Stoppée',
-      PROVISIONING: 'En cours',
-      FAILED: 'Échouée',
-      active: 'Active',
-    };
-    return m[s] ?? s;
-  }
-
   exportCsv() {
     const rows = this.filteredInvoices();
-    const header = 'Client;Type;Email;Période;VMs;Services;Montant;Statut';
+    if (!rows || rows.length === 0) return;
+
+    const header = 'Client;Type Client;Email;Réf Facture;Date;Période;Ressource;Catalogue;Type Service;Montant;Statut';
     const lines = rows.map(r =>
-      `"${r.client}";"${r.clientType}";"${r.email}";"${r.period}";"${r.vmCount}";"${r.serviceCount}";"${r.amount}";"${r.paid ? 'Payée' : 'En attente'}"`
+      `"${r.client}";"${r.clientType === 'entreprise' ? 'Entreprise' : 'Particulier'}";"${r.email}";"${r.ref || ''}";"${this.formatDate(r.date)}";"${r.period}";"${r.resourceName || ''}";"${r.catalogName || ''}";"${r.typeService}";"${r.amount}";"${r.paid ? 'Payée' : 'En attente'}"`
     );
+
     const csv = '\uFEFF' + [header, ...lines].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `facturation-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `facturation_globale_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -212,56 +182,150 @@ export class BillingPageComponent implements OnInit {
     if (!rows || rows.length === 0) return;
 
     const dateStr = new Date().toISOString().slice(0, 10);
-    const fileName = `facturation_globale_${dateStr}.xls`;
+    const fileName = `facturation_globale_${dateStr}.xlsx`;
 
-    const rowsHtml = rows.map(r => `
-      <tr>
-        <td style="mso-number-format:'\\@'; font-weight: bold; color: #1E293B;">${r.client}</td>
-        <td>${r.clientType === 'entreprise' ? 'Entreprise' : 'Particulier'}</td>
-        <td style="mso-number-format:'\\@';">${r.email}</td>
-        <td style="mso-number-format:'\\@';">${r.period}</td>
-        <td style="text-align: center;">${r.vmCount}</td>
-        <td style="text-align: center;">${r.serviceCount}</td>
-        <td style="text-align: right; font-weight: bold; color: #0F172A;">${r.amount}</td>
-        <td style="text-align: center; font-weight: bold; color: ${r.paid ? '#059669' : '#D97706'};">${r.paid ? 'Payée' : 'En attente'}</td>
-      </tr>
-    `).join('');
+    const totalAmount = rows.reduce((sum, r) => {
+      const num = r.price !== undefined ? r.price : (parseFloat((r.amount || '').replace(/[^0-9.-]+/g, '')) || 0);
+      return sum + num;
+    }, 0);
 
-    const excelTemplate = [
-      '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">',
-      '<head><meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"/></head>',
-      '<body style="font-family: Calibri, Arial, sans-serif; font-size: 11pt;">',
-      '<h2 style="color: #0F172A; margin-bottom: 4px;">DYNAMIX CLOUD — Facturation Globale Clients</h2>',
-      '<p style="color: #64748B; font-size: 10pt; margin-top: 0;">Export g\u00e9n\u00e9r\u00e9 le ' + new Date().toLocaleDateString('fr-FR') + ' \u00e0 ' + new Date().toLocaleTimeString('fr-FR') + '</p><br/>',
-      '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; border: 1px solid #E2E8F0;">',
-      '<thead>',
-      '<tr style="background-color: #0F172A; color: #FFFFFF; font-weight: bold;">',
-      '<th style="padding: 8px 12px; border: 1px solid #334155; background-color: #0F172A; color: #FFFFFF;">Client</th>',
-      '<th style="padding: 8px 12px; border: 1px solid #334155; background-color: #0F172A; color: #FFFFFF;">Type</th>',
-      '<th style="padding: 8px 12px; border: 1px solid #334155; background-color: #0F172A; color: #FFFFFF;">Email</th>',
-      '<th style="padding: 8px 12px; border: 1px solid #334155; background-color: #0F172A; color: #FFFFFF;">P\u00e9riode</th>',
-      '<th style="padding: 8px 12px; border: 1px solid #334155; background-color: #0F172A; color: #FFFFFF; text-align: center;">VMs</th>',
-      '<th style="padding: 8px 12px; border: 1px solid #334155; background-color: #0F172A; color: #FFFFFF; text-align: center;">Services</th>',
-      '<th style="padding: 8px 12px; border: 1px solid #334155; background-color: #0F172A; color: #FFFFFF; text-align: right;">Montant</th>',
-      '<th style="padding: 8px 12px; border: 1px solid #334155; background-color: #0F172A; color: #FFFFFF; text-align: center;">Statut</th>',
-      '</tr>',
-      '</thead>',
-      '<tbody>',
-      rowsHtml,
-      '</tbody>',
-      '</table>',
-      '</body>',
-      '</html>'
-    ].join('\n');
+    // ── FEUILLE 1 : Factures Détaillées ────────────────────────────────────
+    const sheet1Data: any[][] = [
+      ['DYNAMIX CLOUD — Facturation Globale des Clients'],
+      [`Export généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')} — ${rows.length} facture(s)`],
+      [],
+      [
+        'Client / Compte',
+        'Type Client',
+        'Email',
+        'Réf. Facture',
+        'Date d\'émission',
+        'Période',
+        'Ressource / Service',
+        'Catalogue',
+        'Type Service',
+        'Montant (DT)',
+        'Statut'
+      ]
+    ];
 
-    const blob = new Blob(['\uFEFF' + excelTemplate], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    rows.forEach(r => {
+      sheet1Data.push([
+        r.client,
+        r.clientType === 'entreprise' ? 'Entreprise' : 'Particulier',
+        r.email,
+        r.ref || '—',
+        this.formatDate(r.date),
+        r.period,
+        r.resourceName || '—',
+        r.catalogName || '—',
+        r.typeService || '—',
+        r.price !== undefined ? r.price : (parseFloat((r.amount || '').replace(/[^0-9.-]+/g, '')) || 0),
+        r.paid ? 'Payée' : 'En attente'
+      ]);
+    });
+
+    sheet1Data.push([]);
+    sheet1Data.push([
+      `TOTAL GÉNÉRAL (${rows.length} factures) :`,
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      totalAmount,
+      ''
+    ]);
+
+    const ws1 = XLSX.utils.aoa_to_sheet(sheet1Data);
+    ws1['!cols'] = [
+      { wch: 26 }, // Client
+      { wch: 15 }, // Type Client
+      { wch: 28 }, // Email
+      { wch: 18 }, // Réf Facture
+      { wch: 15 }, // Date
+      { wch: 16 }, // Période
+      { wch: 24 }, // Ressource
+      { wch: 20 }, // Catalogue
+      { wch: 14 }, // Type Service
+      { wch: 15 }, // Montant
+      { wch: 14 }  // Statut
+    ];
+
+    // ── FEUILLE 2 : Synthèse par Client ──────────────────────────────────
+    const clientSummaryMap = new Map<string, {
+      client: string;
+      clientType: string;
+      email: string;
+      facturesCount: number;
+      totalAmount: number;
+      allPaid: boolean;
+    }>();
+
+    rows.forEach(r => {
+      const key = `${r.client}-${r.email}`;
+      const priceVal = r.price !== undefined ? r.price : (parseFloat((r.amount || '').replace(/[^0-9.-]+/g, '')) || 0);
+      if (!clientSummaryMap.has(key)) {
+        clientSummaryMap.set(key, {
+          client: r.client,
+          clientType: r.clientType === 'entreprise' ? 'Entreprise' : 'Particulier',
+          email: r.email,
+          facturesCount: 0,
+          totalAmount: 0,
+          allPaid: true,
+        });
+      }
+      const c = clientSummaryMap.get(key)!;
+      c.facturesCount += 1;
+      c.totalAmount += priceVal;
+      if (!r.paid) c.allPaid = false;
+    });
+
+    const sheet2Data: any[][] = [
+      ['DYNAMIX CLOUD — Synthèse de Facturation par Client'],
+      [`Date de synthèse : ${new Date().toLocaleDateString('fr-FR')} — ${clientSummaryMap.size} client(s)`],
+      [],
+      [
+        'Client / Compte',
+        'Type Client',
+        'Email',
+        'Nombre de Factures',
+        'Total Facturé (DT)',
+        'Statut Global'
+      ]
+    ];
+
+    clientSummaryMap.forEach(c => {
+      sheet2Data.push([
+        c.client,
+        c.clientType,
+        c.email,
+        c.facturesCount,
+        c.totalAmount,
+        c.allPaid ? 'À jour (Payée)' : 'Paiement en attente'
+      ]);
+    });
+
+    sheet2Data.push([]);
+    sheet2Data.push(['TOTAL GÉNÉRAL', '', '', rows.length, totalAmount, '']);
+
+    const ws2 = XLSX.utils.aoa_to_sheet(sheet2Data);
+    ws2['!cols'] = [
+      { wch: 26 },
+      { wch: 15 },
+      { wch: 28 },
+      { wch: 20 },
+      { wch: 18 },
+      { wch: 22 }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws1, 'Factures Détaillées');
+    XLSX.utils.book_append_sheet(wb, ws2, 'Synthèse par Client');
+
+    XLSX.writeFile(wb, fileName);
   }
 }

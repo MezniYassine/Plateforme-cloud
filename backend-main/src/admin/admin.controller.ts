@@ -27,6 +27,11 @@ export class AdminController {
         return this.adminService.getGlobalBilling();
     }
 
+    @Get('billing/prediction')
+    async getBillingPrediction() {
+        return this.adminService.getPrediction();
+    }
+
     @Get('monitoring')
     async getMonitoringData() {
         return this.adminService.getMonitoringData();

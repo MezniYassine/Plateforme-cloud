@@ -15,8 +15,8 @@ import { Wallet } from 'src/entities/wallet.entity';
 import { Transaction } from 'src/entities/transaction.entity';
 import { ServicePaaS } from 'src/entities/servicePaaS.entity';
 import { PaasService } from 'src/paas/paas.service';
-
 import { ServiceSaaS } from 'src/entities/serviceSaaS.entity';
+import { computePrediction } from 'src/common/prediction.util';
 
 export interface InviteDto {
     nom: string;
@@ -744,7 +744,41 @@ export class EntrepriseService {
         };
         return labels[status] ?? status;
     }
+
+    // ─── PREDICTION IA ────────────────────────────────────────────────────
+    async getEntreprisePrediction(clientId: number) {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear  = now.getFullYear();
+
+        const revenusMensuels = new Array(12).fill(0);
+
+        // Trouver le wallet de l'entreprise via le client (admin)
+        const wallet = await this.walletRepo.findOne({
+            where: { user: { id: clientId } },
+        });
+
+        if (!wallet) {
+            return computePrediction(revenusMensuels, currentMonth);
+        }
+
+        // Agréger les transactions DEBIT par mois
+        const transactions = await this.transactionRepo.find({
+            where: { wallet: { id: wallet.id }, type: 'DEBIT' },
+            order: { dateTransaction: 'ASC' },
+        });
+
+        for (const t of transactions) {
+            const d = new Date(t.dateTransaction);
+            if (d.getFullYear() === currentYear) {
+                revenusMensuels[d.getMonth()] += Number(t.montant) || 0;
+            }
+        }
+
+        return computePrediction(revenusMensuels, currentMonth);
+    }
 }
+
 
 
 

@@ -100,15 +100,29 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
           const txList: FlatTransaction[] = [];
           if (Array.isArray(data.billingInvoices)) {
             data.billingInvoices.forEach((inv: any) => {
-              if (Array.isArray(inv.transactions)) {
+              if (Array.isArray(inv.transactions) && inv.transactions.length > 0) {
                 inv.transactions.forEach((tx: any) => {
                   if (tx.date) {
-                    txList.push({
-                      price: Number(tx.price) || 0,
-                      date: new Date(tx.date)
-                    });
+                    const parsedDate = new Date(tx.date);
+                    if (!isNaN(parsedDate.getTime())) {
+                      txList.push({
+                        price: Number(tx.price) || 0,
+                        date: parsedDate
+                      });
+                    }
                   }
                 });
+              } else if (inv.date) {
+                const parsedDate = new Date(inv.date);
+                if (!isNaN(parsedDate.getTime())) {
+                  const price = inv.price !== undefined
+                    ? Number(inv.price)
+                    : (parseFloat(String(inv.amount || '').replace(/[^\d.]/g, '')) || 0);
+                  txList.push({
+                    price,
+                    date: parsedDate
+                  });
+                }
               }
             });
           }

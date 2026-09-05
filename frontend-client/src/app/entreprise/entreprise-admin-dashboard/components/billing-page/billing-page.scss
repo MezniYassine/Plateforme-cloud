@@ -188,6 +188,14 @@
   align-items: start;
 }
 
+.billing-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 20px;
+}
+
 .billing-card-table,
 .billing-card-side {
   background: #ffffff;
@@ -198,11 +206,6 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-}
-
-.billing-card-side {
-  position: sticky;
-  top: 20px;
 }
 
 .card-head-bar {

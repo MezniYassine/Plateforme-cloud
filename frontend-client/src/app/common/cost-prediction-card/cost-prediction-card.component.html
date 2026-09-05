@@ -1,0 +1,113 @@
+<div class="pred-card">
+
+  <!-- Loading state -->
+  @if (loading()) {
+    <div class="pred-loading">
+      <svg class="spin-svg" viewBox="0 0 24 24" fill="none" stroke="#F07A1F" stroke-width="2.5" width="22" height="22">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/>
+      </svg>
+      <span>Analyse prédictive en cours...</span>
+    </div>
+  }
+
+  <!-- Error state -->
+  @else if (error()) {
+    <div class="pred-error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span>Impossible de charger la prédiction des coûts.</span>
+    </div>
+  }
+
+  <!-- Data state: Clean & Compact 2-Section Layout -->
+  @else if (data()) {
+    <div class="pred-layout">
+
+      <!-- ── 1. Left Section: Title + Main Metric ───────────────────── -->
+      <div class="pred-col-main">
+        <div class="pred-header-mini">
+          <div class="pred-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="14" height="14">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div class="pred-title-group">
+            <div class="pred-title-row">
+              <span class="pred-title">Prédiction IA</span>
+              <span class="pred-ai-tag">IA</span>
+            </div>
+            <span class="pred-subtitle">{{ label }}</span>
+          </div>
+        </div>
+
+        <div class="pred-amount-block">
+          <div class="pred-amount-top">
+            <span class="pred-next-tag">Prévision {{ data()!.nextMonth }}</span>
+            <span class="pred-trend-pill" [class]="trendClass()">
+              {{ trendIcon() }} {{ data()!.trendPct > 0 ? '+' : '' }}{{ data()!.trendPct }}%
+            </span>
+          </div>
+
+          <div class="pred-amount-val">
+            <span class="num">{{ formatAmount(data()!.predictedAmount) }}</span>
+            <span class="cur">{{ currency }}</span>
+          </div>
+
+          <div class="pred-confidence-text">
+            Intervalle : {{ formatAmount(data()!.confidenceLow) }} – {{ formatAmount(data()!.confidenceHigh) }} {{ currency }}
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 2. Right Section: Responsive SVG Histogram ────────────── -->
+      <div class="pred-col-chart">
+        <svg [attr.viewBox]="'0 0 ' + CHART_W + ' ' + CHART_H" [attr.width]="CHART_W" [attr.height]="CHART_H" class="pred-chart-svg">
+          <defs>
+            <linearGradient id="predGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#F07A1F"/>
+              <stop offset="100%" stop-color="#fbbf24"/>
+            </linearGradient>
+          </defs>
+
+          @for (bar of chartBars(); track bar.month) {
+            <!-- Amount label above bar -->
+            <text
+              [attr.x]="bar.x + bar.width / 2"
+              [attr.y]="bar.y - 4"
+              text-anchor="middle"
+              class="bar-amount-label"
+              [class.bar-amount-pred]="bar.isPrediction"
+            >{{ bar.amount.toFixed(0) }}</text>
+
+            <!-- Bar Rect -->
+            <rect
+              [attr.x]="bar.x"
+              [attr.y]="bar.y"
+              [attr.width]="bar.width"
+              [attr.height]="bar.height"
+              [attr.rx]="5"
+              [class]="bar.isPrediction ? 'bar-pred' : 'bar-hist'"
+            />
+
+            <!-- Month label below bar -->
+            <text
+              [attr.x]="bar.x + bar.width / 2"
+              [attr.y]="CHART_H - 4"
+              text-anchor="middle"
+              class="bar-month-label"
+              [class.bar-month-pred]="bar.isPrediction"
+            >{{ bar.month }}</text>
+          }
+        </svg>
+
+        <div class="pred-legend">
+          <span class="leg-item"><span class="dot-hist"></span> Historique</span>
+          <span class="leg-item"><span class="dot-pred"></span> Prévision {{ data()!.nextMonth }}</span>
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>

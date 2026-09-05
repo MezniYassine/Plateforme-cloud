@@ -7,15 +7,23 @@
     @for (card of billingStats(); track $index) {
     <div class="metric-card" [class]="card.cardClass">
       <div class="metric-icon-wrap" [class]="card.icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
           @if (card.icon === 'money') {
-            <circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10h8"/>
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v12M8 10h8" />
           } @else if (card.icon === 'invoice') {
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
           } @else if (card.icon === 'users') {
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           } @else {
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
           }
         </svg>
       </div>
@@ -29,6 +37,14 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════
+       IA PREDICTIVE ANALYSIS (OPTION B)
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="prediction-section">
+    <app-cost-prediction-card [apiUrl]="predictionApiUrl" label="revenus de la plateforme" [isRevenue]="true"
+      currency="DT"></app-cost-prediction-card>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
        INVOICES TABLE (FULL WIDTH)
   ═══════════════════════════════════════════════════════════════ -->
   <div class="section-card">
@@ -39,18 +55,20 @@
       </div>
       <div class="header-actions">
         <button class="btn-export-excel" (click)="exportExcel()" title="Exporter sous format Excel">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="13" height="13">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+            width="13" height="13">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
           Exporter Excel
         </button>
         <button class="btn-export" (click)="exportCsv()" title="Exporter sous format CSV">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13"
+            height="13">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
           Exporter CSV
         </button>
@@ -64,66 +82,77 @@
           Tous <span class="tab-count">{{ billingInvoices().length }}</span>
         </button>
         <button class="filter-tab" [class.active]="activeFilter() === 'entreprise'" (click)="setFilter('entreprise')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
-            <rect x="2" y="7" width="20" height="14" rx="2"/>
-            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-            <line x1="12" y1="12" x2="12" y2="17"/>
-            <line x1="9" y1="14.5" x2="15" y2="14.5"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" width="13" height="13">
+            <rect x="2" y="7" width="20" height="14" rx="2" />
+            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+            <line x1="12" y1="12" x2="12" y2="17" />
+            <line x1="9" y1="14.5" x2="15" y2="14.5" />
           </svg>
           Entreprise <span class="tab-count">{{ enterpriseCount() }}</span>
         </button>
         <button class="filter-tab" [class.active]="activeFilter() === 'personnel'" (click)="setFilter('personnel')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" width="13" height="13">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
           </svg>
           Particulier <span class="tab-count">{{ personnelCount() }}</span>
         </button>
       </div>
 
       <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
+          height="14">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <input class="search-input" type="text" placeholder="Rechercher un client, email…" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event); onFilterChange()" />
+        <input class="search-input" type="text" placeholder="Rechercher un client, email…" [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event); onFilterChange()" />
       </div>
     </div>
 
     <!-- Date Filter Row -->
     <div class="date-filter-bar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" style="color:#F07A1F;flex-shrink:0">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-        <line x1="16" y1="2" x2="16" y2="6"/>
-        <line x1="8" y1="2" x2="8" y2="6"/>
-        <line x1="3" y1="10" x2="21" y2="10"/>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"
+        style="color:#F07A1F;flex-shrink:0">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
       </svg>
       <span class="date-filter-label">Filtrer par date :</span>
       <label class="date-input-wrap">
         <span>Du</span>
-        <input type="date" class="date-input" [ngModel]="startDate()" (ngModelChange)="startDate.set($event); onFilterChange()" />
+        <input type="date" class="date-input" [ngModel]="startDate()"
+          (ngModelChange)="startDate.set($event); onFilterChange()" />
       </label>
       <label class="date-input-wrap">
         <span>Au</span>
-        <input type="date" class="date-input" [ngModel]="endDate()" (ngModelChange)="endDate.set($event); onFilterChange()" />
+        <input type="date" class="date-input" [ngModel]="endDate()"
+          (ngModelChange)="endDate.set($event); onFilterChange()" />
       </label>
       @if (startDate() || endDate()) {
-        <button class="btn-clear-date" (click)="clearDateFilter()" title="Effacer le filtre date">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          Effacer
-        </button>
+      <button class="btn-clear-date" (click)="clearDateFilter()" title="Effacer le filtre date">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+        Effacer
+      </button>
       }
       <span class="date-filter-result">
-        {{ filteredInvoices().length }} facture{{ filteredInvoices().length > 1 ? 's' : '' }} trouvée{{ filteredInvoices().length > 1 ? 's' : '' }}
+        {{ filteredInvoices().length }} facture{{ filteredInvoices().length > 1 ? 's' : '' }} trouvée{{
+        filteredInvoices().length > 1 ? 's' : '' }}
       </span>
     </div>
 
     <!-- Invoices Data Table -->
     <div class="table-wrap">
       @if (filteredInvoices().length === 0) {
-        <div style="text-align: center; padding: 40px; color: #94a3b8;">
-          <p>Aucune facture trouvée correspondant aux critères de recherche.</p>
-        </div>
+      <div style="text-align: center; padding: 40px; color: #94a3b8;">
+        <p>Aucune facture trouvée correspondant aux critères de recherche.</p>
+      </div>
       } @else {
       <table class="billing-table">
         <thead>
@@ -131,30 +160,33 @@
             <th>Client / Compte</th>
             <th>Type</th>
             <th>Réf. Facture</th>
-            <th>Période</th>
-            <th>Ressources</th>
+            <th>Date</th>
+            <th>Ressource / Service</th>
+            <th>Type Service</th>
             <th>Montant</th>
             <th>Statut</th>
-            <th style="width: 40px;"></th>
           </tr>
         </thead>
         <tbody>
           @for (inv of pagedInvoices(); track inv.id) {
-          <tr class="invoice-row" [class.expanded]="isExpanded(inv.id)" (click)="toggleRow(inv.id)">
+          <tr class="invoice-row">
             <!-- Account & Shiny Avatar -->
             <td>
               <div class="cell-company">
-                <div class="shiny-avatar" [class.ent-avatar]="inv.clientType === 'entreprise'" [class.pers-avatar]="inv.clientType === 'personnel'">
+                <div class="shiny-avatar" [class.ent-avatar]="inv.clientType === 'entreprise'"
+                  [class.pers-avatar]="inv.clientType === 'personnel'">
                   @if (inv.clientType === 'entreprise') {
-                    <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
-                      <path d="M9 22v-4h6v4"/>
-                    </svg>
+                  <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                    <path d="M9 22v-4h6v4" />
+                  </svg>
                   } @else {
-                    <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                    </svg>
+                  <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
                   }
                   <span class="avatar-initials">{{ h.getInitials(inv.client) }}</span>
                 </div>
@@ -177,25 +209,41 @@
               <span class="ref-badge">{{ inv.ref || '—' }}</span>
             </td>
 
-            <!-- Period -->
-            <td class="period-cell">{{ inv.period }}</td>
+            <!-- Date -->
+            <td class="date-cell">
+              <span class="date-text">{{ formatDate(inv.date) }}</span>
+            </td>
 
-            <!-- Resources -->
+            <!-- Ressource / Service -->
             <td>
-              <div class="resources-cell">
-                @if (inv.vmCount > 0) {
-                  <span class="res-chip vm">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                    {{ inv.vmCount }} VM{{ inv.vmCount > 1 ? 's' : '' }}
-                  </span>
-                }
-                @if (inv.serviceCount > 0) {
-                  <span class="res-chip svc">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-                    {{ inv.serviceCount }} Service{{ inv.serviceCount > 1 ? 's' : '' }}
-                  </span>
+              <div class="resource-cell">
+                <div class="resource-main">
+                  @if (inv.typeService === 'IAAS') {
+                  <svg class="res-icon iaas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <line x1="8" y1="21" x2="16" y2="21" />
+                    <line x1="12" y1="17" x2="12" y2="21" />
+                  </svg>
+                  } @else {
+                  <svg class="res-icon paas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                    <ellipse cx="12" cy="5" rx="9" ry="3" />
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                  </svg>
+                  }
+                  <span class="res-name">{{ inv.resourceName }}</span>
+                </div>
+                @if (inv.catalogName && inv.catalogName !== inv.resourceName) {
+                <span class="resource-catalog">{{ inv.catalogName }}</span>
                 }
               </div>
+            </td>
+
+            <!-- Type Service -->
+            <td>
+              <span class="service-type-badge" [class]="(inv.typeService || 'iaas').toLowerCase()">
+                {{ inv.typeService }}
+              </span>
             </td>
 
             <!-- Amount -->
@@ -208,78 +256,30 @@
                 {{ inv.paid ? 'Payée' : 'En attente' }}
               </span>
             </td>
-
-            <!-- Expand chevron -->
-            <td>
-              <div class="expand-btn" [class.open]="isExpanded(inv.id)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </div>
-            </td>
           </tr>
-
-          <!-- ── EXPANDED TRANSACTIONS DRAWER ── -->
-          @if (isExpanded(inv.id)) {
-          <tr class="transactions-row">
-            <td colspan="8">
-              <div class="transactions-panel">
-                <div class="transactions-header">
-                  <span class="tx-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                    Détail des transactions réelles ({{ inv.transactions.length }})
-                  </span>
-                </div>
-                <div class="tx-list">
-                  @for (tx of inv.transactions; track $index) {
-                  <div class="tx-item">
-                    <div class="tx-icon" [class]="tx.typeService === 'IAAS' ? 'vm' : 'svc'">
-                      @if (tx.typeService === 'IAAS') {
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                      } @else {
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-                      }
-                    </div>
-                    @if (tx.ref) {
-                      <span class="ref-badge">{{ tx.ref }}</span>
-                    }
-                    <div class="tx-info">
-                      <span class="tx-name">{{ tx.name }}</span>
-                      @if (tx.catalogName) {
-                        <span class="catalog-chip">{{ tx.catalogName }}</span>
-                      }
-                    </div>
-                    <div class="tx-type-label">{{ tx.typeService }}</div>
-                    <div class="tx-date">{{ formatDate(tx.date) }}</div>
-                    <span class="tx-status" [class]="statusClass(tx.status)">{{ statusLabel(tx.status) }}</span>
-                    <div class="tx-price">{{ tx.price.toFixed(2) }} DT</div>
-                  </div>
-                  }
-                </div>
-              </div>
-            </td>
-          </tr>
-          }
           }
         </tbody>
       </table>
 
       <!-- Pagination -->
       @if (totalPages() > 1) {
-        <div class="pagination-bar">
-          <button class="pag-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          @for (p of pageNumbers(); track p) {
-            <button class="pag-btn pag-num" [class.pag-active]="currentPage() === p" (click)="goToPage(p)">{{ p }}</button>
-          }
-          <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-          <span class="pag-info">Page {{ currentPage() }} / {{ totalPages() }} — {{ filteredInvoices().length }} facture{{ filteredInvoices().length > 1 ? 's' : '' }}</span>
-        </div>
+      <div class="pagination-bar">
+        <button class="pag-btn" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        @for (p of pageNumbers(); track p) {
+        <button class="pag-btn pag-num" [class.pag-active]="currentPage() === p" (click)="goToPage(p)">{{ p }}</button>
+        }
+        <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+        <span class="pag-info">Page {{ currentPage() }} / {{ totalPages() }} — {{ filteredInvoices().length }} facture{{
+          filteredInvoices().length > 1 ? 's' : '' }}</span>
+      </div>
       }
       }
     </div>

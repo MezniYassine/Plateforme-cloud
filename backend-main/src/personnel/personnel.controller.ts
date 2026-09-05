@@ -19,4 +19,10 @@ export class PersonnelController {
         const perId = parseInt(req.user.sub, 10);
         return this.personnelService.getBilling(perId);
     }
-}
+
+    @Get('billing/prediction')
+    async getBillingPrediction(@Req() req) {
+        const perId = parseInt(req.user.sub, 10);
+        return this.personnelService.getPersonnelPrediction(perId);
+    }
+}

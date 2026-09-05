@@ -90,6 +90,15 @@
 
   </div>
 
+  <!-- ══════════════════ IA PREDICTION CARD (OPTION B) ══════════════════ -->
+  <div class="prediction-section">
+    <app-cost-prediction-card
+      [apiUrl]="predictionApiUrl"
+      label="dépenses du mois prochain"
+      [currency]="h.walletDevise()"
+    ></app-cost-prediction-card>
+  </div>
+
   <!-- ══════════════════ INVOICES & TRANSACTIONS TABLE ══════════════════ -->
   <div class="invoices-section">
     

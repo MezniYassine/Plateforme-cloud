@@ -5,6 +5,7 @@ import { Personal } from 'src/entities/personal.entity';
 import { Demande, DemandeStatus } from 'src/demande/entities/demande.entity';
 import { Wallet } from 'src/entities/wallet.entity';
 import { Transaction } from 'src/entities/transaction.entity';
+import { computePrediction } from 'src/common/prediction.util';
 
 @Injectable()
 export class PersonnelService {
@@ -62,4 +63,35 @@ export class PersonnelService {
 
         return invoices;
     }
-}
+
+    // ─── PREDICTION IA ──────────────────────────────────────────────────────
+    async getPersonnelPrediction(clientId: number) {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear  = now.getFullYear();
+
+        const revenusMensuels = new Array(12).fill(0);
+
+        const wallet = await this.walletRepo.findOne({
+            where: { user: { id: clientId } },
+        });
+
+        if (!wallet) {
+            return computePrediction(revenusMensuels, currentMonth);
+        }
+
+        const transactions = await this.transactionRepo.find({
+            where: { wallet: { id: wallet.id }, type: 'DEBIT' },
+            order: { dateTransaction: 'ASC' },
+        });
+
+        for (const t of transactions) {
+            const d = new Date(t.dateTransaction);
+            if (d.getFullYear() === currentYear) {
+                revenusMensuels[d.getMonth()] += Number(t.montant) || 0;
+            }
+        }
+
+        return computePrediction(revenusMensuels, currentMonth);
+    }
+}

@@ -15,6 +15,7 @@ import { ServiceSaaS } from 'src/entities/serviceSaaS.entity';
 import { ServiceStatus } from 'src/enum/service-status.enum';
 import { EsxiService } from 'src/esxi/esxi.service';
 import bcrypt from 'bcryptjs';
+import { computePrediction } from 'src/common/prediction.util';
 
 @Injectable()
 export class AdminService {
@@ -141,13 +142,14 @@ export class AdminService {
         let revenuAnnuel = 0;
         const revenusMensuels = new Array(12).fill(0);
 
+        const billingInvoices: any[] = [];
+
         // ─── 1. FACTURES ENTREPRISES via Demande ───────────────────────────────
         const demandes = await this.demandeRepository.find({
             where: { status: DemandeStatus.APPROUVEE },
             relations: ['catalogue', 'client', 'client.entreprise', 'client.wallet'],
+            order: { dateDemande: 'DESC' },
         });
-
-        const invoicesMap = new Map<string, any>();
 
         for (const d of demandes) {
             if (!d.catalogue || !d.client) continue;
@@ -167,47 +169,45 @@ export class AdminService {
             const monthStr = dDate.toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
             const period = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
             const isEnterprise = d.client.role === 'ENTREPRISE_ADMIN' || d.client.role === 'ENTREPRISE_USER';
-            const clientId = isEnterprise && d.client.entreprise
-                ? `ent-${d.client.entreprise.id}`
-                : `pers-${d.client.id}`;
-            const key = `${clientId}-${period}`;
+            const clientName = isEnterprise && d.client.entreprise
+                ? d.client.entreprise.nomEntreprise
+                : `${d.client.prenom} ${d.client.nom}`;
+            const typeService = (d.catalogue.typeService ?? 'IAAS') as 'IAAS' | 'PAAS' | 'SAAS';
+            const resourceName = d.nomInstanceSouhaite || d.catalogue.nomService;
+            const refFacture = d.referenceFacture || `FAC-${dDate.getFullYear()}-${String(d.id).padStart(5, '0')}`;
 
-            if (!invoicesMap.has(key)) {
-                invoicesMap.set(key, {
-                    id: key,
-                    clientType: 'entreprise',
-                    client: isEnterprise && d.client.entreprise
-                        ? d.client.entreprise.nomEntreprise
-                        : `${d.client.prenom} ${d.client.nom}`,
-                    email: isEnterprise ? d.client.email : d.client.email,
-                    period,
-                    vmCount: 0,
-                    serviceCount: 0,
-                    amount: 0,
-                    paid: true,
-                    transactions: [],
-                });
-            }
-
-            const inv = invoicesMap.get(key);
-            const typeService = d.catalogue.typeService ?? 'IAAS';
-            if (typeService === 'PAAS') inv.serviceCount += 1;
-            else inv.vmCount += 1;
-            inv.amount += price;
-            inv.transactions.push({
-                ref: `FAC-${dDate.getFullYear()}-${String(d.id).padStart(5, '0')}`,
-                name: d.nomInstanceSouhaite || d.catalogue.nomService,
+            billingInvoices.push({
+                id: `demande-${d.id}`,
+                ref: refFacture,
+                clientType: isEnterprise ? 'entreprise' : 'personnel',
+                client: clientName,
+                email: d.client.email,
+                date: dDate.toISOString(),
+                period,
+                resourceName,
                 catalogName: d.catalogue.nomService,
                 typeService,
+                amount: `${price.toFixed(2)} DT`,
                 price,
+                paid: true,
                 status: 'active',
-                date: dDate.toISOString(),
+                transactions: [{
+                    ref: refFacture,
+                    name: resourceName,
+                    catalogName: d.catalogue.nomService,
+                    typeService,
+                    price,
+                    status: 'active',
+                    date: dDate.toISOString(),
+                }],
             });
         }
 
+        // ─── 2. FACTURES VIA SERVICE INSTANCES ─────────────────────────────────
         const personalInstances = await this.serviceInstanceRepo.find({
             where: { status: ServiceStatus.RUNNING } as any,
             relations: ['client', 'client.entreprise', 'client.wallet', 'catalogue'],
+            order: { dateCreation: 'DESC' },
         });
 
         // Also fetch all deployed instances regardless of role to compute total active consumption
@@ -241,45 +241,40 @@ export class AdminService {
             const monthStr = dDate.toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
             const period = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
             const isEnterprise = inst.client.role === 'ENTREPRISE_ADMIN' || inst.client.role === 'ENTREPRISE_USER';
-            const clientId = isEnterprise && inst.client.entreprise
-                ? `ent-${inst.client.entreprise.id}`
-                : `pers-${inst.client.id}`;
-            const key = `${clientId}-${period}`;
-
-            if (!invoicesMap.has(key)) {
-                invoicesMap.set(key, {
-                    id: key,
-                    clientType: isEnterprise ? 'entreprise' : 'personnel',
-                    client: isEnterprise && inst.client.entreprise
-                        ? inst.client.entreprise.nomEntreprise
-                        : `${inst.client.prenom} ${inst.client.nom}`,
-                    email: inst.client.email,
-                    period,
-                    vmCount: 0,
-                    serviceCount: 0,
-                    amount: 0,
-                    paid: inst.client.wallet ? Number(inst.client.wallet.solde) >= 0 : true,
-                    transactions: [],
-                });
-            }
-
-            const inv = invoicesMap.get(key);
-            // TypeORM STI: MachineVirtuelle instances have `vCPU` column; PaaS instances do not
+            const clientName = isEnterprise && inst.client.entreprise
+                ? inst.client.entreprise.nomEntreprise
+                : `${inst.client.prenom} ${inst.client.nom}`;
             const isVm = (inst as any).vCPU !== undefined;
-            if (isVm) inv.vmCount += 1;
-            else inv.serviceCount += 1;
-            inv.amount += price;
-            // Resolve catalogue name via the pre-loaded Map using the FK stored on the instance
             const catalogueId = (inst as any).catalogueId ?? (inst.catalogue ? inst.catalogue.id : null);
             const catalogName = inst.catalogue?.nomService || (catalogueId ? (catalogueMap.get(catalogueId) ?? null) : null);
-            inv.transactions.push({
-                ref: `FAC-${dDate.getFullYear()}-${String(inst.id).padStart(5, '0')}`,
-                name: inst.nomPersonnalise,
+            const resourceName = inst.nomPersonnalise || catalogName || (isVm ? 'Machine Virtuelle' : 'Service PaaS');
+            const refFacture = (inst as any).referenceFacture || `FAC-${dDate.getFullYear()}-${String(inst.id).padStart(5, '0')}`;
+            const isPaid = inst.client.wallet ? Number(inst.client.wallet.solde) >= 0 : true;
+
+            billingInvoices.push({
+                id: `inst-${inst.id}`,
+                ref: refFacture,
+                clientType: isEnterprise ? 'entreprise' : 'personnel',
+                client: clientName,
+                email: inst.client.email,
+                date: dDate.toISOString(),
+                period,
+                resourceName,
                 catalogName,
                 typeService: isVm ? 'IAAS' : 'PAAS',
+                amount: `${price.toFixed(2)} DT`,
                 price,
+                paid: isPaid,
                 status: inst.status,
-                date: dDate.toISOString(),
+                transactions: [{
+                    ref: refFacture,
+                    name: resourceName,
+                    catalogName,
+                    typeService: isVm ? 'IAAS' : 'PAAS',
+                    price,
+                    status: inst.status,
+                    date: dDate.toISOString(),
+                }],
             });
         }
 
@@ -290,35 +285,16 @@ export class AdminService {
             ? (effectiveMonthRevenue > 0 ? 100 : 0)
             : Math.round(((effectiveMonthRevenue - revenuMoisPrecedent) / revenuMoisPrecedent) * 100);
 
-        const billingInvoices = Array.from(invoicesMap.values()).map(inv => {
-            const firstTx = inv.transactions[0];
-            const invoiceRef = firstTx?.ref || `FAC-${currentYear}-${String(inv.id).slice(-5)}`;
-            return {
-                id: inv.id,
-                ref: invoiceRef,
-                clientType: inv.clientType,
-                client: inv.client,
-                email: inv.email,
-                period: inv.period,
-                vmCount: inv.vmCount,
-                serviceCount: inv.serviceCount,
-                resources: [
-                    inv.vmCount > 0 ? `${inv.vmCount} VM${inv.vmCount > 1 ? 's' : ''}` : null,
-                    inv.serviceCount > 0 ? `${inv.serviceCount} Service${inv.serviceCount > 1 ? 's' : ''}` : null,
-                ].filter(Boolean).join(' · ') || '—',
-                amount: `${inv.amount.toFixed(2)} DT`,
-                paid: inv.paid,
-                transactions: inv.transactions,
-            };
-        });
-
-        billingInvoices.sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
+        // Sort all invoices chronologically (most recent first)
+        billingInvoices.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         const facturesEmises = billingInvoices.length;
         const facturesEnAttente = billingInvoices.filter(i => !i.paid).length;
         const facturesPayees = facturesEmises - facturesEnAttente;
-        const nbPersonnels = billingInvoices.filter(i => i.clientType === 'personnel').length;
-        const nbEntreprises = billingInvoices.filter(i => i.clientType === 'entreprise').length;
+        const uniqueEntreprises = new Set(billingInvoices.filter(i => i.clientType === 'entreprise').map(i => i.email || i.client));
+        const uniquePersonnels = new Set(billingInvoices.filter(i => i.clientType === 'personnel').map(i => i.email || i.client));
+        const nbPersonnels = uniquePersonnels.size;
+        const nbEntreprises = uniqueEntreprises.size;
 
         const maxRevenuMensuel = Math.max(...revenusMensuels.slice(0, currentMonth + 1), effectiveMonthRevenue, 1);
         const revenueChart = revenusMensuels.map((val, index) => ({
@@ -537,5 +513,40 @@ export class AdminService {
                 activeSaas,
             },
         };
+    }
+
+    // ─── PREDICTION IA ────────────────────────────────────────────────────
+    async getPrediction() {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const revenusMensuels = new Array(12).fill(0);
+
+        // Agréger les demandes approuvées par mois
+        const demandes = await this.demandeRepository.find({
+            where: { status: DemandeStatus.APPROUVEE },
+            relations: ['catalogue'],
+        });
+        for (const d of demandes) {
+            const dDate = new Date(d.dateDemande);
+            if (dDate.getFullYear() === currentYear && d.catalogue) {
+                revenusMensuels[dDate.getMonth()] += Number(d.catalogue.prix) || 0;
+            }
+        }
+
+        // Agréger les instances personnelles actives par mois
+        const instances = await this.serviceInstanceRepo.find({
+            relations: ['catalogue'],
+        });
+        for (const inst of instances) {
+            const dDate = new Date(inst.dateCreation);
+            if (dDate.getFullYear() === currentYear) {
+                const price = Number(inst.prixMensuel) || (inst.catalogue ? Number(inst.catalogue.prix) : 0) || 0;
+                revenusMensuels[dDate.getMonth()] += price;
+            }
+        }
+
+        return computePrediction(revenusMensuels, currentMonth);
     }
 }

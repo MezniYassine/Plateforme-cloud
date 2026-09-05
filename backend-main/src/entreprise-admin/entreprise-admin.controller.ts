@@ -33,5 +33,10 @@ export class EntrepriseController {
     async getBilling(@Req() req) {
         return this.entService.getBilling(req.user.sub);
     }
-}
 
+    @Get('billing/prediction')
+    async getBillingPrediction(@Req() req) {
+        const clientId = parseInt(req.user.sub, 10);
+        return this.entService.getEntreprisePrediction(clientId);
+    }
+}

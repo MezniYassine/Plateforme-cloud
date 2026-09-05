@@ -2,15 +2,19 @@ import { Component, input, output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeamMember, WalletTransaction } from '../../entreprise-helper.service';
+import { environment } from '../../../../../environments/environment';
+import { CostPredictionCardComponent } from '../../../../common/cost-prediction-card/cost-prediction-card.component';
 
 @Component({
   selector: 'ent-billing-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CostPredictionCardComponent],
   templateUrl: './billing-page.html',
   styleUrl: './billing-page.scss',
 })
 export class BillingPageComponent {
+  readonly predictionApiUrl = `${environment.apiBaseUrl}/entreprise-admin/billing/prediction`;
+
   monthlySpend = input.required<number>();
   monthlyBudget = input.required<number>();
   budgetUsedPct = input.required<number>();
@@ -90,7 +94,7 @@ export class BillingPageComponent {
       const d = new Date(t.date);
       if (isNaN(d.getTime())) return true;
       if (start && d < new Date(start)) return false;
-      if (end   && d > new Date(end + 'T23:59:59')) return false;
+      if (end && d > new Date(end + 'T23:59:59')) return false;
       return true;
     });
   });
@@ -136,7 +140,7 @@ export class BillingPageComponent {
           year: 'numeric',
         });
       }
-    } catch (_) {}
+    } catch (_) { }
     if (typeof d === 'string' && d.length > 3) {
       return d.slice(0, 10);
     }

@@ -264,13 +264,20 @@
       </div>
     </div>
 
-    <!-- Right: Member Breakdown & Donut Chart -->
-    <div class="billing-card-side">
-      <div class="card-head-bar">
-        <div>
-          <h4 class="card-head-title">Consommation par Membre</h4>
-          <p class="card-head-sub">Répartition des coûts par collaborateur</p>
-        </div>
+    <!-- Right: AI Prediction + Member Breakdown & Donut Chart -->
+    <div class="billing-side-column">
+      <app-cost-prediction-card
+        [apiUrl]="predictionApiUrl"
+        label="coûts de l'entreprise"
+        currency="DT"
+      ></app-cost-prediction-card>
+
+      <div class="billing-card-side">
+        <div class="card-head-bar">
+          <div>
+            <h4 class="card-head-title">Consommation par Membre</h4>
+            <p class="card-head-sub">Répartition des coûts par collaborateur</p>
+          </div>
         @if (memberStats().items.length > 0) {
           <span class="member-count-badge">{{ memberStats().items.length }} membre{{ memberStats().items.length > 1 ? 's' : '' }}</span>
         }
@@ -388,6 +395,7 @@
         }
       </div>
     </div>
+  </div>
 
   </div>
 
