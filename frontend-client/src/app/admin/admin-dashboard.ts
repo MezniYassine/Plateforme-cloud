@@ -14,6 +14,7 @@ import { TicketsPageComponent } from './components/tickets-page/tickets-page';
 import { isPlatformBrowser } from '@angular/common';
 import { Sidebar } from './components/sidebar/sidebar';
 import { Topbar } from './components/topbar/topbar';
+import { AiChatViewComponent } from '../common/ai-chat-view/ai-chat-view.component';
 
 /* · COMPONENT · */
 @Component({
@@ -28,6 +29,7 @@ import { Topbar } from './components/topbar/topbar';
     CataloguePageComponent,
     ProfilePageComponent,
     TicketsPageComponent,
+    AiChatViewComponent,
     Sidebar,
     Topbar
   ],
@@ -54,6 +56,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
     catalogue: 'Catalogue',
     tickets: 'Tickets & Support',
     profile: 'Mon profil',
+    'ai-chat': 'Assistant IA',
   };
 
   pageTitle = computed(() => this.PAGE_TITLES[this.activePage()] ?? 'Dashboard');

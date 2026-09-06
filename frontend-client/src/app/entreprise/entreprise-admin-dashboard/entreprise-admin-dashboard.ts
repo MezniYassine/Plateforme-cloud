@@ -12,6 +12,7 @@ import { BillingPageComponent } from './components/billing-page/billing-page';
 import { ProfilePageComponent } from './components/profile-page/profile-page';
 import { DeployPageComponent } from './components/deploy-page/deploy-page';
 import { SupportContactModalComponent } from '../../common/support-contact-modal/support-contact-modal.component';
+import { AiChatViewComponent } from '../../common/ai-chat-view/ai-chat-view.component';
 import { isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DemandeService } from '../../services/demande.service';
@@ -29,6 +30,7 @@ import { DemandeService } from '../../services/demande.service';
     ProfilePageComponent,
     DeployPageComponent,
     SupportContactModalComponent,
+    AiChatViewComponent,
     ReactiveFormsModule
   ],
   templateUrl: './entreprise-admin-dashboard.html',
@@ -52,6 +54,7 @@ export class EntrepriseAdminDashboard implements OnInit, OnDestroy {
     deploy: 'Déployer des Ressources',
     billing: 'Budget & Facturation',
     profile: 'Mon profil',
+    'ai-chat': 'Assistant IA',
   };
   pageTitle = computed(() => this.PAGE_TITLES[this.activePage()] ?? 'Dashboard');
   setPage(p: string) {

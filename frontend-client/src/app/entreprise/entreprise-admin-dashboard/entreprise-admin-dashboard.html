@@ -85,6 +85,17 @@
             </div>
 
             <div class="sidebar-section">
+                <div class="sidebar-label">IA</div>
+                <div class="nav-item" [class.active]="activePage()==='ai-chat'" (click)="setPage('ai-chat')" title="Assistant IA">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <span class="nav-label">Assistant IA</span>
+                    <span class="nav-count-pill" style="background: rgba(240, 122, 31, 0.15); color: #f07a1f; font-weight: 700;">IA</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
                 <div class="sidebar-label">Compte</div>
                 <div class="nav-item" [class.active]="activePage()==='profile'" (click)="setPage('profile')" title="Mon profil">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -196,6 +207,10 @@
             <ent-profile-page [adminNom]="adminNom()" [adminPrenom]="adminPrenom()" [adminEmail]="adminEmail()"
                 [adminTelephone]="adminTelephone()" [companyName]="companyName()" [companySize]="companySize()"
                 [taxId]="companyTaxId()" [mfaStatusInput]="adminMfaStatus()" (profileUpdated)="loadCurrentAdmin()" />
+            }
+
+            @if (activePage() === 'ai-chat') {
+            <app-ai-chat-view />
             }
         </div><!-- /content -->
     </div><!-- /main -->

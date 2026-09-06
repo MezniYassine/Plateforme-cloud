@@ -61,16 +61,16 @@
             <span class="nav-pill">{{ saasInstances().length }}</span>
           }
         </div>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-label">Mon compte</div>
         <div class="nav-item" [class.active]="activeTab() === 'monitor'" (click)="switchTab('monitor')" title="Monitoring">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
           </svg>
           <span class="nav-label">Monitoring</span>
         </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Finance</div>
         <div class="nav-item" [class.active]="activeTab() === 'billing'" (click)="switchTab('billing')" title="Facturation & Wallet">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="1" y="4" width="22" height="16" rx="2" />
@@ -78,6 +78,21 @@
           </svg>
           <span class="nav-label">Facturation &amp; Wallet</span>
         </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">IA</div>
+        <div class="nav-item" [class.active]="activeTab() === 'ai-chat'" (click)="switchTab('ai-chat')" title="Assistant IA">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span class="nav-label">Assistant IA</span>
+          <span class="nav-pill" style="background: rgba(240, 122, 31, 0.15); color: #f07a1f; font-weight: 700;">IA</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Mon compte</div>
         <div class="nav-item" [class.active]="activeTab() === 'profile'" (click)="switchTab('profile')" title="Mon profil">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -182,6 +197,10 @@
 
       @if (activeTab() === 'profile') {
       <app-profile-tab [actualPers]="actualPers()" />
+      }
+
+      @if (activeTab() === 'ai-chat') {
+      <app-ai-chat-view />
       }
 
     </div>

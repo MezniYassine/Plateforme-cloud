@@ -55,27 +55,27 @@
             <!-- Account Info with Shiny Avatar -->
             <td>
               <div class="cell-company">
-                <div class="shiny-avatar" [class.ent-avatar]="t.accountType === 'entreprise'" [class.pers-avatar]="t.accountType === 'personnel'">
-                  @if (t.accountType === 'entreprise') {
-                    <!-- Shiny Enterprise / Building Logo -->
-                    <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
-                      <path d="M9 22v-4h6v4"/>
-                      <line x1="8" y1="6" x2="8.01" y2="6"/>
-                      <line x1="16" y1="6" x2="16.01" y2="6"/>
-                      <line x1="8" y1="10" x2="8.01" y2="10"/>
-                      <line x1="16" y1="10" x2="16.01" y2="10"/>
-                      <line x1="8" y1="14" x2="8.01" y2="14"/>
-                      <line x1="16" y1="14" x2="16.01" y2="14"/>
-                    </svg>
-                  } @else {
-                    <!-- Shiny Person / User Logo -->
-                    <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                  }
+                <div class="account-avatar" [class.ent-avatar]="t.accountType === 'entreprise'" [class.pers-avatar]="t.accountType === 'personnel'">
                   <span class="avatar-initials">{{ h.getInitials(t.company) }}</span>
+                  <span class="avatar-type-badge" [title]="t.accountType === 'entreprise' ? 'Compte Entreprise' : 'Compte Particulier'">
+                    @if (t.accountType === 'entreprise') {
+                      <!-- Clean Enterprise Building Glyph -->
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                        <path d="M9 22v-4h6v4"/>
+                        <line x1="8" y1="6" x2="8.01" y2="6"/>
+                        <line x1="16" y1="6" x2="16.01" y2="6"/>
+                        <line x1="8" y1="10" x2="8.01" y2="10"/>
+                        <line x1="16" y1="10" x2="16.01" y2="10"/>
+                      </svg>
+                    } @else {
+                      <!-- Clean Person / User Glyph -->
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                    }
+                  </span>
                 </div>
                 <div class="company-info">
                   <span class="company-name">{{ t.company }}</span>
@@ -195,12 +195,16 @@
               <tr class="row-subuser">
                 <td style="padding-left: 48px;">
                   <div class="cell-company">
-                    <div class="shiny-avatar sub-avatar team-avatar">
-                      <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                      </svg>
+                    <div class="account-avatar sub-avatar team-avatar">
                       <span class="avatar-initials">{{ h.getInitials(u.firstName + ' ' + u.lastName) }}</span>
+                      <span class="avatar-type-badge team-badge" title="Membre d'équipe">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                          <circle cx="9" cy="7" r="4"/>
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                      </span>
                     </div>
                     <div class="company-info">
                       <span class="company-name">{{ u.firstName }} {{ u.lastName }}</span>

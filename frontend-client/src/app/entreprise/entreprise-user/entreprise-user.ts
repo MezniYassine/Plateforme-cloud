@@ -12,6 +12,7 @@ import { Services } from './components/user-services/services';
 import { Monitoring } from './components/user-monitoring/monitoring';
 import { Profile } from './components/user-profile/profile';
 import { SupportContactModalComponent } from '../../common/support-contact-modal/support-contact-modal.component';
+import { AiChatViewComponent } from '../../common/ai-chat-view/ai-chat-view.component';
 
 @Component({
   selector: 'app-entreprise-user',
@@ -29,6 +30,7 @@ import { SupportContactModalComponent } from '../../common/support-contact-modal
     Monitoring,
     Profile,
     SupportContactModalComponent,
+    AiChatViewComponent,
   ],
   templateUrl: './entreprise-user.html',
   styleUrl: './entreprise-user.scss',

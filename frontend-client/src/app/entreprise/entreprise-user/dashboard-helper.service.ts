@@ -86,6 +86,7 @@ export class DashboardHelperService {
     services: 'Mes services',
     monitoring: 'Monitoring',
     profile: 'Mon profil',
+    'ai-chat': 'Assistant IA',
   };
 
   private http = inject(HttpClient);

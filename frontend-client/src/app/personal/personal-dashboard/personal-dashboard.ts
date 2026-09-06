@@ -12,6 +12,7 @@ import { MonitorTabComponent } from './components/monitor-tab/monitor-tab';
 import { BillingTabComponent } from './components/billing-tab/billing-tab';
 import { ProfileTabComponent } from './components/profile-tab/profile-tab';
 import { SupportContactModalComponent } from '../../common/support-contact-modal/support-contact-modal.component';
+import { AiChatViewComponent } from '../../common/ai-chat-view/ai-chat-view.component';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { PaasInstance } from './personal-dashboard-helper.service';
@@ -29,6 +30,7 @@ import { SaasAppType } from './saas-app-types';
     BillingTabComponent,
     ProfileTabComponent,
     SupportContactModalComponent,
+    AiChatViewComponent,
   ],
   templateUrl: './personal-dashboard.html',
   styleUrl: './personal-dashboard.scss',
@@ -69,6 +71,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     overview: "Vue d'ensemble", iaas: 'Mes VMs (IaaS)',
     paas: 'Services PaaS', saas: 'Catalogue SaaS',
     monitor: 'Monitoring', billing: 'Facturation & Wallet', profile: 'Mon profil',
+    'ai-chat': 'Assistant IA',
   };
 
   isSidebarCollapsed = signal<boolean>(typeof localStorage !== 'undefined' ? localStorage.getItem('sidebar_collapsed_personal') === 'true' : false);

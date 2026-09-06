@@ -375,55 +375,94 @@
   gap: 12px;
 }
 
+.account-avatar,
 .shiny-avatar {
   position: relative;
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
   flex-shrink: 0;
-  overflow: hidden;
-}
+  overflow: visible;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
 
-.shiny-avatar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 48%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.05) 100%);
-  border-radius: 9px 9px 0 0;
-  pointer-events: none;
-}
+  &::before {
+    display: none !important;
+  }
 
-.shiny-avatar.ent-avatar {
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 55%, #9A3412 100%);
-  color: #ffffff;
-  box-shadow: 0 3px 8px rgba(240, 122, 31, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(240, 122, 31, 0.5);
-}
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
 
-.shiny-avatar.pers-avatar {
-  background: linear-gradient(135deg, #334155 0%, #1E293B 55%, #0B0D12 100%);
-  color: #ffffff;
-  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.3);
-  border: 1px solid rgba(71, 85, 105, 0.4);
-}
+  .avatar-initials {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-shadow: none;
+    line-height: 1;
+    display: block;
+    user-select: none;
+  }
 
-.avatar-icon {
-  width: 13px;
-  height: 13px;
-  flex-shrink: 0;
-}
+  .avatar-type-badge {
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 17px;
+    height: 17px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+    transition: transform 0.2s ease;
 
-.avatar-initials {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 11px;
-  font-weight: 800;
+    svg {
+      width: 9.5px;
+      height: 9.5px;
+      color: #ffffff;
+    }
+  }
+
+  &:hover .avatar-type-badge {
+    transform: scale(1.1);
+  }
+
+  &.ent-avatar {
+    background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+    border: 1px solid rgba(240, 122, 31, 0.35);
+    color: #EA580C;
+
+    .avatar-type-badge {
+      background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+    }
+
+    &:hover {
+      border-color: rgba(240, 122, 31, 0.65);
+      background: linear-gradient(135deg, #FFEDD5 0%, #FED7AA 100%);
+    }
+  }
+
+  &.pers-avatar {
+    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+    border: 1px solid rgba(100, 116, 139, 0.28);
+    color: #0F172A;
+
+    .avatar-type-badge {
+      background: linear-gradient(135deg, #475569 0%, #1E293B 100%);
+    }
+
+    &:hover {
+      border-color: rgba(100, 116, 139, 0.55);
+      background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%);
+    }
+  }
 }
 
 .company-name {

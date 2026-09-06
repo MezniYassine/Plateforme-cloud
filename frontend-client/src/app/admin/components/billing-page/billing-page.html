@@ -173,22 +173,26 @@
             <!-- Account & Shiny Avatar -->
             <td>
               <div class="cell-company">
-                <div class="shiny-avatar" [class.ent-avatar]="inv.clientType === 'entreprise'"
+                <div class="account-avatar" [class.ent-avatar]="inv.clientType === 'entreprise'"
                   [class.pers-avatar]="inv.clientType === 'personnel'">
-                  @if (inv.clientType === 'entreprise') {
-                  <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                    stroke-linecap="round">
-                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
-                    <path d="M9 22v-4h6v4" />
-                  </svg>
-                  } @else {
-                  <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                    stroke-linecap="round">
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                  }
                   <span class="avatar-initials">{{ h.getInitials(inv.client) }}</span>
+                  <span class="avatar-type-badge" [title]="inv.clientType === 'entreprise' ? 'Compte Entreprise' : 'Compte Particulier'">
+                    @if (inv.clientType === 'entreprise') {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                      <path d="M9 22v-4h6v4" />
+                      <line x1="8" y1="6" x2="8.01" y2="6"/>
+                      <line x1="16" y1="6" x2="16.01" y2="6"/>
+                      <line x1="8" y1="10" x2="8.01" y2="10"/>
+                      <line x1="16" y1="10" x2="16.01" y2="10"/>
+                    </svg>
+                    } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    }
+                  </span>
                 </div>
                 <div>
                   <div class="company-name">{{ inv.client }}</div>

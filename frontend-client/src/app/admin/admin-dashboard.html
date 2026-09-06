@@ -49,6 +49,10 @@
       <app-profile-page [actualAdmin]="actualAdmin()" />
       }
 
+      @if (activePage() === 'ai-chat') {
+      <app-ai-chat-view />
+      }
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->

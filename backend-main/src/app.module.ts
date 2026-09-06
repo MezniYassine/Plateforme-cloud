@@ -34,6 +34,7 @@ import { SystemLog } from './entities/system-log.entity';
 import { LogsModule } from './logs/logs.module';
 import { SupportTicket } from './entities/support-ticket.entity';
 import { TicketsModule } from './tickets/tickets.module';
+import { ChatModule } from './chat/chat.module';
 
 
 @Module({
@@ -86,6 +87,7 @@ import { TicketsModule } from './tickets/tickets.module';
     MetricsModule,
     LogsModule,
     TicketsModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
