@@ -13,25 +13,25 @@
   --font-display: 'Space Grotesk', sans-serif;
   --font-ui:      'Inter', sans-serif;
 
-  /* ── Orange palette ── */
-  --accent:        hsl(28, 99%, 54%);
-  --accent-dim:    hsla(28, 99%, 54%, 0.10);
-  --accent-border: hsla(28, 99%, 54%, 0.28);
-  --accent-glow:   hsla(28, 99%, 54%, 0.45);
+  /* ── Cobalt Tech & Cyber Mint Palette ── */
+  --accent:        hsl(217, 91%, 60%);
+  --accent-dim:    rgba(37, 99, 235, 0.08);
+  --accent-border: rgba(37, 99, 235, 0.25);
+  --accent-glow:   rgba(37, 99, 235, 0.40);
 
-  --bg-base:    #f5f7f5;
-  --bg-card:    #fdfcfb;
+  --bg-base:    #f8fafc;
+  --bg-card:    #ffffff;
   --bg-card-h:  #ffffff;
 
-  --text-white: #111411;
-  --text-muted: #3a4b3a;
-  --text-dim:   #5a6b5a;
+  --text-white: #0f172a;
+  --text-muted: #475569;
+  --text-dim:   #64748b;
 
-  --border: rgba(0, 0, 0, 0.12);
+  --border: rgba(15, 23, 42, 0.08);
 
   /* cube colors */
-  --c-dark:  #f0f2f0;
-  --c-mid:   #f7f8f7;
+  --c-dark:  #f1f5f9;
+  --c-mid:   #f8fafc;
   --c-light: #ffffff;
 
   display: block;
@@ -82,24 +82,24 @@
     background: linear-gradient(145deg, var(--c-light) 0%, var(--c-mid) 40%, var(--c-dark) 100%);
   }
   50% {
-    background: linear-gradient(145deg, hsla(28,99%,54%,.18) 0%, #fef8f4 40%, #fcf0e8 100%);
+    background: linear-gradient(145deg, rgba(37, 99, 235, 0.16) 0%, #eff6ff 40%, #dbeafe 100%);
     box-shadow:
-      inset 1px 1px 0 hsla(28,99%,54%,.10),
-      0 0 12px hsla(28,99%,54%,.10);
+      inset 1px 1px 0 rgba(37, 99, 235, 0.12),
+      0 0 12px rgba(37, 99, 235, 0.15);
   }
 }
 
 /* ★ HOVER GLOW — triggered from JS */
 .cube-tile.cube-hover {
   background: linear-gradient(145deg,
-    hsla(28, 99%, 54%, 0.55) 0%,
-    #fef0e5                  45%,
-    #fce4d6                  100%
+    rgba(37, 99, 235, 0.50) 0%,
+    #eff6ff                  45%,
+    #dbeafe                  100%
   ) !important;
   box-shadow:
-    inset  1px  1px 0 hsla(28, 99%, 54%, 0.3),
-    0 0 22px hsla(28, 99%, 54%, 0.28),
-    0 0 50px hsla(28, 99%, 54%, 0.10) !important;
+    inset  1px  1px 0 rgba(37, 99, 235, 0.35),
+    0 0 22px rgba(37, 99, 235, 0.30),
+    0 0 50px rgba(37, 99, 235, 0.12) !important;
 }
 
 /* ═══════════════════════════════════════
@@ -529,7 +529,7 @@ nav {
   border-radius: 12px; display: flex; align-items: center; justify-content: center;
   transition: background .25s, box-shadow .25s;
 }
-.feature-card:hover .feature-icon { background: hsla(28,99%,54%,.18); box-shadow: 0 0 16px hsla(28,99%,54%,.14); }
+.feature-card:hover .feature-icon { background: rgba(37, 99, 235, 0.15); box-shadow: 0 0 16px rgba(37, 99, 235, 0.18); }
 .feature-icon svg { width: 26px; height: 26px; }
 
 .feature-title {
@@ -597,7 +597,7 @@ nav {
 .contact-form input:focus,
 .contact-form textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.25);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
 }
 .contact-submit {
   width: 100%;
@@ -635,8 +635,8 @@ nav {
   padding: 40px 0 80px;
 }
 .cta-box {
-  background: hsla(28,99%,54%,.15);
-  border: 1px solid hsla(28,99%,54%,.25);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.02) 100%);
+  border: 1px solid rgba(37, 99, 235, 0.20);
   border-radius: 6px; padding: 80px; text-align: center;
   position: relative; overflow: hidden;
   /* Removed isolated radial-gradient decorative element */

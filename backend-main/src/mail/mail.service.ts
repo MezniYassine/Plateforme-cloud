@@ -26,7 +26,7 @@ export class MailService {
 
   private async buildSignature(): Promise<string> {
     const admin = await this.adminRepo.findOne({ where: {} }).catch(() => null);
-    const nom = admin ? `${admin.prenom} ${admin.nom}` : 'Equipe Dynamix';
+    const nom = admin ? `${admin.prenom} ${admin.nom}` : 'Equipe Dyna-Cloud';
     const email = admin?.email ?? 'contact@dynamix-services.com';
     return `
 <table cellpadding="0" cellspacing="0" style="width:100%;border-top:2px solid #e2e8f0;margin-top:28px;padding-top:20px;">
@@ -309,7 +309,7 @@ export class MailService {
           <td style="padding:36px 40px;">
             <p style="margin:0 0 16px;font-size:16px;color:#0f172a;">Bonjour <strong>${p.userPrenom} ${p.userNom}</strong>,</p>
             <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.6;">
-              Votre administrateur <strong>${p.adminPrenom} ${p.adminNom}</strong> (${orgLabel}) vient de provisionner et de vous attribuer une nouvelle ressource sur la plateforme <strong>Dynamix Cloud</strong>.
+              Votre administrateur <strong>${p.adminPrenom} ${p.adminNom}</strong> (${orgLabel}) vient de provisionner et de vous attribuer une nouvelle ressource sur la plateforme <strong>Dyna-Cloud</strong>.
             </p>
 
             <!-- Details Card -->
@@ -379,7 +379,7 @@ export class MailService {
         <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dyna-Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -410,7 +410,7 @@ export class MailService {
         <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">Dynamix Cloud</h1>
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">Dyna-Cloud</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.8);font-size:14px;">Plateforme de gestion des ressources cloud</p>
           </td>
         </tr>
@@ -454,7 +454,7 @@ export class MailService {
         <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dyna-Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -521,7 +521,7 @@ export class MailService {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dyna-Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -572,7 +572,7 @@ export class MailService {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dyna-Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -622,7 +622,7 @@ export class MailService {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dyna-Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -701,7 +701,7 @@ export class MailService {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dyna-Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -768,14 +768,14 @@ export class MailService {
               </td></tr>
             </table>
             <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.6;">
-              Vous pouvez retrouver toutes les informations de connexion (mot de passe, base liée, etc.) directement depuis votre tableau de bord Dynamix.
+              Vous pouvez retrouver toutes les informations de connexion (mot de passe, base liée, etc.) directement depuis votre tableau de bord Dyna-Cloud.
             </p>
             ${signature}
           </td>
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dyna-Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -806,7 +806,7 @@ export class MailService {
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
         <tr>
           <td style="background:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">Dynamix Cloud</h1>
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">Dyna-Cloud</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.8);font-size:14px;">Notification de mise à niveau</p>
           </td>
         </tr>
@@ -855,7 +855,7 @@ export class MailService {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dyna-Cloud · Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
           </td>
         </tr>
       </table>
@@ -895,7 +895,7 @@ export class MailService {
         <tr>
           <td style="padding:40px;">
             <p style="font-size:16px;color:#334155;line-height:1.6;margin:0 0 24px;">Bonjour Administrateur,</p>
-            <p style="font-size:16px;color:#334155;line-height:1.6;margin:0 0 24px;">Un visiteur de Dynamix Cloud a soumis le formulaire de contact :</p>
+            <p style="font-size:16px;color:#334155;line-height:1.6;margin:0 0 24px;">Un visiteur de Dyna-Cloud a soumis le formulaire de contact :</p>
             <ul style="font-size:15px;color:#334155;line-height:1.8;background:#f8fafc;padding:20px 40px;border-radius:6px;margin-bottom:24px;">
               <li><strong>Nom :</strong> ${params.name}</li>
               <li><strong>Email :</strong> <a href="mailto:${params.email}">${params.email}</a></li>
@@ -908,7 +908,7 @@ export class MailService {
         </tr>
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dynamix Cloud</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">© 2026 Dyna-Cloud</p>
           </td>
         </tr>
       </table>
@@ -919,7 +919,7 @@ export class MailService {
 
       await this.mailer.sendMail({
         to: adminEmail,
-        subject: `[Contact Dynamix] ${params.subject}`,
+        subject: `[Contact Dyna-Cloud] ${params.subject}`,
         html: htmlContent,
         attachments: [this.getLogoAttachment()],
       });

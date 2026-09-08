@@ -21,23 +21,23 @@
   --font-mono:    'JetBrains Mono', monospace;
 
   /* Brand Colors */
-  --accent:        hsl(28, 99%, 54%);
-  --accent-light:  #fff7ed;
-  --accent-dim:    hsla(28, 99%, 54%, 0.12);
-  --accent-border: hsla(28, 99%, 54%, 0.28);
-  --accent-glow:   hsla(28, 99%, 54%, 0.35);
+  --accent:        hsl(217, 91%, 60%);
+  --accent-light:  #eff6ff;
+  --accent-dim:    rgba(37, 99, 235, 0.12);
+  --accent-border: rgba(37, 99, 235, 0.28);
+  --accent-glow:   rgba(37, 99, 235, 0.35);
 
   /* Layout Backgrounds */
-  --bg-page:   #f5f7f5;
+  --bg-page:   #f8fafc;
   --bg-white:  #ffffff;
-  --bg-hover:  #f8fafc;
+  --bg-hover:  #f1f5f9;
   --bg-card:   #ffffff;
 
-  /* Metric Card Gradients — Strictly Orange (#F07A1F) & Anthracite (#0B0D12) */
-  --grad-anthracite-dark: linear-gradient(135deg, #181d28 0%, #0b0d12 100%);
-  --grad-orange-deep:      linear-gradient(135deg, #d96b14 0%, #9a4306 100%);
-  --grad-anthracite-mid:  linear-gradient(135deg, #2d3340 0%, #1a1e26 100%);
-  --grad-orange-vibrant:  linear-gradient(135deg, #f07a1f 0%, #d86208 100%);
+  /* Metric Card Gradients — Crimson Red & Cobalt Sapphire */
+  --grad-anthracite-dark: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+  --grad-orange-deep:      linear-gradient(135deg, #1e40af 0%, #172554 100%);
+  --grad-anthracite-mid:  linear-gradient(135deg, #991b1b 0%, #450a0a 100%);
+  --grad-orange-vibrant:  linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 
   /* State colors */
   --green:       #10b981;
@@ -46,7 +46,7 @@
   --amber-light: #fffbeb;
   --red:         #ef4444;
   --red-light:   #fef2f2;
-  --dark-orange: #9a4306;
+  --dark-orange: #1e3a8a;
   --anthracite:  #2d3340;
 
   /* Typography */
@@ -152,19 +152,19 @@ html, body {
 .logo-icon {
   width: 40px;
   height: 40px;
-  background: #111;
-  border-radius: 10px;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .logo-icon img {
-  width: 26px;
-  height: 26px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.08));
 }
 
 .logo-text {
@@ -751,21 +751,21 @@ app-profile-page {
 
 .card-anthracite-dark {
   background: var(--grad-anthracite-dark);
-  box-shadow: 0 10px 25px -5px rgba(11, 13, 18, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 25px -5px rgba(185, 28, 28, 0.40);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 .card-orange-deep {
   background: var(--grad-orange-deep);
-  box-shadow: 0 10px 25px -5px rgba(154, 67, 6, 0.40);
+  box-shadow: 0 10px 25px -5px rgba(30, 64, 175, 0.40);
 }
 .card-anthracite-mid {
   background: var(--grad-anthracite-mid);
-  box-shadow: 0 10px 25px -5px rgba(26, 30, 38, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 25px -5px rgba(153, 27, 27, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.10);
 }
 .card-orange-vibrant {
   background: var(--grad-orange-vibrant);
-  box-shadow: 0 10px 25px -5px rgba(240, 122, 31, 0.40);
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.40);
 }
 
 .metric-icon-wrap {
@@ -932,7 +932,7 @@ app-profile-page {
   border-radius: 50%;
 }
 .dot-orange { background: var(--accent); }
-.dot-dark-orange { background: #9a4306; }
+.dot-dark-orange { background: #172554; }
 .dot-anthracite { background: #334155; }
 
 .chart-body {
@@ -1067,11 +1067,11 @@ app-profile-page {
 }
 
 .icon-blue,
-.icon-orange-subtle { background: #fff7ed; color: #ea580c; }
+.icon-orange-subtle { background: #eff6ff; color: #1d4ed8; }
 .icon-teal,
 .icon-anthracite-subtle { background: #f1f5f9; color: #334155; }
 .icon-amber,
-.icon-orange-deep-subtle { background: #ffedd5; color: #9a4306; }
+.icon-orange-deep-subtle { background: #dbeafe; color: #172554; }
 .icon-anthracite-dark-subtle { background: #e2e8f0; color: #0b0d12; }
 
 
@@ -1394,9 +1394,9 @@ app-profile-page {
 }
 
 .type-indicator-pill.ent {
-  background: #fff7ed;
-  color: #c2410c;
-  border: 1px solid #ffedd5;
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #dbeafe;
 }
 
 .type-indicator-pill.pers {
@@ -1442,13 +1442,13 @@ app-profile-page {
 }
 
 .status-pill.pending {
-  background: #fff7ed;
-  color: #c2410c;
-  border-color: #ffedd5;
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #dbeafe;
 }
 .status-pill.pending .status-dot { 
-  background: #f97316; 
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+  background: #3b82f6; 
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .status-pill.approved {

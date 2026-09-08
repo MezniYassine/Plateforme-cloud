@@ -105,8 +105,8 @@
   }
 
   &:focus-within {
-    border-color: #F07A1F;
-    box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.12);
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
 
   .clear-search {
@@ -131,18 +131,18 @@
   height: 42px;
   padding: 0 18px;
   border-radius: 11px;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   font-size: 13.5px;
   font-weight: 700;
   border: none;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(240, 122, 31, 0.25);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
   transition: all 0.2s ease;
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(240, 122, 31, 0.35);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
   }
 }
 
@@ -192,12 +192,12 @@
   }
 
   &.active {
-    background: #fff7ed;
-    border-color: #fed7aa;
-    color: #c2410c;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e40af;
 
     .pill-badge {
-      background: #ffedd5;
+      background: #dbeafe;
       color: #9a3412;
     }
   }
@@ -638,11 +638,11 @@
     color: #475569;
 
     &:hover {
-      background: #fff7ed;
-      color: #ea580c;
-      border-color: #fed7aa;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(240, 122, 31, 0.2);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
     }
 
     &:active {
@@ -696,8 +696,8 @@
   width: 76px;
   height: 76px;
   border-radius: 50%;
-  background: #fff7ed;
-  border: 1px solid #ffedd5;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -725,18 +725,18 @@
   gap: 8px;
   padding: 10px 22px;
   border-radius: 11px;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   font-size: 14px;
   font-weight: 700;
   border: none;
   cursor: pointer;
-  box-shadow: 0 3px 12px rgba(240, 122, 31, 0.3);
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.3);
   transition: all 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(240, 122, 31, 0.4);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
   }
 }
 

@@ -105,8 +105,8 @@
   }
 
   &:focus-within {
-    border-color: #F07A1F;
-    box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.14);
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
   }
 
   .clear-search {
@@ -139,13 +139,13 @@
   height: 42px;
   padding: 0 20px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   font-size: 13.5px;
   font-weight: 700;
   border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(240, 122, 31, 0.28);
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.28);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
   svg {
@@ -154,7 +154,7 @@
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(240, 122, 31, 0.4);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
 
     svg {
       transform: rotate(90deg);
@@ -163,7 +163,7 @@
 
   &:active {
     transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(240, 122, 31, 0.25);
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
   }
 }
 
@@ -216,13 +216,13 @@
   }
 
   &.active {
-    background: #fff7ed;
-    border-color: #fed7aa;
-    color: #c2410c;
-    box-shadow: 0 2px 8px rgba(240, 122, 31, 0.12);
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e40af;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
 
     .pill-badge {
-      background: #ffedd5;
+      background: #dbeafe;
       color: #9a3412;
     }
   }
@@ -716,8 +716,8 @@
   width: 76px;
   height: 76px;
   border-radius: 50%;
-  background: #fff7ed;
-  border: 1px solid #ffedd5;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -745,18 +745,18 @@
   gap: 8px;
   padding: 11px 24px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   font-size: 14px;
   font-weight: 700;
   border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
-  box-shadow: 0 3px 12px rgba(240, 122, 31, 0.3);
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.3);
   transition: all 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(240, 122, 31, 0.42);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.42);
   }
 
   &:active {

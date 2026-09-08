@@ -56,7 +56,7 @@ export class AdminService {
         if (status === AccountStatus.APPROVED) {
             await this.mailerService.sendMail({
                 to: client.email,
-                subject: 'Bienvenue chez Dynamix ! Votre compte est activé',
+                subject: 'Bienvenue sur Dyna-Cloud ! Votre compte est activé',
                 html: `
           <h3>Félicitations !</h3>
           <p>Votre compte a été approuvé par notre équipe. Vous pouvez désormais vous connecter.</p>
@@ -66,7 +66,7 @@ export class AdminService {
         else if (status === AccountStatus.REJECTED) {
             await this.mailerService.sendMail({
                 to: client.email,
-                subject: 'Information concernant votre compte Dynamix',
+                subject: 'Information concernant votre compte Dyna-Cloud',
                 html: `
           <h3>Bonjour,</h3>
           <p>Malheureusement, votre demande de création de compte a été refusée pour le moment.</p>

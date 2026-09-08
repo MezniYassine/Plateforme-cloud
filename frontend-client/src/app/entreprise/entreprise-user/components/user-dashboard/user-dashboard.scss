@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    DYNAMIX CLOUD — ESPACE ENTREPRISE USER : VUE D'ENSEMBLE
-   Charte Dynamix : Orange (#F07A1F), Anthracite (#0B0D12, #1E293B), Blanc (#FFFFFF)
+   Charte Dynamix : Orange (#2563EB), Anthracite (#0B0D12, #1E293B), Blanc (#FFFFFF)
 ═══════════════════════════════════════════════════════════════ */
 
 :host {
@@ -55,26 +55,26 @@
 }
 
 .card-anthracite-dark {
-  background: linear-gradient(135deg, #11141a 0%, #0b0d12 60%, #1e2430 100%) !important;
-  box-shadow: 0 10px 25px -5px rgba(11, 13, 18, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 50%, #7f1d1d 100%) !important;
+  box-shadow: 0 10px 25px -5px rgba(185, 28, 28, 0.40);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .card-orange-deep {
-  background: linear-gradient(135deg, #c2410c 0%, #ea580c 50%, #F07A1F 100%) !important;
-  box-shadow: 0 10px 25px -5px rgba(154, 67, 6, 0.40);
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 50%, #2563EB 100%) !important;
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .card-anthracite-mid {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 60%, #334155 100%) !important;
-  box-shadow: 0 10px 25px -5px rgba(26, 30, 38, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 60%, #450a0a 100%) !important;
+  box-shadow: 0 10px 25px -5px rgba(153, 27, 27, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 .card-orange-vibrant {
-  background: linear-gradient(135deg, #ea580c 0%, #F07A1F 60%, #fb923c 100%) !important;
-  box-shadow: 0 10px 25px -5px rgba(240, 122, 31, 0.40);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.40);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -183,19 +183,19 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: linear-gradient(135deg, #F07A1F 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%);
   color: #ffffff;
   border: none;
   border-radius: 8px;
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(240, 122, 31, 0.25);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
   transition: all 0.15s ease;
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(240, 122, 31, 0.35);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
   }
 }
 
@@ -219,9 +219,9 @@
 
   &:hover {
     background: #ffffff;
-    border-color: #F07A1F;
-    color: #ea580c;
-    box-shadow: 0 2px 6px rgba(240, 122, 31, 0.12);
+    border-color: #2563EB;
+    color: #1d4ed8;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.12);
 
     svg {
       transform: translateX(2px);
@@ -250,8 +250,8 @@
 
   &:hover {
     transform: translateY(-2px);
-    border-color: #fed7aa;
-    box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 2px 8px -2px rgba(240, 122, 31, 0.06);
+    border-color: #bfdbfe;
+    box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 2px 8px -2px rgba(37, 99, 235, 0.06);
   }
 
   &.is-running {
@@ -283,7 +283,7 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   padding: 5px;
 
-  &[data-os*="ubuntu"] { background: #fff7ed; border-color: #ffedd5; }
+  &[data-os*="ubuntu"] { background: #eff6ff; border-color: #dbeafe; }
   &[data-os*="debian"] { background: #fdf2f8; border-color: #fce7f3; }
   &[data-os*="alpine"] { background: #f0f9ff; border-color: #e0f2fe; }
   &[data-os*="windows"] { background: #eff6ff; border-color: #dbeafe; }
@@ -392,8 +392,8 @@
   transition: color 0.15s;
 
   &:hover {
-    color: #F07A1F;
-    svg { stroke: #F07A1F; }
+    color: #2563EB;
+    svg { stroke: #2563EB; }
   }
 
   svg {
@@ -464,9 +464,9 @@
   }
 
   &.cost {
-    background: #fff7ed;
-    border-color: #ffedd5;
-    color: #ea580c;
+    background: #eff6ff;
+    border-color: #dbeafe;
+    color: #1d4ed8;
     font-weight: 700;
   }
 }
@@ -557,16 +557,16 @@
   flex: 1;
 
   &.btn-start {
-    background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
     color: #ffffff;
     border: none;
-    box-shadow: 0 2px 8px rgba(240, 122, 31, 0.28);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.28);
 
     &:hover {
-      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
       color: #ffffff;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(240, 122, 31, 0.4);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
     }
   }
 
@@ -647,7 +647,7 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #fff7ed;
+  background: #eff6ff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -655,7 +655,7 @@
 
 .btn-empty-action {
   margin-top: 4px;
-  background: linear-gradient(135deg, #F07A1F 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%);
   color: #ffffff;
   border: none;
   font-size: 12.5px;
@@ -663,11 +663,11 @@
   padding: 8px 18px;
   border-radius: 20px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(240, 122, 31, 0.25);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
   transition: all 0.15s ease;
 
   &:hover {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     transform: translateY(-1px);
   }
 }
@@ -704,7 +704,7 @@
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
 
     .chevron-arrow {
-      color: #ea580c;
+      color: #1d4ed8;
       transform: translateX(3px);
     }
   }
@@ -781,7 +781,7 @@
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   font-weight: 700;
-  color: #ea580c;
+  color: #1d4ed8;
 }
 
 .paas-status-wrap {
@@ -825,7 +825,7 @@
 
   &.type-vm { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
   &.type-db { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-  &.type-saas { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+  &.type-saas { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
 }
 
 .req-status-badge {
@@ -894,9 +894,9 @@
   }
 
   &.box-saas {
-    background: #fff7ed;
-    border-color: #fed7aa;
-    color: #ea580c;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
   }
 }
 

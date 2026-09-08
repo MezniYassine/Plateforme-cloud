@@ -146,23 +146,23 @@
   }
 
   &:hover {
-    background: #fff7ed;
-    color: #F07A1F;
+    background: #eff6ff;
+    color: #2563EB;
 
     svg {
       opacity: 1;
-      stroke: #F07A1F;
+      stroke: #2563EB;
     }
   }
 
   &.active {
-    background: #fff7ed;
-    color: #F07A1F;
+    background: #eff6ff;
+    color: #2563EB;
     font-weight: 700;
 
     svg {
       opacity: 1;
-      stroke: #F07A1F;
+      stroke: #2563EB;
     }
 
     &::before {
@@ -172,7 +172,7 @@
       top: 6px;
       bottom: 6px;
       width: 3px;
-      background: #F07A1F;
+      background: #2563EB;
       border-radius: 0 4px 4px 0;
     }
   }
@@ -184,9 +184,9 @@
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 100px;
-  background: #F07A1F;
+  background: #2563EB;
   color: #ffffff;
-  box-shadow: 0 1px 4px rgba(240, 122, 31, 0.35);
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.35);
 }
 
 .sidebar-footer {
@@ -212,8 +212,8 @@
   min-width: 0;
 
   &:hover {
-    background: #fff7ed;
-    border-color: #ffedd5;
+    background: #eff6ff;
+    border-color: #dbeafe;
   }
 }
 
@@ -330,7 +330,7 @@
     .logo-sub {
       font-size: 9.5px !important;
       font-weight: 700 !important;
-      color: #F07A1F !important;
+      color: #2563EB !important;
       line-height: 1.1;
       max-width: 62px;
       white-space: nowrap;
@@ -402,8 +402,8 @@
 
       &:hover {
         background: #f8fafc;
-        color: #F07A1F;
-        border-color: #F07A1F;
+        color: #2563EB;
+        border-color: #2563EB;
       }
 
       svg {

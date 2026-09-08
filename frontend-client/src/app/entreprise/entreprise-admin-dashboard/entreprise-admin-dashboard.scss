@@ -17,9 +17,9 @@
   --bg-page:      #f8fafc;
   --bg-white:     #ffffff;
   --bg-hover:     #f1f5f9;
-  --orange:       #F07A1F;
-  --orange-deep:  #ea580c;
-  --orange-light: #fff7ed;
+  --orange:       #2563EB;
+  --orange-deep:  #1d4ed8;
+  --orange-light: #eff6ff;
   --blue:         #2563eb;
   --blue-light:   #eff6ff;
   --blue-mid:     #dbeafe;
@@ -190,8 +190,8 @@ html, body {
   }
 
   &.active {
-    background: #fff7ed;
-    color: #ea580c;
+    background: #eff6ff;
+    color: #1d4ed8;
     font-weight: 700;
 
     &::before {
@@ -201,13 +201,13 @@ html, body {
       top: 6px;
       bottom: 6px;
       width: 3px;
-      background: #F07A1F;
+      background: #2563EB;
       border-radius: 0 4px 4px 0;
     }
 
     svg {
       opacity: 1;
-      stroke: #ea580c;
+      stroke: #1d4ed8;
     }
   }
 
@@ -225,7 +225,7 @@ html, body {
 
 .nav-pill {
   margin-left: auto;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   font-size: 10.5px;
   font-weight: 800;
@@ -233,7 +233,7 @@ html, body {
   border-radius: 20px;
   min-width: 20px;
   text-align: center;
-  box-shadow: 0 2px 6px rgba(240, 122, 31, 0.3);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
 }
 
 .nav-count-pill {
@@ -268,7 +268,7 @@ html, body {
 
   &:hover {
     background: #f8fafc;
-    .admin-name { color: #ea580c; }
+    .admin-name { color: #1d4ed8; }
   }
 }
 
@@ -382,7 +382,7 @@ html, body {
     .logo-sub {
       font-size: 9.5px !important;
       font-weight: 700 !important;
-      color: var(--orange, #ea580c) !important;
+      color: var(--orange, #1d4ed8) !important;
       line-height: 1.1;
       max-width: 62px;
       white-space: nowrap;
@@ -578,19 +578,19 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  border: 1.5px solid #ea580c;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: 1.5px solid #1d4ed8;
   border-radius: 20px;
   padding: 6px 14px;
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.28);
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.28);
 
   &:hover {
-    background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
-    border-color: #c2410c;
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    border-color: #1e40af;
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(234, 88, 12, 0.42);
+    box-shadow: 0 4px 14px rgba(29, 78, 216, 0.42);
   }
 
   &:active {
@@ -932,11 +932,11 @@ html, body {
     background: linear-gradient(135deg, var(--orange) 0%, var(--orange-deep) 100%);
     color: #fff;
     border: none;
-    box-shadow: 0 2px 8px rgba(240, 122, 31, 0.3);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 
     &:hover {
       transform: translateY(-1px);
-      box-shadow: 0 4px 14px rgba(240, 122, 31, 0.45);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
     }
   }
 }
@@ -1509,7 +1509,7 @@ tbody td {
 
   &[data-t="vm"]   { background: var(--blue-light); color: var(--blue); border: 1px solid #bfdbfe; }
   &[data-t="db"]   { background: var(--green-light); color: var(--green); border: 1px solid #a7f3d0; }
-  &[data-t="saas"] { background: var(--orange-light); color: var(--orange-deep); border: 1px solid #fed7aa; }
+  &[data-t="saas"] { background: var(--orange-light); color: var(--orange-deep); border: 1px solid #bfdbfe; }
 }
 
 .mini-bar {
@@ -1959,7 +1959,7 @@ tbody td {
     &:focus {
       border-color: var(--orange);
       background: #fff;
-      box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.12);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
     }
   }
 }
@@ -1983,7 +1983,7 @@ tbody td {
   &:focus {
     border-color: var(--orange);
     background: #fff;
-    box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.12);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
 }
 
@@ -2210,7 +2210,7 @@ tbody td {
 
 @keyframes toast-pulse {
   0%, 100% { box-shadow: var(--shadow-lg); }
-  50% { box-shadow: 0 8px 32px rgba(240, 122, 31, 0.35); }
+  50% { box-shadow: 0 8px 32px rgba(37, 99, 235, 0.35); }
 }
 
 .toast-icon {

@@ -198,13 +198,13 @@ import { HttpClient } from '@angular/common/http';
       width: 42px;
       height: 42px;
       border-radius: 12px;
-      background: #fff7ed;
-      color: #ea580c;
+      background: #eff6ff;
+      color: #1d4ed8;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      border: 1.5px solid #fed7aa;
+      border: 1.5px solid #bfdbfe;
     }
 
     .header-texts {
@@ -306,11 +306,11 @@ import { HttpClient } from '@angular/common/http';
 
       &:focus-within {
         background: #ffffff;
-        border-color: #F07A1F;
-        box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.14);
+        border-color: #2563EB;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
 
         svg {
-          color: #F07A1F;
+          color: #2563EB;
         }
       }
 
@@ -384,7 +384,7 @@ import { HttpClient } from '@angular/common/http';
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
       color: #ffffff;
       border: none;
       font-size: 13px;
@@ -392,12 +392,12 @@ import { HttpClient } from '@angular/common/http';
       padding: 10px 20px;
       border-radius: 11px;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(240, 122, 31, 0.35);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
       &:hover:not(:disabled) {
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(240, 122, 31, 0.45);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.45);
       }
 
       &:disabled {

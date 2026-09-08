@@ -28,7 +28,7 @@
     left: 0;
     width: 140px;
     height: 3px;
-    background: linear-gradient(90deg, #F07A1F, #fbbf24);
+    background: linear-gradient(90deg, #2563EB, #fbbf24);
     border-radius: 14px 0 0 0;
   }
 
@@ -88,12 +88,12 @@
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #fff7ed, #ffedd5);
-  border: 1px solid #fed7aa;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 1px solid #bfdbfe;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #F07A1F;
+  color: #2563EB;
   flex-shrink: 0;
 }
 
@@ -233,7 +233,7 @@
 
 .bar-pred {
   fill: url(#predGrad);
-  filter: drop-shadow(0 2px 4px rgba(240, 122, 31, 0.3));
+  filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.3));
 }
 
 .bar-amount-label {
@@ -244,7 +244,7 @@
 }
 
 .bar-amount-pred {
-  fill: #ea580c;
+  fill: #1d4ed8;
   font-weight: 800;
 }
 
@@ -256,7 +256,7 @@
 }
 
 .bar-month-pred {
-  fill: #F07A1F;
+  fill: #2563EB;
   font-weight: 800;
 }
 
@@ -284,7 +284,7 @@
 }
 
 .dot-hist { background: #dbeafe; }
-.dot-pred { background: linear-gradient(135deg, #F07A1F, #fbbf24); }
+.dot-pred { background: linear-gradient(135deg, #2563EB, #fbbf24); }
 
 /* ══════════════════ CONTAINER QUERY: NARROW / SIDEBAR ═════════ */
 @container (max-width: 520px) {

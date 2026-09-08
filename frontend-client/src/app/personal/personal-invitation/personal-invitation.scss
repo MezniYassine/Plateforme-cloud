@@ -35,7 +35,7 @@
     top: -120px;
     left: 50%;
     transform: translateX(-50%);
-    background: radial-gradient(circle, rgba(240, 122, 31, 0.22) 0%, rgba(240, 122, 31, 0) 70%);
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, rgba(37, 99, 235, 0) 70%);
   }
 
   &.glow-blue {
@@ -73,11 +73,11 @@
   height: 40px;
   border-radius: 12px;
   background: #ffffff;
-  border: 1.5px solid #fed7aa;
+  border: 1.5px solid #bfdbfe;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(240, 122, 31, 0.15);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
 .logo-brand-text {
@@ -88,7 +88,7 @@
   letter-spacing: 0.5px;
 
   span {
-    color: #F07A1F;
+    color: #2563EB;
   }
 }
 
@@ -132,8 +132,8 @@
 
 /* ══════════════════ HEADER BANNER ══════════════════ */
 .card-header-banner {
-  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-  border-bottom: 1.5px solid #fed7aa;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-bottom: 1.5px solid #bfdbfe;
   padding: 28px 32px 24px;
   text-align: center;
 }
@@ -143,14 +143,14 @@
   align-items: center;
   gap: 6px;
   background: #ffffff;
-  border: 1px solid #fdba74;
+  border: 1px solid #93c5fd;
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 11.5px;
   font-weight: 800;
-  color: #ea580c;
+  color: #1d4ed8;
   margin-bottom: 12px;
-  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.1);
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.1);
 }
 
 .banner-title {
@@ -206,9 +206,9 @@
 
   &.step-active {
     .stepper-circle {
-      background: #fff7ed;
-      border-color: #fed7aa;
-      color: #ea580c;
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #1d4ed8;
     }
     .stepper-label {
       color: #0f172a;
@@ -315,8 +315,8 @@
 
   &:focus-within {
     background: #ffffff;
-    border-color: #F07A1F;
-    box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.14);
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
   }
 
   &.is-valid {
@@ -433,20 +433,20 @@
   justify-content: center;
   gap: 8px;
   height: 46px;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   border: none;
   border-radius: 12px;
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(240, 122, 31, 0.32);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 4px;
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(240, 122, 31, 0.45);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
   }
 
   &:disabled {
@@ -537,7 +537,7 @@
 .redirect-fill-track {
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, #10b981 0%, #F07A1F 100%);
+  background: linear-gradient(90deg, #10b981 0%, #2563EB 100%);
   animation: fillProgress 2.5s ease-out forwards;
 }
 

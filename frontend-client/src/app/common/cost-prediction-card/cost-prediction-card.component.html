@@ -3,7 +3,7 @@
   <!-- Loading state -->
   @if (loading()) {
     <div class="pred-loading">
-      <svg class="spin-svg" viewBox="0 0 24 24" fill="none" stroke="#F07A1F" stroke-width="2.5" width="22" height="22">
+      <svg class="spin-svg" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5" width="22" height="22">
         <path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/>
       </svg>
       <span>Analyse prédictive en cours...</span>
@@ -65,7 +65,7 @@
         <svg [attr.viewBox]="'0 0 ' + CHART_W + ' ' + CHART_H" [attr.width]="CHART_W" [attr.height]="CHART_H" class="pred-chart-svg">
           <defs>
             <linearGradient id="predGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#F07A1F"/>
+              <stop offset="0%" stop-color="#2563EB"/>
               <stop offset="100%" stop-color="#fbbf24"/>
             </linearGradient>
           </defs>

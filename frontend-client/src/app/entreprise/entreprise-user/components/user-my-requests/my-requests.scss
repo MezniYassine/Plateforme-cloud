@@ -86,7 +86,7 @@
 
   &.active {
     background: #ffffff;
-    color: #ea580c;
+    color: #1d4ed8;
     font-weight: 700;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   }
@@ -97,7 +97,7 @@
   font-weight: 800;
   padding: 1px 6px;
   border-radius: 10px;
-  background: #ea580c;
+  background: #1d4ed8;
   color: #ffffff;
 }
 
@@ -105,7 +105,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -113,12 +113,12 @@
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(240, 122, 31, 0.3);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
   transition: all 0.15s ease;
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(240, 122, 31, 0.4);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
   }
 }
 
@@ -195,9 +195,9 @@
   }
 
   &.box-saas {
-    background: #fff7ed;
-    border-color: #fed7aa;
-    color: #ea580c;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
   }
 }
 
@@ -240,7 +240,7 @@
 
   &.type-vm { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
   &.type-db { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-  &.type-saas { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+  &.type-saas { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
 }
 
 .req-specs-text {
@@ -407,7 +407,7 @@
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: #fff7ed;
+  background: #eff6ff;
   display: flex;
   align-items: center;
   justify-content: center;

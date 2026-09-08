@@ -197,11 +197,9 @@ export class ChatService {
   }
 
   private async buildSystemPrompt(userId: number, role: string): Promise<string> {
-    // ════════════════════════════════════════════════════════════════════════
     // 1. CAS ADMINISTRATEUR GLOBAL (SUPERVISION, AUDIT & MÉTROLOGIE SYSTÈME)
-    // ════════════════════════════════════════════════════════════════════════
-    const admin = await this.adminRepo.findOne({ where: { id: userId } }).catch(() => null);
-    const isGlobalAdmin = role === RoleClient.GLOBAL_ADMIN || role === 'GLOBAL_ADMIN' || !!admin;
+    const isGlobalAdmin = role === RoleClient.GLOBAL_ADMIN || role === 'GLOBAL_ADMIN';
+    const admin = isGlobalAdmin ? await this.adminRepo.findOne({ where: { id: userId } }).catch(() => null) : null;
 
     if (isGlobalAdmin) {
       const [
@@ -266,15 +264,15 @@ export class ChatService {
         ? recentLogs.map(l => `• [${l.level}] ${l.source}: ${l.message}`).join('\n')
         : '• Aucun incident critique récent non résolu.';
 
-      return `Tu es "Dynamix AI Assistant", l'assistant d'ingénierie et de supervision Cloud intelligent officiel de la plateforme Dynamix Cloud.
+      return `Tu es "Dyna AI Assistant", l'assistant d'ingénierie et de supervision Cloud intelligent officiel de la plateforme Dyna-Cloud.
 Tu interagis en direct avec l'ADMINISTRATEUR GLOBAL de la plateforme : ${adminName} (${adminEmail}).
 
 [ATTENTION - RÔLE ET LIMITES STRICTES DE L'ADMINISTRATEUR GLOBAL]
 1. L'ADMINISTRATEUR GLOBAL NE COMMANDE NI NE DÉPLOIE AUCUNE RESSOURCE POUR LUI-MÊME (les déploiements de VMs ou bases sont réservés aux clients et entreprises).
-2. Son rôle est d'AUDITER, GÉRER, MONITORER et SUPERVISER l'infrastructure globale de Dynamix Cloud (ESXi, serveurs, stockage, conteneurs, réseau, locataires et facturation).
+2. Son rôle est d'AUDITER, GÉRER, MONITORER et SUPERVISER l'infrastructure globale de Dyna-Cloud (ESXi, serveurs, stockage, conteneurs, réseau, locataires et facturation).
 3. NE LUI PROPOSE JAMAIS de déployer ou provisionner de nouvelles ressources pour son compte personnel !
 4. NE DIS JAMAIS "sur votre compte", "vous n'avez aucun service", ou "si vous souhaitez déployer des ressources au catalogue". L'administrateur supervise les ressources de TOUS les clients sur TOUTE la plateforme !
-5. S'il te salue ("bonjour", "salut"), réponds chaleureusement en le reconnaissant comme l'Administrateur de Dynamix Cloud et propose-lui de faire un point sur l'état de santé de l'infrastructure, le stockage des serveurs, la machine DBaaS, les conteneurs ou les locataires.
+5. S'il te salue ("bonjour", "salut"), réponds chaleureusement en le reconnaissant comme l'Administrateur de Dyna-Cloud et propose-lui de faire un point sur l'état de santé de l'infrastructure, le stockage des serveurs, la machine DBaaS, les conteneurs ou les locataires.
 
 [MÉTROLOGIE ET ÉTAT TECHNIQUE DU SYSTÈME EN TEMPS RÉEL]
 • RÉPARTITION CLOUD GLOBALE DES SERVICES DU SYSTÈME (TOTAL EN PRODUCTION : ${totalActiveServices} SERVICES ACTIFS) :
@@ -365,7 +363,7 @@ ${recentLogsSummary}
 
     const catalogItems = catalogues || [];
 
-    // B. Compiler le catalogue des offres Dynamix Cloud
+    // B. Compiler le catalogue des offres Dyna-Cloud
     const catalogList = (catalogItems || []).map(c => {
       const specs: string[] = [];
       if (c.vcpu) specs.push(`${c.vcpu} vCPU`);
@@ -376,7 +374,7 @@ ${recentLogsSummary}
     }).join('\n');
 
     // C. Compiler le contexte complet pour les clients
-    return `Tu es "Dynamix AI Assistant", l'assistant d'ingénierie Cloud intelligent officiel de la plateforme Dynamix Cloud.
+    return `Tu es "Dyna AI Assistant", l'assistant d'ingénierie Cloud intelligent officiel de la plateforme Dyna-Cloud.
 Ton rôle est d'accompagner, orienter et conseiller les utilisateurs sur leurs infrastructures cloud, architectures, déploiements et coûts.
 
 [DONNÉES EN TEMPS RÉEL DE L'UTILISATEUR CONNECTÉ]
@@ -390,7 +388,7 @@ ${userInstances.length > 0
         ? userInstances.map(inst => `• ${inst.name} (${inst.type}) — Statut: ${inst.status} — Coût: ${inst.price.toFixed(2)} DT/mois ${inst.ip ? '[' + inst.ip + ']' : ''}`).join('\n')
         : '• Aucune machine ou ressource déployée actuellement.'}
 
-[CATALOGUE OFFICIEL DYNAMIX CLOUD (TARIFS EN DINARS TUNISIENS DT)]
+[CATALOGUE OFFICIEL DYNA-CLOUD (TARIFS EN DINARS TUNISIENS DT)]
 ${catalogList}
 
 [CONSIGNES STRICTES DE COMPORTEMENT]

@@ -40,9 +40,9 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #fff7ed;
-  border: 1px solid #ffedd5;
-  color: #ea580c;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  color: #1d4ed8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,7 +106,7 @@
 
   &.is-active {
     background: #ffffff;
-    color: #ea580c;
+    color: #1d4ed8;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   }
 }
@@ -139,7 +139,7 @@
 
   &.active {
     background: #ffffff;
-    color: #F07A1F;
+    color: #2563EB;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   }
 }
@@ -148,7 +148,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #F07A1F 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%);
   color: #ffffff;
   border: none;
   padding: 8px 16px;
@@ -156,13 +156,13 @@
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(240, 122, 31, 0.25);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
   transition: all 0.2s ease;
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(240, 122, 31, 0.35);
-    background: linear-gradient(135deg, #f97316 0%, #c2410c 100%);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
   }
 }
 
@@ -269,9 +269,9 @@
   }
 
   &.box-saas {
-    background: #fff7ed;
-    border-color: #fed7aa;
-    color: #ea580c;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
   }
 }
 
@@ -341,7 +341,7 @@
 
   &.type-vm { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
   &.type-db { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-  &.type-saas { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+  &.type-saas { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
 }
 
 .specs-txt {
@@ -393,7 +393,7 @@
   transition: width 0.3s ease;
 
   &.fill-cpu {
-    background: linear-gradient(90deg, #F07A1F 0%, #EA580C 100%);
+    background: linear-gradient(90deg, #2563EB 0%, #1D4ED8 100%);
   }
 
   &.fill-ram {
@@ -563,9 +563,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  color: #ea580c;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
   padding: 3px 8px;
   border-radius: 6px;
   font-size: 11px;
@@ -574,9 +574,9 @@
   transition: all 0.15s ease;
 
   &:hover {
-    background: #ea580c;
+    background: #1d4ed8;
     color: #ffffff;
-    border-color: #ea580c;
+    border-color: #1d4ed8;
   }
 }
 
@@ -637,7 +637,7 @@
   background: #cbd5e1;
 
   .card-vm & { background: #0284c7; }
-  .card-db & { background: #ea580c; }
+  .card-db & { background: #1d4ed8; }
   .card-saas & { background: #0891b2; }
 }
 
@@ -659,7 +659,7 @@
   border: 1px solid #e2e8f0;
 
   &.box-vm { background: #f0f9ff; border-color: #bae6fd; color: #0284c7; }
-  &.box-db { background: #fff7ed; border-color: #fed7aa; color: #ea580c; }
+  &.box-db { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
   &.box-saas { background: #ecfeff; border-color: #a5f3fc; color: #0891b2; }
 
   .rc-logo-img { width: 24px; height: 24px; object-fit: contain; }
@@ -697,7 +697,7 @@
   border-radius: 5px;
 
   &.tag-vm { background: #e0f2fe; color: #0369a1; }
-  &.tag-db { background: #ffedd5; color: #c2410c; }
+  &.tag-db { background: #dbeafe; color: #1e40af; }
   &.tag-saas { background: #cffafe; color: #0e7490; }
 }
 
@@ -834,8 +834,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
   border-radius: 9px;
   padding: 8px 10px;
 }
@@ -850,7 +850,7 @@
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #c2410c;
+  color: #1e40af;
 }
 
 .rc-cred-val-box {
@@ -860,7 +860,7 @@
   background: #ffffff;
   padding: 3px 6px;
   border-radius: 5px;
-  border: 1px solid #fed7aa;
+  border: 1px solid #bfdbfe;
 }
 
 .rc-cred-txt {
@@ -1038,12 +1038,12 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ea580c;
+  color: #1d4ed8;
 }
 
 .modal-title {
@@ -1139,7 +1139,7 @@
 }
 
 .btn-primary-close {
-  background: #F07A1F;
+  background: #2563EB;
   color: #ffffff;
   border: none;
   padding: 8px 18px;
@@ -1148,7 +1148,7 @@
   font-weight: 700;
   cursor: pointer;
 
-  &:hover { background: #ea580c; }
+  &:hover { background: #1d4ed8; }
 }
 
 /* ══════════════════ EMPTY TABLE STATE ══════════════════ */

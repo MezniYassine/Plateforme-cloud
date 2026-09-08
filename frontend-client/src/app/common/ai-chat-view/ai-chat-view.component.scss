@@ -1,8 +1,8 @@
 // Colors & Variables
-$primary-orange: #f07a1f;
+$primary-orange: #2563eb;
 $primary-hover: #d96810;
-$primary-glow: rgba(240, 122, 31, 0.15);
-$primary-subtle: #fff7ed;
+$primary-glow: rgba(37, 99, 235, 0.15);
+$primary-subtle: #eff6ff;
 
 $dark-navy: #0f172a;
 $slate-card: #1e293b;
@@ -208,7 +208,7 @@ $bg-card: #ffffff;
     &:hover {
       background: #ffffff;
       border-color: $primary-orange;
-      box-shadow: 0 4px 12px rgba(240, 122, 31, 0.12);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
       transform: translateY(-2px);
 
       .card-title {
@@ -375,12 +375,12 @@ $bg-card: #ffffff;
       .chat-bubble {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         color: #ffffff;
-        border: 1px solid rgba(240, 122, 31, 0.25);
+        border: 1px solid rgba(37, 99, 235, 0.25);
         border-top-right-radius: 4px;
         box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
 
         strong {
-          color: #fdba74;
+          color: #93c5fd;
         }
       }
     }
@@ -439,7 +439,7 @@ $bg-card: #ffffff;
     &:focus-within {
       background: #ffffff;
       border-color: $primary-orange;
-      box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.15);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
 
     .chat-textarea {

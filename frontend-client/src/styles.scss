@@ -10,8 +10,8 @@ html {
   height: 100%;
   @include mat.theme((
     color: (
-      primary: mat.$cyan-palette,
-      tertiary: mat.$orange-palette,
+      primary: mat.$blue-palette,
+      tertiary: mat.$azure-palette,
     ),
     typography: Roboto,
     density: 0,
@@ -108,12 +108,22 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════
-   UNIFIED DYNAMIX BUTTON DESIGN SYSTEM (ORANGE / NOIR / GRIS)
+   UNIFIED DYNAMIX BUTTON DESIGN SYSTEM (COBALT / SLATE / MINT)
    ══════════════════════════════════════════════════════════ */
 :root {
-  --dyn-orange-grad: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
-  --dyn-orange-hover: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  --dyn-orange-shadow: 0 4px 14px rgba(240, 122, 31, 0.35);
+  --dyn-primary: #2563eb;
+  --dyn-primary-hover: #1d4ed8;
+  --dyn-primary-grad: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  --dyn-primary-hover-grad: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  --dyn-primary-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+
+  /* Rétro-compatibilité pour composants historiques */
+  --dyn-orange-grad: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  --dyn-orange-hover: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  --dyn-orange-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+
+  --dyn-accent-mint: #10b981;
+  --dyn-accent-mint-light: #ecfdf5;
   
   --dyn-dark: #0f172a;
   --dyn-dark-hover: #1e293b;
@@ -123,7 +133,7 @@ body {
   --dyn-gray-text: #475569;
 }
 
-/* 1. BOUTONS PRIMAIRES (ORANGE DYNAMIX) */
+/* 1. BOUTONS PRIMAIRES (BLEU COBALT DYNAMIX) */
 .btn-primary,
 .btn-submit,
 .btn-submit-action,
@@ -143,17 +153,17 @@ body {
 .btn-activate-mfa,
 .btn-start-large,
 .btn-empty-deploy {
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%) !important;
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
   color: #ffffff !important;
   border: none !important;
   border-radius: 10px;
   font-weight: 700;
-  box-shadow: 0 3px 10px rgba(240, 122, 31, 0.32) !important;
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.32) !important;
   transition: all 0.18s ease !important;
 
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
-    box-shadow: 0 5px 16px rgba(240, 122, 31, 0.45) !important;
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important;
+    box-shadow: 0 5px 18px rgba(37, 99, 235, 0.45) !important;
     transform: translateY(-1px) !important;
   }
 
@@ -194,7 +204,7 @@ body {
   }
 }
 
-/* 3. BOUTONS NEUTRES / CONTOUR (GRIS & BLANC AVEC SURVOL ORANGE) */
+/* 3. BOUTONS NEUTRES / CONTOUR (GRIS & BLANC AVEC SURVOL BLEU COBALT) */
 .btn-ghost,
 .btn-outline,
 .btn-neutral,
@@ -211,9 +221,9 @@ body {
   transition: all 0.18s ease !important;
 
   &:hover:not(:disabled) {
-    background: #fff7ed !important;
-    color: #ea580c !important;
-    border-color: #fed7aa !important;
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border-color: #bfdbfe !important;
     transform: translateY(-1px) !important;
   }
 

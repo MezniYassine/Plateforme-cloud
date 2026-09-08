@@ -1,4 +1,4 @@
-import { Component, signal, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -67,6 +67,46 @@ export class MonitoringPageComponent implements OnInit, OnDestroy {
   selectedLogLevel = signal<string>('ALL');
   selectedLogResolved = signal<boolean | undefined>(undefined);
   isResolvingLog = signal<number | null>(null);
+
+  // Pagination for logs
+  logsPage = signal<number>(1);
+  logsPageSize = signal<number>(10);
+
+  totalLogsPages = computed(() => Math.max(1, Math.ceil(this.logs().length / this.logsPageSize())));
+
+  pagedLogs = computed(() => {
+    const page = Math.min(this.logsPage(), this.totalLogsPages());
+    const size = this.logsPageSize();
+    const start = (page - 1) * size;
+    return this.logs().slice(start, start + size);
+  });
+
+  logsPageNumbers = computed(() => {
+    const total = this.totalLogsPages();
+    const current = this.logsPage();
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const pages: (number | string)[] = [];
+    if (current <= 4) {
+      for (let i = 1; i <= 5; i++) pages.push(i);
+      pages.push('...');
+      pages.push(total);
+    } else if (current >= total - 3) {
+      pages.push(1);
+      pages.push('...');
+      for (let i = total - 4; i <= total; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      pages.push('...');
+      pages.push(current - 1);
+      pages.push(current);
+      pages.push(current + 1);
+      pages.push('...');
+      pages.push(total);
+    }
+    return pages;
+  });
 
   // 4 Top KPI Cards aligned with Dynamix Cloud Palette
   monitorStats = signal([
@@ -251,12 +291,15 @@ export class MonitoringPageComponent implements OnInit, OnDestroy {
       source: this.selectedLogSource(),
       level: this.selectedLogLevel(),
       resolved: this.selectedLogResolved(),
-      limit: 150,
+      limit: 500,
     }).subscribe({
       next: (res) => {
         this.logs.set(res.logs || []);
         if (res.stats) {
           this.logStats.set(res.stats);
+        }
+        if (this.logsPage() > this.totalLogsPages()) {
+          this.logsPage.set(this.totalLogsPages());
         }
       },
       error: (err) => console.warn('Could not load system logs', err)
@@ -264,7 +307,21 @@ export class MonitoringPageComponent implements OnInit, OnDestroy {
   }
 
   onFilterChange() {
+    this.logsPage.set(1);
     this.loadLogs();
+  }
+
+  goToLogsPage(page: number | string) {
+    if (typeof page === 'string') return;
+    if (page >= 1 && page <= this.totalLogsPages()) {
+      this.logsPage.set(page);
+    }
+  }
+
+  setLogsPageSize(size: any) {
+    const s = Number(size) || 10;
+    this.logsPageSize.set(s);
+    this.logsPage.set(1);
   }
 
   resolveLog(id: number, event?: Event) {

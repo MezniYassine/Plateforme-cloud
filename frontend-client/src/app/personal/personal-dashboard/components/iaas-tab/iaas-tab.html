@@ -9,7 +9,7 @@
         <h2 class="page-h-title">Mes Machines Virtuelles</h2>
         <span class="count-badge">{{ totalVms() }} {{ totalVms() > 1 ? 'instances' : 'instance' }}</span>
       </div>
-      <p class="page-h-sub">Instances IaaS déployées sur VMware ESXi · Datacenter Dynamix</p>
+      <p class="page-h-sub">Instances IaaS déployées sur VMware ESXi · Datacenter Dyna-Cloud</p>
     </div>
 
     <div class="header-right">
@@ -134,7 +134,7 @@
           <div class="vm-name-row">
             <h3 class="vm-name" [title]="v.name">{{ v.name }}</h3>
           </div>
-          <span class="vm-catalog-tag">{{ v.catalogName || v.os || 'VM Dynamix' }}</span>
+          <span class="vm-catalog-tag">{{ v.catalogName || v.os || 'VM Dyna-Cloud' }}</span>
         </div>
 
         <div class="vm-status-badge" [class]="'status-' + v.status">

@@ -40,9 +40,9 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #fff7ed;
-  border: 1px solid #ffedd5;
-  color: #ea580c;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  color: #1d4ed8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -100,13 +100,13 @@
 
   &.is-active {
     background: #ffffff;
-    color: #ea580c;
+    color: #1d4ed8;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   }
 }
 
 .tab-badge-pill {
-  background: #ea580c;
+  background: #1d4ed8;
   color: #ffffff;
   font-size: 10.5px;
   font-weight: 800;
@@ -140,7 +140,7 @@
   }
 
   &.is-pending {
-    border: 1.5px solid #fed7aa;
+    border: 1.5px solid #bfdbfe;
     background: #fffcf8;
   }
 }
@@ -187,9 +187,9 @@
   }
 
   &.box-saas {
-    background: #fff7ed;
-    border-color: #fed7aa;
-    color: #ea580c;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
   }
 }
 
@@ -232,7 +232,7 @@
 
   &.type-vm { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
   &.type-db { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-  &.type-saas { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+  &.type-saas { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
 }
 
 .req-meta-row {
@@ -404,14 +404,14 @@
   gap: 5px;
   font-size: 12px;
   font-weight: 700;
-  color: #ea580c;
-  background: #fff7ed;
-  border: 1.5px solid #fed7aa;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
   padding: 4px 12px;
   border-radius: 20px;
-  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.12);
+  box-shadow: 0 1px 3px rgba(29, 78, 216, 0.12);
 
-  svg { stroke: #ea580c; }
+  svg { stroke: #1d4ed8; }
 }
 
 .status-pill-pending {
@@ -461,7 +461,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -469,12 +469,12 @@
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(240, 122, 31, 0.35);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
   transition: all 0.18s ease;
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(240, 122, 31, 0.45);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
   }
 
   &:disabled {
@@ -519,18 +519,18 @@
   gap: 7px;
   font-size: 12px;
   font-weight: 700;
-  color: #ea580c;
-  background: #fff7ed;
-  border: 1.5px solid #fed7aa;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
   padding: 6px 14px;
   border-radius: 20px;
-  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.12);
+  box-shadow: 0 1px 3px rgba(29, 78, 216, 0.12);
   letter-spacing: -0.01em;
   pointer-events: none;
   user-select: none;
 
   svg {
-    stroke: #ea580c;
+    stroke: #1d4ed8;
     flex-shrink: 0;
   }
 }

@@ -119,7 +119,7 @@ export class BillingTabComponent implements OnInit {
     if (!list || list.length === 0) return;
 
     const dateStr = new Date().toISOString().slice(0, 10);
-    const fileName = `facturation_dynamix_${dateStr}.xls`;
+    const fileName = `facturation_dyna_cloud_${dateStr}.xls`;
 
     const rowsHtml = list.map(i => `
       <tr>
@@ -135,7 +135,7 @@ export class BillingTabComponent implements OnInit {
       '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">',
       '<head><meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"/></head>',
       '<body style="font-family: Calibri, Arial, sans-serif; font-size: 11pt;">',
-      '<h2 style="color: #0F172A; margin-bottom: 4px;">DYNAMIX CLOUD — Relevé de Facturation</h2>',
+      '<h2 style="color: #0F172A; margin-bottom: 4px;">DYNA-CLOUD — Relevé de Facturation</h2>',
       '<p style="color: #64748B; font-size: 10pt; margin-top: 0;">Export généré le ' + new Date().toLocaleDateString('fr-FR') + ' à ' + new Date().toLocaleTimeString('fr-FR') + '</p><br/>',
       '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; border: 1px solid #E2E8F0;">',
       '<thead>',

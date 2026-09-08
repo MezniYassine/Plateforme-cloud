@@ -74,9 +74,9 @@
   flex-shrink: 0;
 
   &.icon-orange {
-    background: #fff7ed;
-    color: #ea580c;
-    border: 1px solid #ffedd5;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #dbeafe;
   }
 
   &.icon-amber {
@@ -164,7 +164,7 @@
   margin-top: 1px;
 
   svg {
-    stroke: #F07A1F;
+    stroke: #2563EB;
     flex-shrink: 0;
   }
 }
@@ -205,9 +205,9 @@
   gap: 4px;
   font-size: 11px;
   font-weight: 700;
-  color: #ea580c;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
   padding: 3px 9px;
   border-radius: 20px;
 
@@ -278,9 +278,9 @@
   flex-shrink: 0;
 
   &.icon-key {
-    background: #fff7ed;
-    color: #ea580c;
-    border: 1px solid #fed7aa;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
   }
 
   &.icon-shield {
@@ -362,16 +362,16 @@
   font-size: 12px;
   font-weight: 800;
   color: #ffffff;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   border: none;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(240, 122, 31, 0.28);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.28);
   transition: all 0.18s ease;
   white-space: nowrap;
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(240, 122, 31, 0.4);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
   }
 
   &:disabled {
@@ -405,7 +405,7 @@
 /* MFA OTP Box */
 .mfa-otp-box {
   background: #fffcf8;
-  border: 1.5px solid #fed7aa;
+  border: 1.5px solid #bfdbfe;
   border-radius: 16px;
   padding: 16px 18px;
   display: flex;
@@ -450,29 +450,29 @@
   width: 140px;
   text-align: center;
   padding: 8px 10px;
-  border: 2px solid #F07A1F;
+  border: 2px solid #2563EB;
   border-radius: 10px;
   background: #ffffff;
   font-family: 'DM Mono', monospace;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.15);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .btn-verify-otp {
   padding: 8px 16px;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   border: none;
   border-radius: 9px;
   font-size: 12.5px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(240, 122, 31, 0.3);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
   transition: all 0.15s ease;
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(240, 122, 31, 0.4);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
   }
 
   &:disabled {
@@ -583,12 +583,12 @@
 
       &:focus {
         background: #ffffff;
-        border-color: #F07A1F;
-        box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.14);
+        border-color: #2563EB;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
 
         & + .input-icon,
         ~ .input-icon {
-          stroke: #F07A1F;
+          stroke: #2563EB;
         }
       }
 
@@ -637,7 +637,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -645,12 +645,12 @@
   font-size: 13.5px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(240, 122, 31, 0.32);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(240, 122, 31, 0.42);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.42);
   }
 
   &:disabled {

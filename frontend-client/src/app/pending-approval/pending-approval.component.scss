@@ -35,7 +35,7 @@
     top: -100px;
     left: 50%;
     transform: translateX(-50%);
-    background: radial-gradient(circle, rgba(240, 122, 31, 0.25) 0%, rgba(240, 122, 31, 0) 70%);
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, rgba(37, 99, 235, 0) 70%);
   }
 
   &.glow-bottom {
@@ -73,11 +73,11 @@
   height: 40px;
   border-radius: 12px;
   background: #ffffff;
-  border: 1.5px solid #fed7aa;
+  border: 1.5px solid #bfdbfe;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(240, 122, 31, 0.15);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
 .logo-brand-text {
@@ -88,7 +88,7 @@
   letter-spacing: 0.5px;
 
   span {
-    color: #F07A1F;
+    color: #2563EB;
   }
 }
 
@@ -146,7 +146,7 @@
   position: absolute;
   inset: -6px;
   border-radius: 28px;
-  background: rgba(240, 122, 31, 0.18);
+  background: rgba(37, 99, 235, 0.18);
   animation: pulseGlow 2.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
   z-index: 1;
 }
@@ -167,14 +167,14 @@
   z-index: 2;
   width: 92px;
   height: 92px;
-  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-  border: 2px solid #fed7aa;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 2px solid #bfdbfe;
   border-radius: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ea580c;
-  box-shadow: 0 8px 24px rgba(240, 122, 31, 0.2);
+  color: #1d4ed8;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2);
 }
 
 /* ══════════════════ HEADINGS ══════════════════ */
@@ -303,16 +303,16 @@
   }
 
   &.active {
-    background: #fff7ed;
-    border-color: #fed7aa;
-    color: #ea580c;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
   }
 }
 
 .spinner-tiny {
   width: 14px;
   height: 14px;
-  border: 2px solid #ea580c;
+  border: 2px solid #1d4ed8;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -336,7 +336,7 @@
   margin-bottom: 24px;
 
   &.active {
-    background: linear-gradient(90deg, #10b981 0%, #F07A1F 100%);
+    background: linear-gradient(90deg, #10b981 0%, #2563EB 100%);
   }
 }
 
@@ -377,14 +377,14 @@
   }
 
   &.btn-primary {
-    background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
     color: #ffffff;
     border: none;
-    box-shadow: 0 4px 14px rgba(240, 122, 31, 0.32);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(240, 122, 31, 0.42);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.42);
     }
   }
 }

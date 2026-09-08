@@ -74,7 +74,7 @@ import { ChatModule } from './chat/chat.module';
           },
         }),
         defaults: {
-          from: '"Equipe Dynamix" <hello@demomailtrap.co>',
+          from: '"Equipe Dyna-Cloud" <hello@demomailtrap.co>',
         },
       }),
     }),

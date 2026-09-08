@@ -57,9 +57,9 @@
     width: 48px;
     height: 48px;
     border-radius: 14px;
-    background: #fff7ed;
-    color: #ea580c;
-    border: 1px solid #fed7aa;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -147,8 +147,8 @@
   }
 
   &.active-stat {
-    border-color: #ea580c;
-    box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.2);
+    border-color: #1d4ed8;
+    box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.2);
   }
 
   .stat-icon {
@@ -236,8 +236,8 @@
     transition: all 0.2s ease;
 
     &:focus {
-      border-color: #ea580c;
-      box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+      border-color: #1d4ed8;
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
     }
   }
 
@@ -458,11 +458,11 @@
   gap: 5px;
   font-size: 10.5px;
   font-weight: 700;
-  color: #ea580c;
-  background: #fff7ed;
+  color: #1d4ed8;
+  background: #eff6ff;
   padding: 2px 8px;
   border-radius: 6px;
-  border: 1px solid #ffedd5;
+  border: 1px solid #dbeafe;
 
   .ent-svg {
     width: 12px;
@@ -593,18 +593,18 @@
   gap: 6px;
   padding: 7px 14px;
   border-radius: 8px;
-  border: 1px solid #ea580c;
-  background: #fff7ed;
-  color: #ea580c;
+  border: 1px solid #1d4ed8;
+  background: #eff6ff;
+  color: #1d4ed8;
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
-    background: #ea580c;
+    background: #1d4ed8;
     color: #ffffff;
-    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+    box-shadow: 0 2px 8px rgba(29, 78, 216, 0.3);
   }
 
   svg {
@@ -652,7 +652,7 @@
   width: 36px;
   height: 36px;
   border: 3px solid #f1f5f9;
-  border-top-color: #ea580c;
+  border-top-color: #1d4ed8;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   margin: 0 auto 12px;
@@ -706,9 +706,9 @@
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: #fff7ed;
-    color: #ea580c;
-    border: 1px solid #fed7aa;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -739,8 +739,8 @@
   .ticket-cat-tag {
     font-size: 11px;
     font-weight: 700;
-    color: #ea580c;
-    background: #ffedd5;
+    color: #1d4ed8;
+    background: #dbeafe;
     padding: 2px 7px;
     border-radius: 6px;
   }
@@ -884,8 +884,8 @@
     border-radius: 4px;
 
     &.warn {
-      color: #ea580c;
-      background: #fff7ed;
+      color: #1d4ed8;
+      background: #eff6ff;
     }
   }
 
@@ -980,8 +980,8 @@
   transition: all 0.2s ease;
 
   &:focus {
-    border-color: #ea580c;
-    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
+    border-color: #1d4ed8;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
   }
 }
 
@@ -1025,17 +1025,17 @@
     padding: 10px 22px;
     border-radius: 10px;
     border: none;
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     color: #ffffff;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+    box-shadow: 0 2px 8px rgba(29, 78, 216, 0.3);
     transition: all 0.2s ease;
 
     &:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 4px 14px rgba(234, 88, 12, 0.4);
+      box-shadow: 0 4px 14px rgba(29, 78, 216, 0.4);
     }
 
     &:disabled {

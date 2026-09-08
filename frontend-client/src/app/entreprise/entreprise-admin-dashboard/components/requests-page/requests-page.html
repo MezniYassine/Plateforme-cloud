@@ -150,7 +150,7 @@
             <span>Provisionnement en cours...</span>
           </span>
         </div>
-        <span class="wallet-debit-hint" style="color: #ea580c; font-weight: 600;">Déploiement de l'infrastructure en cours...</span>
+        <span class="wallet-debit-hint" style="color: #1d4ed8; font-weight: 600;">Déploiement de l'infrastructure en cours...</span>
         } @else if (r.status === 'pending') {
         <div class="req-action-buttons-group">
           <button class="btn-approve-primary" [disabled]="r.isProvisioning" (click)="approveRequest.emit(r.id)">

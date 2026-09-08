@@ -43,7 +43,7 @@ export class UsersService {
       relations: ['entreprise', 'personal']
     });
     if (user) {
-      if (user.entreprise.id) {
+      if (user.entreprise?.id) {
         const admin = await this.clientRepo.findOne({
           where: {
             entreprise: { id: user.entreprise.id },

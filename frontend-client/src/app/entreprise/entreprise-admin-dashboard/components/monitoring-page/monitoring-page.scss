@@ -122,8 +122,8 @@
   }
 
   &:focus-within {
-    border-color: #F07A1F;
-    box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.12);
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
 
   .clear-search {
@@ -163,8 +163,8 @@
   transition: all 0.2s ease;
 
   &:focus {
-    border-color: #F07A1F;
-    box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.12);
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
 }
 
@@ -350,13 +350,13 @@
   }
 
   &.active {
-    background: #fff7ed;
-    border-color: #fed7aa;
-    color: #c2410c;
-    box-shadow: 0 1px 6px rgba(240, 122, 31, 0.12);
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e40af;
+    box-shadow: 0 1px 6px rgba(37, 99, 235, 0.12);
 
     .pill-badge {
-      background: #ffedd5;
+      background: #dbeafe;
       color: #9a3412;
     }
   }
@@ -468,7 +468,7 @@ img.os-img {
 }
 
 .mc-owner-pill {
-  color: #ea580c;
+  color: #1d4ed8;
   font-weight: 600;
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
@@ -599,9 +599,9 @@ img.os-img {
 
   &.active {
     background: #ffffff;
-    color: #F07A1F;
-    border: 1px solid #fed7aa;
-    box-shadow: 0 1px 2px rgba(240, 122, 31, 0.15);
+    color: #2563EB;
+    border: 1px solid #bfdbfe;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.15);
   }
 }
 
@@ -984,7 +984,7 @@ img.os-img {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #fff7ed;
+  background: #eff6ff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -992,7 +992,7 @@ img.os-img {
 
 .btn-primary-action {
   margin-top: 4px;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   border: none;
   border-radius: 16px;
@@ -1000,11 +1000,11 @@ img.os-img {
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(240, 122, 31, 0.3);
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);
   transition: all 0.15s ease;
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 5px 14px rgba(240, 122, 31, 0.4);
+    box-shadow: 0 5px 14px rgba(37, 99, 235, 0.4);
   }
 }

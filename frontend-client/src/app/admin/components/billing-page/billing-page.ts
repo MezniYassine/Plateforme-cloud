@@ -191,7 +191,7 @@ export class BillingPageComponent implements OnInit {
 
     // ── FEUILLE 1 : Factures Détaillées ────────────────────────────────────
     const sheet1Data: any[][] = [
-      ['DYNAMIX CLOUD — Facturation Globale des Clients'],
+      ['DYNA-CLOUD — Facturation Globale des Clients'],
       [`Export généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')} — ${rows.length} facture(s)`],
       [],
       [
@@ -285,7 +285,7 @@ export class BillingPageComponent implements OnInit {
     });
 
     const sheet2Data: any[][] = [
-      ['DYNAMIX CLOUD — Synthèse de Facturation par Client'],
+      ['DYNA-CLOUD — Synthèse de Facturation par Client'],
       [`Date de synthèse : ${new Date().toLocaleDateString('fr-FR')} — ${clientSummaryMap.size} client(s)`],
       [],
       [

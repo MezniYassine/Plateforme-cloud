@@ -38,12 +38,13 @@ export class AdminLogsService {
     return environment.apiBaseUrl.replace(/\/$/, '');
   }
 
-  getLogs(filters?: { source?: string; level?: string; resolved?: boolean; limit?: number }): Observable<LogsResponse> {
+  getLogs(filters?: { source?: string; level?: string; resolved?: boolean; limit?: number; page?: number }): Observable<LogsResponse> {
     let params: any = {};
     if (filters?.source && filters.source !== 'ALL') params.source = filters.source;
     if (filters?.level && filters.level !== 'ALL') params.level = filters.level;
     if (filters?.resolved !== undefined) params.resolved = String(filters.resolved);
     if (filters?.limit) params.limit = String(filters.limit);
+    if (filters?.page) params.page = String(filters.page);
 
     return this.http.get<LogsResponse>(`${this.baseUrl}/admin/logs`, { params });
   }

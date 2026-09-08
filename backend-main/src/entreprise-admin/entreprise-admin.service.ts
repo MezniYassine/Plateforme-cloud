@@ -101,9 +101,9 @@ export class EntrepriseService {
 
         await this.mailerService.sendMail({
             to: userSauvegarde.email,
-            subject: 'Bienvenue chez Dynamix - Activez votre compte',
+            subject: 'Bienvenue chez Dyna-Cloud - Activez votre compte',
             html: `
-                <h3>Bienvenue chez Dynamix</h3>
+                <h3>Bienvenue chez Dyna-Cloud</h3>
                 <p>Bonjour ${userSauvegarde.prenom} ${userSauvegarde.nom},</p>
                 <p>${adminWithEntreprise.prenom} ${adminWithEntreprise.nom} vous invite a rejoindre l'espace ${adminWithEntreprise.entreprise.nomEntreprise}.</p>
                 <p><a href="${urlInvitation}">Activer mon compte</a></p>

@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    DYNAMIX CLOUD — LOCATAIRES (TENANTS) PAGE STYLES
-   Palette: Orange (#F07A1F), Anthracite (#0B0D12, #1E293B), Blanc (#FFFFFF)
+   Palette: Orange (#2563EB), Anthracite (#0B0D12, #1E293B), Blanc (#FFFFFF)
 ═══════════════════════════════════════════════════════════════ */
 
 :host {
@@ -129,8 +129,8 @@
 }
 
 .search-wrap input:focus {
-  border-color: #F07A1F;
-  box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.12);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .search-wrap input::placeholder {
@@ -165,7 +165,7 @@
 
 .filter-tab.active {
   background: #ffffff;
-  color: #F07A1F;
+  color: #2563EB;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
@@ -290,17 +290,17 @@
 
   /* 1. Entreprise: Elegant Warm Ivory / Soft Peach Tone with Vivid Brand Orange Accent */
   &.ent-avatar {
-    background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
-    border: 1px solid rgba(240, 122, 31, 0.35);
-    color: #EA580C;
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    border: 1px solid rgba(37, 99, 235, 0.35);
+    color: #1D4ED8;
 
     .avatar-type-badge {
-      background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
     }
 
     &:hover {
-      border-color: rgba(240, 122, 31, 0.65);
-      background: linear-gradient(135deg, #FFEDD5 0%, #FED7AA 100%);
+      border-color: rgba(37, 99, 235, 0.65);
+      background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
     }
   }
 
@@ -395,9 +395,9 @@
 }
 
 .type-tag.ent {
-  background: #fff7ed;
-  color: #c2410c;
-  border: 1px solid #ffedd5;
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #dbeafe;
 }
 
 .type-tag.pers {
@@ -440,7 +440,7 @@
 }
 
 .phone-chip svg {
-  color: #F07A1F;
+  color: #2563EB;
 }
 
 /* Tax ID Monospace Tag */
@@ -496,13 +496,13 @@
 }
 
 .badge.pending {
-  background: #fff7ed;
-  color: #c2410c;
-  border: 1px solid #ffedd5;
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #dbeafe;
 }
 .badge.pending .badge-dot {
-  background: #f97316;
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+  background: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .badge.rejected {
@@ -592,18 +592,18 @@
 
 /* Suspend Button (Aligned on the Left, Direct Column) */
 .action-btn.suspend {
-  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
-  color: #c2410c;
-  border: 1px solid #fed7aa;
-  box-shadow: 0 1px 3px rgba(249, 115, 22, 0.12);
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.12);
   font-weight: 700;
   min-width: 104px;
 }
 
 .action-btn.suspend:hover {
-  background: linear-gradient(180deg, #ea580c 0%, #c2410c 100%);
+  background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
   color: #ffffff;
-  border-color: #c2410c;
+  border-color: #1e40af;
   box-shadow: 0 2px 6px rgba(194, 65, 12, 0.25);
   transform: translateY(-1px);
 }
@@ -679,8 +679,8 @@
 }
 
 .btn-toggle-sub:hover {
-  border-color: #F07A1F;
-  color: #F07A1F;
+  border-color: #2563EB;
+  color: #2563EB;
 }
 
 /* Empty State */

@@ -408,7 +408,7 @@ export class DeployPageComponent implements OnInit {
             price: Number(cat.prix ?? cat.price ?? 0),
             specs,
             bg: cat.bg || '#f8fafc',
-            color: cat.color || '#F07A1F',
+            color: cat.color || '#2563EB',
             rawOffer: cat,
           };
         });
@@ -881,7 +881,7 @@ export class DeployPageComponent implements OnInit {
             cat.stockageGB ? `${cat.stockageGB} GB SSD` : ''
           ].filter(Boolean),
           bg: cat.bg || '#f8fafc',
-          color: cat.color || '#F07A1F',
+          color: cat.color || '#2563EB',
           rawOffer: cat,
         }));
         this.upgradeCatalogues.set(mapped);

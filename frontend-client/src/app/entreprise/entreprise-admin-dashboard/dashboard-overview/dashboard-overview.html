@@ -155,8 +155,8 @@
         <svg viewBox="0 0 500 130" class="wave-svg" preserveAspectRatio="none">
           <defs>
             <linearGradient id="entGradOrange" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#F07A1F" stop-opacity="0.45" />
-              <stop offset="100%" stop-color="#F07A1F" stop-opacity="0.0" />
+              <stop offset="0%" stop-color="#2563EB" stop-opacity="0.45" />
+              <stop offset="100%" stop-color="#2563EB" stop-opacity="0.0" />
             </linearGradient>
             <linearGradient id="entGradAnthracite" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="#334155" stop-opacity="0.30" />
@@ -179,12 +179,12 @@
           <!-- Current Period Curve & Fill -->
           @if (waveChartData().currentArea) {
             <path [attr.d]="waveChartData().currentArea" fill="url(#entGradOrange)" />
-            <path [attr.d]="waveChartData().currentPath" fill="none" stroke="#F07A1F" stroke-width="3" stroke-linecap="round" />
+            <path [attr.d]="waveChartData().currentPath" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" />
           }
 
           <!-- Highlight Dots on Peaks -->
           @for (dot of waveChartData().dots; track $index) {
-            <circle [attr.cx]="dot.cx" [attr.cy]="dot.cy" r="4.5" fill="#fff" stroke="#F07A1F" stroke-width="3" />
+            <circle [attr.cx]="dot.cx" [attr.cy]="dot.cy" r="4.5" fill="#fff" stroke="#2563EB" stroke-width="3" />
           }
         </svg>
 
@@ -215,12 +215,12 @@
           <!-- Background track -->
           <circle cx="80" cy="80" r="60" fill="none" stroke="#f1f5f9" stroke-width="16" />
 
-          <!-- Segment 1: Brand Orange #F07A1F (IaaS - VMs) -->
-          <circle cx="80" cy="80" r="60" fill="none" stroke="#F07A1F" stroke-width="16"
+          <!-- Segment 1: Brand Orange #2563EB (IaaS - VMs) -->
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#2563EB" stroke-width="16"
             [attr.stroke-dasharray]="donutStats().dash1" stroke-dashoffset="0" stroke-linecap="round" class="donut-segment" />
 
-          <!-- Segment 2: Deep Dark Orange #9A4306 (PaaS - Databases) -->
-          <circle cx="80" cy="80" r="60" fill="none" stroke="#9A4306" stroke-width="16"
+          <!-- Segment 2: Deep Dark Orange #172554 (PaaS - Databases) -->
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#172554" stroke-width="16"
             [attr.stroke-dasharray]="donutStats().dash2" [attr.stroke-dashoffset]="donutStats().offset2" stroke-linecap="round" class="donut-segment" />
 
           <!-- Segment 3: Charcoal Anthracite #2D3340 (SaaS - Applications) -->

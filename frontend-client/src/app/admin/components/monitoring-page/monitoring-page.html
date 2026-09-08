@@ -135,7 +135,7 @@
                 <div style="display:flex;align-items:center;gap:7px">
                   <div class="mini-bar">
                     <div class="mini-fill" [style.width.%]="v.cpuUse"
-                      [style.background]="v.cpuUse > 80 ? '#dc2626' : v.cpuUse > 50 ? '#F07A1F' : '#059669'"></div>
+                      [style.background]="v.cpuUse > 80 ? '#dc2626' : v.cpuUse > 50 ? '#2563EB' : '#059669'"></div>
                   </div>
                   <span style="font-size:12px;font-weight:600">{{ v.cpuUse | number:'1.0-1' }}%</span>
                 </div>
@@ -155,7 +155,7 @@
                 <div style="display:flex;align-items:center;gap:7px">
                   <div class="mini-bar">
                     <div class="mini-fill" [style.width.%]="v.ramUse"
-                      [style.background]="v.ramUse > 80 ? '#dc2626' : v.ramUse > 50 ? '#F07A1F' : '#059669'"></div>
+                      [style.background]="v.ramUse > 80 ? '#dc2626' : v.ramUse > 50 ? '#2563EB' : '#059669'"></div>
                   </div>
                   <span style="font-size:12px;font-weight:600">{{ v.ramUse | number:'1.0-1' }}%</span>
                 </div>
@@ -240,7 +240,7 @@
                 <div style="display:flex;align-items:center;gap:7px">
                   <div class="mini-bar">
                     <div class="mini-fill" [style.width]="c.cpuUsage"
-                      [style.background]="parsePercent(c.cpuUsage) > 80 ? '#dc2626' : parsePercent(c.cpuUsage) > 50 ? '#F07A1F' : '#059669'">
+                      [style.background]="parsePercent(c.cpuUsage) > 80 ? '#dc2626' : parsePercent(c.cpuUsage) > 50 ? '#2563EB' : '#059669'">
                     </div>
                   </div>
                   <span style="font-size:12px;font-weight:600">{{ c.cpuUsage }}</span>
@@ -254,7 +254,7 @@
                 <div style="display:flex;align-items:center;gap:7px">
                   <div class="mini-bar">
                     <div class="mini-fill" [style.width]="c.ramPercentage"
-                      [style.background]="parsePercent(c.ramPercentage) > 80 ? '#dc2626' : parsePercent(c.ramPercentage) > 50 ? '#F07A1F' : '#059669'">
+                      [style.background]="parsePercent(c.ramPercentage) > 80 ? '#dc2626' : parsePercent(c.ramPercentage) > 50 ? '#2563EB' : '#059669'">
                     </div>
                   </div>
                   <span style="font-size:12px;font-weight:600">{{ c.ramPercentage }}</span>
@@ -445,7 +445,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (l of logs(); track l.id) {
+              @for (l of pagedLogs(); track l.id) {
               <tr [class.row-unresolved]="!l.resolved">
                 <td>
                   <span class="log-lvl-badge" [class]="getLogLevelClass(l.level)">
@@ -473,7 +473,7 @@
                     <span style="font-size:11px;color:#64748b">{{ l.clientEmail }}</span>
                     }
                     @if (l.serviceType) {
-                    <span style="font-size:10px;font-weight:700;color:#F07A1F">{{ l.serviceType }}</span>
+                    <span style="font-size:10px;font-weight:700;color:#2563EB">{{ l.serviceType }}</span>
                     }
                   </div>
                   } @else {
@@ -515,6 +515,97 @@
               }
             </tbody>
           </table>
+
+          <!-- Logs Pagination Bar -->
+          <div class="pagination-bar logs-pagination">
+            <div class="pag-controls">
+              <!-- First Page -->
+              <button
+                type="button"
+                class="pag-btn"
+                [disabled]="logsPage() === 1"
+                (click)="goToLogsPage(1)"
+                title="Première page"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
+                  <polyline points="11 17 6 12 11 7" />
+                  <polyline points="18 17 13 12 18 7" />
+                </svg>
+              </button>
+
+              <!-- Previous Page -->
+              <button
+                type="button"
+                class="pag-btn"
+                [disabled]="logsPage() === 1"
+                (click)="goToLogsPage(logsPage() - 1)"
+                title="Page précédente"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+
+              <!-- Page Numbers -->
+              @for (p of logsPageNumbers(); track $index) {
+                @if (p === '...') {
+                  <span class="pag-ellipsis">…</span>
+                } @else {
+                  <button
+                    type="button"
+                    class="pag-btn pag-num"
+                    [class.pag-active]="logsPage() === p"
+                    (click)="goToLogsPage(p)"
+                  >
+                    {{ p }}
+                  </button>
+                }
+              }
+
+              <!-- Next Page -->
+              <button
+                type="button"
+                class="pag-btn"
+                [disabled]="logsPage() === totalLogsPages()"
+                (click)="goToLogsPage(logsPage() + 1)"
+                title="Page suivante"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+
+              <!-- Last Page -->
+              <button
+                type="button"
+                class="pag-btn"
+                [disabled]="logsPage() === totalLogsPages()"
+                (click)="goToLogsPage(totalLogsPages())"
+                title="Dernière page"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
+                  <polyline points="13 17 18 12 13 7" />
+                  <polyline points="6 17 11 12 6 7" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="pag-meta-wrap">
+              <span class="pag-info">
+                Page <strong>{{ logsPage() }}</strong> sur <strong>{{ totalLogsPages() }}</strong>
+                · <strong>{{ logs().length }}</strong> log{{ logs().length > 1 ? 's' : '' }}
+              </span>
+
+              <div class="pag-size-selector">
+                <span class="pag-size-label">Afficher :</span>
+                <select [ngModel]="logsPageSize()" (ngModelChange)="setLogsPageSize($event)" class="pag-size-select">
+                  <option [ngValue]="10">10 / page</option>
+                  <option [ngValue]="25">25 / page</option>
+                  <option [ngValue]="50">50 / page</option>
+                </select>
+              </div>
+            </div>
+          </div>
           }
         </div>
       </div>

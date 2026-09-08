@@ -85,8 +85,8 @@
   }
 
   &.kpi-saas {
-    background: #fff7ed;
-    color: #ea580c;
+    background: #eff6ff;
+    color: #1d4ed8;
   }
 
   &.kpi-active {
@@ -222,8 +222,8 @@
 
   &:focus-within {
     background: #ffffff;
-    border-color: #F07A1F;
-    box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.12);
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
 
   .search-icon {
@@ -308,13 +308,13 @@
 
   &.active {
     background: #ffffff;
-    color: #ea580c;
+    color: #1d4ed8;
     font-weight: 700;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 
     .pill-count {
-      background: #fff7ed;
-      color: #ea580c;
+      background: #eff6ff;
+      color: #1d4ed8;
     }
   }
 }
@@ -324,7 +324,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: linear-gradient(135deg, #F07A1F 0%, #EA580C 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -332,13 +332,13 @@
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(240, 122, 31, 0.3);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 5px 16px rgba(240, 122, 31, 0.45);
+    box-shadow: 0 5px 16px rgba(37, 99, 235, 0.45);
   }
 
   &:active {
@@ -390,7 +390,7 @@
 .svc-card.brand-redis .card-accent-line { background: linear-gradient(90deg, #D82C20 0%, #FF5252 100%); }
 .svc-card.brand-wordpress .card-accent-line { background: linear-gradient(90deg, #0073AA 0%, #2271b1 100%); }
 .svc-card.brand-n8n .card-accent-line { background: linear-gradient(90deg, #EA4B71 0%, #FF6F61 100%); }
-.svc-card.brand-default .card-accent-line { background: linear-gradient(90deg, #F07A1F 0%, #EA580C 100%); }
+.svc-card.brand-default .card-accent-line { background: linear-gradient(90deg, #2563EB 0%, #1D4ED8 100%); }
 
 /* Card Head */
 .svc-card-head {
@@ -420,9 +420,9 @@
   }
 
   &.box-saas {
-    background: #fff7ed;
-    border-color: #fed7aa;
-    color: #ea580c;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
   }
 }
 
@@ -479,9 +479,9 @@
   }
 
   &.type-saas {
-    background: #fff7ed;
-    color: #ea580c;
-    border: 1px solid #fed7aa;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
   }
 }
 
@@ -557,7 +557,7 @@
   gap: 5px;
 
   svg {
-    color: #F07A1F;
+    color: #2563EB;
   }
 }
 
@@ -576,11 +576,11 @@
 
   &:hover {
     background: #ffffff;
-    border-color: #F07A1F;
-    box-shadow: 0 2px 8px rgba(240, 122, 31, 0.1);
+    border-color: #2563EB;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
 
     .btn-copy-icon {
-      color: #ea580c;
+      color: #1d4ed8;
     }
   }
 }
@@ -833,17 +833,17 @@
   }
 
   &.btn-upgrade {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     color: #ffffff;
-    border: 1.5px solid #ea580c;
-    box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
+    border: 1.5px solid #1d4ed8;
+    box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);
 
     &:hover {
-      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
-      border-color: #c2410c;
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+      border-color: #1e40af;
       color: #ffffff;
       transform: translateY(-1px);
-      box-shadow: 0 4px 14px rgba(234, 88, 12, 0.38);
+      box-shadow: 0 4px 14px rgba(29, 78, 216, 0.38);
     }
   }
 
@@ -867,8 +867,8 @@
   display: inline-flex;
   align-items: baseline;
   gap: 3px;
-  background: #fff7ed;
-  border: 1px solid #ffedd5;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
   padding: 4px 10px;
   border-radius: 10px;
 
@@ -876,13 +876,13 @@
     font-family: 'DM Mono', monospace;
     font-size: 14.5px;
     font-weight: 800;
-    color: #ea580c;
+    color: #1d4ed8;
   }
 
   .cost-currency {
     font-size: 11px;
     font-weight: 800;
-    color: #ea580c;
+    color: #1d4ed8;
   }
 
   .cost-unit {
@@ -926,11 +926,11 @@
   width: 58px;
   height: 58px;
   border-radius: 16px;
-  background: #fff7ed;
+  background: #eff6ff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(240, 122, 31, 0.15);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
 
   &.search-empty {
     background: #f1f5f9;

@@ -1,5 +1,5 @@
 /**
- * DYNAMIX CLOUD — Utilitaire de Prédiction de Coûts (Option B IA)
+ * DYNA-CLOUD — Utilitaire de Prédiction de Coûts (Option B IA)
  * Algorithme : Régression linéaire pondérée + moyenne mobile
  */
 

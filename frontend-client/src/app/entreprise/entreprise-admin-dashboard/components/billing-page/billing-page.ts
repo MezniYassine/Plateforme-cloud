@@ -39,7 +39,7 @@ export class BillingPageComponent {
       '#2563eb', // royal blue
       '#7c3aed', // purple
       '#059669', // emerald
-      '#ea580c', // orange
+      '#1d4ed8', // orange
       '#0891b2', // cyan
       '#db2777', // pink
       '#4f46e5', // indigo
@@ -176,7 +176,7 @@ export class BillingPageComponent {
       '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">',
       '<head><meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"/></head>',
       '<body style="font-family: Calibri, Arial, sans-serif; font-size: 11pt;">',
-      '<h2 style="color: #0F172A; margin-bottom: 4px;">DYNAMIX CLOUD — Facturation & Transactions Entreprise</h2>',
+      '<h2 style="color: #0F172A; margin-bottom: 4px;">DYNA-CLOUD — Facturation & Transactions Entreprise</h2>',
       '<p style="color: #64748B; font-size: 10pt; margin-top: 0;">Export g\u00e9n\u00e9r\u00e9 le ' + new Date().toLocaleDateString('fr-FR') + ' \u00e0 ' + new Date().toLocaleTimeString('fr-FR') + '</p><br/>',
       '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; border: 1px solid #E2E8F0;">',
       '<thead>',

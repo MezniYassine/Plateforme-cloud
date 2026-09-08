@@ -41,7 +41,7 @@ export class AiChatViewComponent implements OnInit, AfterViewChecked {
     {
       title: 'Conseils Architecture',
       desc: 'Recommandation du pack selon votre besoin applicatif.',
-      prompt: 'Je prépare une nouvelle application. Quel pack ou catalogue Dynamix me conseilles-tu selon mes besoins et mon budget ?',
+      prompt: 'Je prépare une nouvelle application. Quel pack ou catalogue Dyna-Cloud me conseilles-tu selon mes besoins et mon budget ?',
     },
     {
       title: 'Mes Machines & Statut',
@@ -94,12 +94,12 @@ export class AiChatViewComponent implements OnInit, AfterViewChecked {
   inputPlaceholder = computed(() =>
     this.isAdmin()
       ? "Posez une question sur l'infrastructure (ex: Quel est le stockage restant pour la machine DBaaS ?)..."
-      : "Posez votre question à Dynamix AI (ex: Quel pack me conseilles-tu pour héberger PostgreSQL ?)..."
+      : "Posez votre question à Dyna AI (ex: Quel pack me conseilles-tu pour héberger PostgreSQL ?)..."
   );
 
   disclaimerText = computed(() =>
     this.isAdmin()
-      ? "Assistant d'administration et de supervision système connecté en temps réel à l'infrastructure Dynamix Cloud."
+      ? "Assistant d'administration et de supervision système connecté en temps réel à l'infrastructure Dyna-Cloud."
       : "Assistant Cloud intelligent connecté en direct. Pour les pannes physiques ou litiges, veuillez ouvrir un Ticket de Support."
   );
 
@@ -108,42 +108,70 @@ export class AiChatViewComponent implements OnInit, AfterViewChecked {
   }
 
   loadUserData() {
-    this.http.get<any>(`${this.base}/users/me`).subscribe({
-      next: (user) => {
-        const prenom = (user?.prenom || '').trim();
-        const nom = (user?.nom || '').trim();
-        const fullName = `${prenom} ${nom}`.trim() || user?.email || '';
-        this.userName.set(fullName);
-        if (user?.role === 'GLOBAL_ADMIN' || user?.role === 'ADMIN_GLOBAL') {
-          this.isAdmin.set(true);
-        }
-        this.initWelcomeMessage(fullName);
-      },
-      error: () => {
-        // Fallback pour compte Administrateur Global
-        this.http.get<any>(`${this.base}/admin/me`).subscribe({
-          next: (admin) => {
-            const prenom = (admin?.prenom || '').trim();
-            const nom = (admin?.nom || '').trim();
-            const fullName = `${prenom} ${nom}`.trim() || admin?.email || '';
-            this.isAdmin.set(true);
-            this.userName.set(fullName);
-            this.initWelcomeMessage(fullName);
-          },
-          error: () => {
-            this.initWelcomeMessage('');
-          },
-        });
-      },
-    });
+    // 1. Détection stricte et prioritaire du rôle via le payload du token JWT
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('access_token') : null;
+    let tokenRole = '';
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        tokenRole = payload?.role || '';
+      } catch (e) {
+        console.warn('Could not decode token payload', e);
+      }
+    }
+
+    const isGlobalAdmin = tokenRole === 'GLOBAL_ADMIN';
+    this.isAdmin.set(isGlobalAdmin);
+
+    if (isGlobalAdmin) {
+      // Compte Administrateur Global uniquement
+      this.http.get<any>(`${this.base}/admin/me`).subscribe({
+        next: (admin) => {
+          const prenom = (admin?.prenom || '').trim();
+          const nom = (admin?.nom || '').trim();
+          const fullName = `${prenom} ${nom}`.trim() || admin?.email || '';
+          this.userName.set(fullName);
+          this.initWelcomeMessage(fullName);
+        },
+        error: () => {
+          this.initWelcomeMessage('');
+        },
+      });
+    } else {
+      // Compte Client (Personnel ou Entreprise)
+      this.http.get<any>(`${this.base}/users/me`).subscribe({
+        next: (user) => {
+          const prenom = (user?.prenom || '').trim();
+          const nom = (user?.nom || '').trim();
+          const fullName = `${prenom} ${nom}`.trim() || user?.email || '';
+          this.userName.set(fullName);
+          this.initWelcomeMessage(fullName);
+        },
+        error: () => {
+          // Fallback spécifique pour les particuliers
+          this.http.get<any>(`${this.base}/personal/me`).subscribe({
+            next: (pers) => {
+              const prenom = (pers?.client?.prenom || pers?.prenom || '').trim();
+              const nom = (pers?.client?.nom || pers?.nom || '').trim();
+              const fullName = `${prenom} ${nom}`.trim() || pers?.client?.email || '';
+              this.userName.set(fullName);
+              this.initWelcomeMessage(fullName);
+            },
+            error: () => {
+              this.initWelcomeMessage('');
+            },
+          });
+        },
+      });
+    }
   }
 
   private initWelcomeMessage(name: string) {
     let greeting = '';
     if (this.isAdmin()) {
       greeting = name
-        ? `Bonjour ${name} ! Je suis Dynamix AI Assistant, votre assistant d'administration et de métrologie système. Comment puis-je vous aider aujourd'hui ?`
-        : `Bonjour ! Je suis Dynamix AI Assistant, votre assistant d'administration et de métrologie système. Comment puis-je vous aider aujourd'hui ?`;
+        ? `Bonjour ${name} ! Je suis Dyna AI Assistant, votre assistant d'administration et de métrologie système. Comment puis-je vous aider aujourd'hui ?`
+        : `Bonjour ! Je suis Dyna AI Assistant, votre assistant d'administration et de métrologie système. Comment puis-je vous aider aujourd'hui ?`;
     } else {
       greeting = name
         ? `Bonjour ${name}, comment puis-je vous aider aujourd'hui ?`

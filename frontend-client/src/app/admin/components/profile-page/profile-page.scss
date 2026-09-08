@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    DYNAMIX CLOUD — PROFIL SUPER ADMIN PAGE STYLES
-   Palette: Orange (#F07A1F), Anthracite (#0B0D12, #1E293B), Blanc (#FFFFFF)
+   Palette: Orange (#2563EB), Anthracite (#0B0D12, #1E293B), Blanc (#FFFFFF)
 ═══════════════════════════════════════════════════════════════ */
 
 :host {
@@ -71,7 +71,7 @@
   width: 60px;
   height: 60px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #F07A1F 0%, #ea580c 50%, #9a3412 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 50%, #9a3412 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -80,8 +80,8 @@
   font-size: 20px;
   font-weight: 800;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(240, 122, 31, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(240, 122, 31, 0.4);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(37, 99, 235, 0.4);
 }
 
 .admin-avatar::before {
@@ -111,9 +111,9 @@
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 6px;
-  background: #fff7ed;
-  color: #c2410c;
-  border: 1px solid #ffedd5;
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #dbeafe;
   margin-top: 4px;
 }
 
@@ -155,8 +155,8 @@
 }
 
 .profile-field input:focus {
-  border-color: #F07A1F;
-  box-shadow: 0 0 0 3px rgba(240, 122, 31, 0.12);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .btn-save {
@@ -164,20 +164,20 @@
   align-items: center;
   gap: 6px;
   padding: 8px 18px;
-  background: linear-gradient(135deg, #F07A1F 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%);
   color: #ffffff;
   border: none;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(240, 122, 31, 0.25);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
   transition: all 0.18s;
 }
 
 .btn-save:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(240, 122, 31, 0.35);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
 .btn-save:disabled {
@@ -287,12 +287,12 @@
 
 .btn-sec-action.primary {
   background: #f8fafc;
-  color: #F07A1F;
-  border-color: #F07A1F;
+  color: #2563EB;
+  border-color: #2563EB;
 }
 
 .btn-sec-action.primary:hover {
-  background: #F07A1F;
+  background: #2563EB;
   color: #ffffff;
 }
 

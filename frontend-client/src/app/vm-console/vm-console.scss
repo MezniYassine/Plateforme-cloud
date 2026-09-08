@@ -106,7 +106,7 @@
   flex-shrink: 0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 
-  &[data-os*="ubuntu"] { background: #fff7ed; border-color: #ffedd5; }
+  &[data-os*="ubuntu"] { background: #eff6ff; border-color: #dbeafe; }
   &[data-os*="debian"] { background: #fdf2f8; border-color: #fce7f3; }
   &[data-os*="windows"] { background: #eff6ff; border-color: #dbeafe; }
   &[data-os*="alpine"] { background: #f0f9ff; border-color: #e0f2fe; }
@@ -242,20 +242,20 @@
   gap: 6px;
   padding: 8px 14px;
   border-radius: 9px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  color: #c2410c;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.18s ease;
 
   &:hover {
-    background: #ffedd5;
-    border-color: #fdba74;
+    background: #dbeafe;
+    border-color: #93c5fd;
     color: #9a3412;
     transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(240, 122, 31, 0.15);
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.15);
   }
 }
 
@@ -583,8 +583,8 @@
 .loader-spinner {
   width: 44px;
   height: 44px;
-  border: 3px solid rgba(240, 122, 31, 0.2);
-  border-top-color: #F07A1F;
+  border: 3px solid rgba(37, 99, 235, 0.2);
+  border-top-color: #2563EB;
   border-radius: 50%;
   animation: spin-console 0.9s linear infinite;
 }
@@ -663,4 +663,4 @@
     display: none;
   }
 }
-
+
