@@ -50,6 +50,7 @@ export class CreateVmDto {
 }
 
 import { Demande, DemandeStatus } from 'src/demande/entities/demande.entity';
+import { TenantNetworkService } from 'src/infrastructure/tenant-network.service';
 
 @Controller('esxi')
 export class EsxiController {
@@ -65,6 +66,7 @@ export class EsxiController {
     private readonly walletService: WalletService,
     private readonly mailService: MailService,
     private readonly metricsService: MetricsService,
+    private readonly tenantNetworkService: TenantNetworkService,
   ) { }
 
   @Get('test-connection')
@@ -169,16 +171,31 @@ export class EsxiController {
       }
     }
 
-    return Promise.all(activeVms.map((vm) => this.syncVmRuntimeStatus(vm)));
+    const synced = await Promise.all(activeVms.map((vm) => this.syncVmRuntimeStatus(vm)));
+    return synced.map((v) => {
+      (v as any).ip = v.ipAddress || null;
+      return v;
+    });
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('my-vms/:id')
   async getMyVmById(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
-    const vm = await this.vmRepo.findOne({
-      where: { id, client: { id: req.user.sub } },
-      relations: ['catalogue'],
-    });
+    const clientId = Number(req.user.sub);
+    const client = await this.clientRepo.findOne({ where: { id: clientId }, relations: ['entreprise'] });
+    let vm: MachineVirtuelle | null = null;
+
+    if (client?.role === RoleClient.ENTREPRISE_ADMIN && client.entreprise) {
+      vm = await this.vmRepo.findOne({
+        where: { id, client: { entreprise: { id: client.entreprise.id } } },
+        relations: ['catalogue', 'client', 'client.entreprise'],
+      });
+    } else {
+      vm = await this.vmRepo.findOne({
+        where: { id, client: { id: clientId } },
+        relations: ['catalogue', 'client'],
+      });
+    }
 
     if (!vm) {
       throw new NotFoundException(`Machine virtuelle avec l'ID ${id} introuvable pour ce client.`);
@@ -192,7 +209,9 @@ export class EsxiController {
     }
 
     // On synchronise le statut en temps réel avec l'ESXi avant de renvoyer la VM
-    return this.syncVmRuntimeStatus(vm);
+    const synced = await this.syncVmRuntimeStatus(vm);
+    (synced as any).ip = synced.ipAddress || null;
+    return synced;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -502,6 +521,10 @@ export class EsxiController {
       }
     }
 
+    // Attribution automatique d'un réseau étanche depuis le pool Terraform (propre au particulier ou à l'entreprise)
+    const assignedNetwork = await this.tenantNetworkService.resolveNetworkForClient(targetClient);
+    const assignedIp = await this.tenantNetworkService.resolveStaticIpForNetwork(assignedNetwork);
+
     // 2. CRÉATION EN BASE DE DONNÉES (Statut: PROVISIONING)
     const newVmRecord = new MachineVirtuelle();
     newVmRecord.nomPersonnalise = dto.name;
@@ -514,6 +537,10 @@ export class EsxiController {
     newVmRecord.client = targetClient;
     newVmRecord.catalogue = catalogue;
     newVmRecord.prixMensuel = prixMensuel;
+    newVmRecord.networkName = assignedNetwork;
+    if (assignedIp) {
+      newVmRecord.ipAddress = assignedIp;
+    }
 
     const savedVm = await this.vmRepo.save(newVmRecord);
 
@@ -526,7 +553,8 @@ export class EsxiController {
       esxiName,
       dto.ramGB * 1024,
       dto.vCPU,
-      dto.storageGB ?? 20
+      dto.storageGB ?? 20,
+      assignedNetwork,
     )
       .then(async (taskId) => {
         // Démarrer automatiquement la VM sur l'ESXi pour qu'elle boote et reçoive son IP
@@ -665,9 +693,23 @@ export class EsxiController {
       vm.ipAddress = runtime.ipAddress;
     }
 
+    if (!vm.ipAddress && vm.networkName) {
+      try {
+        const fallbackIp = await this.tenantNetworkService.resolveStaticIpForNetwork(vm.networkName);
+        if (fallbackIp) {
+          updates.ipAddress = fallbackIp;
+          vm.ipAddress = fallbackIp;
+        }
+      } catch (err) {
+        // Ignorer si la résolution automatique échoue
+      }
+    }
+
     if (Object.keys(updates).length > 0) {
       await this.vmRepo.update(vm.id, updates);
     }
+
+    (vm as any).ip = vm.ipAddress || null;
 
     if (skipMetrics) {
       return vm;

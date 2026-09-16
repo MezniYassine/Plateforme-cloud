@@ -1,0 +1,17 @@
+---
+- name: Déployer l'instance MongoDB PaaS
+  community.docker.docker_container:
+    name: "{{ instance_name }}"
+    image: "mongo:4.4"
+    state: started
+    restart_policy: always
+    published_ports:
+      - "{{ external_port }}:27017"
+    env:
+      MONGO_INITDB_ROOT_USERNAME: "{{ db_user }}"
+      MONGO_INITDB_ROOT_PASSWORD: "{{ db_pass }}"
+      MONGO_INITDB_DATABASE: "{{ db_name }}"
+    volumes:
+      - "/var/lib/dbaas/data/{{ instance_name }}:/data/db"
+    memory: "{{ ram_limit | default(omit) }}"
+    cpus: "{{ (cpu_limit | float) if (cpu_limit is defined and cpu_limit | string | length > 0 and (cpu_limit | float) > 0) else omit }}"

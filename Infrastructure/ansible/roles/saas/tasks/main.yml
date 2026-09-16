@@ -1,0 +1,9 @@
+---
+- name: Créer le répertoire persistant du conteneur SaaS
+  ansible.builtin.file:
+    path: "/var/lib/saas/data/{{ instance_name }}"
+    state: directory
+    mode: '0777'
+
+- name: Déployer l'application SaaS demandée
+  ansible.builtin.include_tasks: "{{ app_type | lower }}.yml"

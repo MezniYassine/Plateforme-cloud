@@ -26,6 +26,7 @@ import { MailService } from 'src/mail/mail.service';
 import { MetricsService } from 'src/metrics/metrics.service';
 import { LogsService } from 'src/logs/logs.service';
 import { LogSource } from 'src/enum/log-source.enum';
+import { AnsibleService } from 'src/ansible/ansible.service';
 
 @Injectable()
 export class SaasService {
@@ -58,6 +59,9 @@ export class SaasService {
         @Optional()
         @Inject(forwardRef(() => LogsService))
         private readonly logsService?: LogsService,
+        @Optional()
+        @Inject(forwardRef(() => AnsibleService))
+        private readonly ansibleService?: AnsibleService,
     ) { }
 
     /**
@@ -260,6 +264,50 @@ export class SaasService {
                 throw new InternalServerErrorException(`Type d'application SaaS non pris en charge : ${dto.appType}`);
         }
 
+        const ansibleVars: Record<string, any> = {
+            instance_name: containerName,
+            external_port: externalPort,
+            admin_email: adminEmail,
+            admin_password: adminPassword,
+        };
+
+        switch (dto.appType) {
+            case SaasAppType.PHPMYADMIN:
+                ansibleVars.app_type = 'phpmyadmin';
+                ansibleVars.pma_host = linkedPaas?.hostIp;
+                ansibleVars.pma_port = linkedPaas?.port;
+                ansibleVars.pma_user = linkedPaas?.dbUser;
+                ansibleVars.pma_password = linkedPaas?.dbPassword;
+                break;
+            case SaasAppType.PGADMIN:
+                ansibleVars.app_type = 'pgadmin';
+                break;
+            case SaasAppType.WORDPRESS:
+                ansibleVars.app_type = 'wordpress';
+                if (linkedPaas) {
+                    ansibleVars.linked_paas = true;
+                    ansibleVars.wp_db_host = `${linkedPaas.hostIp}:${linkedPaas.port}`;
+                    ansibleVars.wp_db_user = linkedPaas.dbUser;
+                    ansibleVars.wp_db_password = linkedPaas.dbPassword;
+                    ansibleVars.wp_db_name = linkedPaas.nomPersonnalise;
+                } else {
+                    ansibleVars.linked_paas = false;
+                    ansibleVars.wp_db_password = Math.random().toString(36).slice(-8) + 'Db1!';
+                }
+                break;
+            case SaasAppType.N8N:
+                ansibleVars.app_type = 'n8n';
+                break;
+            case SaasAppType.MONGO_EXPRESS:
+                ansibleVars.app_type = 'mongo-express';
+                ansibleVars.mongo_url = `mongodb://${linkedPaas?.dbUser}:${linkedPaas?.dbPassword}@${linkedPaas?.hostIp}:${linkedPaas?.port}/?authSource=admin`;
+                break;
+            case SaasAppType.REDIS_INSIGHT:
+                ansibleVars.app_type = 'redis-commander';
+                ansibleVars.redis_hosts = `my-redis:${linkedPaas?.hostIp}:${linkedPaas?.port}:0:${linkedPaas?.dbPassword}`;
+                break;
+        }
+
         const sshOptions = {
             host: this.hostIp,
             username: this.sshUser,
@@ -268,14 +316,21 @@ export class SaasService {
         };
 
         try {
-            await withSsh(sshOptions, async (ssh) => {
-                // --- Connexion SSH et déploiement ---
-                const result = await ssh.execCommand(dockerCmd);
-
-                if (result.code !== 0) {
-                    throw new Error(`Erreur lors du lancement Docker : ${result.stderr}`);
+            if (this.ansibleService) {
+                // Orchestration déclarative et idempotente via Ansible
+                const ansibleRes = await this.ansibleService.runPlaybook('saas-deploy.yml', ansibleVars);
+                if (!ansibleRes.success) {
+                    throw new Error(ansibleRes.stderr || ansibleRes.stdout || 'Échec du déploiement Ansible SaaS');
                 }
-            });
+            } else {
+                // Fallback direct SSH
+                await withSsh(sshOptions, async (ssh) => {
+                    const result = await ssh.execCommand(dockerCmd);
+                    if (result.code !== 0) {
+                        throw new Error(`Erreur lors du lancement Docker : ${result.stderr}`);
+                    }
+                });
+            }
 
             // --- DÉBIT DU WALLET APRÈS DÉPLOIEMENT RÉUSSI ---
             if (prixMensuel > 0) {
@@ -287,7 +342,7 @@ export class SaasService {
                 );
             }
 
-            // --- Sauvegarde en base de données ---
+            // --- Sauvegarde en base de données avec statut initial PROVISIONING ---
             const now = new Date();
             const nextMonth = new Date(now);
             nextMonth.setMonth(now.getMonth() + 1);
@@ -295,7 +350,7 @@ export class SaasService {
             const newSaas = this.saasRepo.create({
                 nomPersonnalise: dto.nomPersonnalise,
                 prixMensuel: prixMensuel,
-                status: ServiceStatus.RUNNING,
+                status: ServiceStatus.PROVISIONING,
                 port: externalPort,
                 connectionString,
                 client: targetClient || ({ id: Number(dto.clientId) } as any),
@@ -306,11 +361,12 @@ export class SaasService {
                 ownerPassword: adminPassword ?? undefined,
             });
 
-            // Attendre que le conteneur démarre et initialise son serveur web interne (Gunicorn, Apache, Node)
-            const delayMs = 12000;
-            await new Promise(resolve => setTimeout(resolve, delayMs));
-
             const savedSaas = await this.saasRepo.save(newSaas);
+
+            // Sonde de disponibilité asynchrone (Option A) : dès que le serveur web interne répond, passe en RUNNING
+            this.pollSaasReadiness(savedSaas.id, this.hostIp, externalPort).catch((err) => {
+                this.logger.error(`[SaaS Readiness Probe] Erreur inattendue pour SaaS #${savedSaas.id}: ${err.message}`);
+            });
 
             // Envoi de l'email de confirmation ou d'attribution
             if (targetClient) {
@@ -414,18 +470,25 @@ export class SaasService {
         };
 
         try {
-            await withSsh(sshOptions, async (ssh) => {
-                // Arrête et supprime le conteneur Docker + données
-                // On tente aussi de supprimer un éventuel conteneur DB standalone (WordPress)
-                const dbContainerName = `${containerName}_db`;
-                const networkName = `net_${containerName}`;
-                await ssh.execCommand(
-                    `docker stop ${containerName} 2>/dev/null; docker rm ${containerName} 2>/dev/null; ` +
-                    `docker stop ${dbContainerName} 2>/dev/null; docker rm ${dbContainerName} 2>/dev/null; ` +
-                    `docker network rm ${networkName} 2>/dev/null; ` +
-                    `echo ${this.sshPass} | sudo -S rm -rf /var/lib/saas/data/${containerName} /var/lib/saas/data/${dbContainerName}`,
-                );
-            });
+            if (this.ansibleService) {
+                await this.ansibleService.runPlaybook('saas-destroy.yml', {
+                    instance_name: containerName,
+                    delete_data: true,
+                });
+            } else {
+                await withSsh(sshOptions, async (ssh) => {
+                    // Arrête et supprime le conteneur Docker + données
+                    // On tente aussi de supprimer un éventuel conteneur DB standalone (WordPress)
+                    const dbContainerName = `${containerName}_db`;
+                    const networkName = `net_${containerName}`;
+                    await ssh.execCommand(
+                        `docker stop ${containerName} 2>/dev/null; docker rm ${containerName} 2>/dev/null; ` +
+                        `docker stop ${dbContainerName} 2>/dev/null; docker rm ${dbContainerName} 2>/dev/null; ` +
+                        `docker network rm ${networkName} 2>/dev/null; ` +
+                        `echo ${this.sshPass} | sudo -S rm -rf /var/lib/saas/data/${containerName} /var/lib/saas/data/${dbContainerName}`,
+                    );
+                });
+            }
 
             await this.saasRepo.remove(saasService);
 
@@ -592,6 +655,55 @@ export class SaasService {
                 ramPercentage: '0.00%',
                 usedStorageMb: 0,
             };
+        }
+    }
+
+    /**
+     * Sonde HTTP asynchrone pour vérifier la disponibilité réelle du service SaaS (Option A).
+     * Vérifie toutes les 3s si le serveur web interne répond avec un code HTTP valide (< 500)
+     * et met à jour automatiquement le statut de l'instance vers RUNNING.
+     */
+    private async pollSaasReadiness(saasId: number, hostIp: string, port: number): Promise<void> {
+        const startTime = Date.now();
+        const maxWaitMs = 120000; // 2 minutes max
+        const checkIntervalMs = 3000; // Vérification toutes les 3 secondes
+        const url = `http://${hostIp}:${port}`;
+
+        this.logger.log(`[SaaS Readiness Probe] Début de surveillance pour SaaS #${saasId} (${url})`);
+
+        while (Date.now() - startTime < maxWaitMs) {
+            await new Promise((resolve) => setTimeout(resolve, checkIntervalMs));
+
+            // Si le SaaS a été supprimé ou son statut a changé entre-temps
+            const existing = await this.saasRepo.findOne({ where: { id: saasId } });
+            if (!existing || existing.status !== ServiceStatus.PROVISIONING) {
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    redirect: 'manual',
+                    signal: AbortSignal.timeout(2500),
+                });
+
+                // Si le serveur web répond avec un code HTTP (200-499), l'application est prête
+                if (response.status >= 200 && response.status < 500) {
+                    const elapsedSec = Math.round((Date.now() - startTime) / 1000);
+                    this.logger.log(`[SaaS Readiness Probe] SaaS #${saasId} est opérationnel ! Code HTTP: ${response.status} après ${elapsedSec}s`);
+                    await this.saasRepo.update(saasId, { status: ServiceStatus.RUNNING });
+                    return;
+                }
+            } catch {
+                // Le conteneur initialise encore son application interne
+            }
+        }
+
+        // Si le délai max est atteint
+        this.logger.warn(`[SaaS Readiness Probe] Timeout de 120s atteint pour SaaS #${saasId}. Passage en RUNNING.`);
+        const saas = await this.saasRepo.findOne({ where: { id: saasId } });
+        if (saas && saas.status === ServiceStatus.PROVISIONING) {
+            await this.saasRepo.update(saasId, { status: ServiceStatus.RUNNING });
         }
     }
 

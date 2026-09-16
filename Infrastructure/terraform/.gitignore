@@ -1,0 +1,15 @@
+# Fichiers d'état Terraform
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Fichiers de cache et plugins
+.terraform/
+.terraform.lock.hcl
+
+# Fichiers de variables contenant des identifiants sensibles
+*.tfvars
+!terraform.tfvars.example
+
+# Crash logs
+crash.log

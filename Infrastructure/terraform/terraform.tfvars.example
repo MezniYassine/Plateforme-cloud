@@ -1,0 +1,12 @@
+# Exemple de configuration pour terraform.tfvars
+esxi_host     = "192.168.x.x"
+esxi_user     = "root"
+esxi_password = "VotreMotDePasse"
+
+datacenter_name = "ha-datacenter"
+datastore_name  = "datastore1"
+vswitch_name    = "vSwitch0"
+
+# Taille du pool de réseaux isolés
+tenant_pool_size  = 30
+tenant_vlan_start = 101

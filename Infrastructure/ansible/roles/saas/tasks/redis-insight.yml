@@ -1,0 +1,13 @@
+---
+- name: Déployer l'application Redis Commander (Redis Insight)
+  community.docker.docker_container:
+    name: "{{ instance_name }}"
+    image: "rediscommander/redis-commander:latest"
+    state: started
+    restart_policy: always
+    published_ports:
+      - "{{ external_port }}:8081"
+    env:
+      REDIS_HOSTS: "{{ redis_hosts }}"
+      HTTP_USER: "{{ admin_email }}"
+      HTTP_PASSWORD: "{{ admin_password }}"

@@ -14,6 +14,8 @@ import { PaasModule } from 'src/paas/paas.module';
 import { WalletModule } from 'src/wallet/wallet.module';
 import { SaasModule } from 'src/saas/saas.module';
 
+import { TenantNetworkService } from 'src/infrastructure/tenant-network.service';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Demande, Client, Catalogue, MachineVirtuelle]),
@@ -24,7 +26,7 @@ import { SaasModule } from 'src/saas/saas.module';
     SaasModule,
   ],
   controllers: [DemandeController],
-  providers: [DemandeService, EsxiService],
-  exports: [DemandeService],
+  providers: [DemandeService, EsxiService, TenantNetworkService],
+  exports: [DemandeService, TenantNetworkService],
 })
 export class DemandeModule { }

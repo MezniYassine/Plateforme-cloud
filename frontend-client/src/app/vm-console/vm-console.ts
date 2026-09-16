@@ -37,9 +37,18 @@ export class VmConsoleComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (!this.isBrowser) return;
-    this.vmId = history.state.id || this.route.snapshot.queryParams['id'] || '';
-    this.returnUrl = history.state.returnUrl || this.route.snapshot.queryParams['returnUrl'] || '/personal-dashboard';
+    this.vmId = history.state?.id || this.route.snapshot.queryParams['id'] || '';
+    this.returnUrl = history.state?.returnUrl || this.route.snapshot.queryParams['returnUrl'] || '/personal-dashboard';
     
+    // Pré-initialisation immédiate si l'objet VM a été transmis via le router state
+    if (history.state?.vm) {
+      const stateVm = { ...history.state.vm };
+      const rawIp = stateVm.ip || stateVm.ipAddress || null;
+      stateVm.ip = rawIp;
+      stateVm.ipAddress = rawIp;
+      this.vm = stateVm;
+    }
+
     if (this.vmId) {
       this.chargerDonneesVM();
     } else {
@@ -62,10 +71,11 @@ export class VmConsoleComponent implements OnInit, OnDestroy {
     return 'assets/ubuntu.png';
   }
 
-  copyIp(ip: string, event?: Event) {
+  copyIp(ip?: string, event?: Event) {
     if (event) event.stopPropagation();
-    if (!ip || ip === 'N/A' || ip === 'En attente') return;
-    navigator.clipboard.writeText(ip);
+    const targetIp = ip || this.vm?.ip || this.vm?.ipAddress;
+    if (!targetIp || targetIp === 'N/A' || targetIp.toLowerCase().includes('attente') || targetIp.toLowerCase().includes('aucun')) return;
+    navigator.clipboard.writeText(targetIp);
     this.copiedIp = true;
     setTimeout(() => this.copiedIp = false, 2000);
   }
@@ -97,7 +107,13 @@ export class VmConsoleComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (donnees) => {
           this.isLoading = false;
-          this.vm = Array.isArray(donnees) ? donnees[0] : donnees;
+          const entity = Array.isArray(donnees) ? donnees[0] : donnees;
+          if (entity) {
+            const rawIp = entity.ip || entity.ipAddress || this.vm?.ip || this.vm?.ipAddress || null;
+            entity.ip = rawIp;
+            entity.ipAddress = rawIp;
+            this.vm = { ...(this.vm || {}), ...entity };
+          }
           this.cdr.detectChanges();
           if (this.vm && this.vm.vmReference && this.vm.status === 'RUNNING') {
             this.initialiserConsole(this.vm.vmReference);

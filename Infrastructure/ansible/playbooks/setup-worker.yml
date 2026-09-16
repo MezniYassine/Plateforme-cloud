@@ -1,0 +1,27 @@
+---
+- name: Préparation et configuration du nœud d'hébergement Docker
+  hosts: dbaas_servers
+  gather_facts: true
+  tasks:
+    - name: S'assurer que les répertoires racines de persistance existent
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0777'
+      loop:
+        - /var/lib/dbaas/data
+        - /var/lib/saas/data
+
+    - name: Vérifier que le service Docker est actif et démarré au boot
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Valider la connectivité avec le démon Docker
+      community.docker.docker_host_info:
+      register: docker_info
+
+    - name: Afficher les informations Docker du serveur
+      ansible.builtin.debug:
+        msg: "Docker version {{ docker_info.host_info.ServerVersion }} opérationnel sur {{ inventory_hostname }}"

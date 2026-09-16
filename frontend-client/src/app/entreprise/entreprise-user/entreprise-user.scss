@@ -1483,7 +1483,7 @@ button {
 .toast {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: 88px;
   background: #ffffff;
   color: #0f172a;
   padding: 11px 16px;
@@ -1494,11 +1494,11 @@ button {
   align-items: center;
   gap: 9px;
   box-shadow: var(--shadow-lg);
-  transform: translateY(60px);
+  transform: translateY(16px);
   opacity: 0;
   pointer-events: none;
   transition: transform .3s cubic-bezier(.22, .8, .36, 1), opacity .3s;
-  z-index: 300;
+  z-index: 1050;
 }
 
 .toast.show {

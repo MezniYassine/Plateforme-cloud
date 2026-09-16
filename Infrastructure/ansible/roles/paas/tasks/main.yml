@@ -1,0 +1,13 @@
+---
+- name: Normaliser le type de base de données
+  ansible.builtin.set_fact:
+    normalized_db_type: "{{ db_type | lower | trim }}"
+
+- name: Créer le répertoire persistant du conteneur
+  ansible.builtin.file:
+    path: "/var/lib/dbaas/data/{{ instance_name }}"
+    state: directory
+    mode: '0777'
+
+- name: Déployer le service SGBD sélectionné
+  ansible.builtin.include_tasks: "{{ normalized_db_type }}.yml"

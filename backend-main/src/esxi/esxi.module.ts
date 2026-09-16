@@ -15,6 +15,8 @@ import { Demande } from 'src/demande/entities/demande.entity';
 import { MetricsModule } from 'src/metrics/metrics.module';
 import { LogsModule } from 'src/logs/logs.module';
 
+import { TenantNetworkService } from 'src/infrastructure/tenant-network.service';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Personal, MachineVirtuelle, Client, Catalogue, Wallet, Transaction, Demande]),
@@ -25,7 +27,7 @@ import { LogsModule } from 'src/logs/logs.module';
     forwardRef(() => LogsModule),
   ],
   controllers: [EsxiController],
-  providers: [EsxiService],
-  exports: [EsxiService],
+  providers: [EsxiService, TenantNetworkService],
+  exports: [EsxiService, TenantNetworkService],
 })
 export class EsxiModule { }

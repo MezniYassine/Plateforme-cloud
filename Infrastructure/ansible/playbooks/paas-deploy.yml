@@ -1,0 +1,20 @@
+---
+- name: Orchestration PaaS - Déploiement d'une instance SGBD
+  hosts: dbaas_servers
+  gather_facts: false
+  roles:
+    - role: paas
+
+  post_tasks:
+    - name: "Attendre que le port SGBD {{ external_port }} soit ouvert et réponde"
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: "{{ external_port }}"
+        state: started
+        delay: 2
+        timeout: 45
+
+    - name: Confirmer la disponibilité du SGBD
+      ansible.builtin.debug:
+        msg: "✅ La base de données {{ instance_name }} ({{ db_type }}) est prête sur le port {{ external_port }}"
+

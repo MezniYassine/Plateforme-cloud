@@ -88,17 +88,20 @@
         </div>
 
         <!-- Status Badge -->
-        <div class="status-badge" [class.status-running]="s.status === 'RUNNING'" [class.status-provisioning]="s.status !== 'RUNNING'">
+        <div class="status-badge" 
+             [class.status-running]="s.status === 'RUNNING'" 
+             [class.status-provisioning]="s.status === 'PROVISIONING'"
+             [class.status-stopped]="s.status === 'STOPPED' || s.status === 'FAILED'">
           <span class="pulse-dot"></span>
-          <span>{{ s.status === 'RUNNING' ? 'Actif' : s.status }}</span>
+          <span>{{ s.status === 'RUNNING' ? 'Actif' : (s.status === 'PROVISIONING' ? 'En cours d\'initialisation...' : s.status) }}</span>
         </div>
       </div>
 
       <!-- Access URL Box -->
-      <div class="access-url-box">
+      <div class="access-url-box" [class.is-provisioning]="s.status === 'PROVISIONING'">
         <div class="url-label-row">
           <span class="url-title">URL d'accès public</span>
-          @if (s.connectionString) {
+          @if (s.connectionString && s.status === 'RUNNING') {
             <button class="btn-copy-mini" (click)="copyText(s.connectionString, 'url-' + s.id, $event)">
               @if (isCopied('url-' + s.id)) {
                 <span class="badge-copied-text">Copié !</span>
@@ -113,7 +116,13 @@
           }
         </div>
         <div class="url-value-row">
-          @if (s.connectionString) {
+          @if (s.status === 'PROVISIONING') {
+            <div class="url-provisioning-box">
+              <span class="spinner-mini"></span>
+              <span class="provisioning-text">Initialisation des services en cours...</span>
+              <span class="provisioning-sub">(Prêt d'ici quelques instants)</span>
+            </div>
+          } @else if (s.connectionString) {
             <a [href]="s.connectionString" target="_blank" rel="noopener noreferrer" class="app-direct-link" title="Ouvrir l'application dans un nouvel onglet">
               <span class="url-text monospace">{{ s.connectionString }}</span>
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
@@ -206,7 +215,12 @@
         </div>
 
         <div class="footer-actions">
-          @if (s.connectionString) {
+          @if (s.status === 'PROVISIONING') {
+            <button class="btn-card-action btn-provisioning-disabled" disabled title="L'application est en cours d'initialisation...">
+              <span class="spinner-mini-btn"></span>
+              <span>Initialisation...</span>
+            </button>
+          } @else if (s.connectionString && s.status === 'RUNNING') {
             <a [href]="s.connectionString" target="_blank" rel="noopener noreferrer" class="btn-card-action btn-open" title="Ouvrir l'application web">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>

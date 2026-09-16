@@ -702,7 +702,7 @@ export class PersonalDashboard implements OnInit, OnDestroy {
       }).subscribe({
         next: () => {
           this.isDeploying.set(false);
-          this.showToast('Application SaaS déployée avec succès !', 'var(--green)');
+          this.showToast('Application SaaS créée ! Initialisation en cours...', 'var(--blue)', 4000);
           this.h.loadWallet();
           if (clientId) this.loadMySaas(clientId);
         },
@@ -904,9 +904,20 @@ export class PersonalDashboard implements OnInit, OnDestroy {
     }
   }
 
+  private provisioningSaas = new Set<number>();
+
   loadMySaas(clientId: number) {
     this.h.getMySaas(clientId).subscribe({
       next: (data) => {
+        (data || []).forEach((s: SaasInstance) => {
+          if (s.status === 'PROVISIONING') {
+            this.provisioningSaas.add(s.id);
+          } else if (s.status === 'RUNNING' && this.provisioningSaas.has(s.id)) {
+            this.provisioningSaas.delete(s.id);
+            this.showToast(`Application SaaS "${s.nomPersonnalise}" prête à l'emploi !`, 'var(--green)', 4500);
+            this.h.loadWallet();
+          }
+        });
         this.saasInstances.set(data || []);
       },
       error: (err) => {

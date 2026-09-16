@@ -1,0 +1,15 @@
+---
+- name: Orchestration PaaS - Destruction propre d'une instance SGBD
+  hosts: dbaas_servers
+  gather_facts: false
+  tasks:
+    - name: Arrêter et supprimer le conteneur SGBD
+      community.docker.docker_container:
+        name: "{{ instance_name }}"
+        state: absent
+
+    - name: Supprimer le répertoire de données du conteneur
+      ansible.builtin.file:
+        path: "/var/lib/dbaas/data/{{ instance_name }}"
+        state: absent
+      when: delete_data | default(true) | bool

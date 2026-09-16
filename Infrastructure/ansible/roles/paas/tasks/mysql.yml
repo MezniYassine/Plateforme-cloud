@@ -1,0 +1,18 @@
+---
+- name: Déployer l'instance MySQL PaaS
+  community.docker.docker_container:
+    name: "{{ instance_name }}"
+    image: "mysql:8.0"
+    state: started
+    restart_policy: always
+    published_ports:
+      - "{{ external_port }}:3306"
+    env:
+      MYSQL_DATABASE: "{{ db_name }}"
+      MYSQL_USER: "{{ db_user }}"
+      MYSQL_PASSWORD: "{{ db_pass }}"
+      MYSQL_ROOT_PASSWORD: "{{ db_pass }}_root"
+    volumes:
+      - "/var/lib/dbaas/data/{{ instance_name }}:/var/lib/mysql"
+    memory: "{{ ram_limit | default(omit) }}"
+    cpus: "{{ (cpu_limit | float) if (cpu_limit is defined and cpu_limit | string | length > 0 and (cpu_limit | float) > 0) else omit }}"

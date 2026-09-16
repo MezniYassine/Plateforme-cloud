@@ -21,4 +21,7 @@ export class MachineVirtuelle extends ServiceInstance {
 
   @Column({ nullable: true })
   os!: string;
+
+  @Column({ nullable: true, default: 'VM Network' })
+  networkName?: string;
 }

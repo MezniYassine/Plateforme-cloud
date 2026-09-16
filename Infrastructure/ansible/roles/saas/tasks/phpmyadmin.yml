@@ -1,0 +1,14 @@
+---
+- name: Déployer l'application phpMyAdmin
+  community.docker.docker_container:
+    name: "{{ instance_name }}"
+    image: "phpmyadmin/phpmyadmin:latest"
+    state: started
+    restart_policy: always
+    published_ports:
+      - "{{ external_port }}:80"
+    env:
+      PMA_HOST: "{{ pma_host }}"
+      PMA_PORT: "{{ pma_port | string }}"
+      PMA_USER: "{{ pma_user }}"
+      PMA_PASSWORD: "{{ pma_password }}"

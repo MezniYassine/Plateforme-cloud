@@ -169,7 +169,7 @@
                 } @else if (r.ip) {
                   <div class="vm-endpoint-row">
                     <span class="mono-ip-badge font-mono">{{ r.ip }}</span>
-                    <button class="btn-tbl-console" (click)="openConsole(r.id, $event)" title="Ouvrir la console Web">
+                    <button class="btn-tbl-console" (click)="openConsole(r.id, $event, r)" title="Ouvrir la console Web">
                       <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="4 17 10 11 4 5"/>
                         <line x1="12" y1="19" x2="20" y2="19"/>
@@ -431,7 +431,7 @@
             </button>
           }
           @if (r.type === 'vm') {
-            <button class="btn-rc-action" (click)="openConsole(r.id, $event)">
+            <button class="btn-rc-action" (click)="openConsole(r.id, $event, r)">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
               <span>Console Web</span>
             </button>

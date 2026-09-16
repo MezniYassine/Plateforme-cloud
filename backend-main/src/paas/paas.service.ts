@@ -16,6 +16,7 @@ import { MetricsService } from 'src/metrics/metrics.service';
 import { LogsService } from 'src/logs/logs.service';
 import { LogSource } from 'src/enum/log-source.enum';
 import { MailService } from 'src/mail/mail.service';
+import { AnsibleService } from 'src/ansible/ansible.service';
 
 @Injectable()
 export class PaasService implements OnModuleInit {
@@ -47,6 +48,9 @@ export class PaasService implements OnModuleInit {
         @Optional()
         @Inject(forwardRef(() => LogsService))
         private readonly logsService?: LogsService,
+        @Optional()
+        @Inject(forwardRef(() => AnsibleService))
+        private readonly ansibleService?: AnsibleService,
     ) { }
 
     async onModuleInit() {
@@ -194,6 +198,17 @@ export class PaasService implements OnModuleInit {
                 throw new InternalServerErrorException(`SGBD non pris en charge : ${dto.typeSgbd}`);
         }
 
+        const ansibleVars: Record<string, any> = {
+            instance_name: containerName,
+            db_type: dto.typeSgbd.toLowerCase(),
+            db_name: dto.nomPersonnalise,
+            db_user: dbUser,
+            db_pass: dbPass,
+            external_port: externalPort,
+            ram_limit: catalogue.ramMB > 0 ? `${Math.round(catalogue.ramMB * 1024)}m` : undefined,
+            cpu_limit: catalogue.vcpu > 0 ? catalogue.vcpu : undefined,
+        };
+
         const sshOptions = {
             host: this.hostIp,
             username: this.sshUser,
@@ -202,15 +217,21 @@ export class PaasService implements OnModuleInit {
         };
 
         try {
-            await withSsh(sshOptions, async (ssh) => {
-                // 3. Connexion SSH à la VM DBaaS
-                // 4. Lancement du conteneur Docker
-                const result = await ssh.execCommand(dockerCmd);
-
-                if (result.code !== 0) {
-                    throw new Error(`Erreur lors du lancement Docker : ${result.stderr}`);
+            if (this.ansibleService) {
+                // Orchestration déclarative et idempotente via Ansible
+                const ansibleRes = await this.ansibleService.runPlaybook('paas-deploy.yml', ansibleVars);
+                if (!ansibleRes.success) {
+                    throw new Error(ansibleRes.stderr || ansibleRes.stdout || 'Échec du déploiement Ansible');
                 }
-            });
+            } else {
+                // Fallback direct SSH
+                await withSsh(sshOptions, async (ssh) => {
+                    const result = await ssh.execCommand(dockerCmd);
+                    if (result.code !== 0) {
+                        throw new Error(`Erreur lors du lancement Docker : ${result.stderr}`);
+                    }
+                });
+            }
 
             // --- DÉBIT DU WALLET APRÈS DÉPLOIEMENT RÉUSSI ---
             if (prixMensuel > 0) {
@@ -323,10 +344,17 @@ export class PaasService implements OnModuleInit {
         };
 
         try {
-            await withSsh(sshOptions, async (ssh) => {
-                // Arrête et supprime le conteneur Docker ET supprime le dossier de données localement
-                await ssh.execCommand(`docker stop ${containerName} && docker rm ${containerName} && echo ${this.sshPass} | sudo -S rm -rf /var/lib/dbaas/data/${containerName}`);
-            });
+            if (this.ansibleService) {
+                await this.ansibleService.runPlaybook('paas-destroy.yml', {
+                    instance_name: containerName,
+                    delete_data: true,
+                });
+            } else {
+                await withSsh(sshOptions, async (ssh) => {
+                    // Arrête et supprime le conteneur Docker ET supprime le dossier de données localement
+                    await ssh.execCommand(`docker stop ${containerName} && docker rm ${containerName} && echo ${this.sshPass} | sudo -S rm -rf /var/lib/dbaas/data/${containerName}`);
+                });
+            }
 
             // Supprime la ligne en base de données
             await this.paasRepo.remove(paasService);
@@ -398,6 +426,17 @@ export class PaasService implements OnModuleInit {
                 throw new InternalServerErrorException(`SGBD non pris en charge : ${paasService.typeSgbd}`);
         }
 
+        const ansibleVars: Record<string, any> = {
+            instance_name: containerName,
+            db_type: paasService.typeSgbd.toLowerCase(),
+            db_name: paasService.nomPersonnalise,
+            db_user: paasService.dbUser,
+            db_pass: paasService.dbPassword,
+            external_port: paasService.port,
+            ram_limit: newCatalogue.ramMB > 0 ? `${Math.round(newCatalogue.ramMB * 1024)}m` : undefined,
+            cpu_limit: newCatalogue.vcpu > 0 ? newCatalogue.vcpu : undefined,
+        };
+
         const sshOptions = {
             host: this.hostIp,
             username: this.sshUser,
@@ -406,16 +445,25 @@ export class PaasService implements OnModuleInit {
         };
 
         try {
-            await withSsh(sshOptions, async (ssh) => {
-                await ssh.execCommand(`docker stop ${containerName} && docker rm ${containerName}`);
-                const result = await ssh.execCommand(dockerCmd);
-
-                if (result.code !== 0) {
-                    throw new Error(`Erreur lors du relancement Docker pour upgrade : ${result.stderr}`);
+            if (this.ansibleService) {
+                // Mise à niveau déclarative et idempotente (Scale-up) via Ansible
+                const ansibleRes = await this.ansibleService.runPlaybook('paas-deploy.yml', ansibleVars);
+                if (!ansibleRes.success) {
+                    throw new Error(ansibleRes.stderr || ansibleRes.stdout || 'Échec de la mise à niveau Ansible');
                 }
-            });
-        } catch (error) {
-            throw new InternalServerErrorException(`Erreur lors de la mise à niveau Docker : ${error.message}`);
+            } else {
+                // Fallback direct SSH
+                await withSsh(sshOptions, async (ssh) => {
+                    await ssh.execCommand(`docker stop ${containerName} && docker rm ${containerName}`);
+                    const result = await ssh.execCommand(dockerCmd);
+
+                    if (result.code !== 0) {
+                        throw new Error(`Erreur lors du relancement Docker pour upgrade : ${result.stderr}`);
+                    }
+                });
+            }
+        } catch (error: any) {
+            throw new InternalServerErrorException(`Erreur lors de la mise à niveau : ${error.message}`);
         }
 
         paasService.catalogue = newCatalogue;

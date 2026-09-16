@@ -1,0 +1,18 @@
+---
+- name: Déployer l'application n8n Workflow Automation
+  community.docker.docker_container:
+    name: "{{ instance_name }}"
+    image: "n8nio/n8n:latest"
+    user: "root"
+    state: started
+    restart_policy: always
+    published_ports:
+      - "{{ external_port }}:5678"
+    env:
+      N8N_LISTEN_ADDRESS: "0.0.0.0"
+      N8N_SECURE_COOKIE: "false"
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: "{{ admin_email }}"
+      N8N_BASIC_AUTH_PASSWORD: "{{ admin_password }}"
+    volumes:
+      - "/var/lib/saas/data/{{ instance_name }}:/home/node/.n8n"

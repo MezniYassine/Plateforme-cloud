@@ -1,0 +1,29 @@
+- name: Orchestration SaaS - Déploiement d'une application
+  hosts: saas_servers
+  gather_facts: false
+  roles:
+    - role: saas
+
+  post_tasks:
+    - name: "Attendre que le port TCP {{ external_port }} soit ouvert"
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: "{{ external_port }}"
+        state: started
+        delay: 2
+        timeout: 60
+
+    - name: "Attendre que l'application Web réponde (Readiness HTTP)"
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ external_port }}"
+        status_code: [200, 301, 302, 401, 403]
+        follow_redirects: none
+      register: http_result
+      until: http_result.status in [200, 301, 302, 401, 403]
+      retries: 30
+      delay: 2
+      ignore_errors: true
+
+    - name: Confirmer la disponibilité du service
+      ansible.builtin.debug:
+        msg: "✅ L'application SaaS {{ instance_name }} est prête et répond sur le port {{ external_port }} (HTTP {{ http_result.status | default('TCP OK') }})"

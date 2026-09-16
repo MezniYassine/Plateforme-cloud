@@ -1,0 +1,17 @@
+---
+- name: Déployer l'instance PostgreSQL PaaS
+  community.docker.docker_container:
+    name: "{{ instance_name }}"
+    image: "postgres:15-alpine"
+    state: started
+    restart_policy: always
+    published_ports:
+      - "{{ external_port }}:5432"
+    env:
+      POSTGRES_DB: "{{ db_name }}"
+      POSTGRES_USER: "{{ db_user }}"
+      POSTGRES_PASSWORD: "{{ db_pass }}"
+    volumes:
+      - "/var/lib/dbaas/data/{{ instance_name }}:/var/lib/postgresql/data"
+    memory: "{{ ram_limit | default(omit) }}"
+    cpus: "{{ (cpu_limit | float) if (cpu_limit is defined and cpu_limit | string | length > 0 and (cpu_limit | float) > 0) else omit }}"

@@ -1,0 +1,14 @@
+---
+- name: Déployer l'instance Redis PaaS
+  community.docker.docker_container:
+    name: "{{ instance_name }}"
+    image: "redis:alpine"
+    state: started
+    restart_policy: always
+    published_ports:
+      - "{{ external_port }}:6379"
+    command: "redis-server --requirepass {{ db_pass }} --appendonly yes"
+    volumes:
+      - "/var/lib/dbaas/data/{{ instance_name }}:/data"
+    memory: "{{ ram_limit | default(omit) }}"
+    cpus: "{{ (cpu_limit | float) if (cpu_limit is defined and cpu_limit | string | length > 0 and (cpu_limit | float) > 0) else omit }}"

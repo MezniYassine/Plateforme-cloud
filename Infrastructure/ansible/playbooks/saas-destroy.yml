@@ -1,0 +1,30 @@
+---
+- name: Orchestration SaaS - Destruction propre d'une application
+  hosts: saas_servers
+  gather_facts: false
+  tasks:
+    - name: Arrêter et supprimer le conteneur applicatif principal
+      community.docker.docker_container:
+        name: "{{ instance_name }}"
+        state: absent
+
+    - name: Arrêter et supprimer le conteneur de base de données dédiée (si existant)
+      community.docker.docker_container:
+        name: "{{ instance_name }}_db"
+        state: absent
+      ignore_errors: true
+
+    - name: Supprimer le réseau Docker dédié (si existant)
+      community.docker.docker_network:
+        name: "net_{{ instance_name }}"
+        state: absent
+      ignore_errors: true
+
+    - name: Supprimer les répertoires persistants
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/var/lib/saas/data/{{ instance_name }}"
+        - "/var/lib/saas/data/{{ instance_name }}_db"
+      when: delete_data | default(true) | bool

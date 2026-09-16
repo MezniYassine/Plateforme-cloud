@@ -134,6 +134,7 @@ export class EsxiService {
         if (lower === 'paas' || lower.startsWith('paas') || lower.includes('paas')) return false;
         if (lower === 'saas' || lower.startsWith('saas') || lower.includes('saas')) return false;
         if (lower === 'vcenter' || lower.includes('vcenter')) return false;
+        if (lower.includes('gateway') || lower.includes('cloud-gateway')) return false;
         return true;
     }
 
@@ -220,16 +221,22 @@ export class EsxiService {
                     props.find((p) => p.name === 'config.hardware.memoryMB')?.val,
                 );
 
-                // Tentative 1 : guest.ipAddress (principal)
-                let ipAddress = this.unwrapSoapValue(
+                // Tentative 1 : guest.ipAddress (principal - ne garder que les vraies IPv4)
+                let rawGuestIp = this.unwrapSoapValue(
                     props.find((p) => p.name === 'guest.ipAddress')?.val,
                 );
+                let ipAddress: string | null = (typeof rawGuestIp === 'string' && rawGuestIp.includes('.') && !rawGuestIp.startsWith('169.') && !rawGuestIp.startsWith('127.'))
+                    ? rawGuestIp
+                    : null;
 
                 // Tentative 2 : summary.guest.ipAddress
                 if (!ipAddress) {
-                    ipAddress = this.unwrapSoapValue(
+                    const rawSummaryIp = this.unwrapSoapValue(
                         props.find((p) => p.name === 'summary.guest.ipAddress')?.val,
                     );
+                    if (typeof rawSummaryIp === 'string' && rawSummaryIp.includes('.') && !rawSummaryIp.startsWith('169.') && !rawSummaryIp.startsWith('127.')) {
+                        ipAddress = rawSummaryIp;
+                    }
                 }
 
                 // Tentative 3 : guest.net (liste des NIC avec leurs IPs)
@@ -754,7 +761,14 @@ export class EsxiService {
         }
     }
 
-    async cloneAndReconfigure(templateName: string, newName: string, ramMB: number, vcpu: number, storageGB?: number): Promise<any> {
+    async cloneAndReconfigure(
+        templateName: string,
+        newName: string,
+        ramMB: number,
+        vcpu: number,
+        storageGB?: number,
+        networkName?: string,
+    ): Promise<any> {
         try {
             // 1. Récupérer les références nécessaires (Template, Folder, Pool, Datastore)
             const templateRef = await this.findMoRefByName('VirtualMachine', templateName);
@@ -809,13 +823,16 @@ export class EsxiService {
             } catch (error) {
                 if (this.isUnsupportedCloneError(error)) {
                     this.logger.warn('CloneVM_Task non supporté, fallback vers copie datastore + register VM.');
-                    return this.cloneWithDatastoreCopy(templateRef, destinationFolder, resourcePool, newName, ramMB, vcpu, storageGB);
+                    return this.cloneWithDatastoreCopy(templateRef, destinationFolder, resourcePool, newName, ramMB, vcpu, storageGB, networkName);
                 }
 
                 throw error;
             }
             this.logger.log(`✅ Clonage terminé pour ${newName}. Task ID: ${taskId}`);
             await this.resizeVmStorageByName(newName, storageGB);
+            if (networkName && networkName !== 'VM Network') {
+                await this.reconfigureVmNetworkByName(newName, networkName);
+            }
             // Résoudre le vrai MoRef VMware de la VM clonée (ex: "13") pour le stocker en BDD
             const clonedVmRef = await this.findMoRefByName('VirtualMachine', newName);
             const vmMoRef: string | undefined = clonedVmRef?.$value;
@@ -862,6 +879,7 @@ export class EsxiService {
         ramMB: number,
         vcpu: number,
         storageGB?: number,
+        networkName?: string,
     ): Promise<string> {
         const serviceContent = this.vsphereClient.serviceContent;
         const datacenter = await this.getFirstMoRef('Datacenter');
@@ -913,6 +931,9 @@ export class EsxiService {
 
         await this.waitForTaskCompletion(reconfigTaskRef);
         await this.resizeVmStorageByName(newName, storageGB);
+        if (networkName && networkName !== 'VM Network') {
+            await this.reconfigureVmNetworkByName(newName, networkName);
+        }
         return this.unwrapSoapValue(registeredVm?.value ?? registeredVm);
     }
 
@@ -1044,6 +1065,104 @@ export class EsxiService {
             const type = device?.attributes?.['xsi:type'] ?? device?.attributes?.type ?? device?.type;
             return type === 'VirtualDisk' || (device?.capacityInKB !== undefined && device?.backing);
         }) ?? null;
+    }
+
+    private async getPrimaryNetworkCard(vmRef: any): Promise<any | null> {
+        await this.ensureClientReady();
+        const serviceContent = this.vsphereClient.serviceContent;
+        const result: any = await this.runVsphereCommand('RetrievePropertiesEx', {
+            _this: serviceContent.propertyCollector,
+            specSet: [
+                {
+                    propSet: [
+                        { type: 'VirtualMachine', all: false, pathSet: ['config.hardware.device'] },
+                    ],
+                    objectSet: [{ obj: vmRef, skip: false }],
+                },
+            ],
+            options: {},
+        });
+
+        const rawDevices = result?.returnval?.objects?.[0]?.propSet?.find(
+            (prop: any) => prop.name === 'config.hardware.device',
+        )?.val;
+
+        const devices = Array.isArray(rawDevices)
+            ? rawDevices
+            : Array.isArray(rawDevices?.VirtualDevice)
+                ? rawDevices.VirtualDevice
+                : Array.isArray(rawDevices?.device)
+                    ? rawDevices.device
+                    : [];
+
+        return (
+            devices.find((device: any) => {
+                const type = String(
+                    device?.attributes?.['xsi:type'] ?? device?.attributes?.type ?? device?.type ?? '',
+                );
+                return (
+                    type.includes('EthernetCard') ||
+                    type.includes('E1000') ||
+                    type.includes('Vmxnet') ||
+                    type.includes('PCNet') ||
+                    device?.macAddress !== undefined
+                );
+            }) ?? null
+        );
+    }
+
+    async reconfigureVmNetworkByName(vmName: string, networkName: string): Promise<void> {
+        if (!networkName || networkName === 'VM Network') {
+            return;
+        }
+
+        try {
+            const vmRef = await this.findMoRefByName('VirtualMachine', vmName);
+            if (!vmRef) {
+                this.logger.warn(`VM "${vmName}" introuvable pour reconfigurer le réseau — ignoré.`);
+                return;
+            }
+
+            const nic = await this.getPrimaryNetworkCard(vmRef);
+            if (!nic) {
+                this.logger.warn(`Aucune carte réseau trouvée sur "${vmName}" pour assigner "${networkName}".`);
+                return;
+            }
+
+            const nicKey = parseInt(String(this.unwrapSoapValue(nic.key)), 10);
+            if (!Number.isFinite(nicKey)) {
+                this.logger.warn(`Clé de carte réseau VMware invalide sur "${vmName}" — reconfiguration ignorée.`);
+                return;
+            }
+
+            const nicType = nic.attributes?.['xsi:type'] ?? nic.type ?? 'VirtualE1000';
+            const updatedNic: any = {
+                attributes: { 'xsi:type': nicType },
+                key: nicKey,
+                backing: {
+                    attributes: { 'xsi:type': 'VirtualEthernetCardNetworkBackingInfo' },
+                    deviceName: networkName,
+                },
+            };
+
+            const deviceChange = [
+                {
+                    attributes: { 'xsi:type': 'VirtualDeviceConfigSpec' },
+                    operation: 'edit',
+                    device: updatedNic,
+                },
+            ];
+
+            const reconfigResult: any = await this.runVsphereCommand('ReconfigVM_Task', {
+                _this: vmRef,
+                spec: { deviceChange },
+            });
+            await this.waitForTaskCompletion(reconfigResult?.returnval);
+            this.logger.log(`✅ Carte réseau de "${vmName}" connectée au port group "${networkName}".`);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            this.logger.warn(`⚠️ Reconfiguration réseau de "${vmName}" vers "${networkName}" ignorée ou non supportée (${message}).`);
+        }
     }
 
     private async getVmPathName(vmRef: any): Promise<string> {

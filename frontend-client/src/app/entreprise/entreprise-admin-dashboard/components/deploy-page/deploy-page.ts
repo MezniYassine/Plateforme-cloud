@@ -829,10 +829,21 @@ export class DeployPageComponent implements OnInit {
     window.open(targetUrl, '_blank', 'noopener,noreferrer');
   }
 
-  openVmConsole(vmId: string, event?: Event) {
+  openVmConsole(vmId: string, event?: Event, res?: DeployedResource) {
     if (event) event.stopPropagation();
     this.router.navigate(['/vm-console'], {
-      state: { id: vmId, returnUrl: '/entreprise-admin-dashboard' }
+      state: {
+        id: vmId,
+        returnUrl: '/entreprise-admin-dashboard',
+        vm: res ? {
+          id: res.id,
+          nomPersonnalise: res.name,
+          os: res.os,
+          ip: res.ip,
+          ipAddress: res.ip,
+          status: res.status
+        } : undefined
+      }
     });
   }
 

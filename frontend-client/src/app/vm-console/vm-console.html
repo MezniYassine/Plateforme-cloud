@@ -32,12 +32,12 @@
     @if (vm) {
     <div class="header-specs">
       <!-- IP Chip -->
-      <div class="spec-chip ip-chip" (click)="copyIp(vm.ip, $event)" [title]="'Cliquer pour copier l\'IP : ' + vm.ip">
+      <div class="spec-chip ip-chip" (click)="copyIp(vm.ip || vm.ipAddress, $event)" [title]="'Cliquer pour copier l\'IP : ' + (vm.ip || vm.ipAddress || 'Non assignée')">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
         </svg>
-        <span>{{ vm.ip || 'En attente IP' }}</span>
+        <span>{{ (vm.ip || vm.ipAddress) || 'En attente IP' }}</span>
         @if (copiedIp) {
           <span class="badge-copied">Copié !</span>
         }

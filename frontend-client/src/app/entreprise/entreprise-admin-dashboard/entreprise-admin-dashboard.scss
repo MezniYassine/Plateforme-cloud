@@ -2179,7 +2179,7 @@ tbody td {
 /* ══ TOAST NOTIFICATIONS ══ */
 .toast {
   position: fixed;
-  bottom: 24px;
+  bottom: 88px;
   right: 24px;
   background: #ffffff;
   color: #0f172a;
@@ -2192,10 +2192,10 @@ tbody td {
   gap: 10px;
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
-  transform: translateY(60px);
+  transform: translateY(16px);
   opacity: 0;
   transition: all 0.3s cubic-bezier(0.22, 0.8, 0.36, 1);
-  z-index: 300;
+  z-index: 1050;
   max-width: 380px;
 
   &.show {

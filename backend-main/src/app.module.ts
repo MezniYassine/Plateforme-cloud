@@ -35,6 +35,7 @@ import { LogsModule } from './logs/logs.module';
 import { SupportTicket } from './entities/support-ticket.entity';
 import { TicketsModule } from './tickets/tickets.module';
 import { ChatModule } from './chat/chat.module';
+import { AnsibleModule } from './ansible/ansible.module';
 
 
 @Module({
@@ -88,6 +89,7 @@ import { ChatModule } from './chat/chat.module';
     LogsModule,
     TicketsModule,
     ChatModule,
+    AnsibleModule,
   ],
   controllers: [AppController],
   providers: [AppService],

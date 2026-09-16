@@ -23,6 +23,8 @@ import { TypeSgbd } from 'src/enum/type-sgbd.enum';
 import { SaasService } from 'src/saas/saas.service';
 import { SaasAppType } from 'src/enum/saas-app-type.enum';
 
+import { TenantNetworkService } from 'src/infrastructure/tenant-network.service';
+
 @Injectable()
 export class DemandeService {
   constructor(
@@ -43,6 +45,7 @@ export class DemandeService {
     private readonly paasService: PaasService,
     private readonly walletService: WalletService,
     private readonly saasService: SaasService,
+    private readonly tenantNetworkService: TenantNetworkService,
   ) { }
 
   /**
@@ -275,7 +278,7 @@ export class DemandeService {
   async approuver(id: number, adminId: number, commentaireAdmin?: string): Promise<Demande> {
     const demande = await this.demandeRepository.findOne({
       where: { id },
-      relations: ['catalogue', 'client'],
+      relations: ['catalogue', 'client', 'client.entreprise'],
     });
 
     if (!demande) throw new NotFoundException(`Demande ${id} introuvable.`);
@@ -385,8 +388,10 @@ export class DemandeService {
         }, adminId);
 
       } else {
-        // --- LOGIQUE IAAS ---
-        // 1. Création de l'instance dans le système d'héritage (MachineVirtuelle)
+        // Attribution automatique d'un réseau étanche depuis le pool Terraform (PG-Tenant-01 à PG-Tenant-30)
+        const assignedNetwork = await this.tenantNetworkService.resolveNetworkForClient(demande.client);
+        const assignedIp = await this.tenantNetworkService.resolveStaticIpForNetwork(assignedNetwork);
+
         const nouvelleVM = this.vmRepo.create({
           nomPersonnalise: demande.nomInstanceSouhaite,
           status: ServiceStatus.PROVISIONING,
@@ -397,6 +402,8 @@ export class DemandeService {
           catalogue: demande.catalogue,
           prixMensuel: Number(demande.prixMensuel),
           client: demande.client,
+          networkName: assignedNetwork,
+          ipAddress: assignedIp || undefined,
         });
         savedVm = await this.vmRepo.save(nouvelleVM);
 
@@ -410,6 +417,7 @@ export class DemandeService {
           (demande.catalogue?.ramMB || 0) * 1024,
           demande.catalogue?.vcpu || 0,
           demande.catalogue?.stockageGB || 0,
+          assignedNetwork,
         );
 
         // 3. Mise à jour de la VM avec la référence
