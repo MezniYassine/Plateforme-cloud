@@ -132,6 +132,42 @@
   </header>
 
   <!-- ═══════════════════════════════════════════════════════════════
+       UBUNTU DEFAULT CREDENTIALS BANNER
+  ═══════════════════════════════════════════════════════════════ -->
+  @if (isUbuntu()) {
+    <div class="ubuntu-credentials-banner">
+      <div class="banner-left">
+        <div class="banner-badge">
+          <img src="assets/ubuntu.png" alt="Ubuntu" class="banner-os-icon" />
+          <span>Ubuntu Server</span>
+        </div>
+        <div class="banner-info">
+          <span class="banner-label">Identifiants par défaut :</span>
+          <div class="creds-tags">
+            <span class="cred-tag" (click)="copyText('ubuntu', $event)" title="Cliquer pour copier 'ubuntu'">
+              Utilisateur : <code class="cred-code">ubuntu</code>
+            </span>
+            <span class="cred-tag-sep">·</span>
+            <span class="cred-tag" (click)="copyText('ubuntu', $event)" title="Cliquer pour copier 'ubuntu'">
+              Mot de passe : <code class="cred-code">ubuntu</code>
+            </span>
+          </div>
+          <span class="banner-note">(Valable pour la console interactive WebMKS et la connexion SSH)</span>
+        </div>
+      </div>
+      <div class="banner-right">
+        <button type="button" class="btn-copy-ubuntu" (click)="copyText('ubuntu', $event)" title="Copier l'identifiant par défaut">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span>{{ copiedCreds ? 'Identifiant copié !' : 'Copier "ubuntu"' }}</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════
        MAIN CONSOLE VIEWPORT / SCREEN CONTAINER
   ═══════════════════════════════════════════════════════════════ -->
   <main class="console-main" id="wmks-frame-wrapper">
@@ -180,6 +216,21 @@
               <p class="offline-desc">
                 La console interactive WebMKS VNC nécessite que la machine virtuelle soit sous tension.
               </p>
+
+              @if (isUbuntu()) {
+                <div class="offline-creds-box">
+                  <div class="offline-creds-header">
+                    <img src="assets/ubuntu.png" alt="Ubuntu" class="offline-creds-icon" />
+                    <span>Identifiants par défaut Ubuntu Server</span>
+                  </div>
+                  <div class="offline-creds-details">
+                    <span>Utilisateur : <code>ubuntu</code></span>
+                    <span class="dot-sep">•</span>
+                    <span>Mot de passe : <code>ubuntu</code></span>
+                  </div>
+                </div>
+              }
+
               <button class="btn-start-large" [disabled]="isPowering" (click)="changerStatut('start')">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                   <polygon points="5 3 19 12 5 21 5 3"/>

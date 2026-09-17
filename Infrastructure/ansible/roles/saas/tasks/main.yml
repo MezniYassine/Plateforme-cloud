@@ -1,4 +1,15 @@
 ---
+- name: S'assurer que le réseau Docker privé dynamix-network existe
+  community.docker.docker_network:
+    name: "dynamix-network"
+    state: present
+
+- name: S'assurer que le répertoire Nginx Ingress existe
+  ansible.builtin.file:
+    path: "/opt/dynamix/nginx/conf.d"
+    state: directory
+    mode: '0755'
+
 - name: Créer le répertoire persistant du conteneur SaaS
   ansible.builtin.file:
     path: "/var/lib/saas/data/{{ instance_name }}"
@@ -7,3 +18,7 @@
 
 - name: Déployer l'application SaaS demandée
   ansible.builtin.include_tasks: "{{ app_type | lower }}.yml"
+
+- name: Configurer le Reverse Proxy Nginx Ingress pour l'application
+  ansible.builtin.include_tasks: nginx-vhost.yml
+

@@ -580,7 +580,7 @@ export class DeployPageComponent implements OnInit {
 
   isSaasCredentialsRequired(): boolean {
     const saas = this.selectedSaasApp().toLowerCase();
-    return saas.includes('pgadmin') || saas.includes('n8n');
+    return saas.includes('pgadmin');
   }
 
   getCompatibleDatabases(): any[] {

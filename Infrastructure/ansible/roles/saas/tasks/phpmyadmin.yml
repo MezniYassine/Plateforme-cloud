@@ -5,10 +5,10 @@
     image: "phpmyadmin/phpmyadmin:latest"
     state: started
     restart_policy: always
-    published_ports:
-      - "{{ external_port }}:80"
+    networks:
+      - name: "dynamix-network"
     env:
       PMA_HOST: "{{ pma_host }}"
       PMA_PORT: "{{ pma_port | string }}"
-      PMA_USER: "{{ pma_user }}"
-      PMA_PASSWORD: "{{ pma_password }}"
+
+

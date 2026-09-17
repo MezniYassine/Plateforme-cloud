@@ -23,6 +23,7 @@ export class VmConsoleComponent implements OnInit, OnDestroy {
   isLoading: boolean = true;
   isPowering: boolean = false;
   copiedIp: boolean = false;
+  copiedCreds: boolean = false;
   isFullscreen: boolean = false;
   consoleError: string | null = null;
 
@@ -78,6 +79,20 @@ export class VmConsoleComponent implements OnInit, OnDestroy {
     navigator.clipboard.writeText(targetIp);
     this.copiedIp = true;
     setTimeout(() => this.copiedIp = false, 2000);
+  }
+
+  isUbuntu(): boolean {
+    if (!this.vm) return false;
+    const combined = `${this.vm.os || ''} ${this.vm.nomPersonnalise || ''} ${this.vm.templateName || ''} ${this.vm.guestOs || ''}`.toLowerCase();
+    return combined.includes('ubuntu');
+  }
+
+  copyText(text: string, event?: Event) {
+    if (event) event.stopPropagation();
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    this.copiedCreds = true;
+    setTimeout(() => this.copiedCreds = false, 2000);
   }
 
   toggleFullscreen() {

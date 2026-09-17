@@ -130,8 +130,8 @@ export class SaasTabComponent {
     if (text.includes('phpmyadmin') || text.includes('pma') || (s.linkedPaasService && s.linkedPaasService.typeSgbd === 'MYSQL' && !text.includes('pgadmin'))) {
       return false;
     }
-    // WordPress is configured during web setup
-    if (text.includes('wordpress') || text.includes('wp')) {
+    // WordPress and n8n are configured during web setup
+    if (text.includes('wordpress') || text.includes('wp') || text.includes('n8n') || this.getAppIdentity(s).brandClass === 'brand-n8n') {
       return false;
     }
     // Don't show if empty or dummy fallback

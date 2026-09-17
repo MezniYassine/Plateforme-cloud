@@ -500,7 +500,7 @@
           </div>
           }
 
-          <!-- Identifiants d'administration (pgAdmin, n8n, etc.) -->
+          <!-- Identifiants d'administration (pgAdmin, etc.) -->
           @if (isSaasCredentialsRequired()) {
           <div class="form-grid-2">
             <div class="field-group">
@@ -516,6 +516,13 @@
                 </button>
               </div>
             </div>
+          </div>
+          }
+
+          @if (selectedSaasApp().toLowerCase().includes('wordpress') || selectedSaasApp().toLowerCase().includes('n8n')) {
+          <div style="display: flex; align-items: center; gap: 10px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 12px 14px; margin-top: 12px; color: #1e40af; font-size: 0.85rem;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Les identifiants administrateur seront configurés lors du premier accès à l'interface Web (assistant d'installation).</span>
           </div>
           }
 
@@ -741,7 +748,7 @@
         </div>
 
         <!-- ══════ CREDENTIALS ROW (FOR PAAS & SAAS APPS) ══════ -->
-        @if (r.type === 'db' || (r.type === 'saas' && (r.adminEmail || r.adminPassword))) {
+        @if (r.type === 'db' || (r.type === 'saas' && !r.name.toLowerCase().includes('n8n') && !r.name.toLowerCase().includes('wordpress') && (r.adminEmail || r.adminPassword))) {
         <div class="credentials-box">
           <div class="cred-item">
             <span class="cred-lbl">{{ r.type === 'saas' ? 'Admin Email' : 'Utilisateur' }}</span>

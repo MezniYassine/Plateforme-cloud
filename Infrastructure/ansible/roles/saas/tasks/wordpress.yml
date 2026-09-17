@@ -8,8 +8,8 @@
         image: "wordpress:latest"
         state: started
         restart_policy: always
-        published_ports:
-          - "{{ external_port }}:80"
+        networks:
+          - name: "dynamix-network"
         env:
           WORDPRESS_DB_HOST: "{{ wp_db_host }}"
           WORDPRESS_DB_USER: "{{ wp_db_user }}"
@@ -55,9 +55,8 @@
         state: started
         restart_policy: always
         networks:
+          - name: "dynamix-network"
           - name: "net_{{ instance_name }}"
-        published_ports:
-          - "{{ external_port }}:80"
         env:
           WORDPRESS_DB_HOST: "{{ instance_name }}_db:3306"
           WORDPRESS_DB_USER: "wp_user"
@@ -65,3 +64,4 @@
           WORDPRESS_DB_NAME: "wordpress"
         volumes:
           - "/var/lib/saas/data/{{ instance_name }}:/var/www/html"
+

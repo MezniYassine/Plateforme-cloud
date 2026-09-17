@@ -601,7 +601,7 @@
       }
 
       @if (selectedSaasApp() === 'dpage/pgadmin4:latest' ||
-      selectedSaasApp() === 'mongo-express:latest' || selectedSaasApp() === 'rediscommander/redis-commander:latest' || selectedSaasApp() === 'n8nio/n8n:latest') {
+      selectedSaasApp() === 'mongo-express:latest' || selectedSaasApp() === 'rediscommander/redis-commander:latest') {
       <div class="field">
         <div class="field-label">Email admin / Nom d'utilisateur <span style="color:#dc2626">*</span></div>
         <div class="input-with-icon">
@@ -633,6 +633,13 @@
             <span class="field-hint hint-error">{{ getSaasPasswordError() }}</span>
           </div>
         }
+      </div>
+      }
+
+      @if (selectedSaasApp() === 'n8nio/n8n:latest' || selectedSaasApp() === 'wordpress:latest') {
+      <div class="field" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 12px 14px; margin-top: 8px; display: flex; align-items: center; gap: 10px; color: #1e40af; font-size: 0.85rem;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Les identifiants administrateur seront configurés lors du premier accès à l'interface Web (assistant d'installation).</span>
       </div>
       }
       }

@@ -35,12 +35,16 @@ export class SaasService {
     private get hostIp(): string {
         return (process.env.PAAS_HOST_IP || '192.168.8.183').replace(/^"(.*)"$/, '$1').trim();
     }
+    private get baseDomain(): string {
+        return (process.env.SAAS_BASE_DOMAIN || '192.168.8.183.nip.io').replace(/^"(.*)"$/, '$1').trim();
+    }
     private get sshUser(): string {
         return (process.env.PAAS_SSH_USER || 'dbaas').replace(/^"(.*)"$/, '$1').trim();
     }
     private get sshPass(): string {
         return (process.env.PAAS_SSH_PASS || '').replace(/^"(.*)"$/, '$1').trim();
     }
+
 
     constructor(
         @InjectRepository(ServiceSaaS)
@@ -146,8 +150,34 @@ export class SaasService {
         const cleanName = dto.nomPersonnalise.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const containerName = `saas_${cleanName}_${externalPort}`;
 
+        // --- Génération du nom de domaine Ingress / Nginx sécurisé (Méthode 1) ---
+        // Suffixe aléatoire de 6 caractères (ex: a7f4c9) pour garantir une URL imprévisible
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const dnsSubdomain = dto.nomPersonnalise.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+        const saasDomain = `${dnsSubdomain}-${randomSuffix}.${this.baseDomain}`;
+        const connectionString = `http://${saasDomain}`;
+
+
+        // --- Port interne exposé par l'image Docker de chaque application SaaS ---
+        let containerInternalPort = 80;
+        switch (dto.appType) {
+            case SaasAppType.N8N:
+                containerInternalPort = 5678;
+                break;
+            case SaasAppType.MONGO_EXPRESS:
+            case SaasAppType.REDIS_INSIGHT:
+                containerInternalPort = 8081;
+                break;
+            case SaasAppType.PHPMYADMIN:
+            case SaasAppType.PGADMIN:
+            case SaasAppType.WORDPRESS:
+            default:
+                containerInternalPort = 80;
+                break;
+        }
+
         // --- Identifiants admin (si applicable) ---
-        const isDbAuthOrWizard = dto.appType === SaasAppType.PHPMYADMIN || dto.appType === SaasAppType.WORDPRESS;
+        const isDbAuthOrWizard = dto.appType === SaasAppType.PHPMYADMIN || dto.appType === SaasAppType.WORDPRESS || dto.appType === SaasAppType.N8N;
         const adminPassword = isDbAuthOrWizard ? undefined : (dto.adminPassword || Math.random().toString(36).slice(-8) + 'A1!');
         const adminEmail = isDbAuthOrWizard ? undefined : (dto.adminEmail || 'admin@cloud.local');
 
@@ -155,23 +185,20 @@ export class SaasService {
         // Les conteneurs SaaS n'auront aucune restriction de ressources
         const limitsStr = '';
 
-        // --- Construction de la commande Docker ---
+        // --- Construction de la commande Docker (Fallback direct SSH si nécessaire) ---
         let dockerCmd = '';
-        let connectionString = '';
 
         switch (dto.appType) {
             case SaasAppType.PHPMYADMIN:
                 if (!linkedPaas) {
                     throw new BadRequestException('phpMyAdmin nécessite un service PaaS MySQL lié (linkedPaasServiceId).');
                 }
-                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} ` +
+                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} --network dynamix-network ` +
                     `-e PMA_HOST=${linkedPaas.hostIp} ` +
                     `-e PMA_PORT=${linkedPaas.port} ` +
-                    `-e PMA_USER=${linkedPaas.dbUser} ` +
-                    `-e PMA_PASSWORD=${linkedPaas.dbPassword} ` +
-                    `-p ${externalPort}:80 --restart always ${SaasAppType.PHPMYADMIN}`;
-                connectionString = `http://${this.hostIp}:${externalPort}`;
+                    `--restart always ${SaasAppType.PHPMYADMIN}`;
                 break;
+
 
             case SaasAppType.PGADMIN:
                 if (!adminEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail)) {
@@ -180,30 +207,28 @@ export class SaasService {
                 if (!adminPassword || adminPassword.trim().length < 4) {
                     throw new BadRequestException("pgAdmin requiert un mot de passe administrateur d'au moins 4 caractères.");
                 }
-                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} ` +
+                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} --network dynamix-network ` +
                     `-e PGADMIN_DEFAULT_EMAIL=${adminEmail} ` +
                     `-e PGADMIN_DEFAULT_PASSWORD=${adminPassword} ` +
-                    `-p ${externalPort}:80 --restart always ${SaasAppType.PGADMIN}`;
-                connectionString = `http://${this.hostIp}:${externalPort}`;
+                    `--restart always ${SaasAppType.PGADMIN}`;
                 break;
 
             case SaasAppType.WORDPRESS:
                 if (linkedPaas) {
                     // WordPress lié à une base MySQL existante
-                    dockerCmd = `docker run -d ${limitsStr}--name ${containerName} ` +
+                    dockerCmd = `docker run -d ${limitsStr}--name ${containerName} --network dynamix-network ` +
                         `-e WORDPRESS_DB_HOST=${linkedPaas.hostIp}:${linkedPaas.port} ` +
                         `-e WORDPRESS_DB_USER=${linkedPaas.dbUser} ` +
                         `-e WORDPRESS_DB_PASSWORD=${linkedPaas.dbPassword} ` +
                         `-e WORDPRESS_DB_NAME=${linkedPaas.nomPersonnalise} ` +
                         `-v /var/lib/saas/data/${containerName}:/var/www/html ` +
-                        `-p ${externalPort}:80 --restart always ${SaasAppType.WORDPRESS}`;
+                        `--restart always ${SaasAppType.WORDPRESS}`;
                 } else {
                     // WordPress standalone avec sa propre base de données intégrée via Docker network
                     const dbContainerName = `${containerName}_db`;
                     const dbPass = Math.random().toString(36).slice(-8) + 'Db1!';
                     const networkName = `net_${containerName}`;
 
-                    // On crée un réseau + un conteneur MySQL + WordPress
                     dockerCmd =
                         `docker network create ${networkName} && ` +
                         `docker run -d --name ${dbContainerName} --network ${networkName} ` +
@@ -213,51 +238,46 @@ export class SaasService {
                         `-e MYSQL_PASSWORD=${dbPass} ` +
                         `-v /var/lib/saas/data/${dbContainerName}:/var/lib/mysql ` +
                         `--restart always mysql:8.0 && ` +
-                        `docker run -d ${limitsStr}--name ${containerName} --network ${networkName} ` +
+                        `docker run -d ${limitsStr}--name ${containerName} --network dynamix-network ` +
                         `-e WORDPRESS_DB_HOST=${dbContainerName}:3306 ` +
                         `-e WORDPRESS_DB_USER=wp_user ` +
                         `-e WORDPRESS_DB_PASSWORD=${dbPass} ` +
                         `-e WORDPRESS_DB_NAME=wordpress ` +
                         `-v /var/lib/saas/data/${containerName}:/var/www/html ` +
-                        `-p ${externalPort}:80 --restart always ${SaasAppType.WORDPRESS}`;
+                        `--restart always ${SaasAppType.WORDPRESS} && ` +
+                        `docker network connect ${networkName} ${containerName}`;
                 }
-                connectionString = `http://${this.hostIp}:${externalPort}`;
                 break;
 
             case SaasAppType.N8N:
-                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} -u root ` +
+                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} --network dynamix-network -u root ` +
                     `-e N8N_LISTEN_ADDRESS=0.0.0.0 ` +
                     `-e N8N_SECURE_COOKIE=false ` +
-                    `-e N8N_BASIC_AUTH_ACTIVE=true ` +
-                    `-e N8N_BASIC_AUTH_USER=${adminEmail} ` +
-                    `-e N8N_BASIC_AUTH_PASSWORD=${adminPassword} ` +
+                    `-e WEBHOOK_URL=http://${saasDomain}/ ` +
                     `-v /var/lib/saas/data/${containerName}:/home/node/.n8n ` +
-                    `-p ${externalPort}:5678 --restart always ${SaasAppType.N8N}`;
-                connectionString = `http://${this.hostIp}:${externalPort}`;
+                    `--restart always ${SaasAppType.N8N}`;
                 break;
 
             case SaasAppType.MONGO_EXPRESS:
                 if (!linkedPaas) {
                     throw new BadRequestException('Mongo Express nécessite un service PaaS MongoDB lié (linkedPaasServiceId).');
                 }
-                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} ` +
+                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} --network dynamix-network ` +
                     `-e ME_CONFIG_MONGODB_URL="mongodb://${linkedPaas.dbUser}:${linkedPaas.dbPassword}@${linkedPaas.hostIp}:${linkedPaas.port}/?authSource=admin" ` +
                     `-e ME_CONFIG_BASICAUTH_USERNAME=${adminEmail} ` +
                     `-e ME_CONFIG_BASICAUTH_PASSWORD=${adminPassword} ` +
-                    `-p ${externalPort}:8081 --restart always ${SaasAppType.MONGO_EXPRESS}`;
-                connectionString = `http://${this.hostIp}:${externalPort}`;
+                    `--restart always ${SaasAppType.MONGO_EXPRESS}`;
                 break;
 
             case SaasAppType.REDIS_INSIGHT:
                 if (!linkedPaas) {
                     throw new BadRequestException('Redis Commander nécessite un service PaaS Redis lié (linkedPaasServiceId).');
                 }
-                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} ` +
+                dockerCmd = `docker run -d ${limitsStr}--name ${containerName} --network dynamix-network ` +
                     `-e REDIS_HOSTS=my-redis:${linkedPaas.hostIp}:${linkedPaas.port}:0:${linkedPaas.dbPassword} ` +
                     `-e HTTP_USER=${adminEmail} ` +
                     `-e HTTP_PASSWORD=${adminPassword} ` +
-                    `-p ${externalPort}:8081 --restart always ${SaasAppType.REDIS_INSIGHT}`;
-                connectionString = `http://${this.hostIp}:${externalPort}`;
+                    `--restart always ${SaasAppType.REDIS_INSIGHT}`;
                 break;
 
             default:
@@ -267,18 +287,20 @@ export class SaasService {
         const ansibleVars: Record<string, any> = {
             instance_name: containerName,
             external_port: externalPort,
+            container_internal_port: containerInternalPort,
+            saas_domain: saasDomain,
             admin_email: adminEmail,
             admin_password: adminPassword,
         };
+
 
         switch (dto.appType) {
             case SaasAppType.PHPMYADMIN:
                 ansibleVars.app_type = 'phpmyadmin';
                 ansibleVars.pma_host = linkedPaas?.hostIp;
                 ansibleVars.pma_port = linkedPaas?.port;
-                ansibleVars.pma_user = linkedPaas?.dbUser;
-                ansibleVars.pma_password = linkedPaas?.dbPassword;
                 break;
+
             case SaasAppType.PGADMIN:
                 ansibleVars.app_type = 'pgadmin';
                 break;
@@ -329,6 +351,11 @@ export class SaasService {
                     if (result.code !== 0) {
                         throw new Error(`Erreur lors du lancement Docker : ${result.stderr}`);
                     }
+                    const vhostConf = `server {\n    listen 80;\n    server_name ${saasDomain};\n    resolver 127.0.0.11 valid=10s ipv6=off;\n    client_max_body_size 100M;\n    location / {\n        set $upstream ${containerName}:${containerInternalPort};\n        proxy_pass http://$upstream;\n        proxy_http_version 1.1;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection "upgrade";\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 600s;\n        proxy_read_timeout 600s;\n    }\n}`;
+                    await ssh.execCommand(
+                        `cat << 'EOF' > /opt/dynamix/nginx/conf.d/${containerName}.conf\n${vhostConf}\nEOF\n` +
+                        `docker exec dynamix-proxy nginx -s reload`
+                    );
                 });
             }
 
@@ -363,10 +390,11 @@ export class SaasService {
 
             const savedSaas = await this.saasRepo.save(newSaas);
 
-            // Sonde de disponibilité asynchrone (Option A) : dès que le serveur web interne répond, passe en RUNNING
-            this.pollSaasReadiness(savedSaas.id, this.hostIp, externalPort).catch((err) => {
+            // Sonde de disponibilité asynchrone (Option A) : dès que le serveur web interne répond via Nginx Ingress, passe en RUNNING
+            this.pollSaasReadiness(savedSaas.id, connectionString).catch((err) => {
                 this.logger.error(`[SaaS Readiness Probe] Erreur inattendue pour SaaS #${savedSaas.id}: ${err.message}`);
             });
+
 
             // Envoi de l'email de confirmation ou d'attribution
             if (targetClient) {
@@ -477,7 +505,7 @@ export class SaasService {
                 });
             } else {
                 await withSsh(sshOptions, async (ssh) => {
-                    // Arrête et supprime le conteneur Docker + données
+                    // Arrête et supprime le conteneur Docker + données + configuration Nginx
                     // On tente aussi de supprimer un éventuel conteneur DB standalone (WordPress)
                     const dbContainerName = `${containerName}_db`;
                     const networkName = `net_${containerName}`;
@@ -485,8 +513,11 @@ export class SaasService {
                         `docker stop ${containerName} 2>/dev/null; docker rm ${containerName} 2>/dev/null; ` +
                         `docker stop ${dbContainerName} 2>/dev/null; docker rm ${dbContainerName} 2>/dev/null; ` +
                         `docker network rm ${networkName} 2>/dev/null; ` +
+                        `rm -f /opt/dynamix/nginx/conf.d/${containerName}.conf 2>/dev/null; ` +
+                        `docker exec dynamix-proxy nginx -s reload 2>/dev/null; ` +
                         `echo ${this.sshPass} | sudo -S rm -rf /var/lib/saas/data/${containerName} /var/lib/saas/data/${dbContainerName}`,
                     );
+
                 });
             }
 
@@ -663,13 +694,13 @@ export class SaasService {
      * Vérifie toutes les 3s si le serveur web interne répond avec un code HTTP valide (< 500)
      * et met à jour automatiquement le statut de l'instance vers RUNNING.
      */
-    private async pollSaasReadiness(saasId: number, hostIp: string, port: number): Promise<void> {
+    private async pollSaasReadiness(saasId: number, targetUrl: string): Promise<void> {
         const startTime = Date.now();
         const maxWaitMs = 120000; // 2 minutes max
         const checkIntervalMs = 3000; // Vérification toutes les 3 secondes
-        const url = `http://${hostIp}:${port}`;
 
-        this.logger.log(`[SaaS Readiness Probe] Début de surveillance pour SaaS #${saasId} (${url})`);
+        this.logger.log(`[SaaS Readiness Probe] Début de surveillance pour SaaS #${saasId} (${targetUrl})`);
+
 
         while (Date.now() - startTime < maxWaitMs) {
             await new Promise((resolve) => setTimeout(resolve, checkIntervalMs));
@@ -681,11 +712,12 @@ export class SaasService {
             }
 
             try {
-                const response = await fetch(url, {
+                const response = await fetch(targetUrl, {
                     method: 'GET',
                     redirect: 'manual',
                     signal: AbortSignal.timeout(2500),
                 });
+
 
                 // Si le serveur web répond avec un code HTTP (200-499), l'application est prête
                 if (response.status >= 200 && response.status < 500) {

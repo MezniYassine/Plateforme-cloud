@@ -28,3 +28,16 @@
         - "/var/lib/saas/data/{{ instance_name }}"
         - "/var/lib/saas/data/{{ instance_name }}_db"
       when: delete_data | default(true) | bool
+
+    - name: Supprimer la configuration Nginx Ingress
+      ansible.builtin.file:
+        path: "/opt/dynamix/nginx/conf.d/{{ instance_name }}.conf"
+        state: absent
+      ignore_errors: true
+
+    - name: Recharger Nginx dynamix-proxy
+      community.docker.docker_container_exec:
+        container: dynamix-proxy
+        command: nginx -s reload
+      ignore_errors: true
+

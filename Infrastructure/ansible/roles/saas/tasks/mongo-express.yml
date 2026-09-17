@@ -5,9 +5,10 @@
     image: "mongo-express:latest"
     state: started
     restart_policy: always
-    published_ports:
-      - "{{ external_port }}:8081"
+    networks:
+      - name: "dynamix-network"
     env:
       ME_CONFIG_MONGODB_URL: "{{ mongo_url }}"
       ME_CONFIG_BASICAUTH_USERNAME: "{{ admin_email }}"
       ME_CONFIG_BASICAUTH_PASSWORD: "{{ admin_password }}"
+

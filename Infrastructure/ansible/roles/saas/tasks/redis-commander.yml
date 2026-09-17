@@ -5,9 +5,10 @@
     image: "rediscommander/redis-commander:latest"
     state: started
     restart_policy: always
-    published_ports:
-      - "{{ external_port }}:8081"
+    networks:
+      - name: "dynamix-network"
     env:
       REDIS_HOSTS: "{{ redis_hosts }}"
       HTTP_USER: "{{ admin_email }}"
       HTTP_PASSWORD: "{{ admin_password }}"
+

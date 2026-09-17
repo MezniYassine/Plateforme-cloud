@@ -440,12 +440,15 @@ export class PersonalDashboard implements OnInit, OnDestroy {
 
   isSaasEmailValid(): boolean {
     const app = this.selectedSaasApp();
+    if (app === 'n8nio/n8n:latest' || app === 'wordpress:latest' || app === 'phpmyadmin/phpmyadmin:latest') {
+      return true;
+    }
     const email = this.saasAdminEmail().trim();
     if (app === 'dpage/pgadmin4:latest') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return emailRegex.test(email);
     }
-    if (app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest' || app === 'n8nio/n8n:latest') {
+    if (app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest') {
       return email.length >= 3;
     }
     return true;
@@ -453,12 +456,15 @@ export class PersonalDashboard implements OnInit, OnDestroy {
 
   getSaasEmailError(): string {
     const app = this.selectedSaasApp();
+    if (app === 'n8nio/n8n:latest' || app === 'wordpress:latest' || app === 'phpmyadmin/phpmyadmin:latest') {
+      return '';
+    }
     const email = this.saasAdminEmail().trim();
     if (app === 'dpage/pgadmin4:latest') {
       if (!email) return 'Adresse email requise pour pgAdmin';
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) return 'Format d\'email invalide (ex: admin@domaine.com)';
-    } else if (app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest' || app === 'n8nio/n8n:latest') {
+    } else if (app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest') {
       if (!email) return 'Identifiant / Email requis (min. 3 caractères)';
       if (email.length < 3) return 'Minimum 3 caractères requis';
     }
@@ -467,8 +473,11 @@ export class PersonalDashboard implements OnInit, OnDestroy {
 
   isSaasPasswordValid(): boolean {
     const app = this.selectedSaasApp();
+    if (app === 'n8nio/n8n:latest' || app === 'wordpress:latest' || app === 'phpmyadmin/phpmyadmin:latest') {
+      return true;
+    }
     const pass = this.saasAdminPassword().trim();
-    if (app === 'dpage/pgadmin4:latest' || app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest' || app === 'n8nio/n8n:latest') {
+    if (app === 'dpage/pgadmin4:latest' || app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest') {
       return pass.length >= 4;
     }
     return true;
@@ -476,8 +485,11 @@ export class PersonalDashboard implements OnInit, OnDestroy {
 
   getSaasPasswordError(): string {
     const app = this.selectedSaasApp();
+    if (app === 'n8nio/n8n:latest' || app === 'wordpress:latest' || app === 'phpmyadmin/phpmyadmin:latest') {
+      return '';
+    }
     const pass = this.saasAdminPassword().trim();
-    if (app === 'dpage/pgadmin4:latest' || app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest' || app === 'n8nio/n8n:latest') {
+    if (app === 'dpage/pgadmin4:latest' || app === 'mongo-express:latest' || app === 'rediscommander/redis-commander:latest') {
       if (!pass) return 'Mot de passe requis';
       if (pass.length < 4) return 'Minimum 4 caractères requis';
     }

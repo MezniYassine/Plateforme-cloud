@@ -113,7 +113,7 @@ export class TenantNetworkService implements OnModuleInit {
       vmsWithNetwork.map((v) => v.networkName).filter(Boolean),
     );
 
-    // 3. Attribution du premier slot libre dans le pool Terraform (PG-Tenant-01 à PG-Tenant-30)
+    // 3. Attribution du premier slot libre dans le pool Terraform (PG-Tenant-01 à PG-Tenant-100)
     for (let i = 1; i <= this.POOL_SIZE; i++) {
       const candidate = `PG-Tenant-${String(i).padStart(2, '0')}`;
       if (!usedNetworks.has(candidate)) {

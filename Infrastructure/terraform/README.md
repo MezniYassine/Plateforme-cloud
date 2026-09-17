@@ -58,7 +58,7 @@ terraform destroy
 | Nom du Port Group | VLAN ID | Rôle |
 | :--- | :---: | :--- |
 | `PG-DBaaS-PaaS` | **50** | Réseau réservé à l'hébergement des bases de données PaaS |
-| `PG-Tenant-01` à `PG-Tenant-30` | **101** à **130** | Pool de réseaux privés étanches attribués dynamiquement (chaque particulier son VLAN, chaque entreprise son VLAN) |
+| `PG-Tenant-01` à `PG-Tenant-100` | **101** à **200** | Pool de réseaux privés étanches attribués dynamiquement (chaque particulier son VLAN, chaque entreprise son VLAN) |
 
 ---
 

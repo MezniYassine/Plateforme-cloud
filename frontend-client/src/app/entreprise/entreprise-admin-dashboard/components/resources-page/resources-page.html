@@ -359,7 +359,7 @@
       </div>
 
       <!-- Credentials Box for PaaS / SaaS -->
-      @if (r.type === 'db' || (r.type === 'saas' && (r.adminEmail || r.adminPassword))) {
+      @if (r.type === 'db' || (r.type === 'saas' && !r.name.toLowerCase().includes('n8n') && !r.name.toLowerCase().includes('wordpress') && (r.adminEmail || r.adminPassword))) {
       <div class="rc-creds-box">
         <div class="rc-cred-field">
           <span class="rc-cred-title">{{ r.type === 'saas' ? 'Admin Email' : 'Utilisateur' }}</span>
@@ -482,6 +482,7 @@
           </div>
         </div>
 
+        @if (tgt.type === 'db' || (tgt.type === 'saas' && !tgt.name.toLowerCase().includes('n8n') && !tgt.name.toLowerCase().includes('wordpress'))) {
         <div class="cred-modal-group">
           <label>{{ tgt.type === 'saas' ? 'Email Administrateur :' : 'Nom d\'utilisateur :' }}</label>
           <div class="cred-modal-input-row">
@@ -505,6 +506,7 @@
             </button>
           </div>
         </div>
+        }
         }
       </div>
 

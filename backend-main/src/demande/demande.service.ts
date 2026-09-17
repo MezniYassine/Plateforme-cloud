@@ -388,7 +388,7 @@ export class DemandeService {
         }, adminId);
 
       } else {
-        // Attribution automatique d'un réseau étanche depuis le pool Terraform (PG-Tenant-01 à PG-Tenant-30)
+        // Attribution automatique d'un réseau étanche depuis le pool Terraform (PG-Tenant-01 à PG-Tenant-100)
         const assignedNetwork = await this.tenantNetworkService.resolveNetworkForClient(demande.client);
         const assignedIp = await this.tenantNetworkService.resolveStaticIpForNetwork(assignedNetwork);
 

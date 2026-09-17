@@ -5,8 +5,9 @@
     image: "dpage/pgadmin4:latest"
     state: started
     restart_policy: always
-    published_ports:
-      - "{{ external_port }}:80"
+    networks:
+      - name: "dynamix-network"
     env:
       PGADMIN_DEFAULT_EMAIL: "{{ admin_email }}"
       PGADMIN_DEFAULT_PASSWORD: "{{ admin_password }}"
+

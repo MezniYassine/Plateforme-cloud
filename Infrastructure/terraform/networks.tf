@@ -28,7 +28,7 @@ resource "vsphere_host_port_group" "tenant_pool" {
 }
 
 # 3. Port Group Trunk (VLAN 4095) pour la passerelle Cloud-Gateway
-# Le VLAN 4095 (VGT - Virtual Guest Tagging) transmet tous les flux 802.1Q (VLAN 101 à 130)
+# Le VLAN 4095 (VGT - Virtual Guest Tagging) transmet tous les flux 802.1Q (VLAN 101 à 200)
 # sur la deuxième interface réseau de la passerelle Cloud.
 resource "vsphere_host_port_group" "gateway_trunk_pg" {
   name                = "PG-Cloud-Gateway-Trunk"

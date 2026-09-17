@@ -8,5 +8,5 @@ datastore_name  = "datastore1"
 vswitch_name    = "vSwitch0"
 
 # Taille du pool de réseaux isolés
-tenant_pool_size  = 30
+tenant_pool_size  = 100
 tenant_vlan_start = 101
